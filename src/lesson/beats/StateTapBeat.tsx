@@ -12,6 +12,7 @@ import { BeatShell } from '../BeatShell'
 import { resolveFeedback, useHintLadder } from '../feedback'
 import { StateGraph } from '../konva/StateGraph'
 import { useElementWidth } from '../konva/useElementWidth'
+import { stateTapHint } from '../stateTapHints'
 
 const key = (from: string, on: 'H' | 'T') => `${from}-${on}`
 
@@ -42,6 +43,8 @@ export function StateTapBeat(props: BeatProps) {
   // Emphasize overlap edges once the ladder reaches the highlight level.
   const emphasize =
     (ladder.view.kind === 'hint' && ladder.view.level >= 2) || solved
+  const hintLevel =
+    ladder.view.kind === 'hint' ? (ladder.view.level as 1 | 2 | 3) : 0
 
   function check() {
     const allCorrect = transitions.every(
@@ -103,12 +106,13 @@ export function StateTapBeat(props: BeatProps) {
                 <div className="tap-choices" role="radiogroup">
                   {automaton.states.map((s) => {
                     const isPick = picked === s.id
-                    const showCorrect = (revealed || solved) && s.id === correct
-                    const showWrong =
-                      ladder.view.kind === 'hint' &&
-                      !solved &&
-                      isPick &&
-                      s.id !== correct
+                    // A check that wasn't fully correct still grades each card:
+                    // a correct pick goes green, a wrong pick goes red.
+                    const graded = ladder.view.kind === 'hint' && !solved
+                    const showCorrect =
+                      ((revealed || solved) && s.id === correct) ||
+                      (graded && isPick && s.id === correct)
+                    const showWrong = graded && isPick && s.id !== correct
                     return (
                       <button
                         type="button"
@@ -122,9 +126,12 @@ export function StateTapBeat(props: BeatProps) {
                           (showCorrect ? ' statechip--correct' : '') +
                           (showWrong ? ' statechip--wrong' : '')
                         }
-                        onClick={() =>
+                        onClick={() => {
                           setPicks((p) => ({ ...p, [k]: s.id }))
-                        }
+                          // Editing a pick drops the stale verdict from the
+                          // previous Check.
+                          ladder.clear()
+                        }}
                       >
                         <span className="statechip__label mono">{s.label}</span>
                         <span className="statechip__id mono">{s.id}</span>
@@ -132,6 +139,19 @@ export function StateTapBeat(props: BeatProps) {
                     )
                   })}
                 </div>
+                {hintLevel > 0 &&
+                  !solved &&
+                  picked &&
+                  picked !== correct && (
+                    <p className="tap-card__hint">
+                      {stateTapHint(
+                        automaton,
+                        t.from as StateId,
+                        t.on,
+                        hintLevel as 1 | 2 | 3,
+                      )}
+                    </p>
+                  )}
               </fieldset>
             )
           })}

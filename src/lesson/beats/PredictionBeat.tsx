@@ -21,8 +21,15 @@ export function PredictionBeat({
   const { options } = beat.interaction
   const fb = resolveFeedback(beat.feedback, pattern)
 
+  // The open bet is not graded and has no per-option correct answer, so the
+  // strip is an answer-agnostic acknowledgement framed as a guess. We avoid
+  // fb.correct ("…we'll prove HH takes longer…") since it would reveal the
+  // result and congratulate every pick, including the traps. hints[2] confirms
+  // the guess is provisional and will be revisited downstream.
   const view: FeedbackView =
-    selected !== null ? { kind: 'correct', text: fb.correct } : { kind: 'idle' }
+    selected !== null
+      ? { kind: 'note', text: fb.hints[2], label: 'Good guess!' }
+      : { kind: 'idle' }
 
   return (
     <BeatShell
@@ -36,6 +43,9 @@ export function PredictionBeat({
         },
       }}
     >
+      <p className="bet-caption">
+        Just a guess — there's no wrong answer here. {fb.hints[0]}
+      </p>
       <div className="chips" role="radiogroup" aria-label="Your prediction">
         {options.map((opt) => (
           <button

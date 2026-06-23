@@ -14,16 +14,25 @@ export function FeedbackStrip({
 }) {
   if (view.kind === 'idle') return null
 
-  const tone = view.kind === 'correct' ? 'correct' : 'wrong'
+  // 'note' is a neutral, ungraded acknowledgement (e.g. the open bet) — it uses
+  // the base strip styling with no correct/wrong tint.
+  const tone =
+    view.kind === 'correct' ? 'correct' : view.kind === 'note' ? null : 'wrong'
   const label =
     view.kind === 'correct'
       ? 'Correct'
-      : view.revealed
-        ? 'Answer'
-        : `Hint ${view.level}`
+      : view.kind === 'note'
+        ? (view.label ?? 'Noted')
+        : view.revealed
+          ? 'Answer'
+          : `Hint ${view.level}`
 
   return (
-    <div className={`feedback feedback--${tone}`} role="status" aria-live="polite">
+    <div
+      className={`feedback${tone ? ` feedback--${tone}` : ''}`}
+      role="status"
+      aria-live="polite"
+    >
       <p className="feedback__label">{label}</p>
       <p className="feedback__text">{view.text}</p>
       {view.kind === 'hint' && view.revealed && onTryAgain && (

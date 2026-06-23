@@ -1,0 +1,39 @@
+{
+  "findings": [
+    {
+      "id": "c1-equation-tiles-O3-01",
+      "beatId": "equation-tiles",
+      "axis": "objective",
+      "dimension": "O3",
+      "severity": "S2",
+      "kind": "auto-fix",
+      "summary": "Mobile tap-only completion failed at the equation-tiles Check button.",
+      "resolution": "Reclassified: NOT a product defect. Verified via elementsFromPoint that the Check button is the top element when the window is scrolled to the bar; the failure was a Playwright actionability quirk re-scrolling the CSS-sticky action bar mid-click. Fixed in e2e/helpers.ts (window scroll + asserted enabled + force click); reverted the speculative .actionbar z-index.",
+      "repro": "e2e/lesson-complete.spec.ts [mobile]",
+      "discoveredBy": "harness-setup",
+      "status": "closed-not-a-bug"
+    },
+    {
+      "id": "c1-pattern-pick-P2-01",
+      "beatId": "pattern-pick",
+      "axis": "pedagogy",
+      "dimension": "P2",
+      "severity": "S2",
+      "kind": "stage",
+      "summary": "pattern-pick is a passive confirmation screen: both patterns are pre-selected, there is no interaction beyond Continue and no feedback strip. P2 (productive struggle) = 2, P4 (interaction fit) = 3, pedagogyMean 2.8 — below the 4.0 bar. It does not create learning; it restates what open-bet and simulate already establish.",
+      "proposal": "Either (a) give it a real micro-decision (e.g., 'which pair looks like it should tie?' tap), (b) fold the compare framing into the simulate beat's intro and cut the standalone beat, or (c) make the cards tappable to preview each pattern's near-miss. See audits/proposals/cycle-1.md.",
+      "status": "proposed"
+    },
+    {
+      "id": "c1-guided-solve-P2-01",
+      "beatId": "guided-solve",
+      "axis": "pedagogy",
+      "dimension": "P2",
+      "severity": "S1",
+      "kind": "stage",
+      "summary": "guided-solve is tap-to-advance (low agency); 'Show algebra' lets the learner reveal the whole derivation without doing the substitution. P2 = 3, pedagogyMean 3.8 — just under bar. Retrieval value is weak vs. the strong recap.",
+      "proposal": "Raise agency: ask the learner to choose which state to substitute next (tap E2 before it folds into E1), or to pick the resulting value, before revealing each step. See audits/proposals/cycle-1.md.",
+      "status": "proposed"
+    }
+  ]
+}

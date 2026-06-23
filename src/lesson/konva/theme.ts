@@ -23,6 +23,13 @@ export const C = {
   wrong: '#CE4A3E',
   mark: '#E8B23A',
   markWash: 'rgba(232, 178, 58, 0.30)',
+  // Translucent quill washes for the simulation chart's area fill + live head
+  // glow (Konva needs rgba; these mirror --quill #2E4FB0).
+  quillFill: 'rgba(46, 79, 176, 0.16)',
+  quillFillFade: 'rgba(46, 79, 176, 0)',
+  quillGlow: 'rgba(46, 79, 176, 0.20)',
+  // Faint ink band marking the convergence target around the theory line.
+  inkBand: 'rgba(27, 34, 48, 0.05)',
 } as const
 
 export const edgeColor = (on: 'H' | 'T') => (on === 'H' ? C.heads : C.tails)

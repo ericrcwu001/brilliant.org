@@ -1,0 +1,42 @@
+{
+  "rubricVersion": "2026-06-23",
+  "cycles": [
+    {
+      "cycle": 1,
+      "timestamp": "2026-06-23T22:30:00Z",
+      "scope": "/dev/lesson flagship (Groups A/B, local-only)",
+      "beats": {
+        "open-bet":          { "pedagogy": { "P1": 5, "P2": 4, "P3": 4, "P4": 5, "P5": 5 }, "pedagogyMean": 4.6 },
+        "pattern-pick":      { "pedagogy": { "P1": 3, "P2": 2, "P3": 3, "P4": 3, "P5": 3 }, "pedagogyMean": 2.8, "findingIds": ["c1-pattern-pick-P2-01"] },
+        "simulate":          { "pedagogy": { "P1": 5, "P2": 5, "P3": 4, "P4": 5, "P5": 5 }, "pedagogyMean": 4.8 },
+        "failure-edge":      { "pedagogy": { "P1": 5, "P2": 5, "P3": 5, "P4": 5, "P5": 5 }, "pedagogyMean": 5.0 },
+        "equation-tiles":    { "pedagogy": { "P1": 5, "P2": 5, "P3": 5, "P4": 4, "P5": 5 }, "pedagogyMean": 4.8 },
+        "refine-prediction": { "pedagogy": { "P1": 4, "P2": 4, "P3": 3, "P4": 5, "P5": 4 }, "pedagogyMean": 4.0 },
+        "guided-solve":      { "pedagogy": { "P1": 4, "P2": 3, "P3": 4, "P4": 4, "P5": 4 }, "pedagogyMean": 3.8, "findingIds": ["c1-guided-solve-P2-01"] },
+        "theory-vs-sim":     { "pedagogy": { "P1": 5, "P2": 4, "P3": 4, "P4": 4, "P5": 5 }, "pedagogyMean": 4.4 },
+        "overlap":           { "pedagogy": { "P1": 5, "P2": 3, "P3": 4, "P4": 4, "P5": 5 }, "pedagogyMean": 4.2 },
+        "bias-sandbox":      { "pedagogy": { "P1": 4, "P2": 4, "P3": 4, "P4": 4, "P5": 4 }, "pedagogyMean": 4.0, "extension": true },
+        "recap":             { "pedagogy": { "P1": 5, "P2": 5, "P3": 5, "P4": 5, "P5": 5 }, "pedagogyMean": 5.0 }
+      },
+      "objective": {
+        "O1_functional": "pass",
+        "O2_robustness": "pass",
+        "O3_accessibility": "pass",
+        "O4_performance": "n/a",
+        "O5_design_conformance": "pass",
+        "evidence": "e2e/lesson-complete.spec.ts green across chromium/mobile/reduced-motion; 75 vitest incl. 8k-iter diagnoseRow fuzz; validate+build+lint green. O4 (feedback<100ms / 60fps) not yet instrumented."
+      },
+      "totals": {
+        "pedagogyMeanAllBeats": 4.31,
+        "pedagogyMeanRequired": 4.34,
+        "requiredBeatsBelowBar": ["pattern-pick", "guided-solve"],
+        "openFindings": { "S3": 0, "S2": 1, "S1": 1 },
+        "pedagogyMeanDeltaVsPrev": null
+      },
+      "stopRule": {
+        "met": false,
+        "reason": "pattern-pick (2.8) and guided-solve (3.8) are below the 4.0 required-beat bar; O4 not yet measured. Continue after review of the cycle-1 PR."
+      }
+    }
+  ]
+}

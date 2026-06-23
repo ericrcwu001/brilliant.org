@@ -24,7 +24,7 @@
         "hints": [
           "There's no wrong guess yet. Commit to one so you can test it against the math.",
           "Most people pick the tie. Notice the trap: both patterns have length 2, but a near-miss doesn't cost the same.",
-          "Lock in any answer to continue — you'll revisit this prediction once you've built the equations."
+          "You'll revisit this prediction once you've built the equations."
         ]
       }
     },
@@ -99,7 +99,7 @@
     {
       "beatId": "equation-tiles",
       "required": true,
-      "prompt": "Assemble the recurrence for each state. Every flip costs 1, then split by the coin.",
+      "prompt": "Here's the equation for E0, worked out. Build E1 the same way: every flip costs 1, then split by the coin.",
       "interaction": {
         "type": "equationTiles",
         "bank": [
@@ -117,7 +117,7 @@
         "rows": [
           {
             "lhs": "E0",
-            "graded": true,
+            "graded": false,
             "target": {
               "lhs": "E0",
               "constant": 1,

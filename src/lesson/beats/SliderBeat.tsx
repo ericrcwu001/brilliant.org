@@ -38,9 +38,12 @@ export function SliderBeat(props: BeatProps) {
     labelIdx.add(Math.round((i * (ticks.length - 1)) / Math.max(1, labelCount - 1)))
   }
 
+  // This is an ungraded prediction, not a checked answer, so the locked
+  // acknowledgement is a neutral 'note' (no green "Correct" tint) — matching the
+  // open-bet PredictionBeat.
   const fb = resolveFeedback(beat.feedback, pattern)
   const view: FeedbackView = locked
-    ? { kind: 'correct', text: fb.correct }
+    ? { kind: 'note', text: fb.correct, label: 'Locked in' }
     : { kind: 'idle' }
 
   const numlineClass =

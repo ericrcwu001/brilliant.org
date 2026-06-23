@@ -52,6 +52,13 @@ export function CoinSimBeat({
   const stageH = Math.max(220, Math.round((width || 320) * 0.52))
   const gated = flipCount >= minFlips && sawChange
 
+  const e0 = automaton.states[0].id
+  const isAbsorbing = (id: StateId) =>
+    !!automaton.states.find((s) => s.id === id)?.absorbing
+  // The absorbing state has no outgoing edges: once the pattern is matched, the
+  // next flip starts a fresh search from ∅, so the stream keeps going.
+  const fromState = (id: StateId) => (isAbsorbing(id) ? e0 : id)
+
   function applyFlip(from: StateId, on: 'H' | 'T', label: string): StateId {
     const to = nextStateOf(automaton, from, on)
     setState(to)
@@ -66,29 +73,7 @@ export function CoinSimBeat({
     const on: 'H' | 'T' = Math.random() < automaton.p ? 'H' : 'T'
     setStream((s) => [...s, { on, key: `f${s.length}-${Math.random()}` }])
     setFlipCount((c) => c + 1)
-    applyFlip(state, on, 'Free')
-  }
-
-  function flipBatch(n: number) {
-    let cur = state
-    const added: Flip[] = []
-    let changed = false
-    let last: 'H' | 'T' = 'H'
-    for (let i = 0; i < n; i++) {
-      const on: 'H' | 'T' = Math.random() < automaton.p ? 'H' : 'T'
-      const to = nextStateOf(automaton, cur, on)
-      if (to !== cur) changed = true
-      added.push({ on, key: `b${flipCount + i}-${Math.random()}` })
-      cur = to
-      last = on
-    }
-    setStream((s) => [...s, ...added])
-    setFlipCount((c) => c + n)
-    setState(cur)
-    setActiveEdge({ from: added.length > 1 ? cur : state, on: last })
-    setPulseKey((k) => k + 1)
-    if (changed) setSawChange(true)
-    setAnnounce(`Flipped ${n}. State: ${labelOf(automaton, cur)}.`)
+    applyFlip(fromState(state), on, 'Free')
   }
 
   // Scripted near-miss replay: advance to E1, then take the failing edge the
@@ -156,10 +141,8 @@ export function CoinSimBeat({
   }
 
   const secondary =
-    phase === 'free'
-      ? gated
-        ? { label: 'Flip', onClick: flipOnce }
-        : { label: 'Flip ×8', onClick: () => flipBatch(8) }
+    (phase === 'free' && gated) || phase === 'done'
+      ? { label: 'Flip', onClick: flipOnce }
       : undefined
 
   return (

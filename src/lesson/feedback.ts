@@ -32,6 +32,7 @@ export function resolveFeedback(
 export type FeedbackView =
   | { kind: 'idle' }
   | { kind: 'correct'; text: string }
+  | { kind: 'note'; text: string; label?: string }
   | { kind: 'hint'; level: number; text: string; revealed: boolean }
 
 export type HintLadder = {
@@ -40,6 +41,9 @@ export type HintLadder = {
   submitWrong: () => void
   submitCorrect: () => void
   tryAgain: () => void
+  // Drop the visible verdict (e.g. when the learner edits their answer before
+  // re-checking) while preserving wrongCount/everRevealed for needsReview.
+  clear: () => void
 }
 
 export function useHintLadder(opts: {
@@ -79,5 +83,7 @@ export function useHintLadder(opts: {
     submitWrong: () => setState((p) => onWrong(p, max)),
     submitCorrect: () => setState(onCorrect),
     tryAgain: () => setState(onTryAgain),
+    clear: () =>
+      setState((p) => (p.outcome === 'idle' ? p : onTryAgain(p))),
   }
 }

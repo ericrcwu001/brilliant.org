@@ -12,6 +12,11 @@ dist
 dist-ssr
 *.local
 
+# Playwright (beat-audit harness)
+test-results
+playwright-report
+.playwright-artifacts*
+
 # Environment files
 .env
 .env.*

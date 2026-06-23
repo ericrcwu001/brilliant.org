@@ -1,12 +1,16 @@
 'use no memo'
 
 // Instrumentation-style theory-vs-simulation chart (docs/ui_design_system.md
-// "Simulation Chart"): solid ink theory line, quill-blue running empirical
-// average, dashed highlighter prediction marker. Labels + dash patterns keep it
-// readable without color. Mounts a Konva <Stage>, so it opts out of the React
-// Compiler.
+// "Simulation Chart"). The linear x-axis grows to the cumulative simulation
+// count, so the running empirical mean (drawn trial by trial as a quill curve
+// with a soft gradient area) always fills the width and re-compresses as runs
+// accumulate, sweeping toward the solid ink theory line on a logarithmic y-axis.
+// A faint band marks the convergence target, the learner's locked prediction is
+// a dashed highlighter mark, and the live "head" at the right edge carries a
+// glowing bead plus a value chip. Mounts a Konva <Stage>, so it opts out of the
+// React Compiler.
 
-import { Circle, Layer, Line, Stage, Text } from 'react-konva'
+import { Circle, Layer, Line, Rect, Stage, Text } from 'react-konva'
 import { C, FONT_MONO } from './theme'
 
 export function SimChart({
@@ -15,48 +19,106 @@ export function SimChart({
   theory,
   prediction,
   points,
+  running = false,
 }: {
   width: number
   height: number
   theory: number
   prediction?: number
   points: number[]
+  running?: boolean
 }) {
-  const padL = 38
-  const padR = 60
-  const padT = 14
-  const padB = 26
+  const padL = 40
+  const padR = 64
+  const padT = 16
+  const padB = 36
   const plotL = padL
   const plotR = width - padR
   const plotT = padT
   const plotB = height - padB
 
-  const yMax = Math.max(12, Math.ceil(theory + 2), (prediction ?? 0) + 1)
-  const yFor = (v: number) => plotB - (v / yMax) * (plotB - plotT)
+  // Fixed logarithmic y-axis (chosen up front) so the curve doesn't rescale while
+  // it converges. The running mean for this lesson never dips below ~2, so the
+  // axis runs from yLo=2 up to a rounded ceiling above theory / prediction; the
+  // log compresses early spikes so the convergence stays readable.
+  const yLo = 2
+  const need = Math.max(theory + 3, (prediction ?? 0) + 1, 10)
+  const yMax = Math.ceil(need / 4) * 4
+  const lnLo = Math.log(yLo)
+  const lnSpan = Math.log(yMax) - lnLo
+  const yFor = (v: number) =>
+    plotB - ((Math.log(Math.max(v, yLo)) - lnLo) / lnSpan) * (plotB - plotT)
+  const yForC = (v: number) => Math.max(plotT, Math.min(plotB, yFor(v)))
+
+  // Dynamic linear x-axis: the domain is [0, n], so run k lands at fraction k/n
+  // and the newest run stays pinned to the right edge.
   const n = points.length
-  const xFor = (i: number) =>
-    n <= 1 ? (plotL + plotR) / 2 : plotL + ((plotR - plotL) * i) / (n - 1)
+  const denom = Math.max(1, n)
+  const xForRun = (k: number) => plotL + ((plotR - plotL) * k) / denom
 
-  const yTicks = [0, yMax / 2, yMax]
+  const last = n > 0 ? points[n - 1] : 0
+  const xHead = xForRun(n)
+  const yHead = yForC(last)
 
-  const empiricalPts: number[] = []
-  points.forEach((v, i) => {
-    empiricalPts.push(xFor(i), yFor(v))
-  })
+  // 1–2–5 style ticks that fall within the visible log range.
+  const yTicks: number[] = []
+  for (let p = 1; p <= yMax; p *= 10) {
+    for (const m of [1, 2, 5]) {
+      const v = p * m
+      if (v >= yLo && v <= yMax) yTicks.push(v)
+    }
+  }
+
+  // ±band around theory communicates "settled near the answer".
+  const band = Math.max(0.5, theory * 0.06)
+
+  // Empirical curve as a single polyline (performant for thousands of points);
+  // the matching closed polygon paints the gradient area underneath.
+  const linePts: number[] = []
+  for (let i = 0; i < n; i++) linePts.push(xForRun(i + 1), yForC(points[i]))
+  const areaPts = n >= 2 ? [...linePts, xForRun(n), plotB, xForRun(1), plotB] : []
+
+  // Live value chip floats just above the head, clamped inside the plot.
+  const chipText = last.toFixed(1)
+  const chipW = 12 + chipText.length * 8
+  const chipH = 18
+  const chipX = Math.max(plotL, Math.min(plotR - chipW, xHead - chipW / 2))
+  const chipY = Math.max(plotT, Math.min(plotB - chipH - 12, yHead - chipH - 10))
 
   return (
     <Stage width={width} height={height}>
       <Layer listening={false}>
+        {/* convergence target band around theory */}
+        <Rect
+          x={plotL}
+          y={yFor(theory + band)}
+          width={plotR - plotL}
+          height={yFor(theory - band) - yFor(theory + band)}
+          fill={C.inkBand}
+        />
+
+        {/* horizontal gridlines aligned to the y ticks */}
+        {yTicks.map((v) => (
+          <Line
+            key={`grid-${v}`}
+            points={[plotL, yFor(v), plotR, yFor(v)]}
+            stroke={C.ruleFaint}
+            strokeWidth={1}
+          />
+        ))}
+
         {/* axes */}
         <Line points={[plotL, plotT, plotL, plotB]} stroke={C.rule} strokeWidth={1} />
         <Line points={[plotL, plotB, plotR, plotB]} stroke={C.rule} strokeWidth={1} />
+
+        {/* y ticks + axis caption */}
         {yTicks.map((v) => (
           <Text
             key={`yt-${v}`}
             text={String(Math.round(v))}
             x={0}
-            y={yFor(v) - 7}
-            width={padL - 6}
+            y={yFor(v) - 6}
+            width={padL - 8}
             align="right"
             fontFamily={FONT_MONO}
             fontSize={11}
@@ -64,9 +126,41 @@ export function SimChart({
           />
         ))}
         <Text
-          text="flips"
+          text="flips (log)"
           x={2}
           y={plotT - 2}
+          fontFamily={FONT_MONO}
+          fontSize={10}
+          fill={C.graphiteSoft}
+        />
+
+        {/* x axis: 0 at the left, live run count at the right edge */}
+        <Text
+          text="0"
+          x={plotL - 20}
+          y={plotB + 6}
+          width={40}
+          align="center"
+          fontFamily={FONT_MONO}
+          fontSize={11}
+          fill={C.graphiteSoft}
+        />
+        <Text
+          text={String(n)}
+          x={plotR - 80}
+          y={plotB + 6}
+          width={80}
+          align="right"
+          fontFamily={FONT_MONO}
+          fontSize={11}
+          fill={n > 0 ? C.quill : C.graphiteSoft}
+        />
+        <Text
+          text="simulations"
+          x={plotL}
+          y={plotB + 20}
+          width={plotR - plotL}
+          align="center"
           fontFamily={FONT_MONO}
           fontSize={10}
           fill={C.graphiteSoft}
@@ -87,7 +181,7 @@ export function SimChart({
           fill={C.ink}
         />
 
-        {/* prediction marker (dashed mark) */}
+        {/* prediction marker (dashed highlighter) */}
         {prediction !== undefined && (
           <>
             <Line
@@ -107,28 +201,69 @@ export function SimChart({
           </>
         )}
 
-        {/* empirical running average (quill) */}
-        {n > 1 && (
-          <Line points={empiricalPts} stroke={C.quill} strokeWidth={2.5} />
+        {/* empirical running average: gradient area + quill curve */}
+        {areaPts.length > 0 && (
+          <Line
+            points={areaPts}
+            closed
+            fillLinearGradientStartPoint={{ x: 0, y: plotT }}
+            fillLinearGradientEndPoint={{ x: 0, y: plotB }}
+            fillLinearGradientColorStops={[0, C.quillFill, 1, C.quillFillFade]}
+          />
         )}
-        {points.map((v, i) => (
-          <Circle
-            key={`pt-${i}`}
-            x={xFor(i)}
-            y={yFor(v)}
-            radius={i === n - 1 ? 4 : 2.5}
-            fill={C.quill}
+        {n >= 2 && (
+          <Line
+            points={linePts}
+            stroke={C.quill}
+            strokeWidth={2.5}
+            lineJoin="round"
+            lineCap="round"
           />
-        ))}
+        )}
+
+        {/* live head: guide drop-line, glow, bead, value chip */}
         {n >= 1 && (
-          <Text
-            text="empirical"
-            x={plotR + 4}
-            y={yFor(points[n - 1]) - 6}
-            fontFamily={FONT_MONO}
-            fontSize={11}
-            fill={C.quill}
-          />
+          <>
+            <Line
+              points={[xHead, plotB, xHead, yHead]}
+              stroke={C.quill}
+              strokeWidth={1}
+              dash={[2, 4]}
+              opacity={0.45}
+            />
+            <Circle x={xHead} y={yHead} radius={running ? 10 : 8} fill={C.quillGlow} />
+            <Circle
+              x={xHead}
+              y={yHead}
+              radius={4.5}
+              fill={C.quill}
+              stroke={C.paper0}
+              strokeWidth={1.5}
+            />
+            <Rect
+              x={chipX}
+              y={chipY}
+              width={chipW}
+              height={chipH}
+              cornerRadius={5}
+              fill={C.quill}
+              shadowColor={C.ink}
+              shadowBlur={6}
+              shadowOpacity={0.18}
+              shadowOffsetY={1}
+            />
+            <Text
+              text={chipText}
+              x={chipX}
+              y={chipY + 3}
+              width={chipW}
+              align="center"
+              fontFamily={FONT_MONO}
+              fontStyle="600"
+              fontSize={12}
+              fill={C.paper0}
+            />
+          </>
         )}
       </Layer>
     </Stage>

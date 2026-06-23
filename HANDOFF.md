@@ -187,6 +187,21 @@ Group B phase-by-phase status (PRD "Done-when"):
    `LessonState` + `hintLevelByBeat` shapes are ready to serialize), Cloud
    Functions for completion/mastery/unlock, streaks/milestones, security rules +
    App Check, analytics.
+   - **Open question — opening-bet field is qualitative, analytics expects
+     numeric.** The `open-bet` beat is an ungraded "which wait is longer" guess,
+     so `LessonState.initialPrediction` is a **string** (e.g. "Waiting for HH
+     takes longer") and is consumed only by `RecapBeat` as a narrative bookend —
+     it drives no computation. But the analytics spec in `docs/mvp_prd.md`
+     ("Derived learning fields", e.g. `initialPrediction: 4` and
+     `predictionDeltaInitial = |initialPrediction − theoreticalValue|`) assumes a
+     **number**. The numeric "how many flips" guess is only captured later by the
+     `refine-prediction` slider as `finalPrediction` (number). Before wiring
+     analytics/derived fields, decide one of: (a) treat the qualitative bet and
+     the numeric guess as two distinct fields (rename/keep `initialPrediction`
+     qualitative; base `predictionDeltaInitial` on `finalPrediction`), or (b) also
+     capture a numeric estimate at the opening bet. This also affects the
+     `predictionDeltaInitial` KPI ("median should shrink between opening bet and
+     locked prediction"), which needs two comparable numbers to be meaningful.
 
 ## Quick Reference
 

@@ -23,12 +23,17 @@ export function BeatShell({
   onTryAgain,
   primary,
   secondary,
+  tertiary,
 }: {
   children: ReactNode
   feedback?: FeedbackView
   onTryAgain?: () => void
   primary: PrimaryAction
   secondary?: SecondaryAction
+  // Optional second quiet action (rendered as a ghost beside `secondary`), used
+  // when a beat offers two side actions plus the primary — e.g. the sim chart's
+  // "Run again" + "Run 500 more" alongside "Continue".
+  tertiary?: SecondaryAction
 }) {
   return (
     <>
@@ -42,6 +47,15 @@ export function BeatShell({
             onClick={secondary.onClick}
           >
             {secondary.label}
+          </button>
+        )}
+        {tertiary && (
+          <button
+            type="button"
+            className="btn btn--ghost"
+            onClick={tertiary.onClick}
+          >
+            {tertiary.label}
           </button>
         )}
         <button

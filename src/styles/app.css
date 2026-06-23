@@ -534,6 +534,12 @@ button {
   font-size: 15px;
   color: var(--ink);
 }
+.tap-card__hint {
+  margin: var(--s2) 0 0;
+  padding: 0 var(--s2);
+  font-size: 13px;
+  color: var(--wrong);
+}
 
 .tap-choices {
   display: flex;
@@ -596,6 +602,62 @@ button {
   flex-direction: column;
   gap: var(--s3);
 }
+
+.sim-status {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s2);
+}
+
+.sim-stats {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--s5);
+  flex-wrap: wrap;
+}
+.sim-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  line-height: 1.1;
+}
+.sim-stat b {
+  font-family: var(--font-mono);
+  font-size: 22px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink);
+}
+.sim-stat small {
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--graphite-soft);
+}
+.sim-stat--quill b {
+  color: var(--quill);
+}
+.sim-stat--ink b {
+  color: var(--ink);
+}
+.sim-stat__of {
+  font-size: 14px;
+  color: var(--graphite-soft);
+}
+
+.sim-progress {
+  height: 6px;
+  border-radius: var(--r-pill);
+  background: var(--paper-2);
+  overflow: hidden;
+}
+.sim-progress__bar {
+  height: 100%;
+  border-radius: var(--r-pill);
+  background: linear-gradient(90deg, var(--quill), var(--quill-strong));
+  transition: width var(--dur-micro) linear;
+}
+
 .sim-readout {
   margin: 0;
   font-size: 13px;
@@ -702,45 +764,209 @@ button {
 .recap {
   display: flex;
   flex-direction: column;
-  align-items: center;
   gap: var(--s5);
 }
-.recap__stamp {
+
+/* Retrieval check: generate the cause before the reveal. Reuses the .chip
+   selectable-option look from the opening bet, closing the bookend. */
+.recap__q {
+  margin: 0 0 var(--s3);
+  font-size: 17px;
+  line-height: 24px;
+  font-weight: 500;
+  color: var(--ink);
+}
+.recap__choicemark {
+  margin-right: var(--s2);
+  font-family: var(--font-mono);
+  font-weight: 600;
+}
+.chip--correct {
+  border: 1.5px solid var(--correct);
+  background: var(--correct-tint);
+  color: var(--correct-text);
+}
+.chip--correct .recap__choicemark {
+  color: var(--correct-text);
+}
+.chip--wrong {
+  border: 1.5px solid var(--wrong);
+  background: var(--wrong-tint);
+  color: var(--wrong-text);
+}
+.chip--wrong .recap__choicemark {
+  color: var(--wrong-text);
+}
+.chip--select:disabled {
+  cursor: default;
+}
+
+/* The reveal payoff. */
+.recap__reveal {
   display: flex;
+  flex-direction: column;
+  gap: var(--s5);
+}
+.recap__reveal--enter {
+  animation: recap-reveal var(--dur-slow) var(--ease-out);
+}
+@keyframes recap-reveal {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Hero: the verdict is the visual weight; a restrained ink seal marks the
+   milestone (design system: stamped seal, not a colored badge). */
+.recap__hero {
+  display: flex;
+  flex-direction: column;
   align-items: center;
-  justify-content: center;
-  width: 96px;
-  height: 96px;
-  border: 2px solid var(--quill);
-  border-radius: var(--r-pill);
-  background: var(--quill-tint);
+  gap: var(--s3);
+  text-align: center;
 }
 .recap__seal {
-  font-size: 16px;
+  display: inline-flex;
+  align-items: center;
+  padding: var(--s1) var(--s3);
+  border: 1.5px solid var(--ink);
+  border-radius: var(--r-pill);
+  font-size: 12px;
   font-weight: 600;
-  color: var(--quill-strong);
+  letter-spacing: 0.08em;
+  color: var(--ink);
 }
-.recap__list {
-  width: 100%;
+.recap__verdict {
   margin: 0;
+  font-size: 26px;
+  line-height: 1.2;
+  font-weight: 600;
+  color: var(--ink);
 }
-.recap__row {
-  display: flex;
-  justify-content: space-between;
-  gap: var(--s4);
-  padding: var(--s3) 0;
-  border-bottom: 1px dashed var(--rule);
-}
-.recap__dt {
-  font-size: 14px;
+.recap__principle {
+  margin: 0;
+  max-width: 44ch;
+  font-size: 15px;
+  line-height: 22px;
   color: var(--graphite);
 }
-.recap__dd {
-  margin: 0;
-  font-family: var(--font-mono);
-  font-size: 14px;
+
+/* Mechanism: the recurrences the learner built, with the costly HH reset term
+   the single amber signal on the screen. */
+.recap__mech {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s2);
+  padding: var(--s4);
+  border: 1px solid var(--rule);
+  border-radius: var(--r-md);
+  background: var(--paper-1);
+}
+.recap__mechrow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--s2);
+}
+.recap__mechlabel {
+  min-width: 2.5ch;
+  font-weight: 600;
   color: var(--ink);
-  text-align: right;
+}
+.recap__mecheq {
+  font-size: 15px;
+  color: var(--ink);
+}
+.recap__mark {
+  padding: 0 var(--s1);
+  border-radius: var(--r-xs);
+  background: var(--mark-wash);
+  color: var(--ink);
+}
+.recap__mechtag {
+  font-size: 12px;
+  color: var(--graphite-soft);
+}
+.recap__gloss {
+  margin: 0;
+  font-size: 14px;
+  line-height: 20px;
+  color: var(--graphite);
+}
+
+/* Your path: the belief-update arc as a small ledger. */
+.recap__path {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s3);
+}
+.recap__narrative {
+  margin: 0;
+  font-size: 15px;
+  line-height: 22px;
+  color: var(--ink);
+}
+.recap__trio {
+  display: flex;
+  gap: var(--s3);
+}
+.recap__metric {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--s1);
+  padding-top: var(--s2);
+  border-top: 2px solid var(--rule);
+}
+.recap__metric-val {
+  font-size: 22px;
+  font-weight: 600;
+  color: var(--ink);
+}
+.recap__metric-label {
+  font-size: 12px;
+  color: var(--graphite-soft);
+}
+
+/* Forward bridge + struggle note (graphite, never a second amber signal). */
+.recap__next {
+  margin: 0;
+  padding-top: var(--s4);
+  border-top: 1px solid var(--rule);
+  font-size: 14px;
+  line-height: 20px;
+  color: var(--graphite);
+}
+.recap__nexthint {
+  color: var(--graphite-soft);
+}
+.recap__review {
+  margin: 0;
+  padding: var(--s2) var(--s3);
+  border-left: 3px solid var(--graphite);
+  background: var(--paper-2);
+  border-radius: var(--r-xs);
+  font-size: 14px;
+  line-height: 20px;
+  color: var(--ink);
+}
+
+@media (min-width: 768px) {
+  .recap__q {
+    font-size: 19px;
+    line-height: 26px;
+  }
+  .recap__verdict {
+    font-size: 34px;
+  }
+  .recap__mecheq {
+    font-size: 17px;
+  }
 }
 
 /* --- Feedback strip (inline, above the action bar) --- */
@@ -802,6 +1028,13 @@ button {
 
 /* --- Selectable prediction chips --- */
 
+.bet-caption {
+  margin: 0 0 var(--s3);
+  font-size: 14px;
+  line-height: 20px;
+  color: var(--graphite);
+}
+
 .chip--select {
   width: 100%;
   text-align: left;
@@ -812,7 +1045,7 @@ button {
     border-color var(--dur-micro) var(--ease-out),
     background var(--dur-micro) var(--ease-out);
 }
-.chip--select:hover {
+.chip--select:hover:not(:disabled) {
   border-color: var(--quill);
 }
 .chip--on {
@@ -918,6 +1151,19 @@ button {
   font-weight: 600;
 }
 
+/* Visually-hidden, screen-reader-only live region. */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
 /* --- Equation-tiles beat: build equations --- */
 
 .eqtiles {
@@ -925,6 +1171,72 @@ button {
   flex-direction: column;
   gap: var(--s4);
 }
+
+/* Per-check progress line: "N of 5 tiles locked in green …" */
+.eqprogress {
+  margin: 0;
+  padding: var(--s2) var(--s3);
+  border-left: 3px solid var(--correct);
+  border-radius: var(--r-xs);
+  background: var(--correct-tint);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  line-height: 1.45;
+  color: var(--correct-text);
+}
+.eqprogress--invalid {
+  border-left-color: var(--mark);
+  background: var(--mark-wash);
+  color: var(--ink);
+}
+
+.eqtiles__legend {
+  padding: var(--s3) var(--s4);
+  border: 1px solid var(--rule);
+  border-radius: var(--r-md);
+  background: var(--paper-1);
+}
+
+.eqtiles__example {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s2);
+}
+.eqtiles__example-kicker {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--quill);
+}
+.eqtiles__legend-lead {
+  margin: 0 0 var(--s2);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--ink);
+}
+.eqtiles__legend-list {
+  margin: 0;
+  padding-left: var(--s4);
+  font-size: 13px;
+  color: var(--graphite);
+  line-height: 1.5;
+}
+.eqtiles__legend-id {
+  font-family: var(--font-mono);
+  font-weight: 500;
+  color: var(--quill);
+}
+
+.eqtiles sub {
+  font-size: 0.72em;
+  line-height: 0;
+  vertical-align: baseline;
+  position: relative;
+  bottom: -0.15em;
+}
+
 .eqtiles__rows {
   display: flex;
   flex-direction: column;
@@ -942,6 +1254,57 @@ button {
 }
 .eqline--static {
   color: var(--graphite);
+}
+.eqline--build {
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--s2);
+}
+.eqline--build .eqline__body {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s2);
+}
+.eqline__kicker {
+  margin: 0;
+  width: 100%;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--graphite-soft);
+}
+.eqline--prefilled {
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--s2);
+  padding: var(--s3) var(--s4);
+  border: 1px solid var(--quill-tint);
+  border-radius: var(--r-md);
+  background: var(--quill-tint);
+}
+.eqline--prefilled .eqline__body {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s2);
+}
+.eqline__term-group {
+  white-space: nowrap;
+}
+.eqline__explain,
+.eqline__note {
+  margin: var(--s2) 0 0;
+  width: 100%;
+  font-family: var(--font-sans);
+  font-size: 14px;
+  line-height: 1.45;
+  color: var(--graphite);
+}
+.eqline__note {
+  font-size: 13px;
+  font-style: italic;
 }
 .eqline__lhs {
   font-family: var(--font-mono);
@@ -977,9 +1340,24 @@ button {
   border: 1.5px dashed var(--graphite-soft);
   color: var(--graphite-soft);
 }
+@media (hover: hover) {
+  .slot--empty:hover:not(:disabled),
+  .infotip--slot:hover .slot--empty:not(:disabled) {
+    border-color: var(--quill);
+    background: var(--quill-tint);
+    color: var(--ink);
+  }
+}
 .slot--filled {
   border: 1.5px solid var(--rule);
   background: var(--paper-0);
+}
+@media (hover: hover) {
+  .slot--filled:hover:not(:disabled):not(.slot--correct):not(.slot--wrong),
+  .infotip--slot:hover .slot--filled:not(:disabled):not(.slot--correct):not(.slot--wrong) {
+    border-color: var(--quill);
+    background: var(--quill-tint);
+  }
 }
 .slot--const.slot--filled {
   color: var(--graphite);
@@ -1000,6 +1378,22 @@ button {
 }
 .slot:disabled {
   cursor: default;
+}
+
+.token--placed {
+  cursor: help;
+}
+@media (hover: hover) {
+  .token--placed:hover,
+  .infotip:hover .token--placed {
+    border-color: var(--quill);
+    background: var(--quill-tint);
+    box-shadow: var(--e1);
+  }
+}
+.token--placed:focus-visible {
+  outline: 2px solid var(--quill);
+  outline-offset: 2px;
 }
 .slot--glow {
   background: var(--mark-wash);
@@ -1060,24 +1454,95 @@ button {
   color: var(--graphite-soft);
 }
 
-.token--tap {
+/* Tray tiles are tap-only — no hover lift or tooltips. */
+.palette .token {
   cursor: pointer;
-  transition:
-    border-color var(--dur-micro) var(--ease-out),
-    box-shadow var(--dur-micro) var(--ease-out),
-    background-color var(--dur-micro) var(--ease-out);
 }
-.token--tap:hover {
-  border-color: var(--quill);
+@media (hover: hover) {
+  .palette .token:hover:not(.token--selected) {
+    border-color: var(--rule);
+    background: var(--paper-0);
+    box-shadow: none;
+  }
 }
-.token--tap:focus-visible {
+.palette .token:focus-visible {
   outline: 2px solid var(--quill);
   outline-offset: 2px;
 }
+
 .token--selected {
   border: 1.5px solid var(--quill);
   background: var(--quill-tint);
   box-shadow: var(--e1);
+}
+
+/* Worked-example term buttons + hover/tap tooltips */
+.eqterm {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 32px;
+  min-height: 32px;
+  padding: 0 var(--s1);
+  border: 1px solid transparent;
+  border-radius: var(--r-sm);
+  background: var(--paper-0);
+  font-family: var(--font-mono);
+  font-weight: 500;
+  font-size: 18px;
+  cursor: help;
+}
+.eqterm--const {
+  color: var(--graphite);
+}
+.eqterm--prob {
+  color: var(--heads);
+}
+.eqterm--var {
+  color: var(--quill);
+}
+.eqterm:hover,
+.eqterm:focus-visible {
+  border-color: var(--quill);
+  outline: none;
+}
+
+.infotip {
+  position: relative;
+  display: inline-flex;
+}
+.infotip--slot {
+  display: inline-flex;
+}
+.infotip__bubble {
+  position: absolute;
+  z-index: 10;
+  left: 50%;
+  bottom: calc(100% + var(--s2));
+  transform: translateX(-50%);
+  width: max-content;
+  max-width: min(280px, 85vw);
+  padding: var(--s2) var(--s3);
+  border: 1px solid var(--rule);
+  border-radius: var(--r-sm);
+  background: var(--paper-0);
+  box-shadow: var(--e2);
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 400;
+  line-height: 1.4;
+  color: var(--ink);
+  text-align: left;
+  pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity var(--dur-micro) var(--ease-out);
+}
+.infotip:hover .infotip__bubble,
+.infotip:focus-within .infotip__bubble,
+.infotip[data-open] .infotip__bubble {
+  opacity: 1;
+  visibility: visible;
 }
 
 /* --- Guided substitution stepper (SubstitutionBeat) --- */
