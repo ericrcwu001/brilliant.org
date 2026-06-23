@@ -2,6 +2,10 @@
    See docs/ui_design_system.md. Avoid literal hex values in components. */
 
 :root {
+  /* Responsive */
+  --bp-laptop: 768px;
+  --page-max: 960px;
+
   /* Paper and ink */
   --paper-0: #fcfaf5;
   --paper-1: #f6f2e9;

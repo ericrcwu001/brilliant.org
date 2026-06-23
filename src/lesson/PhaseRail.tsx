@@ -1,30 +1,31 @@
-import { PHASES, getPhaseProgress } from './phases'
+import { useEffect, useRef } from 'react'
+import { getRail } from './phases'
 
 export function PhaseRail({ beatId }: { beatId: string }) {
-  const { currentPhaseIndex, step, steps, offRail } = getPhaseProgress(beatId)
+  const segments = getRail(beatId)
+  const currentRef = useRef<HTMLLIElement>(null)
+
+  // Keep the current beat in view as the learner advances.
+  useEffect(() => {
+    currentRef.current?.scrollIntoView({
+      inline: 'center',
+      block: 'nearest',
+      behavior: 'smooth',
+    })
+  }, [beatId])
 
   return (
-    <div className="rail" role="group" aria-label="Lesson progress">
-      {PHASES.map((phase, i) => {
-        const state =
-          i < currentPhaseIndex
-            ? 'complete'
-            : i === currentPhaseIndex
-              ? 'current'
-              : 'upcoming'
-        const showStep = state === 'current' && !offRail && step !== null
-        const label = showStep ? `${phase.id} · ${step}/${steps}` : phase.id
-        return (
-          <div
-            key={phase.id}
-            className={`rail__seg rail__seg--${state}`}
-            aria-current={state === 'current' ? 'step' : undefined}
-          >
-            <div className="rail__bar" />
-            <span className="rail__label">{label}</span>
-          </div>
-        )
-      })}
-    </div>
+    <ol className="rail" aria-label="Lesson progress">
+      {segments.map((seg) => (
+        <li
+          key={seg.beatId}
+          ref={seg.state === 'current' ? currentRef : undefined}
+          className={`rail__seg rail__seg--${seg.phase.toLowerCase()} rail__seg--${seg.state}`}
+          aria-current={seg.state === 'current' ? 'step' : undefined}
+        >
+          <span className="rail__bar" />
+        </li>
+      ))}
+    </ol>
   )
 }

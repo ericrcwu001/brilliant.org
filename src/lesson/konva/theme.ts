@@ -1,0 +1,31 @@
+// Canvas palette: the Konva renderer cannot read CSS custom properties, so this
+// is the single mirror of the relevant tokens in src/styles/tokens.css. Keep
+// these in sync with the design tokens (docs/ui_design_system.md "Color
+// Tokens"). Components must import from here rather than inlining hex.
+
+export const C = {
+  paper0: '#FCFAF5',
+  paper1: '#F6F2E9',
+  paper2: '#EFEADD',
+  ruleFaint: '#E7E1D2',
+  rule: '#D8D1BF',
+  ink: '#1B2230',
+  graphite: '#4C4F59',
+  graphiteSoft: '#7C7E87',
+  quill: '#2E4FB0',
+  quillStrong: '#233E8C',
+  quillTint: '#E5EAF7',
+  heads: '#C0892C',
+  headsTint: '#F6EAD2',
+  tails: '#2A7C88',
+  tailsTint: '#DCEDEF',
+  correct: '#2F8F5B',
+  wrong: '#CE4A3E',
+  mark: '#E8B23A',
+  markWash: 'rgba(232, 178, 58, 0.30)',
+} as const
+
+export const edgeColor = (on: 'H' | 'T') => (on === 'H' ? C.heads : C.tails)
+
+export const FONT_MONO =
+  '"IBM Plex Mono", ui-monospace, "SF Mono", Consolas, monospace'

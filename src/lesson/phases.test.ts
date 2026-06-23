@@ -1,38 +1,65 @@
 import { describe, it, expect } from 'vitest'
 import lessonFixture from '../../fixtures/lesson-pattern-hitting-times.json'
 import { LessonSchema } from '../content/schema'
-import { PHASES, getPhaseProgress } from './phases'
+import { RAIL_BEAT_IDS, getRail, biasChipState } from './phases'
 
 const lesson = LessonSchema.parse(lessonFixture)
 const beatOrder = lesson.beats.map((b) => b.beatId)
 
-describe('phase rail mapping', () => {
-  it('maps every flagship beat to a phase', () => {
-    for (const beatId of beatOrder) {
-      const p = getPhaseProgress(beatId)
-      expect(p.currentPhaseIndex).toBeGreaterThanOrEqual(0)
-      expect(p.currentPhaseIndex).toBeLessThan(PHASES.length)
+describe('per-beat progress rail', () => {
+  it('has one segment per beat in lesson order, minus the off-rail bias sandbox', () => {
+    expect(RAIL_BEAT_IDS).toEqual(beatOrder.filter((b) => b !== 'bias-sandbox'))
+  })
+
+  it('groups every rail beat under exactly one phase tint', () => {
+    const segs = getRail('open-bet')
+    expect(segs.map((s) => s.phase)).toEqual([
+      'Bet',
+      'Bet',
+      'Explore',
+      'Model',
+      'Model',
+      'Model',
+      'Model',
+      'Prove',
+      'Prove',
+      'Prove',
+    ])
+  })
+
+  it('marks the current beat current, earlier beats complete, later upcoming', () => {
+    const segs = getRail('failure-edge')
+    const current = segs.find((s) => s.state === 'current')
+    expect(current?.beatId).toBe('failure-edge')
+    const idx = RAIL_BEAT_IDS.indexOf('failure-edge')
+    segs.forEach((s, i) => {
+      if (i < idx) expect(s.state).toBe('complete')
+      else if (i > idx) expect(s.state).toBe('upcoming')
+    })
+  })
+
+  it('advances the current segment monotonically across the linear walk', () => {
+    let prev = -1
+    for (const beatId of RAIL_BEAT_IDS) {
+      const currentIdx = getRail(beatId).findIndex((s) => s.state === 'current')
+      expect(currentIdx).toBe(RAIL_BEAT_IDS.indexOf(beatId))
+      expect(currentIdx).toBeGreaterThan(prev)
+      prev = currentIdx
     }
   })
 
-  it('advances through all four phases in order as you Continue', () => {
-    const indices = beatOrder.map((b) => getPhaseProgress(b).currentPhaseIndex)
-    // Non-decreasing across the linear walk...
-    for (let i = 1; i < indices.length; i++) {
-      expect(indices[i]).toBeGreaterThanOrEqual(indices[i - 1])
-    }
-    // ...and every one of the four segments is reached.
-    expect(new Set(indices)).toEqual(new Set([0, 1, 2, 3]))
+  it('keeps bias-sandbox off the rail: no current segment, overlap complete, recap upcoming', () => {
+    const segs = getRail('bias-sandbox')
+    expect(segs.some((s) => s.beatId === 'bias-sandbox')).toBe(false)
+    expect(segs.some((s) => s.state === 'current')).toBe(false)
+    expect(segs.find((s) => s.beatId === 'overlap')?.state).toBe('complete')
+    expect(segs.find((s) => s.beatId === 'recap')?.state).toBe('upcoming')
   })
 
-  it('marks bias-sandbox off-rail with no step counter', () => {
-    const p = getPhaseProgress('bias-sandbox')
-    expect(p.offRail).toBe(true)
-    expect(p.step).toBeNull()
-  })
-
-  it('shows step-within-phase for on-rail beats (Model · 1/4 at failure-edge)', () => {
-    const p = getPhaseProgress('failure-edge')
-    expect(p).toMatchObject({ currentPhaseIndex: 2, step: 1, steps: 4, offRail: false })
+  it('exposes the off-rail bias chip: active on the sandbox, available in Prove, hidden earlier', () => {
+    expect(biasChipState('bias-sandbox')).toBe('active')
+    expect(biasChipState('theory-vs-sim')).toBe('available')
+    expect(biasChipState('open-bet')).toBe('hidden')
+    expect(biasChipState('simulate')).toBe('hidden')
   })
 })

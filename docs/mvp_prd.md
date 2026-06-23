@@ -46,7 +46,7 @@ After the MVP lesson, the learner should understand:
 - Lightweight `needsReview` flag when the learner repeatedly misses a required interaction or reveals the answer.
 - Full interaction snapshot persistence.
 - Hand-authored feedback and hint ladder with no AI, including explanations for correct answers.
-- Mobile-responsive experience.
+- Responsive experience on mobile and laptop, per `docs/ui_design_system.md`.
 - Firebase Hosting deployment with a public URL.
 
 ### Out of Scope
@@ -110,7 +110,7 @@ Completing all three lessons earns the `three-lessons-complete` milestone.
 
 ## Flagship Lesson Flow
 
-The lesson is a linear guided experience with sandbox moments embedded. Each beat is a focused screen with one interaction, instant feedback, a short explanation, and one primary action (usually `Continue`; simulation, check, prediction, and run-simulation beats use the action named in the design-system CTA matrix). A 4-segment phase rail (Bet, Explore, Model, Prove) shows lesson position on mobile; the per-beat index is persisted internally rather than rendered as 11 dots.
+The lesson is a linear guided experience with sandbox moments embedded. Each beat is a focused screen with one interaction, instant feedback, a short explanation, and one primary action (usually `Continue`; simulation, check, prediction, and run-simulation beats use the action named in the design-system CTA matrix). Lesson position is shown by a horizontally scrollable per-beat progress rail (beats color-grouped by phase: Bet, Explore, Model, Prove); see `docs/ui_design_system.md` Top Bar.
 
 1. **Open with the bet**
    - Prompt: "You flip a fair coin until you see `HH`. Then again until you see `HT`. Which wait is longer, and by how much?"
@@ -273,7 +273,7 @@ Use a **Clean Mathematical Notebook** identity.
 
 Design traits:
 
-- Off-white notebook-like background.
+- Off-white notebook-like background with subtle paper-grain texture (not a full-page graph-paper grid).
 - Crisp black and gray notation.
 - Restrained accent colors for active states, selected tiles, and correct/incorrect feedback.
 - Elegant Konva motion, not game-like effects.
@@ -283,7 +283,7 @@ Design traits:
 
 The "wow" should come from clarity, motion, and the moment the learner sees the state machine explain the algebra.
 
-The detailed UI design system lives in `docs/ui_design_system.md`.
+The detailed UI design system lives in `docs/ui_design_system.md`, including responsive strategy (mobile + laptop), typography scale, background texture, and the per-beat progress rail.
 
 ## Auth and Onboarding
 
@@ -531,7 +531,7 @@ The MVP is acceptable when:
 - Streak and milestones persist in Firestore and cannot be written by the client.
 - Firestore security rules and App Check are deployed before the public URL.
 - The lesson is completable via the non-drag (tap-to-place) path and the reduced-motion path, per `docs/ui_design_system.md` Accessibility.
-- The app works on mobile screen sizes with touch input.
+- The app works on mobile screen sizes with touch input and on laptop viewports with the centered page layout, per `docs/ui_design_system.md` Responsive Strategy.
 - The app is deployed publicly on Firebase Hosting.
 - No AI features are present in Phase 1.
 
@@ -592,8 +592,8 @@ Guiding principles for the phasing:
 
 #### Phase 3 — Content loader + beat renderer registry (local)
 - **Goal:** Walk through the flagship lesson beat-by-beat from the local fixture, with no interactions wired yet.
-- **Build:** A content loader that reads the local fixture; a beat-renderer registry keyed by `interaction.type` (stub renderers showing prompt + `Continue`); linear beat navigation; the 4-segment phase rail (Bet, Explore, Model, Prove); a dev route `/dev/lesson`.
-- **Manual test:** Open `/dev/lesson`, click `Continue` through all 11 beats, confirm the phase rail advances across the four phases and the prompt text matches the fixture.
+- **Build:** A content loader that reads the local fixture; a beat-renderer registry keyed by `interaction.type` (stub renderers showing prompt + `Continue`); linear beat navigation; the scrollable per-beat progress rail per `docs/ui_design_system.md` Top Bar; a dev route `/dev/lesson`.
+- **Manual test:** Open `/dev/lesson`, click `Continue` through all 11 beats, confirm the beat rail scrolls and highlights the current beat (with phase color-grouping) and the prompt text matches the fixture.
 - **Done when:** You can reach the recap beat from the open-bet beat using only `Continue`.
 
 ### Group B — Flagship lesson interactions (local)
@@ -718,11 +718,11 @@ Each phase below replaces a stub renderer with the real interaction and its inst
 - **Manual test:** Confirm locked lessons are not enterable; complete in order and watch nodes unlock; confirm a `needsReview` lesson shows a review recommendation; confirm roadmap stubs are visible but locked.
 - **Done when:** The path enforces unlock order and surfaces mastery/review states correctly.
 
-#### Phase 23 — Mobile, accessibility & performance pass
-- **Goal:** Meet the responsive/a11y/performance acceptance bars.
-- **Build:** Mobile-responsive layouts; complete the lesson via tap-only and reduced-motion paths; 44px targets, focus management, `aria-live` feedback; verify performance targets.
-- **Manual test:** Complete the flagship lesson on a phone-sized viewport with touch using only tap-to-place; complete it again with reduced motion; spot-check feedback <100ms and Konva at ~60fps during drag/animation.
-- **Done when:** The lesson is fully completable on mobile, tap-only, and reduced-motion, within performance targets.
+#### Phase 23 — Responsive (mobile + laptop), accessibility & performance pass
+- **Goal:** Meet the responsive/a11y/performance acceptance bars on both mobile and laptop.
+- **Build:** Responsive layouts per `docs/ui_design_system.md` (centered laptop column, laptop type scale, canvas min-height, hover affordances); complete the lesson via tap-only and reduced-motion paths; 44px targets, focus management, `aria-live` feedback; verify performance targets.
+- **Manual test:** Complete the flagship lesson on a phone-sized viewport with touch using only tap-to-place; complete it again on a laptop viewport (side-by-side beats stay side-by-side, per-beat rail shows ~6 beats); complete once more with reduced motion; spot-check feedback <100ms and Konva at ~60fps during drag/animation.
+- **Done when:** The lesson is fully completable on mobile and laptop, tap-only, and reduced-motion, within performance targets.
 
 #### Phase 24 — Public deploy
 - **Goal:** Live on Firebase Hosting with a public URL.
@@ -882,6 +882,7 @@ Author one complete, schema-validated fixture `fixtures/lesson-pattern-hitting-t
 - Cycle 1 — 2026-06-23 — Resolved Phase 1 forks (Cloud Functions required, Firestore-hosted content, email/Google auth, local-timezone streaks, full analytics). Added engine contract, Firestore rules matrix + App Check, resume/restore contract, `needsReview` and hint-ladder definitions, checker normalization rules, Konva/React-Compiler scope, success metrics, and a Data Contracts appendix with canonical IDs and a golden fixture. Owner kept all three lessons as the Wednesday gate against the Scope expert's recommendation.
 - Cycle 2 — 2026-06-23 — Added beat inventories for Lessons 1 and 3 with cut lines; designated Lesson 3 as the transfer lesson (faded hints, `transferAttained` for both `THH` and `HTH`, learner-facing "Fully mastered" label, non-blocking). Merged flagship beats 3 and 4 into one (11 beats, renumbered). Switched the mobile beat rail to a 4-phase rail. Fleshed out the Data Contracts appendix (engine `Automaton`, `Tile`, `EquationRow`, `SubstitutionStep`, `overlap` interaction, interaction modes, `maxHintLevel`). Added analytics, substitution, and bias-sandbox cut lines. Aligned the design system (Top Bar phase rail, CTA matrix, mobile layout, course-path node states).
 - Cycle 3 — 2026-06-23 — Added an `Implementation Phases` section breaking the MVP into 25 granular, independently testable phases (Groups A–D: foundations, flagship interactions, Firebase backend, remaining lessons/polish/deploy). Each phase specifies Goal, Build, Manual test, and Done-when criteria, and follows a local-first, one-interaction-per-phase strategy so each feature can be built and manually tested before the next.
+- Cycle 4 — 2026-06-23 — Aligned PRD with updated `docs/ui_design_system.md`: scrollable per-beat progress rail (replacing 4-segment phase rail), mobile + laptop responsive strategy, paper-grain background with edge-confined grid, and expanded Phase 23 responsive/a11y scope.
 
 ## Open Questions
 
