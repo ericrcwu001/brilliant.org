@@ -1,0 +1,23 @@
+{
+  "lessonId": "lesson-pattern-hitting-times",
+  "beatId": "equation-tiles",
+  "pattern": "HH",
+  "completedBeats": ["open-bet", "pattern-pick", "simulate", "failure-edge"],
+  "interactionState": {
+    "equationTiles": {
+      "E0": [
+        "const:1",
+        "op:+",
+        "prob:1/2",
+        "var:E1",
+        "op:+",
+        "prob:1/2",
+        "var:E0"
+      ]
+    },
+    "prediction": null,
+    "hintLevelByBeat": { "failure-edge": 2 }
+  },
+  "updatedAt": "2026-06-23T17:42:00.000Z",
+  "schemaVersion": 1
+}

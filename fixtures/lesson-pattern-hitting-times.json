@@ -1,0 +1,264 @@
+{
+  "lessonId": "lesson-pattern-hitting-times",
+  "courseId": "course-pattern-hitting-times",
+  "title": "Pattern Hitting Times",
+  "patternOptions": ["HH", "HT"],
+  "milestoneId": "hh-ht-mastered",
+  "unlocks": "lesson-longer-patterns",
+  "schemaVersion": 1,
+  "beats": [
+    {
+      "beatId": "open-bet",
+      "required": true,
+      "prompt": "You flip a fair coin until you see HH. Then again until you see HT. Which wait is longer, and by how much?",
+      "interaction": {
+        "type": "prediction",
+        "options": [
+          "Waiting for HH takes longer",
+          "Waiting for HT takes longer",
+          "They tie — both take 4 flips on average"
+        ]
+      },
+      "feedback": {
+        "correct": "Good instinct. We'll prove HH takes longer — and pin down exactly by how much.",
+        "hints": [
+          "There's no wrong guess yet. Commit to one so you can test it against the math.",
+          "Most people pick the tie. Notice the trap: both patterns have length 2, but a near-miss doesn't cost the same.",
+          "Lock in any answer to continue — you'll revisit this prediction once you've built the equations."
+        ]
+      }
+    },
+    {
+      "beatId": "pattern-pick",
+      "required": true,
+      "prompt": "We'll compare HH against HT side by side, both with a fair coin.",
+      "interaction": {
+        "type": "patternPick",
+        "patterns": ["HH", "HT"],
+        "mode": "compare"
+      },
+      "feedback": {
+        "correct": "Compare mode locked in: HH vs HT, same fair coin.",
+        "hints": [
+          "Both patterns stay selected — this lesson is the HH vs HT contrast.",
+          "Length-3 patterns come later in Longer Patterns & Overlap.",
+          "Confirm compare mode to continue."
+        ]
+      }
+    },
+    {
+      "beatId": "simulate",
+      "required": true,
+      "prompt": "Flip the coin and watch the state machine. Where does progress go on each flip?",
+      "interaction": {
+        "type": "coinSim",
+        "mode": "free",
+        "gate": { "minFlips": 3 }
+      },
+      "feedback": {
+        "correct": "Notice the prefix-state chip: a near-miss sends you backward differently for HH than HT.",
+        "hints": [
+          "Flip a few times and follow the active state chip.",
+          "Watch what happens right after a single H — that's the moment that matters.",
+          "Keep flipping until the guided replay reaches the near-miss, then continue."
+        ]
+      }
+    },
+    {
+      "beatId": "failure-edge",
+      "required": true,
+      "prompt": "After matching one H, the next flip is the near-miss. Where does the state machine go?",
+      "interaction": {
+        "type": "stateTap",
+        "transitions": [
+          { "from": "E1", "on": "T" },
+          { "from": "E1", "on": "H" }
+        ]
+      },
+      "feedback": {
+        "byPattern": {
+          "HH": {
+            "correct": "Right. For HH, a T after one H throws away all progress: E1 resets to E0.",
+            "hints": [
+              "For HH you need two heads in a row. Does a tail keep any progress?",
+              "Look at the edge leaving E1 on T — it curves back below to the start.",
+              "E1 on T resets to E0. A tail erases the matched H entirely."
+            ]
+          },
+          "HT": {
+            "correct": "Right. For HT, an extra H after one H preserves progress: E1 self-loops back to E1.",
+            "hints": [
+              "For HT, you still only need one H before a T. Does another H hurt you?",
+              "Look at the edge leaving E1 on H — it loops above onto itself.",
+              "E1 on H is a self-loop back to E1. You keep your matched H."
+            ]
+          }
+        }
+      }
+    },
+    {
+      "beatId": "equation-tiles",
+      "required": true,
+      "prompt": "Assemble the recurrence for each state. Every flip costs 1, then split by the coin.",
+      "interaction": {
+        "type": "equationTiles",
+        "bank": [
+          { "id": "t-const-1", "kind": "const", "value": 1 },
+          { "id": "t-const-0", "kind": "const", "value": 0 },
+          { "id": "t-prob-a", "kind": "prob", "value": "1/2" },
+          { "id": "t-prob-b", "kind": "prob", "value": "1/2" },
+          { "id": "t-state-e0", "kind": "state", "value": "E0" },
+          { "id": "t-state-e1", "kind": "state", "value": "E1" },
+          { "id": "t-state-e2", "kind": "state", "value": "E2" },
+          { "id": "t-op-plus-a", "kind": "op", "value": "+" },
+          { "id": "t-op-plus-b", "kind": "op", "value": "+" },
+          { "id": "t-op-eq", "kind": "op", "value": "=" }
+        ],
+        "rows": [
+          {
+            "lhs": "E0",
+            "graded": true,
+            "target": {
+              "lhs": "E0",
+              "constant": 1,
+              "terms": [
+                { "coeff": { "n": 1, "d": 2 }, "var": "E1" },
+                { "coeff": { "n": 1, "d": 2 }, "var": "E0" }
+              ]
+            }
+          },
+          {
+            "lhs": "E1",
+            "graded": true,
+            "target": {
+              "lhs": "E1",
+              "constant": 1,
+              "terms": [
+                { "coeff": { "n": 1, "d": 2 }, "var": "E2" },
+                { "coeff": { "n": 1, "d": 2 }, "var": "E0" }
+              ]
+            }
+          },
+          {
+            "lhs": "E2",
+            "graded": false,
+            "target": { "lhs": "E2", "constant": 0, "terms": [] }
+          }
+        ]
+      },
+      "feedback": {
+        "correct": "That's the system. The 1/2 E0 term in E1 is HH's penalty: a near-miss falls all the way back.",
+        "hints": [
+          "Each non-absorbing state starts with the 1 flip cost, then a 1/2 chance to each next state.",
+          "Look again at where E1 goes on a tail — that term should point at E0, not E1.",
+          "E0 = 1 + 1/2 E1 + 1/2 E0 and E1 = 1 + 1/2 E2 + 1/2 E0, with E2 = 0."
+        ]
+      }
+    },
+    {
+      "beatId": "refine-prediction",
+      "required": true,
+      "prompt": "Now commit to a number: how many flips, on average, until HH?",
+      "interaction": { "type": "slider", "min": 2, "max": 12, "step": 1 },
+      "feedback": {
+        "correct": "Locked. We'll mark your prediction on the chart and test it against simulation.",
+        "hints": [
+          "Trust the equations you just built rather than the length-2 intuition.",
+          "Your marker will appear on the theory-vs-simulation chart next.",
+          "Move the slider and lock any value to continue."
+        ]
+      }
+    },
+    {
+      "beatId": "guided-solve",
+      "required": true,
+      "prompt": "Tap through the substitution to solve the system for E0.",
+      "interaction": {
+        "type": "substitution",
+        "steps": [
+          { "display": "E2 = 0", "substitute": "E2", "resultValue": 0 },
+          {
+            "display": "E1 = 1 + 1/2 E2 + 1/2 E0",
+            "substitute": "E1",
+            "resultValue": 4
+          },
+          {
+            "display": "E0 = 1 + 1/2 E1 + 1/2 E0",
+            "substitute": "E0",
+            "resultValue": 6
+          }
+        ]
+      },
+      "feedback": {
+        "correct": "E[HH] = 6. Substituting the absorbing state and solving gives the exact expected wait.",
+        "hints": [
+          "Start from the absorbing state E2 = 0 and work backward.",
+          "Substitute E2 into E1, then E1 into E0, and isolate E0.",
+          "Solving 1/2 E0 = 3 gives E0 = 6."
+        ]
+      }
+    },
+    {
+      "beatId": "theory-vs-sim",
+      "required": true,
+      "prompt": "Run simulations and watch the empirical average converge toward the theory line.",
+      "interaction": { "type": "theorySimChart" },
+      "feedback": {
+        "correct": "The empirical mean settles near 6 — simulation confirms the recurrence.",
+        "hints": [
+          "Run more simulations; the average steadies as the count grows.",
+          "Your prediction marker stays fixed while the empirical line converges.",
+          "The theory line sits at 6 for HH."
+        ]
+      }
+    },
+    {
+      "beatId": "overlap",
+      "required": true,
+      "prompt": "Here's why HH waits longer than HT: overlap is memory.",
+      "interaction": {
+        "type": "overlap",
+        "highlight": [
+          { "from": "E1", "on": "T" },
+          { "from": "E1", "on": "H" }
+        ]
+      },
+      "feedback": {
+        "correct": "HH's near-miss resets to zero; HT's near-miss preserves progress. That gap is the 2-flip difference.",
+        "hints": [
+          "Compare the two highlighted edges leaving E1.",
+          "HH on T falls back to E0; HT on H stays at E1.",
+          "Near-misses that preserve progress shorten the expected wait."
+        ]
+      }
+    },
+    {
+      "beatId": "bias-sandbox",
+      "required": false,
+      "prompt": "Optional: drag the coin bias p and watch the equations and expected times update live.",
+      "interaction": { "type": "slider", "min": 0.1, "max": 0.9, "step": 0.05 },
+      "feedback": {
+        "correct": "Explore freely — biasing the coin stretches or shrinks both expected waits.",
+        "hints": [
+          "This sandbox is exploratory and never graded.",
+          "Try p near 0 or 1 to see the waits diverge.",
+          "Skip or continue whenever you like."
+        ]
+      }
+    },
+    {
+      "beatId": "recap",
+      "required": true,
+      "prompt": "Recap: your prediction, the theory, the simulation, and the overlap insight.",
+      "interaction": { "type": "recap" },
+      "feedback": {
+        "correct": "You modeled HH vs HT as states, built the recurrences, and proved E[HH] = 6 > E[HT] = 4.",
+        "hints": [
+          "Overlap structure — not pattern length — sets the expected wait.",
+          "The 1/2 E0 reset term is what makes HH slower.",
+          "Next: transfer the method to THH vs HTH."
+        ]
+      }
+    }
+  ]
+}

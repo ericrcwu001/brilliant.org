@@ -1,0 +1,8 @@
+{
+  "lhs": "E0",
+  "constant": 1,
+  "terms": [
+    { "coeff": { "n": 1, "d": 2 }, "var": "E1" },
+    { "coeff": { "n": 1, "d": 2 }, "var": "E0" }
+  ]
+}

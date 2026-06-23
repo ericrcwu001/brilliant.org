@@ -1,0 +1,70 @@
+/* Clean Mathematical Notebook design tokens — single source of truth.
+   See docs/ui_design_system.md. Avoid literal hex values in components. */
+
+:root {
+  /* Paper and ink */
+  --paper-0: #fcfaf5;
+  --paper-1: #f6f2e9;
+  --paper-2: #efeadd;
+  --rule-faint: #e7e1d2;
+  --rule: #d8d1bf;
+  --ink: #1b2230;
+  --graphite: #4c4f59;
+  --graphite-soft: #7c7e87;
+
+  /* Primary accent: Quill Blue */
+  --quill: #2e4fb0;
+  --quill-strong: #233e8c;
+  --quill-tint: #e5eaf7;
+
+  /* Coin semantics */
+  --heads: #c0892c;
+  --heads-tint: #f6ead2;
+  --tails: #2a7c88;
+  --tails-tint: #dcedef;
+
+  /* Feedback */
+  --correct: #2f8f5b;
+  --correct-text: #1f6e43;
+  --correct-tint: #e2f1e8;
+  --wrong: #ce4a3e;
+  --wrong-text: #a93529;
+  --wrong-tint: #f8e6e3;
+  --mark: #e8b23a;
+  --mark-wash: rgba(232, 178, 58, 0.22);
+
+  /* Typography */
+  --font-sans: 'IBM Plex Sans', system-ui, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, 'SF Mono', Consolas, monospace;
+  --font-serif: 'IBM Plex Serif', Georgia, 'Times New Roman', serif;
+
+  /* Spacing (4px base, 8px rhythm) */
+  --s1: 4px;
+  --s2: 8px;
+  --s3: 12px;
+  --s4: 16px;
+  --s5: 24px;
+  --s6: 32px;
+  --s7: 48px;
+  --s8: 64px;
+
+  /* Radius */
+  --r-xs: 4px;
+  --r-sm: 6px;
+  --r-md: 8px;
+  --r-lg: 12px;
+  --r-pill: 999px;
+
+  /* Elevation */
+  --e1: 0 1px 2px rgba(27, 34, 48, 0.06);
+  --e2: 0 6px 16px rgba(27, 34, 48, 0.14);
+
+  /* Motion */
+  --dur-micro: 120ms;
+  --dur-base: 200ms;
+  --dur-slow: 360ms;
+  --dur-tell: 600ms;
+  --ease-out: cubic-bezier(0.2, 0.7, 0.2, 1);
+  --ease-spring: cubic-bezier(0.2, 1.2, 0.3, 1);
+  --ease-inout: cubic-bezier(0.5, 0, 0.2, 1);
+}
