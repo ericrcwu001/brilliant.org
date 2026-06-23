@@ -4,217 +4,171 @@
 
 Build a Brilliant-style learn-by-doing web app whose flagship lesson teaches
 **pattern hitting times** for coin flips (why `E[HH]=6` but `E[HT]=4`). Work is
-sequenced by the phased plan in `docs/mvp_prd.md` (Groups A–D). This handoff
-covers the completion of **Group A (Phases 0–3)** and **Group B (Phases 4–12)**
-— the full local-only flagship lesson.
+sequenced by `docs/mvp_prd.md` (Groups A–D). The **local-only flagship lesson
+(Groups A + B) is complete and hardened**; two follow-on workstreams are now
+live: a **beat-audit quality loop** and **next-lesson design (L4–L6)**.
 
-Key constraints (from `docs/mvp_prd.md` + `AGENTS.md`):
+Key constraints (`docs/mvp_prd.md`, `docs/core_instructions.md`, `AGENTS.md`):
 
 - **Groups A & B are local-only**: NO Firebase, auth, persistence, or Cloud
-  Functions. All feedback is computed client-side from the engine; interaction
-  state lives in component/local state for now.
-- Match the visual identity in `docs/ui_design_system.md` ("Clean Mathematical
-  Notebook", IBM Plex typography, design tokens, sticky action bar).
-- Keep the KMP engine **pure and dependency-free**.
+  Functions. Feedback is computed client-side from the engine; interaction state
+  lives in component/local state.
+- Match `docs/ui_design_system.md` ("Clean Mathematical Notebook", IBM Plex,
+  design tokens, sticky action bar). Keep the KMP engine **pure/dependency-free**.
 - Surgical changes, simplicity first, no speculative scope.
 
-## Current Progress
+## Current State (snapshot)
 
-**Group B (Phases 4–12) is COMPLETE.** The full flagship lesson is completable
-end-to-end locally at `/dev/lesson`. All programmatic checks pass:
+- **Git:** branch `main`, up to date with `origin/main` (remote exists). **3
+  commits** (HEAD `a958010` added Playwright + e2e, the diagnosis/hint modules,
+  `BiasChart`, the beat-audit infra, and a tree of `.agents/skills/firebase-*`).
+- **Working tree (uncommitted):** `AGENTS.md` + `cursor.md` (added the "update
+  HANDOFF.md each response" line); **untracked** `audits/ideation/agent-{1..5}-*.md`
+  and `docs/proposed-lessons.md` (the L4–L6 proposal).
+- **Verification (re-run this session, all green):**
+  - `npm run validate` → fixtures valid + engine recurrences match HH tiles.
+  - `npx vitest run` → **75 tests across 10 files** (incl. `equationDiagnosis`
+    + `stateTapHints` unit **and** `*.fuzz.test.ts` property tests).
+  - `npm run lint` → clean. `npm run build` → green (199 modules; `dist` JS
+    654 kB / gzip 203 kB — Konva trips the 500 kB advisory, a warning not error).
+  - `npm run e2e` (Playwright, 3 projects: chromium / mobile-tap-only / reduced-
+    motion) — **not re-run here**; recorded green in the cycle-1 audit.
+- **Stray:** `docs/Hermes-Setup.dmg` is committed (binary, likely unintended).
 
-- `npm run validate` → green (fixtures valid + engine recurrences match tiles)
-- `npx vitest run` → **47 tests passing across 6 files**
-- `npm run build` → green (`tsc -b && vite build`; Konva pushes the bundle past
-  the 500 kB advisory — a warning, not an error)
-- `npm run lint` → clean
+## Flagship Lesson — Groups A & B COMPLETE
 
-Group B phase-by-phase status (PRD "Done-when"):
+Completable end-to-end at `/dev/lesson`. Phase status (PRD "Done-when"):
 
-- **Phase 4 — Feedback + hint-ladder primitive ✅**
-  - Pure state machine `src/lesson/hintLadder.ts` (escalate on wrong, reset on
-    success/Try-again, `maxHintLevel` cap, `needsReview` rule). React glue in
-    `src/lesson/feedback.ts` (`useHintLadder`, `resolveFeedback`) and the strip
-    in `src/lesson/FeedbackStrip.tsx`. `src/lesson/BeatShell.tsx` lays out
-    region + strip + sticky action bar. **10 ladder tests** verify escalation,
-    cap-of-2-before-reveal, and `needsReview` thresholds.
-- **Phase 5 — `prediction` (open bet) ✅** — `PredictionBeat`; trap options;
-  stores `initialPrediction`; shows authored feedback.
-- **Phase 6 — `coinSim` state graph + simulation ✅** — Konva `StateGraph`
-  hero (node pulse + traveling-dash edge; self-loop arcs above, reset curves
-  below), DOM `CoinStream` with active prefix-state chip + `aria-live`; single
-  + batch flip; gate (`≥3 flips && ≥1 prefix change`) swaps `Flip → Continue`;
-  scripted near-miss `guidedReplay`; reduced-motion lands immediately. Pure
-  `src/engine/simulate.ts` (**4 convergence tests**).
-- **Phase 7 — `stateTap` (failure edge) ✅** — `StateTapBeat` checks taps
-  against the engine, emphasizes overlap edges at hint level ≥2, honors the
-  `maxHintLevel` cap.
-- **Phase 8 — `equationTiles` builder + checker ✅** — pure
-  `src/lesson/equationChecker.ts` (canonical form; additive reorder accepted;
-  fixed prob tokens; implicit coeff 1; full row required; reasons
-  incomplete/wrong-var/wrong-coeff/wrong-constant/malformed) with **10 tests**;
-  tap-to-place `EquationTilesBeat` (44px slots, level-2 glow, level-3 reveal).
-- **Phase 9 — `slider` (refine prediction) ✅** — `SliderBeat` number-line;
-  stores `finalPrediction` + `theoreticalValue`; locked `--mark` marker.
-- **Phase 10 — `substitution` (guided solve) ✅** — `SubstitutionBeat`
-  tap-to-advance stepper + "Show algebra" single-reveal fallback.
-- **Phase 11 — `theorySimChart` ✅** — Konva `SimChart` (theory / empirical /
-  prediction series); `Run simulation` batches converge the empirical mean;
-  stores `empiricalMean` + `simRuns`.
-- **Phase 12 — `overlap`, `bias-sandbox`, `recap` ✅** — side-by-side
-  mini-graphs (`OverlapBeat`); Extension `BiasSandboxBeat` (live `p` recompute,
-  never blocks / never `needsReview`); `RecapBeat` summarizing
-  prediction/theory/sim/overlap + milestone stamp + review note.
-- Also built `PatternPickBeat` (beat 2 compare cards) — not in the Phase 4–12
-  list but required for end-to-end completion.
+- **A0 Scaffold ✅** Vite + React 19 + TS; React Compiler (Babel) global with
+  per-file `'use no memo'` for Konva; Prettier/Vitest/ESLint; scripts incl.
+  `validate`, `e2e`.
+- **A1 Pure KMP engine ✅** `buildAutomaton(pattern,p)` → typed `Automaton`
+  (states/transitions/recurrences/expectedTimes/substitutionSteps/overlap).
+  Exact rational arithmetic + Gaussian elimination. Golden: `E[HH]=6`, `E[HT]=4`,
+  `E[THH]=8`, `E[HTH]=10`, `E[HHH]=14`.
+- **A2 Schema + fixtures ✅** `src/content/schema.ts` (Zod); `fixtures/` (11-beat
+  lesson + snapshot + canonical); `scripts/validate-fixtures.ts` cross-checks
+  engine vs tile targets.
+- **A3 Loader + renderer registry + per-beat rail ✅** `loader.ts`,
+  `beats/index.tsx` dispatcher, `phases.ts` + `PhaseRail.tsx`, `LessonPlayer.tsx`
+  linear nav + off-rail "Try bias" chip; `/dev/lesson` route; responsive
+  (mobile-first, 768px laptop breakpoint, paper-grain bg).
+- **B4 Feedback + hint ladder ✅** pure `hintLadder.ts` (escalate/reset, cap,
+  `needsReview`) + `feedback.ts` glue (`useHintLadder`, `resolveFeedback`,
+  `FeedbackView` incl. `note` kind + `clear()`); `FeedbackStrip` + `BeatShell`.
+- **B5–B12 ✅** `prediction`, `patternPick`, `coinSim` (Konva `StateGraph` +
+  DOM `CoinStream`, gate, scripted near-miss replay), `stateTap`, `equationTiles`,
+  `slider` (refine + bias), `substitution`, `theorySimChart` (Konva `SimChart`),
+  `overlap`, `bias-sandbox` (now a Konva `BiasChart` E-vs-p curve + live cards),
+  `recap`. Engine `simulate.ts` (`nextStateOf`, `flipsToAbsorption`,
+  `empiricalMean`, seedable `mulberry32`).
 
-**Group A (Phases 0–3) remains COMPLETE.** Phase-by-phase status (PRD
-"Done-when"):
+**Post-baseline hardening (since the Group A/B commit):**
 
-- **Phase 0 — Scaffold & tooling ✅**
-  - Vite + React 19 + TS. Pinned `konva@10.3.0` + `react-konva@19.2.5`.
-  - React Compiler enabled globally via Babel preset; per-file opt-out
-    `'use no memo'` documented in `vite.config.ts` for Konva stage files.
-  - Prettier (`.prettierrc`), Vitest (`vitest.config.ts`), ESLint +
-    `eslint-config-prettier`, `.env.example`, `.gitignore`.
-  - Scripts in `package.json`: `dev`, `build`, `test`, `test:watch`, `lint`,
-    `format`, `format:check`, `validate`.
-- **Phase 1 — Pure KMP engine ✅**
-  - `buildAutomaton(pattern, p)` in `src/engine/automaton.ts` returns the full
-    typed `Automaton` (states, transitions, recurrences, expectedTimes,
-    substitutionSteps, overlapHighlights). Exact rational arithmetic + Gaussian
-    elimination (no floats).
-  - Golden tests pass: `E[HH]=6`, `E[HT]=4`, `E[THH]=8`, `E[HTH]=10`; transition
-    kinds (advance/self-loop/reset) match PRD.
-- **Phase 2 — Schema, types & golden fixture ✅**
-  - `src/content/schema.ts`: Zod schemas + inferred types for
-    Lesson/Beat/Interaction/Feedback/Snapshot/CanonicalRecurrence.
-  - Fixtures: `fixtures/lesson-pattern-hitting-times.json` (11 beats),
-    `fixtures/example-snapshot.json`, `fixtures/canonical.example.json`.
-  - `scripts/validate-fixtures.ts` validates fixtures AND cross-checks engine
-    recurrences against fixture `equationTiles` targets.
-- **Phase 3 — Content loader + beat renderer registry (local) ✅**
-  - `src/content/loader.ts` → `loadFlagshipLesson()` reads + validates fixture.
-  - `src/lesson/renderers.tsx` → registry keyed by `interaction.type` with stub
-    renderers; exported as `BeatInteraction` component.
-  - `src/lesson/phases.ts` + `PhaseRail.tsx` → **scrollable per-beat progress
-    rail**: one segment per beat (10 rail beats; `bias-sandbox` is off-rail),
-    color-grouped by phase tint (Bet=quill, Explore=heads, Model=tails,
-    Prove=correct), complete/current/upcoming states, hidden scrollbar,
-    auto-scrolls current into view. `getRail()` + `biasChipState()` are the API.
-  - `src/lesson/LessonPlayer.tsx` does linear Continue navigation and renders
-    the off-rail "Try bias" chip (available in Prove, active on `bias-sandbox`).
-  - Dev-only route `/dev/lesson` wired in `src/App.tsx` (Vite SPA fallback).
-  - **Responsive** (`docs/ui_design_system.md`): mobile-first, single laptop
-    breakpoint at 768px. Page background is seamless paper-grain (SVG
-    feTurbulence noise on `--paper-0`); the old full-page graph-paper grid and
-    560px notebook frame are gone. Laptop centers a `--page-max` (960px) column
-    with top/action bars aligned to it, +25% type bump, `.region` min-height
-    55vh, bumped vertical spacing, and button/rail hover affordances. Tokens
-    `--bp-laptop` / `--page-max` live in `src/styles/tokens.css`.
+- `src/lesson/equationDiagnosis.ts` — per-slot diagnostic grader (12 `MistakeId`s,
+  two-level targeted hint copy, additive-reorder-safe, aggregate progress +
+  a11y summary). Richer companion to the coarse row-level `equationChecker.ts`
+  (both still present). **Caveat: state-mistake copy is hardwired to HH's
+  `{E0,E2}` target** — generalize before reusing for new lessons.
+- `src/lesson/stateTapHints.ts` — engine-derived per-transition hints (L1 nudge /
+  L2 reason by transition kind / L3 reveal).
+- `src/lesson/useReducedMotion.ts` — OS `prefers-reduced-motion` hook.
+- `src/lesson/konva/BiasChart.tsx` — E-vs-p curves for the bias sandbox.
+- **Playwright e2e harness:** `e2e/{smoke,lesson-complete}.spec.ts` + `helpers.ts`
+  drive the full lesson tap-only across 3 projects (asserting the CTA gate matrix);
+  doubles as the O1/O3 objective check.
 
-## What Worked
+## Beat-Audit Loop (cycle 1 done)
 
-- **General KMP build over hardcoded tables**: PRD allowed hardcoding HH/HT/THH/
-  HTH, but a single general `buildAutomaton` was simpler and correct. UI still
-  only exposes curated patterns.
-- **Rational arithmetic + Gaussian elimination** for exact expected times —
-  avoids float drift, makes golden tests exact.
-- **Validation cross-check**: `validate-fixtures.ts` asserting engine output ==
-  fixture `equationTiles` caught content/engine drift early.
-- **Smoke-testing dev server** via background `npm run dev` + `curl` + `kill`
-  (since `timeout` is unavailable on macOS).
+A supervised, split-autonomy quality loop over the flagship. Contract:
+`docs/beat-audit-rubric.md` (approved 2026-06-23) + runner `audits/cycle-runner.md`.
+Pedagogy (P1–P5, 1–5) → **staged** PR proposals; Objective (O1–O5, pass/fail) →
+**auto-fix** commits behind the verify gate. Knobs: ≤3 cycles, ≤3 auto-fixes/cycle,
+one `beat-audit/cycle-NN` branch+PR per cycle, bar = pedagogyMean ≥ 4.0 (Ext ≥ 3.0).
 
-## What Didn't Work (and fixes)
+**Cycle 1 (`audits/scoreboard.json`, `backlog.json`, `proposals/cycle-1.md`):**
+pedagogyMean 4.31 all / 4.34 required; O1/O2/O3/O5 pass, **O4 (perf) n/a — not
+instrumented**. **Stop Rule NOT met:** two required beats below bar —
+`pattern-pick` (2.8, S2: passive confirmation screen) and `guided-solve` (3.8, S1:
+low agency). Both are **staged proposals**, not yet applied.
 
-- `timeout` command → not on macOS. Fix: background process + `curl` + `kill`.
-- `tsx` script in `/tmp` couldn't resolve `zod`. Fix: keep scripts under
-  `scripts/` so node module resolution works.
-- ESLint `react-refresh/only-export-components` in `renderers.tsx` (exported a
-  non-component fn). Fix: refactored to a `BeatInteraction` React component.
+## Next-Lesson Ideation — L4–L6 proposed (untracked)
 
-## Key Decisions (Group B)
+5 parallel research agents (`audits/ideation/agent-{1..5}-*.md`) converged, synthesized
+in `docs/proposed-lessons.md`, on the next three lessons — each varies exactly one
+variable from the base course:
 
-- **Self-contained beat views over a central controller.** Each beat is its own
-  component in `src/lesson/beats/` that renders region + feedback + action bar
-  via the shared `<BeatShell>`. The dispatcher `beats/index.tsx` keys on
-  `interaction.type` (and on `beatId` for the two `slider` beats). The player
-  (`LessonPlayer.tsx`) owns only cross-beat state: current index, `needsReview`,
-  and `LessonState` (`initialPrediction`, `finalPrediction`, `theoreticalValue`,
-  `empiricalMean`, `simRuns`) read by the recap. `key={beatId}` remounts each
-  beat so per-beat interaction/hint state resets on navigation.
-- **HH is the primary engine pattern** for the flagship (`patternOptions[0]`);
-  HT is the side-by-side contrast (overlap + bias beats build it via
-  `buildAutomaton`). This matches the HH-centric fixture targets. `BeatProps`
-  carries both `pattern` and `patternOptions`.
-- **Hint ladder is a pure module** (`hintLadder.ts`) so it is unit-testable in
-  the node Vitest env; `useHintLadder` wraps it. `needsReview` is reported up to
-  the player via a callback (`reportNeedsReview`).
-- **Konva scope**: only the state graph (`konva/StateGraph.tsx`) and the
-  simulation chart (`konva/SimChart.tsx`). Both start with `'use no memo'`. The
-  coin stream is **DOM** (`CoinStream.tsx`) with an `aria-live` summary — the
-  accessible equivalent of the canvas motion. Equation tiles/slots are DOM.
-- **Canvas palette mirror**: Konva can't read CSS vars, so `konva/theme.ts`
-  mirrors the relevant `tokens.css` values — keep them in sync.
-- **Engine stays pure**; added `src/engine/simulate.ts` (`nextStateOf`,
-  `flipsToAbsorption`, `empiricalMean`, seedable `mulberry32`).
+- **L4 Penney's Game** (vary the *question*: who's first ≠ how long; non-transitive,
+  second-mover edge; `THH≻HHH` at 7/8).
+- **L5 Gambler's Ruin** (vary the *arena*: random walk between two walls;
+  probability `i/N` + duration `i(N−i)`; the house-edge cliff).
+- **L6 Overlap Shortcut** (vary the *method*: `E=Σ2^L` via a fair-casino martingale;
+  re-derives 6/4/8/10/14).
 
-## Key Decisions (Group A)
+New pure engine proposed (`race.ts`, `walk.ts`, `correlation.ts`); new widgets
+(RaceTrack, WalkBoard, AutocorrelationRuler, GamblerLedger, DominanceWheel, SumTiles,
+DistributionHistogram). Nothing built yet — design only.
 
-- Engine is pure/dependency-free; all types live in `src/engine/types.ts` and
-  are reused by `src/content/schema.ts`.
-- JSON fixtures imported directly (`resolveJsonModule: true` in
-  `tsconfig.app.json`).
-- Vitest runs in a `node` environment (`vitest.config.ts`,
-  `include: src/**/*.test.ts`).
-- Minimal hand-rolled dev router in `App.tsx` (no router dep) for `/dev/lesson`.
-- Design tokens in `src/styles/tokens.css`; layout in `src/styles/app.css`.
+## Key Decisions
+
+- **Self-contained beat views** in `src/lesson/beats/`, each composing `<BeatShell>`
+  (region + `FeedbackStrip` + sticky action bar); `index.tsx` keys on
+  `interaction.type` (+ `beatId` for the two `slider` beats). `LessonPlayer` owns
+  only cross-beat state (`LessonState`, `needsReview`); `key={beatId}` remounts.
+- **HH is the primary engine pattern** (`patternOptions[0]`); HT is the contrast.
+- **Pure modules** (`hintLadder`, `equationChecker`, `equationDiagnosis`,
+  `stateTapHints`, engine) are node-Vitest-testable; React hooks wrap them.
+- **Konva** only for `StateGraph` / `SimChart` / `BiasChart` (each `'use no memo'`);
+  `konva/theme.ts` mirrors `tokens.css` (keep in sync); coin stream + tiles are DOM
+  with `aria-live`. Engine stays pure (exact rationals, no floats).
+- Types live in `src/engine/types.ts`, reused by `schema.ts`; JSON fixtures imported
+  directly; hand-rolled dev router in `App.tsx`.
+
+## What Worked / Didn't
+
+- ✅ General `buildAutomaton` over hardcoded tables; rational arithmetic for exact
+  golden tests; `validate-fixtures` engine↔fixture cross-check catches drift.
+- ✅ e2e via pinned-port Vite + Playwright; the tap-only/reduced-motion projects
+  prove both required accessibility paths complete.
+- ❌ `timeout` absent on macOS → background + `curl`/`kill`. `tsx` in `/tmp` can't
+  resolve `zod` → keep scripts under `scripts/`. Playwright sticky-bar hit-test
+  quirk on short viewports → assert enabled then force-click (see `helpers.ts`).
 
 ## Next Steps (priority order)
 
-1. **Manual eyeball check (the remaining human step for Group B)**: run
-   `npm run dev`, open `/dev/lesson`, and play the full lesson — confirm the
-   state graph pulses + the active edge travels on each flip, the near-miss
-   replay gates `Continue`, the equation tiles grade correctly (build the HH
-   recurrences, reorder terms, try a wrong coeff/var), the empirical mean
-   converges on the chart, and the recap shows all four summary values. Repeat
-   with OS reduced-motion on and using tap-only (no drag).
-2. **Initial git commit**: repo has NO commits yet and everything is untracked.
-   Create the first commit for the Group A + B baseline (only when the user
-   asks).
-3. **Begin Group C** per `docs/mvp_prd.md` — Firebase Auth + onboarding,
-   Firestore content seeding/runtime read, snapshot persistence + restore (the
-   `LessonState` + `hintLevelByBeat` shapes are ready to serialize), Cloud
-   Functions for completion/mastery/unlock, streaks/milestones, security rules +
-   App Check, analytics.
-   - **Open question — opening-bet field is qualitative, analytics expects
-     numeric.** The `open-bet` beat is an ungraded "which wait is longer" guess,
-     so `LessonState.initialPrediction` is a **string** (e.g. "Waiting for HH
-     takes longer") and is consumed only by `RecapBeat` as a narrative bookend —
-     it drives no computation. But the analytics spec in `docs/mvp_prd.md`
-     ("Derived learning fields", e.g. `initialPrediction: 4` and
-     `predictionDeltaInitial = |initialPrediction − theoreticalValue|`) assumes a
-     **number**. The numeric "how many flips" guess is only captured later by the
-     `refine-prediction` slider as `finalPrediction` (number). Before wiring
-     analytics/derived fields, decide one of: (a) treat the qualitative bet and
-     the numeric guess as two distinct fields (rename/keep `initialPrediction`
-     qualitative; base `predictionDeltaInitial` on `finalPrediction`), or (b) also
-     capture a numeric estimate at the opening bet. This also affects the
-     `predictionDeltaInitial` KPI ("median should shrink between opening bet and
-     locked prediction"), which needs two comparable numbers to be meaningful.
+1. **Resolve cycle-1 beat-audit proposals** (blocking the Stop Rule): redesign or
+   waive `pattern-pick` (passive screen) and `guided-solve` (low agency), then
+   continue/stop the loop (≤3 cycles). See `audits/proposals/cycle-1.md`.
+2. **Instrument O4 (perf)** — feedback <100ms, no per-frame React state during
+   drag/animation — currently `n/a`, blocks a clean Stop Rule.
+3. **Decide on L4–L6** from `docs/proposed-lessons.md`. If greenlit, commit the
+   ideation and, before any new `equationTiles` beat, **generalize
+   `equationDiagnosis.ts`** (HH-specific copy) or fall back to `equationChecker.ts`.
+4. **Tidy the working tree** (only when asked): commit the `AGENTS.md`/`cursor.md`
+   line + ideation; consider removing the stray `docs/Hermes-Setup.dmg`.
+5. **Manual eyeball pass** remains the human step (e2e covers the tap-only/reduced-
+   motion happy path, not visual polish).
+6. **Group C (Firebase)** still unstarted: Auth/onboarding, Firestore seed+read,
+   snapshot persistence (`LessonState` + `hintLevelByBeat` are serialize-ready),
+   Cloud Functions, streaks/milestones, rules + App Check, analytics.
+   - **Open question (unresolved):** `open-bet` is qualitative, so
+     `LessonState.initialPrediction` is a **string** used only by the recap, but the
+     analytics spec assumes a **number** (`predictionDeltaInitial`). The numeric
+     guess only appears later via the slider `finalPrediction`. Before wiring derived
+     fields, decide: (a) keep the bet qualitative and base the delta on
+     `finalPrediction`, or (b) also capture a numeric opening estimate.
 
 ## Quick Reference
 
-- PRD: `docs/mvp_prd.md` (Implementation Phases + Data Contracts Appendix)
-- Design: `docs/ui_design_system.md`
-- Engine: `src/engine/automaton.ts`, `src/engine/types.ts`,
-  `src/engine/simulate.ts`
-- Content: `src/content/schema.ts`, `src/content/loader.ts`, `fixtures/`
-- Lesson shell: `src/lesson/LessonPlayer.tsx`, `BeatShell.tsx`,
-  `FeedbackStrip.tsx`, `feedback.ts`, `hintLadder.ts`, `CoinStream.tsx`
-- Beats: `src/lesson/beats/*` (one component per interaction, `index.tsx`
-  dispatcher, `types.ts` `BeatProps`/`LessonState`)
-- Konva: `src/lesson/konva/*` (`StateGraph.tsx`, `SimChart.tsx`, `theme.ts`,
-  `useElementWidth.ts`)
-- Checker: `src/lesson/equationChecker.ts`
-- Validate: `npm run validate` · Tests: `npx vitest run` · Build: `npm run build`
+- Docs: `docs/mvp_prd.md`, `docs/core_instructions.md`, `docs/ui_design_system.md`,
+  `docs/beat-audit-rubric.md`, `docs/proposed-lessons.md`, `docs/future_ideas.md`
+- Engine: `src/engine/{automaton,simulate,types,index}.ts`
+- Content: `src/content/{schema,loader}.ts`, `fixtures/`, `scripts/validate-fixtures.ts`
+- Lesson shell: `src/lesson/{LessonPlayer,BeatShell,FeedbackStrip,CoinStream,PhaseRail}.tsx`,
+  `{feedback,hintLadder,phases,useReducedMotion}.ts`
+- Beats: `src/lesson/beats/*` (`index.tsx` dispatcher, `types.ts`)
+- Pure graders: `equationChecker.ts`, `equationDiagnosis.ts`, `stateTapHints.ts`
+- Konva: `src/lesson/konva/{StateGraph,SimChart,BiasChart,theme,useElementWidth}.*`
+- e2e: `e2e/*` + `playwright.config.ts` · Audit: `audits/*`
+- Commands: `npm run validate` · `npx vitest run` · `npm run lint` · `npm run build`
+  · `npm run e2e`
