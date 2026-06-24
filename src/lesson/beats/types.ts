@@ -42,6 +42,14 @@ export type BeatProps = {
   // (no persistence) — beats simply start at level 0.
   initialHintLevel?: number
   onHintLevelChange?: (level: number) => void
+  // Adaptive override (build-brief §4.10c). The LessonPlayer driver supplies
+  // these when a learner struggles so a capped beat never dead-ends:
+  // `hintCapOverride` lifts useHintLadder's cap at runtime (reveal becomes
+  // reachable); `assist` re-prefills a faded equationTiles row on each `nonce`
+  // bump — filling every still-open slot except the last term, preserving the
+  // learner's already-correct tiles. Inert at nonce 0.
+  hintCapOverride?: 1 | 2 | 3
+  assist?: { prefillToLastTerm: boolean; nonce: number }
   // Habit loop (Phase 17): the milestone this lesson awards + whether the lesson
   // is complete, so the recap can press the milestone stamp on the recap flow.
   milestone: MilestoneMeta | null

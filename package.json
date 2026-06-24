@@ -23,6 +23,7 @@
     "@fontsource/ibm-plex-serif": "^5.2.7",
     "firebase": "^12.15.0",
     "konva": "10.3.0",
+    "motion": "^12.41.0",
     "react": "^19.2.6",
     "react-dom": "^19.2.6",
     "react-konva": "19.2.5",

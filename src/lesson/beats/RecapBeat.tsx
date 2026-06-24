@@ -15,6 +15,7 @@ import { BeatShell } from '../BeatShell'
 import { resolveFeedback } from '../feedback'
 import type { FeedbackView } from '../FeedbackStrip'
 import { MilestoneSeal } from '../../habit/MilestoneSeal'
+import { FLAGSHIP_LESSON_ID } from '../../pages/routes'
 import { analytics } from '../../analytics/events'
 
 type RecallId = 'length' | 'overlap' | 'rarity'
@@ -106,6 +107,43 @@ export function RecapBeat(props: BeatProps) {
   if (beat.interaction.type !== 'recap') return null
 
   const fb = resolveFeedback(beat.feedback, pattern)
+
+  // The rich recap below is hardwired to the flagship's HH/HT contrast. Every
+  // other lesson (L0, L2–L6) gets a generic generate-then-reveal recap from its
+  // authored feedback — the takeaway line + supporting points — so the content is
+  // never the wrong (flagship) framing. Finish is always enabled either way.
+  if (props.lessonId !== FLAGSHIP_LESSON_ID) {
+    const revealedG = revealedAnyway
+    return (
+      <BeatShell
+        feedback={revealedG ? { kind: 'correct', text: fb.correct } : undefined}
+        primary={{ label: isLast ? 'Finish' : 'Continue', enabled: true, onClick: onAdvance }}
+        secondary={
+          revealedG ? undefined : { label: 'Reveal recap', onClick: () => setRevealedAnyway(true) }
+        }
+      >
+        <div className="recap">
+          {props.lessonComplete && props.milestone && (
+            <div className={`recap__stamp${reducedMotion ? '' : ' recap__stamp--press'}`}>
+              <p className="recap__stamp-kicker">Milestone earned</p>
+              <MilestoneSeal meta={props.milestone} earned />
+            </div>
+          )}
+          <p className="recap__q">{beat.prompt}</p>
+          {revealedG && (
+            <div className={`recap__reveal${reducedMotion ? '' : ' recap__reveal--enter'}`}>
+              <p className="recap__principle">{fb.correct}</p>
+              <ul className="recap__takeaways">
+                {fb.hints.map((h, i) => (
+                  <li key={i}>{h}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </div>
+      </BeatShell>
+    )
+  }
 
   const answered = picked !== null
   const revealed = answered || revealedAnyway

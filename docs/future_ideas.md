@@ -17,24 +17,35 @@ reduced-motion completable, and styled in the Clean Mathematical Notebook identi
 | # | lessonId | Title | Status | Milestone | Unlocks |
 |---|----------|-------|--------|-----------|---------|
 | **L1** | `lesson-pattern-hitting-times` | Pattern Hitting Times | **Built** (flagship) | `hh-ht-mastered` | L2 |
-| **L2** | `lesson-penneys-game` | Penney's Game: Who Gets There First? | Planned | `penneys-game-won` | L3 |
-| **L3** | `lesson-gamblers-ruin` | Gambler's Ruin: How a Fair Game Breaks You | Planned | `gamblers-ruin-solved` | L4 |
-| **L4** | `lesson-overlap-shortcut` | The Overlap Shortcut: Read the Wait Off the Pattern | Planned | `martingale-mastered` | L5 |
-| **L5** | `lesson-states-streaks` | States & Streaks: The Simplest Pattern | Planned | `first-pattern-cracked` | L6 |
-| **L6** | `lesson-longer-patterns` | Longer Patterns & Overlap (THH vs HTH) | Planned | `state-machine-builder` | — |
+| **L2** | `lesson-penneys-game` | Penney's Game: Who Gets There First? | **Built** | `penneys-game-won` | L3 |
+| **L3** | `lesson-gamblers-ruin` | Gambler's Ruin: How a Fair Game Breaks You | **Built** | `gamblers-ruin-solved` | L4 |
+| **L4** | `lesson-states-streaks` | Mixed Review & Streaks | **Built** | `first-pattern-cracked` | L5 |
+| **L5** | `lesson-longer-patterns` | Longer Patterns & Overlap (THH vs HTH) | **Built** | `state-machine-builder` | L6 |
+| **L6** | `lesson-overlap-shortcut` | The Overlap Shortcut: Read the Wait Off the Pattern | **Built** | `martingale-mastered` | — |
 
-**Unlock order:** L1 → L2 → L3 → L4 → L5 → L6. Mid-course milestone `three-lessons-complete`
-after L3; course completion `six-lessons-complete` after L6.
+> **Canonical order (reconciled 2026-06-24):** this is the PRD / `CONTEXT.md` /
+> `docs/proposed-lessons.md` §11 order, which the code (course fixture + milestones +
+> unlock chain) follows: the **Overlap Shortcut is LAST** (concreteness fading puts the
+> most idealized lesson at the end). An optional **L0 `lesson-first-heads`** on-ramp
+> precedes L1 (ungated, `unlocks: null`). ⚠ **plan-L\* filename offset:**
+> `audits/ideation/plan-L4-overlap-shortcut.md` is this course's **L6**, and
+> `audits/ideation/plan-L6-longer-patterns.md` is this course's **L5**
+> (`plan-L5-states-streaks.md` is L4). The math in those files is canonical; only the
+> L-numbers in the filenames are off.
+
+**Unlock order:** (L0 optional) → L1 → L2 → L3 → L4 → L5 → L6. Mid-course milestone
+`three-lessons-complete` after L3; course completion `six-lessons-complete` after L6.
 
 **Arc (one new variable per lesson after L1):**
 
 ```
+L0  The First Heads (opt)   — the machine at minimum size (E[H]=2; on-ramp)
 L1  Pattern Hitting Times   — learn the machine (states, overlap, recurrence, sim)
 L2  Penney's Game           — vary the QUESTION  (how long → who's first)
 L3  Gambler's Ruin          — vary the ARENA     (coin patterns → random walk)
-L4  Overlap Shortcut         — vary the METHOD    (linear system → closed form + martingale)
-L5  States & Streaks        — consolidate        (simplest case; every tool → 2)
-L6  Longer Patterns         — transfer           (novel THH vs HTH, faded hints)
+L4  Mixed Review & Streaks  — consolidate        (interleaved checkpoint)
+L5  Longer Patterns         — transfer           (novel THH vs HTH, faded hints)
+L6  Overlap Shortcut        — vary the METHOD    (closed form Σ2^L + martingale, last)
 ```
 
 ---

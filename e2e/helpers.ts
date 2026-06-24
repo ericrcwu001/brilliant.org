@@ -112,6 +112,7 @@ export async function completeLessonTrackA(page: Page) {
   await clickPrimary(page, 'Continue') // pattern-pick
   await clickPrimary(page, 'Continue') // primer: ½
   await clickPrimary(page, 'Continue') // primer: state
+  await clickPrimary(page, 'Continue') // primer: graph
 
   // simulate (split): stream warm-up -> reveal graph -> gate -> single-step replay
   const flip = page.getByRole('button', { name: 'Flip', exact: true })

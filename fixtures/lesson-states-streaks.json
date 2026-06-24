@@ -1,0 +1,144 @@
+{
+  "lessonId": "lesson-states-streaks",
+  "courseId": "course-pattern-hitting-times",
+  "title": "Mixed Review & Streaks",
+  "patternOptions": ["H", "HT", "THH", "HH", "HTH", "HHH"],
+  "milestoneId": "first-pattern-cracked",
+  "unlocks": "lesson-longer-patterns",
+  "schemaVersion": 1,
+  "beats": [
+    {
+      "beatId": "retrieval-grid",
+      "required": true,
+      "prompt": "Match each result to its value — pulling from everything so far.",
+      "interaction": {
+        "type": "retrievalGrid",
+        "pairs": [
+          { "left": "E[HH] (wait for HH)", "right": "6" },
+          { "left": "E[HT] (wait for HT)", "right": "4" },
+          { "left": "E[THH]", "right": "8" },
+          { "left": "P(THH beats HHH)", "right": "7/8" }
+        ]
+      },
+      "feedback": {
+        "correct": "All matched — those are the headline numbers of the course.",
+        "hints": [
+          "Tap a result, then its value.",
+          "HH waited longer than HT; THH is longer still.",
+          "6, 4, 8, and 7/8."
+        ]
+      }
+    },
+    {
+      "beatId": "mixed-primer",
+      "required": false,
+      "prompt": "Why we're mixing it all together.",
+      "interaction": {
+        "type": "primer",
+        "variant": "custom",
+        "title": "Mixed beats blocked",
+        "body": "Practicing different kinds of problems together feels harder than drilling one kind — and that's exactly why it works better. You're learning to tell them apart, the way a real problem arrives without a label.",
+        "collapsible": true
+      },
+      "feedback": {
+        "correct": "Harder now, stickier later.",
+        "hints": ["Interleaving > blocking.", "You practice discriminating.", "Continue."]
+      }
+    },
+    {
+      "beatId": "which-waits-longest",
+      "required": true,
+      "prompt": "Of these, which pattern takes the LONGEST on average to appear?",
+      "interaction": {
+        "type": "mcq",
+        "options": [
+          { "id": "hth", "label": "HTH (10)", "correct": true },
+          { "id": "thh", "label": "THH (8)", "correct": false },
+          { "id": "hh", "label": "HH (6)", "correct": false }
+        ]
+      },
+      "feedback": {
+        "correct": "Right — HTH waits 10, the longest here. Structure, not length, sets the wait.",
+        "hints": [
+          "Length alone doesn't decide it.",
+          "Self-overlap stretches the wait.",
+          "HTH = 10 is the longest."
+        ]
+      }
+    },
+    {
+      "beatId": "race-or-wait",
+      "required": true,
+      "prompt": "Two friends watch ONE coin: one waits for HH, the other for HT. Who appears first more often?",
+      "interaction": {
+        "type": "mcq",
+        "options": [
+          { "id": "tie", "label": "It's a tie — 50/50", "correct": true },
+          { "id": "ht", "label": "HT — it's faster on its own", "correct": false },
+          { "id": "hh", "label": "HH", "correct": false }
+        ]
+      },
+      "feedback": {
+        "correct": "A tie — \"who's first\" on a shared stream isn't \"who's faster alone.\"",
+        "hints": [
+          "This is a race, not a solo wait.",
+          "Remember Penney's tie.",
+          "50/50."
+        ]
+      }
+    },
+    {
+      "beatId": "plus-one-or-not",
+      "required": true,
+      "prompt": "Which kind of recurrence carries a \"+1\" for every flip?",
+      "interaction": {
+        "type": "mcq",
+        "options": [
+          { "id": "dur", "label": "A duration (average flips)", "correct": true },
+          { "id": "prob", "label": "A probability (a chance)", "correct": false },
+          { "id": "both", "label": "Both of them", "correct": false }
+        ]
+      },
+      "feedback": {
+        "correct": "Right — durations pay 1 per flip; a probability has no per-flip cost.",
+        "hints": [
+          "One counts flips, one splits chances.",
+          "The +1 is a flip cost.",
+          "Duration has the +1; probability doesn't."
+        ]
+      }
+    },
+    {
+      "beatId": "weak-node",
+      "required": true,
+      "prompt": "One more, on the idea that trips people up most — overlap as memory. While waiting for HH, a lone H then a T means…",
+      "interaction": {
+        "type": "mcq",
+        "options": [
+          { "id": "reset", "label": "Full reset — start over from scratch", "correct": true },
+          { "id": "keep", "label": "Keep the H, need one more", "correct": false },
+          { "id": "half", "label": "Lose half the progress", "correct": false }
+        ]
+      },
+      "feedback": {
+        "correct": "Reset — and that extra restart is exactly why HH (6) beats HT (4).",
+        "hints": [
+          "A T breaks the HH streak.",
+          "No partial credit for HH.",
+          "Back to the start."
+        ]
+      }
+    },
+    {
+      "beatId": "recap-streak",
+      "required": true,
+      "prompt": "How it all connects.",
+      "interaction": { "type": "recap" },
+      "interviewNote": "Mixed retrieval like this is the spaced-practice core of durable problem-solving: when the problem arrives unlabeled, you've rehearsed choosing the right tool (wait vs race, probability vs duration).",
+      "feedback": {
+        "correct": "Wait, race, walk — you can now tell them apart on sight.",
+        "hints": ["Pick the right tool per problem.", "Structure sets the wait.", "Done."]
+      }
+    }
+  ]
+}

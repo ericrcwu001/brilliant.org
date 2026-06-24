@@ -14,9 +14,12 @@ import '@fontsource/ibm-plex-serif/600.css'
 import './styles/tokens.css'
 import './styles/app.css'
 import App from './App.tsx'
+import { MotionProvider } from './motion/MotionProvider'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <App />
+    <MotionProvider>
+      <App />
+    </MotionProvider>
   </StrictMode>,
 )

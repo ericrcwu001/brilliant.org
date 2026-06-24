@@ -9,6 +9,8 @@ import type { Automaton } from '../../engine/types'
 import type { BeatProps } from './types'
 import { BeatShell } from '../BeatShell'
 import { FirstSuccessTimeline } from '../FirstSuccessTimeline'
+import { StateGraph } from '../konva/StateGraph'
+import { useElementWidth } from '../konva/useElementWidth'
 
 const TITLES: Record<string, string> = {
   half: '½ means 1 in 2',
@@ -16,6 +18,7 @@ const TITLES: Record<string, string> = {
   state: 'What a "state" is',
   exponent: 'What an exponent counts',
   transitivity: 'When "beats" is not transitive',
+  graph: 'What a state graph is',
   custom: 'Quick refresher',
 }
 
@@ -76,22 +79,68 @@ function StateDemo() {
   )
 }
 
+function GraphDemo({
+  automaton,
+  reducedMotion,
+}: {
+  automaton: Automaton
+  reducedMotion: boolean
+}) {
+  const [boxRef, width] = useElementWidth<HTMLDivElement>()
+  return (
+    <div className="primer__demo">
+      <div className="canvas-frame primer__graph" ref={boxRef}>
+        {width > 0 && (
+          <StateGraph
+            automaton={automaton}
+            width={width}
+            height={Math.max(150, Math.round(width * 0.42))}
+            labelMode="dual"
+            reducedMotion={reducedMotion}
+          />
+        )}
+      </div>
+      <ul className="primer__key">
+        <li>
+          <span className="primer__key-mark primer__key-mark--node" aria-hidden="true" />
+          circle = a state (how much of HH you've matched)
+        </li>
+        <li>
+          <span className="primer__key-mark primer__key-mark--h" aria-hidden="true" />
+          gold arrow = a heads flip
+        </li>
+        <li>
+          <span className="primer__key-mark primer__key-mark--t" aria-hidden="true" />
+          teal arrow = a tails flip
+        </li>
+        <li>
+          <span className="primer__key-mark primer__key-mark--ring" aria-hidden="true" />
+          ringed circle = done (HH matched)
+        </li>
+      </ul>
+    </div>
+  )
+}
+
 function PrimerDemo({
   variant,
   automaton,
+  reducedMotion,
 }: {
   variant: string
   automaton: Automaton
+  reducedMotion: boolean
 }) {
   if (variant === 'half') return <HalfDemo />
   if (variant === 'state') return <StateDemo />
   // The "average" primer is the grounding moment (§5.5): run the experiment and
   // watch the running average settle toward the theoretical expected wait.
   if (variant === 'average') return <FirstSuccessTimeline automaton={automaton} />
+  if (variant === 'graph') return <GraphDemo automaton={automaton} reducedMotion={reducedMotion} />
   return null
 }
 
-export function PrimerBeat({ beat, automaton, isLast, onAdvance }: BeatProps) {
+export function PrimerBeat({ beat, automaton, reducedMotion, isLast, onAdvance }: BeatProps) {
   const interaction = beat.interaction
   // Track B (or any author choice) collapses the card behind a disclosure;
   // Track A authors `collapsible: false` so it starts expanded.
@@ -128,7 +177,7 @@ export function PrimerBeat({ beat, automaton, isLast, onAdvance }: BeatProps) {
             <p className="primer__kicker">Quick refresher</p>
             <h2 className="primer__title">{title}</h2>
             <p className="primer__body">{body}</p>
-            <PrimerDemo variant={variant} automaton={automaton} />
+            <PrimerDemo variant={variant} automaton={automaton} reducedMotion={reducedMotion} />
           </div>
         )}
       </section>

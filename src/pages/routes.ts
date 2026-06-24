@@ -31,3 +31,13 @@ export function parseLessonId(pathname: string): string | null {
   const match = pathname.match(/^\/lesson\/([^/]+)$/)
   return match ? decodeURIComponent(match[1]) : null
 }
+
+/** Returns the lessonId for a dev `/dev/lesson/:lessonId` path, else null. */
+export function parseDevLessonId(pathname: string): string | null {
+  const match = pathname.match(/^\/dev\/lesson\/([^/]+)$/)
+  return match ? decodeURIComponent(match[1]) : null
+}
+
+export function devLessonPath(lessonId: string): string {
+  return `/dev/lesson/${lessonId}`
+}

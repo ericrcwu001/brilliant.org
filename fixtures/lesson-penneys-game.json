@@ -1,0 +1,232 @@
+{
+  "lessonId": "lesson-penneys-game",
+  "courseId": "course-pattern-hitting-times",
+  "title": "Penney's Game",
+  "patternOptions": ["HHH", "THH", "HTH", "HHT"],
+  "milestoneId": "penneys-game-won",
+  "unlocks": "lesson-gamblers-ruin",
+  "schemaVersion": 1,
+  "beats": [
+    {
+      "beatId": "recall-6-4",
+      "required": true,
+      "prompt": "Quick warm-up from last time: on a fair coin, which wait is longer?",
+      "interaction": {
+        "type": "mcq",
+        "options": [
+          { "id": "hh", "label": "HH takes longer (6 vs 4)", "correct": true },
+          { "id": "ht", "label": "HT takes longer", "correct": false },
+          { "id": "same", "label": "They're the same", "correct": false }
+        ]
+      },
+      "feedback": {
+        "correct": "Right — HH averages 6 flips, HT averages 4. Hold onto that.",
+        "hints": [
+          "No pressure — this is just a warm-up.",
+          "Overlap made one of them wait longer.",
+          "HH = 6, HT = 4."
+        ]
+      }
+    },
+    {
+      "beatId": "whos-first-primer",
+      "required": false,
+      "prompt": "A quick distinction before the game.",
+      "interaction": {
+        "type": "primer",
+        "variant": "custom",
+        "title": "\"Who's first\" is not \"how long\"",
+        "body": "Two friends watch the same coin stream. One waits for HH, the other for HT. \"How long until mine shows up?\" and \"whose shows up first?\" are different questions — and they can have surprising answers.",
+        "collapsible": true
+      },
+      "feedback": {
+        "correct": "Keep that split in mind.",
+        "hints": ["Same stream, two targets.", "First ≠ fastest-on-its-own.", "Continue."]
+      }
+    },
+    {
+      "beatId": "open-bet",
+      "required": true,
+      "prompt": "We both watch one coin. You wait for HT, I wait for HH. HT is faster on its own (4 vs 6) — so HT should win the race, right?",
+      "interaction": {
+        "type": "prediction",
+        "options": ["HT wins the race", "HH wins the race", "It's a coin-flip tie"]
+      },
+      "feedback": {
+        "byOption": {
+          "HT wins the race": {
+            "note": "Tempting — but \"faster alone\" doesn't decide a shared-stream race. Watch what actually happens.",
+            "correct": false
+          },
+          "HH wins the race": {
+            "note": "Let's see — the shared stream makes this less lopsided than it looks.",
+            "correct": false
+          },
+          "It's a coin-flip tie": {
+            "note": "Great instinct — on one shared stream HH vs HT is a dead 50/50.",
+            "correct": true
+          }
+        },
+        "hints": [
+          "No wrong guess yet — commit and we'll race it.",
+          "On a shared stream, the first H sets up both.",
+          "It's a tie: 50/50."
+        ]
+      }
+    },
+    {
+      "beatId": "race-the-tie",
+      "required": true,
+      "prompt": "Run the race. Watch one slowly, then run a couple hundred.",
+      "interaction": {
+        "type": "raceSim",
+        "patterns": ["HH", "HT"],
+        "display": "lanes"
+      },
+      "hero": {
+        "slowFirst": true,
+        "structuralReadout": "HH and HT each win about 50 of every 100 races — a dead tie.",
+        "reducedMotionFinalFrame": true
+      },
+      "feedback": {
+        "correct": "A tie — even though HH waits longer on its own.",
+        "hints": ["Watch one race first.", "Then run the batch.", "The bars stay neck-and-neck."]
+      }
+    },
+    {
+      "beatId": "first-step-split",
+      "required": true,
+      "prompt": "Why a tie? After the very first H lands, what decides the HH-vs-HT race?",
+      "interaction": {
+        "type": "mcq",
+        "options": [
+          { "id": "next", "label": "The next single flip: H gives HH, T gives HT", "correct": true },
+          { "id": "longrun", "label": "Whoever has waited longer overall", "correct": false },
+          { "id": "neither", "label": "Nothing — it's already decided", "correct": false }
+        ]
+      },
+      "feedback": {
+        "correct": "Exactly — after the first H, one fair flip decides it. 50/50.",
+        "hints": [
+          "Think about the moment right after the first H.",
+          "Both targets start with H.",
+          "The next flip (H or T) picks the winner."
+        ]
+      }
+    },
+    {
+      "beatId": "pick-your-counter",
+      "required": true,
+      "prompt": "New game: you pick HHH. Going second, which pattern should I pick to beat you most often?",
+      "interaction": {
+        "type": "mcq",
+        "options": [
+          { "id": "thh", "label": "THH", "correct": true },
+          { "id": "ttt", "label": "TTT (the opposite)", "correct": false },
+          { "id": "hht", "label": "HHT", "correct": false }
+        ]
+      },
+      "feedback": {
+        "correct": "THH it is — it sneaks in just before HHH can complete.",
+        "hints": [
+          "The opposite pattern is not the strongest counter.",
+          "You want to appear right before HHH completes.",
+          "Put a T in front: THH."
+        ]
+      }
+    },
+    {
+      "beatId": "race-the-counter",
+      "required": true,
+      "prompt": "Now race HHH against THH. Watch one, then run the batch.",
+      "interaction": {
+        "type": "raceSim",
+        "patterns": ["HHH", "THH"],
+        "display": "lanes"
+      },
+      "hero": {
+        "slowFirst": true,
+        "structuralReadout": "THH won about 7 of every 8 races against HHH.",
+        "reducedMotionFinalFrame": true
+      },
+      "interviewNote": "This is the classic Penney's Game / second-mover edge: the exact 7:1 comes from Conway's leading numbers, and the non-arbitrage flavor makes it a trading-desk favorite.",
+      "feedback": {
+        "correct": "About 7 to 1 — going second is a real advantage.",
+        "hints": ["Watch one race.", "Then run the batch.", "THH wins ~7 of 8."]
+      }
+    },
+    {
+      "beatId": "prob-vs-duration",
+      "required": false,
+      "prompt": "One idea before we write the win-chance down.",
+      "interaction": {
+        "type": "primer",
+        "variant": "custom",
+        "title": "A chance has no per-flip cost",
+        "body": "When we counted how LONG a pattern takes, every flip added 1. A win-CHANCE is different: there's no \"+1\" — you're just splitting probability between outcomes that end at 1 (you win) or 0 (you don't).",
+        "collapsible": true
+      },
+      "feedback": {
+        "correct": "No \"+1\" for a probability — good.",
+        "hints": ["Duration counts flips.", "Probability splits chances.", "Continue."]
+      }
+    },
+    {
+      "beatId": "win-prob-tiles",
+      "required": true,
+      "prompt": "Which equation shape describes a win CHANCE (not a wait time)?",
+      "interaction": {
+        "type": "mcq",
+        "options": [
+          {
+            "id": "noplus",
+            "label": "w = ½·(chance from here) + ½·(chance from there), ending at 1 or 0",
+            "correct": true
+          },
+          {
+            "id": "plus",
+            "label": "w = 1 + ½·w₁ + ½·w₀ (a +1 each flip)",
+            "correct": false
+          },
+          { "id": "const", "label": "w is just a fixed number, no equation", "correct": false }
+        ]
+      },
+      "feedback": {
+        "correct": "Right — no \"+1\". A probability recurrence just splits chances and ends at 1 or 0.",
+        "hints": [
+          "A win-chance doesn't accumulate flips.",
+          "The \"+1\" belongs to duration, not probability.",
+          "Pick the shape with no +1, ending at 1·0."
+        ]
+      }
+    },
+    {
+      "beatId": "non-transitive-loop",
+      "required": true,
+      "comparison": true,
+      "prompt": "If every pattern can be countered, is there a single \"best\" one?",
+      "interaction": {
+        "type": "dominanceWheel",
+        "patterns": ["HHH", "THH", "TTH", "HTT"]
+      },
+      "feedback": {
+        "correct": "No best pattern — the \"beats\" relation goes in a loop.",
+        "hints": [
+          "Pick the counter, then see the cycle.",
+          "Each pattern is beaten by another.",
+          "It's a loop, like rock-paper-scissors."
+        ]
+      }
+    },
+    {
+      "beatId": "recap",
+      "required": true,
+      "prompt": "What you just showed yourself.",
+      "interaction": { "type": "recap" },
+      "feedback": {
+        "correct": "Race ≠ wait; going second wins; there's no best pattern.",
+        "hints": ["Faster-alone can still tie or lose.", "Second mover has the edge.", "Done."]
+      }
+    }
+  ]
+}

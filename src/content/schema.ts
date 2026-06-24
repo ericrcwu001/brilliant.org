@@ -68,6 +68,9 @@ export const EquationCopySchema = z.object({
   termTips: z.record(z.string(), z.string()).optional(),
   tokenTips: z.record(z.string(), z.string()).optional(),
   legend: z.array(z.object({ id: StateIdSchema, text: z.string() })).optional(),
+  // The legend's lead line. Defaults to the HH "expected extra flips" gloss;
+  // walk/probability tiles (L3) override it so the symbol gloss isn't misleading.
+  legendLead: z.string().optional(),
   // Per-mistake [level-1, level-2] hint copy; overrides the generic module copy.
   mistakeHints: z.record(z.string(), z.tuple([z.string(), z.string()])).optional(),
   // Collapsed "variable" primer card shown above the build (Track A).
@@ -132,7 +135,22 @@ export const InteractionSchema = z.discriminatedUnion('type', [
   // bites (L1 §3.2). Never graded, never required; collapsible on Track B.
   z.object({
     type: z.literal('primer'),
-    variant: z.enum(['half', 'average', 'state', 'exponent', 'transitivity', 'custom']),
+    variant: z.enum([
+      'half',
+      'average',
+      'state',
+      'exponent',
+      'transitivity',
+      // Dual-label state-graph explainer (state-graph-explainer-brief.md): a
+      // static mini-graph + annotated key that pre-teaches the graph before
+      // the simulate beat (Track A only).
+      'graph',
+      // L3 misconception refutation (proposed §2.4): "after 3 losses you are NOT
+      // due for a win." A named variant so validate-fixtures can assert L3 carries
+      // it (rather than only testing structural presence).
+      'gamblersFallacy',
+      'custom',
+    ]),
     body: z.string(),
     title: z.string().optional(),
     collapsible: z.boolean().optional(),
@@ -143,6 +161,59 @@ export const InteractionSchema = z.discriminatedUnion('type', [
     options: z.array(
       z.object({ id: z.string(), label: z.string(), correct: z.boolean() }),
     ),
+  }),
+  // ── Remaining-lesson widget variants (build-brief §4.4). Each maps 1:1 to a
+  // new beat view in beats/index.tsx. Engine inputs that are a single pattern
+  // come from the beat-level `pattern` field (below); only inputs that aren't a
+  // single pattern (race pairs, walk N/p, retrieval pairs, lens copy) live here.
+  //
+  // L2 Penney's: two patterns race on one shared stream. `display` folds the
+  // RaceTrack / OddsDial / TournamentHeatmap presentations of one race.
+  z.object({
+    type: z.literal('raceSim'),
+    patterns: z.tuple([z.string(), z.string()]).optional(),
+    trials: z.number().optional(),
+    display: z.enum(['lanes', 'oddsDial', 'heatmap']).optional(),
+  }),
+  // L2 non-transitive cycle (the "every pattern has a beater" radial).
+  z.object({
+    type: z.literal('dominanceWheel'),
+    patterns: z.array(z.string()).optional(),
+  }),
+  // L3 Gambler's Ruin walk. `display` folds the single-walker / swarm /
+  // ruin-landscape / duration-histogram presentations of one walk model.
+  z.object({
+    type: z.literal('walkBoard'),
+    n: z.number().optional(),
+    p: z.number().optional(),
+    start: z.number().optional(),
+    interactive: z.boolean().optional(),
+    display: z
+      .enum(['single', 'swarm', 'landscape', 'histogram'])
+      .optional(),
+  }),
+  // L6 martingale ledger (money-in/out converge before E[T]=Σ2^L). Pattern from
+  // the beat-level `pattern` field; always fair-coin.
+  z.object({ type: z.literal('gamblerLedger') }),
+  // L4/L6 Σ2^L tile builder. Chips derive from the beat-level `pattern`'s
+  // self-overlap lengths; running sum snaps to the closed form.
+  z.object({ type: z.literal('sumTiles') }),
+  // L5/L6 self-overlap ruler. Slides the beat-level `pattern` over itself; the
+  // concrete 2^L total leads, binary/Conway forms relegate to the interview note.
+  z.object({ type: z.literal('autocorrelationRuler') }),
+  // L4/L6/opener matching grid (graded). Left↔right pairs in correct order; the
+  // widget shuffles for presentation. Distinct from single-select `mcq`.
+  z.object({
+    type: z.literal('retrievalGrid'),
+    pairs: z.array(z.object({ left: z.string(), right: z.string() })),
+  }),
+  // L4 tripletReveal / L6 TriangulationStrip: three lenses converging on one
+  // value, predict-then-reveal. `display` picks cards (L4) vs an axis (L6).
+  z.object({
+    type: z.literal('tripletReveal'),
+    value: z.string(),
+    lenses: z.array(z.object({ label: z.string(), body: z.string() })),
+    display: z.enum(['cards', 'axis']).optional(),
   }),
 ])
 
@@ -180,6 +251,37 @@ export const BeatSchema = z.object({
   track: z.enum(['A', 'B', 'both']).optional(),
   // Render density for CoinSim/EquationTiles by track; default (absent) = 'merged'.
   density: z.enum(['split', 'merged']).optional(),
+  // ── Remaining-lesson contract fields (build-brief §4.3/§4.4). All optional and
+  // additive; flagship/L0 fixtures are unaffected.
+  //
+  // The active engine pattern this beat operates on (L5/L6 are multi-pattern, so
+  // it can't always be patternOptions[0]). validate-fixtures cross-checks
+  // equationTiles/sumTiles/ruler beats against buildAutomaton(pattern ??
+  // patternOptions[0]). Engine-driven race/walk beats keep patternOptions[0] a
+  // valid H/T placeholder and build their own model.
+  pattern: z.string().optional(),
+  // "Watch it resolve" hero (proposed §2.8): one slow paced instance before any
+  // swarm; one plain structural number; reduced-motion renders the final frame.
+  // validate-fixtures requires this block on HERO_TYPES interaction beats.
+  hero: z
+    .object({
+      slowFirst: z.boolean(),
+      structuralReadout: z.string(),
+      reducedMotionFinalFrame: z.literal(true),
+    })
+    .optional(),
+  // Notation-ladder ordering tags (proposed §2.2, "no symbol before its
+  // referent"). validate-fixtures fails CI if an `introducesSymbol` beat is not
+  // preceded by all its `groundedBy` beatIds within each track's visible
+  // subsequence.
+  introducesSymbol: z.string().optional(),
+  groundedBy: z.array(z.string()).optional(),
+  // A beat that states a contrast (proposed §2.2 rule 4): marks that it carries a
+  // learner align-and-articulate tap, not a passive narration.
+  comparison: z.literal(true).optional(),
+  // Opt-in "For the interview" note (proposed §2.7). De-gatekept default copy +
+  // this collapsed quant framing; validate-fixtures asserts one exists per lesson.
+  interviewNote: z.string().optional(),
 })
 
 export const LessonSchema = z.object({

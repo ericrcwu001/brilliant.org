@@ -20,6 +20,7 @@ export function SimChart({
   prediction,
   points,
   running = false,
+  scale = 'log',
 }: {
   width: number
   height: number
@@ -27,6 +28,10 @@ export function SimChart({
   prediction?: number
   points: number[]
   running?: boolean
+  // 'log' (default) = the flagship hitting-time look (y from ~2 up). 'linear' =
+  // a [0,1] win-rate / ruin-rate axis for L2/L3 (build-brief §4.7); a log axis
+  // can't show values below 1, so this is a real second scale, not a yLo tweak.
+  scale?: 'log' | 'linear'
 }) {
   const padL = 40
   const padR = 64
@@ -37,17 +42,20 @@ export function SimChart({
   const plotT = padT
   const plotB = height - padB
 
-  // Fixed logarithmic y-axis (chosen up front) so the curve doesn't rescale while
-  // it converges. The running mean for this lesson never dips below ~2, so the
-  // axis runs from yLo=2 up to a rounded ceiling above theory / prediction; the
-  // log compresses early spikes so the convergence stays readable.
-  const yLo = 2
-  const need = Math.max(theory + 3, (prediction ?? 0) + 1, 10)
-  const yMax = Math.ceil(need / 4) * 4
-  const lnLo = Math.log(yLo)
+  const linear = scale === 'linear'
+
+  // Y-axis. 'log': fixed logarithmic axis (chosen up front) so the curve doesn't
+  // rescale while it converges; runs from yLo=2 up to a rounded ceiling above
+  // theory/prediction. 'linear': a fixed [0,1] axis for win/ruin-rate (a log axis
+  // can't represent values below 1).
+  const yLo = linear ? 0 : 2
+  const yMax = linear ? 1 : Math.ceil(Math.max(theory + 3, (prediction ?? 0) + 1, 10) / 4) * 4
+  const lnLo = Math.log(Math.max(yLo, 1e-9))
   const lnSpan = Math.log(yMax) - lnLo
   const yFor = (v: number) =>
-    plotB - ((Math.log(Math.max(v, yLo)) - lnLo) / lnSpan) * (plotB - plotT)
+    linear
+      ? plotB - ((Math.min(Math.max(v, yLo), yMax) - yLo) / (yMax - yLo)) * (plotB - plotT)
+      : plotB - ((Math.log(Math.max(v, yLo)) - lnLo) / lnSpan) * (plotB - plotT)
   const yForC = (v: number) => Math.max(plotT, Math.min(plotB, yFor(v)))
 
   // Dynamic linear x-axis: the domain is [0, n], so run k lands at fraction k/n
@@ -60,17 +68,25 @@ export function SimChart({
   const xHead = xForRun(n)
   const yHead = yForC(last)
 
-  // 1–2–5 style ticks that fall within the visible log range.
+  // Y ticks: quartiles on a linear [0,1] axis, else 1–2–5 within the log range.
   const yTicks: number[] = []
-  for (let p = 1; p <= yMax; p *= 10) {
-    for (const m of [1, 2, 5]) {
-      const v = p * m
-      if (v >= yLo && v <= yMax) yTicks.push(v)
+  if (linear) {
+    yTicks.push(0, 0.25, 0.5, 0.75, 1)
+  } else {
+    for (let p = 1; p <= yMax; p *= 10) {
+      for (const m of [1, 2, 5]) {
+        const v = p * m
+        if (v >= yLo && v <= yMax) yTicks.push(v)
+      }
     }
   }
 
+  // Value formatting + axis caption differ by scale.
+  const fmt = (v: number) => (linear ? v.toFixed(2) : String(Math.round(v)))
+  const yCaption = linear ? 'rate' : 'flips (log)'
+
   // ±band around theory communicates "settled near the answer".
-  const band = Math.max(0.5, theory * 0.06)
+  const band = linear ? Math.max(0.02, theory * 0.06) : Math.max(0.5, theory * 0.06)
 
   // Empirical curve as a single polyline (performant for thousands of points);
   // the matching closed polygon paints the gradient area underneath.
@@ -79,7 +95,7 @@ export function SimChart({
   const areaPts = n >= 2 ? [...linePts, xForRun(n), plotB, xForRun(1), plotB] : []
 
   // Live value chip floats just above the head, clamped inside the plot.
-  const chipText = last.toFixed(1)
+  const chipText = fmt(last)
   const chipW = 12 + chipText.length * 8
   const chipH = 18
   const chipX = Math.max(plotL, Math.min(plotR - chipW, xHead - chipW / 2))
@@ -115,7 +131,7 @@ export function SimChart({
         {yTicks.map((v) => (
           <Text
             key={`yt-${v}`}
-            text={String(Math.round(v))}
+            text={fmt(v)}
             x={0}
             y={yFor(v) - 6}
             width={padL - 8}
@@ -126,7 +142,7 @@ export function SimChart({
           />
         ))}
         <Text
-          text="flips (log)"
+          text={yCaption}
           x={2}
           y={plotT - 2}
           fontFamily={FONT_MONO}
@@ -173,7 +189,7 @@ export function SimChart({
           strokeWidth={2}
         />
         <Text
-          text={`theory ${theory}`}
+          text={`theory ${fmt(theory)}`}
           x={plotR + 4}
           y={yFor(theory) - 6}
           fontFamily={FONT_MONO}
@@ -191,7 +207,7 @@ export function SimChart({
               dash={[7, 5]}
             />
             <Text
-              text={`you ${prediction}`}
+              text={`you ${fmt(prediction)}`}
               x={plotR + 4}
               y={yFor(prediction) - 6}
               fontFamily={FONT_MONO}

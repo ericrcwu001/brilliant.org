@@ -11,8 +11,9 @@ import {
 } from './studyDesk.model'
 
 const course = CourseSchema.parse(courseFixture)
-// The MVP gate ships only L1 built; the general unlock/priority logic is exercised
-// against a variant where every node is built (post-gate shape).
+// The course now ships L0–L6 built; the unlock/priority logic is exercised against
+// a variant where every node is built (the unbuilt-gate is tested separately with
+// a synthetic unbuilt node).
 const builtCourse: Course = {
   ...course,
   lessons: course.lessons.map((l) => ({ ...l, built: true })),
@@ -47,8 +48,15 @@ describe('studyDesk model — gate (L1-only)', () => {
   })
 
   it('an unbuilt lesson stays locked even if the server reports it unlocked', () => {
+    // All shipped lessons are now built, so force one unbuilt to test the gate.
+    const unbuiltCourse: Course = {
+      ...course,
+      lessons: course.lessons.map((l) =>
+        l.lessonId === L2 ? { ...l, built: false } : l,
+      ),
+    }
     const progress: Record<string, Progress> = { [L2]: { unlockedAt: 1 } }
-    const nodes = resolveNodes(course, progress)
+    const nodes = resolveNodes(unbuiltCourse, progress)
     expect(nodes[2].state).toBe('locked')
     expect(nodeCtaLabel(nodes[2], progress[L2])).toBeNull()
   })

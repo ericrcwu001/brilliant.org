@@ -11,6 +11,7 @@ import {
   useEffect,
   useId,
   useLayoutEffect,
+  useMemo,
   useRef,
   useState,
   type ReactElement,
@@ -20,6 +21,8 @@ import type { BeatProps } from './types'
 import type { CanonicalRecurrence, Tile } from '../../content/schema'
 import type { StateId } from '../../engine/types'
 import { BeatShell } from '../BeatShell'
+import { m } from 'motion/react'
+import { SPRING } from '../../motion/tokens'
 import { resolveFeedback, useHintLadder } from '../feedback'
 import { StateGraph, type EdgeRef } from '../konva/StateGraph'
 import { useElementWidth } from '../konva/useElementWidth'
@@ -102,11 +105,14 @@ const DEFAULT_LEGEND: { id: string; text: string }[] = [
 ]
 
 // Resolved per-beat copy: fixture `interaction.copy` over the generic defaults.
+const DEFAULT_LEGEND_LEAD = 'E\u1D62 = average extra flips still needed from state i.'
+
 type EqCopy = {
   workedExplanation: string
   termTips: Record<string, string>
   tokenTips: Record<string, string>
   legend: { id: string; text: string }[]
+  legendLead: string
   mistakeHints?: Record<string, [string, string]>
   primer?: { title: string; body: string }
 }
@@ -118,6 +124,7 @@ function resolveEqCopy(
         termTips?: Record<string, string>
         tokenTips?: Record<string, string>
         legend?: { id: string; text: string }[]
+        legendLead?: string
         mistakeHints?: Record<string, [string, string]>
         primer?: { title: string; body: string }
       }
@@ -128,6 +135,7 @@ function resolveEqCopy(
     termTips: { ...DEFAULT_TERM_TIPS, ...(copy?.termTips ?? {}) },
     tokenTips: { ...DEFAULT_TOKEN_TIPS, ...(copy?.tokenTips ?? {}) },
     legend: copy?.legend ?? DEFAULT_LEGEND,
+    legendLead: copy?.legendLead ?? DEFAULT_LEGEND_LEAD,
     mistakeHints: copy?.mistakeHints,
     primer: copy?.primer,
   }
@@ -325,7 +333,12 @@ export function EquationTilesBeat(props: BeatProps) {
     setLessonState,
   } = props
   const interaction = beat.interaction
-  const rows = interaction.type === 'equationTiles' ? interaction.rows : []
+  // Stable across renders (the assist effect depends on it) — the beat object is
+  // fixed for the mounted beat, so this only recomputes on a beat change.
+  const rows = useMemo(
+    () => (interaction.type === 'equationTiles' ? interaction.rows : []),
+    [interaction],
+  )
   const bank = interaction.type === 'equationTiles' ? interaction.bank : []
   const eqCopy = resolveEqCopy(
     interaction.type === 'equationTiles' ? interaction.copy : undefined,
@@ -342,6 +355,11 @@ export function EquationTilesBeat(props: BeatProps) {
   const isFaded = (r: { lhs: string; faded?: boolean }) => split && !!r.faded
   const fadedOpenIdx = (target: CanonicalRecurrence) => slotTemplate(target).length - 1
 
+  // Persisted-state key: namespace by beatId so two beats that build the SAME row
+  // id (e.g. L3 prob-tiles + duration-tiles both build E2) don't cross-contaminate
+  // each other's saved placements via lessonState.equationTiles.
+  const nsKey = (lhs: string) => `${beat.beatId}::${lhs}`
+
   // Restore placements persisted into LessonState (Phase 15): a saved row of the
   // matching slot length seeds the build; otherwise start from empty slots (or,
   // for a faded rung, the correct fill with only the last term left open).
@@ -351,7 +369,7 @@ export function EquationTilesBeat(props: BeatProps) {
     for (const row of rows) {
       if (row.graded && !isExampleRow(row)) {
         const template = slotTemplate(row.target)
-        const savedRow = saved?.[row.lhs]
+        const savedRow = saved?.[nsKey(row.lhs)]
         if (savedRow && savedRow.length === template.length) {
           init[row.lhs] = [...savedRow]
         } else if (split && row.faded) {
@@ -367,10 +385,12 @@ export function EquationTilesBeat(props: BeatProps) {
   })
 
   // Mirror placements back into LessonState so they persist across navigation
-  // and into the restore snapshot. `setLessonState` is referentially stable.
+  // and into the restore snapshot, under the beat-namespaced key (see nsKey).
   useEffect(() => {
-    setLessonState({ equationTiles: filled })
-  }, [filled, setLessonState])
+    const ns: Record<string, (string | null)[]> = {}
+    for (const k of Object.keys(filled)) ns[`${beat.beatId}::${k}`] = filled[k]
+    setLessonState({ equationTiles: ns })
+  }, [filled, setLessonState, beat.beatId])
   const [selTile, setSelTile] = useState<string | null>(null)
   const [selSlot, setSelSlot] = useState<{ row: string; idx: number } | null>(null)
   // True while a Check verdict is on screen; cleared by any edit so green/wrong
@@ -395,6 +415,10 @@ export function EquationTilesBeat(props: BeatProps) {
   // shows everything at once (buildShown starts true).
   const [buildShown, setBuildShown] = useState(!split)
   const [primerOpen, setPrimerOpen] = useState(false)
+  // Chrome reduction (proposed §2.8): on Track A the legend, build rows, and
+  // palette no longer stack all at once — the legend collapses to a one-line
+  // disclosure (revealed on demand). Track B (merged/flagship) keeps it open.
+  const [legendOpen, setLegendOpen] = useState(!split)
 
   // Per-slot diagnosis of the current placements, recomputed each render. Used
   // for green highlighting, the targeted glow, the progress line, and to derive
@@ -425,12 +449,48 @@ export function EquationTilesBeat(props: BeatProps) {
   const ladder = useHintLadder({
     feedback: dynamicFeedback,
     required: beat.required,
-    maxHintLevel: beat.maxHintLevel,
+    // Adaptive override (build-brief §4.10c): a runtime cap lift takes precedence
+    // over the fixture cap, so a struggling learner on a capped beat can still
+    // reach the level-3 reveal (no dead-end). useHintLadder reads `max` each
+    // render, so subsequent submits honor the lifted cap with no remount.
+    maxHintLevel: props.hintCapOverride ?? beat.maxHintLevel,
     onNeedsReview: reportNeedsReview,
     initialLevel: props.initialHintLevel,
     onLevelChange: props.onHintLevelChange,
     event: { lessonId: props.lessonId, beatId: beat.beatId },
   })
+
+  // Adaptive re-prefill (build-brief §4.10c / tech B2). The faded fill is built
+  // once in the `filled` initializer and the beat remounts per beat (key), so a
+  // runtime re-prefill needs this effect. On each `assist.nonce` bump, fill the
+  // correct token into every still-open graded slot EXCEPT the final one,
+  // preserving the learner's already-correct tiles — leaving just the last term
+  // to complete. Recomputes from the stable `rows` reference so deps stay tight.
+  const assistNonce = props.assist?.nonce ?? 0
+  const assistEnabled = props.assist?.prefillToLastTerm ?? false
+  const lastAssistNonce = useRef(0)
+  useEffect(() => {
+    if (!assistEnabled || assistNonce === 0) return
+    if (assistNonce === lastAssistNonce.current) return
+    lastAssistNonce.current = assistNonce
+    setFilled((prev) => {
+      const next = { ...prev }
+      for (const row of rows) {
+        if (!row.graded || isExampleRow(row)) continue
+        const template = slotTemplate(row.target)
+        const fill = correctFill(row.target)
+        const lastIdx = fill.length - 1
+        const cur = prev[row.lhs] ?? template.map(() => null)
+        const d = diagnoseRow(cur, row.target)
+        next[row.lhs] = fill.map((tok, i) => {
+          if (d.slotStatus[i] === 'correct') return cur[i]
+          return i === lastIdx ? null : tok
+        })
+      }
+      return next
+    })
+    setChecked(false)
+  }, [assistEnabled, assistNonce, rows])
 
   const revealed = ladder.view.kind === 'hint' && ladder.view.revealed
 
@@ -610,7 +670,18 @@ export function EquationTilesBeat(props: BeatProps) {
         onClick={() => onSlotTap(rowId, idx)}
         disabled={solved || revealed || locked}
       >
-        {value ? displayTokenValue(value) : placeholder}
+        {value ? (
+          <m.span
+            key={value}
+            initial={{ scale: 0.4, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={SPRING}
+          >
+            {displayTokenValue(value)}
+          </m.span>
+        ) : (
+          placeholder
+        )}
       </button>
     )
   }
@@ -695,18 +766,28 @@ export function EquationTilesBeat(props: BeatProps) {
 
         {buildShown && (
           <>
-            <div className="eqtiles__legend">
-              <p className="eqtiles__legend-lead">
-                E<sub>i</sub> = average extra flips still needed from state i.
-              </p>
-              <ul className="eqtiles__legend-list">
-                {eqCopy.legend.map(({ id, text }) => (
-                  <li key={id}>
-                    <span className="eqtiles__legend-id">{stateLabel(id)}</span>: {text}
-                  </li>
-                ))}
-              </ul>
-            </div>
+            {legendOpen ? (
+              <div className="eqtiles__legend">
+                <p className="eqtiles__legend-lead">{eqCopy.legendLead}</p>
+                <ul className="eqtiles__legend-list">
+                  {eqCopy.legend.map(({ id, text }) => (
+                    <li key={id}>
+                      <span className="eqtiles__legend-id">{stateLabel(id)}</span>: {text}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ) : (
+              <button
+                type="button"
+                className="eqtiles__legend-disclosure"
+                aria-expanded={false}
+                onClick={() => setLegendOpen(true)}
+              >
+                What do <span aria-hidden="true">E₀, E₁…</span>
+                <span className="sr-only">the state labels</span> mean?
+              </button>
+            )}
 
             <div className="eqtiles__rows">
               {buildRows.map((row) =>
@@ -756,15 +837,18 @@ export function EquationTilesBeat(props: BeatProps) {
                     tile.kind === 'state' ? 'state' : tile.kind === 'prob' ? 'prob' : 'const'
                   const selected = selTile === token
                   return (
-                    <button
+                    <m.button
                       key={token}
                       type="button"
                       className={`token token--${cat}${selected ? ' token--selected' : ''}`}
                       aria-pressed={selected}
                       onClick={() => onTileTap(token)}
+                      whileHover={{ y: -3, scale: 1.04 }}
+                      whileTap={{ scale: 0.95 }}
+                      transition={SPRING}
                     >
                       {tile.kind === 'state' ? stateLabel(String(tile.value)) : tile.value}
-                    </button>
+                    </m.button>
                   )
                 })}
               </div>

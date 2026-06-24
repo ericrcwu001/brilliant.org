@@ -18,6 +18,14 @@ import { SubstitutionBeat } from './SubstitutionBeat'
 import { EquationTilesBeat } from './EquationTilesBeat'
 import { PrimerBeat } from './PrimerBeat'
 import { McqBeat } from './McqBeat'
+import { RetrievalGridBeat } from './RetrievalGridBeat'
+import { SumTilesBeat } from './SumTilesBeat'
+import { AutocorrelationRulerBeat } from './AutocorrelationRulerBeat'
+import { TripletRevealBeat } from './TripletRevealBeat'
+import { RaceSimBeat } from './RaceSimBeat'
+import { DominanceWheelBeat } from './DominanceWheelBeat'
+import { WalkBoardBeat } from './WalkBoardBeat'
+import { GamblerLedgerBeat } from './GamblerLedgerBeat'
 
 function ContinueStub({ beat, isLast, onAdvance }: BeatProps) {
   return (
@@ -66,6 +74,24 @@ export function BeatView(props: BeatProps) {
       ) : (
         <SliderBeat {...props} />
       )
+    // Shared Wave-1 widgets.
+    case 'retrievalGrid':
+      return <RetrievalGridBeat {...props} />
+    case 'sumTiles':
+      return <SumTilesBeat {...props} />
+    case 'autocorrelationRuler':
+      return <AutocorrelationRulerBeat {...props} />
+    case 'tripletReveal':
+      return <TripletRevealBeat {...props} />
+    // Lesson-specific heroes (build-brief §4.4 / §6).
+    case 'raceSim':
+      return <RaceSimBeat {...props} />
+    case 'dominanceWheel':
+      return <DominanceWheelBeat {...props} />
+    case 'walkBoard':
+      return <WalkBoardBeat {...props} />
+    case 'gamblerLedger':
+      return <GamblerLedgerBeat {...props} />
     default:
       return <ContinueStub {...props} />
   }

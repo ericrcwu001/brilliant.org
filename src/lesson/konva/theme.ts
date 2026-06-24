@@ -30,6 +30,27 @@ export const C = {
   quillGlow: 'rgba(46, 79, 176, 0.20)',
   // Faint ink band marking the convergence target around the theory line.
   inkBand: 'rgba(27, 34, 48, 0.05)',
+  // ── Remaining-lesson hero tokens, pre-stocked (build-brief §4.4) so Wave-2
+  // authors never edit this shared palette. Notebook-toned, drawn from the
+  // existing quill / heads / tails / correct-wrong families.
+  //
+  // L2 race lanes (A = quill blue, B = a warm contrast) + their fills.
+  laneA: '#2E4FB0',
+  laneATint: '#E5EAF7',
+  laneB: '#B26A2B',
+  laneBTint: '#F3E6D6',
+  // L2 TournamentHeatmap diverging gradient: B-favored → tie → A-favored.
+  heatLo: '#B26A2B',
+  heatMid: '#EFEADD',
+  heatHi: '#2E4FB0',
+  // L3 ruin / win outcomes (semantic names distinct from correct/wrong) + fills.
+  ruin: '#CE4A3E',
+  ruinTint: '#F6DEDA',
+  win: '#2F8F5B',
+  winTint: '#D8EFE0',
+  // L3 walker swarm: a neutral in-flight dot (absorbed walkers take win/ruin).
+  swarm: '#7C7E87',
+  swarmTint: 'rgba(124, 126, 135, 0.18)',
 } as const
 
 export const edgeColor = (on: 'H' | 'T') => (on === 'H' ? C.heads : C.tails)

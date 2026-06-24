@@ -32,7 +32,10 @@ function gcd(a: number, b: number): number {
   return a || 1
 }
 
-function reduce(n: number, d: number): Rational {
+// Exact rational toolkit. Exported (build-brief §4.1) so the new pure engines
+// (race.ts, walk.ts, correlation.ts) construct and operate on the same Rational
+// representation as buildAutomaton — one exact-math source of truth, no drift.
+export function reduce(n: number, d: number): Rational {
   if (d < 0) {
     n = -n
     d = -d
@@ -41,23 +44,23 @@ function reduce(n: number, d: number): Rational {
   return { n: n / g, d: d / g }
 }
 
-function toRational(x: number): Rational {
+export function toRational(x: number): Rational {
   if (Number.isInteger(x)) return { n: x, d: 1 }
   const denom = 1_000_000_000
   return reduce(Math.round(x * denom), denom)
 }
 
-const ratAdd = (a: Rational, b: Rational) =>
+export const ratAdd = (a: Rational, b: Rational) =>
   reduce(a.n * b.d + b.n * a.d, a.d * b.d)
-const ratSub = (a: Rational, b: Rational) =>
+export const ratSub = (a: Rational, b: Rational) =>
   reduce(a.n * b.d - b.n * a.d, a.d * b.d)
-const ratMul = (a: Rational, b: Rational) => reduce(a.n * b.n, a.d * b.d)
-const ratDiv = (a: Rational, b: Rational) => reduce(a.n * b.d, a.d * b.n)
-const ratNum = (a: Rational) => a.n / a.d
+export const ratMul = (a: Rational, b: Rational) => reduce(a.n * b.n, a.d * b.d)
+export const ratDiv = (a: Rational, b: Rational) => reduce(a.n * b.d, a.d * b.n)
+export const ratNum = (a: Rational) => a.n / a.d
 
 // --- KMP transition table ---
 
-function prefixFunction(pattern: string): number[] {
+export function prefixFunction(pattern: string): number[] {
   const pi = new Array<number>(pattern.length).fill(0)
   for (let i = 1; i < pattern.length; i++) {
     let k = pi[i - 1]
@@ -106,8 +109,9 @@ function recurrenceToString(rec: CanonicalRecurrence): string {
   return `${rec.lhs} = ${parts.join(' + ')}`
 }
 
-// Solve A x = b over the rationals via Gauss-Jordan elimination.
-function solveLinearSystem(a: Rational[][], b: Rational[]): Rational[] {
+// Solve A x = b over the rationals via Gauss-Jordan elimination. Exported
+// (build-brief §4.1) for walk.ts (handles the r = q/p = 1 fair-coin case).
+export function solveLinearSystem(a: Rational[][], b: Rational[]): Rational[] {
   const m = b.length
   const aug = a.map((row, i) => [...row, b[i]])
 

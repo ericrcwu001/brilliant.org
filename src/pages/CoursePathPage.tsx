@@ -12,8 +12,10 @@ import type { Course, Progress } from '../content/schema'
 import { loadProgressMap } from '../progress/progress'
 import { loadStreak, ZERO_STREAK, type Streak } from '../habit/streaks'
 import { loadEarnedMilestones } from '../habit/milestones'
+import { loadTrack, saveTrack, type Track } from '../progress/track'
 import { analytics } from '../analytics/events'
 import { StudyDesk } from './StudyDesk'
+import { DiagnosticGate } from './DiagnosticGate'
 import type { NavigateFn } from './routes'
 
 const seenKey = (uid: string) => `phht:seenSeals:${uid}`
@@ -44,6 +46,25 @@ export function CoursePathPage({ navigate }: { navigate: NavigateFn }) {
   const [earned, setEarned] = useState<Set<string>>(new Set())
   const [newlyEarned, setNewlyEarned] = useState<Set<string>>(new Set())
   const earnComputed = useRef(false)
+  // Two-track diagnostic at course entry (build-brief §4.8). `undefined` = still
+  // loading; `null` = not yet taken (show the gate); 'A'/'B' = chosen.
+  const [track, setTrack] = useState<Track | null | undefined>(undefined)
+
+  useEffect(() => {
+    if (!user) return
+    const uid = user.uid
+    let cancelled = false
+    void loadTrack(uid)
+      .then((t) => {
+        if (!cancelled) setTrack(t)
+      })
+      .catch(() => {
+        if (!cancelled) setTrack('B')
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [user])
 
   useEffect(() => {
     let cancelled = false
@@ -102,6 +123,20 @@ export function CoursePathPage({ navigate }: { navigate: NavigateFn }) {
       analytics.reviewRecommendedShown({ lessonId: reviewLessonId })
     }
   }, [progressById])
+
+  // Course entry: run the ~60s diagnostic once if the learner has no track yet,
+  // persist the choice, then reveal the path. L0 stays offered to everyone.
+  if (user && track === null) {
+    const uid = user.uid
+    return (
+      <DiagnosticGate
+        onDone={(t) => {
+          void saveTrack(uid, t).catch(() => {})
+          setTrack(t)
+        }}
+      />
+    )
+  }
 
   return (
     <StudyDesk

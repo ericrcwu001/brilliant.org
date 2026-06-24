@@ -21,9 +21,11 @@ import { LessonPage } from './pages/LessonPage'
 import {
   ROUTES,
   parseLessonId,
+  parseDevLessonId,
   type NavigateFn,
   type NavigateOptions,
 } from './pages/routes'
+import { loadDevLesson } from './content/devLessons'
 
 function useRouter() {
   const [path, setPath] = useState(() => window.location.pathname)
@@ -129,6 +131,22 @@ function App() {
     const track =
       new URLSearchParams(window.location.search).get('track') === 'A' ? 'A' : 'B'
     return <LessonPlayer track={track} />
+  }
+  // Parameterized dev route (build-brief §4.6): /dev/lesson/:lessonId renders any
+  // bundled fixture lesson with no Firebase, so every lesson is exercisable +
+  // e2e-testable in both tracks before it's seeded.
+  const devLessonId = parseDevLessonId(path)
+  if (devLessonId) {
+    const track =
+      new URLSearchParams(window.location.search).get('track') === 'A' ? 'A' : 'B'
+    const lesson = loadDevLesson(devLessonId)
+    if (lesson) return <LessonPlayer lesson={lesson} track={track} />
+    return (
+      <div className="bootscreen" aria-live="polite">
+        <p className="bootscreen__brand">Lesson not found</p>
+        <p className="bootscreen__caption">No bundled fixture for “{devLessonId}”.</p>
+      </div>
+    )
   }
   if (path === ROUTES.devHome) return <DevHomePage />
 

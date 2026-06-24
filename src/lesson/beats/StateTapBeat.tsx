@@ -25,7 +25,9 @@ export function StateTapBeat(props: BeatProps) {
   const ladder = useHintLadder({
     feedback: resolveFeedback(beat.feedback, pattern),
     required: beat.required,
-    maxHintLevel: beat.maxHintLevel,
+    // Adaptive override (build-brief §4.10c): a capped setup beat (L5
+    // failure-edge) lifts to the reveal on struggle, so it can't dead-end.
+    maxHintLevel: props.hintCapOverride ?? beat.maxHintLevel,
     onNeedsReview: props.reportNeedsReview,
     initialLevel: props.initialHintLevel,
     onLevelChange: props.onHintLevelChange,

@@ -252,6 +252,16 @@ export function CoinSimBeat({
             )}
           </div>
         )}
+        {showGraph && (
+          <p className="coinsim__legend">
+            <span className="coinsim__legend-item">circle = state</span>
+            <span className="coinsim__legend-item">
+              arrow = a flip (<span className="coin coin--H coin--inline">H</span> gold,{' '}
+              <span className="coin coin--T coin--inline">T</span> teal)
+            </span>
+            <span className="coinsim__legend-item">ringed = done</span>
+          </p>
+        )}
         {split ? (
           <div
             className={

@@ -1,8 +1,8 @@
 {
   "courseId": "course-pattern-hitting-times",
   "title": "Pattern Hitting Times",
-  "description": "Learn probability the way quant interviews test it: turn pattern-matching questions into states, transitions, and recurrences — race patterns, walk to ruin, consolidate the fundamentals, then close with a one-line overlap shortcut and its martingale proof.",
-  "persona": "Built for university underclassmen prepping for quant interviews who want hands-on state thinking, not static problem lists.",
+  "description": "Learn probability by playing with it: turn pattern-matching questions into states, transitions, and recurrences — race patterns, walk to ruin, consolidate the fundamentals, then close with a one-line overlap shortcut and its fair-game proof. Optional \"For the interview\" notes carry the quant framing.",
+  "persona": "For anyone curious about probability who likes to learn by doing — no prior probability, statistics, or algebra assumed. Quant-interview prep is a fully-served optional track, not a prerequisite to walk in.",
   "completionMilestoneId": "six-lessons-complete",
   "schemaVersion": 1,
   "lessons": [
@@ -26,35 +26,35 @@
       "title": "Penney's Game",
       "summary": "Two patterns race on one stream — who appears first is decoupled from expected wait, and going second can win 7 to 1.",
       "milestoneId": "penneys-game-won",
-      "built": false
+      "built": true
     },
     {
       "lessonId": "lesson-gamblers-ruin",
       "title": "Gambler's Ruin",
       "summary": "The same first-step machine on a number line: P(ruin) = i/N and E[duration] = i(N−i); a tiny edge is catastrophic.",
       "milestoneId": "gamblers-ruin-solved",
-      "built": false
+      "built": true
     },
     {
       "lessonId": "lesson-states-streaks",
-      "title": "States & Streaks",
-      "summary": "Consolidate the fundamentals: model the wait for the first H as a two-state machine and prove E[H] = 2.",
+      "title": "Mixed Review & Streaks",
+      "summary": "An interleaved checkpoint: mix waiting, racing, and walking so you can tell the tools apart the way a real problem arrives — unlabeled.",
       "milestoneId": "first-pattern-cracked",
-      "built": false
+      "built": true
     },
     {
       "lessonId": "lesson-longer-patterns",
       "title": "Longer Patterns & Overlap",
       "summary": "Transfer the method to the novel contrast THH vs HTH (E[THH] = 8, E[HTH] = 10) the long way, with faded hints.",
       "milestoneId": "state-machine-builder",
-      "built": false
+      "built": true
     },
     {
       "lessonId": "lesson-overlap-shortcut",
       "title": "The Overlap Shortcut",
       "summary": "Capstone: read E[wait] = Σ 2^(overlap length) straight off the pattern, proved by a fair-casino martingale — re-derives 6, 4, 8, 10 in one line.",
       "milestoneId": "martingale-mastered",
-      "built": false
+      "built": true
     }
   ],
   "roadmap": [

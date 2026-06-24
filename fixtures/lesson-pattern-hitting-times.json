@@ -94,6 +94,23 @@
       }
     },
     {
+      "beatId": "primer-graph",
+      "required": false,
+      "track": "A",
+      "prompt": "One more thing before we flip: how to read this picture.",
+      "interaction": {
+        "type": "primer",
+        "variant": "graph",
+        "title": "What a state graph is",
+        "body": "This picture is a state graph. Each circle is a state — how much of HH you've matched so far: none, one H, or HH (the ringed circle = done). Each arrow is one coin flip: gold = heads, teal = tails. A flip moves you along an arrow — forward toward HH, back to the start, or looping in place.",
+        "collapsible": false
+      },
+      "feedback": {
+        "correct": "Got it.",
+        "hints": ["Each circle is a state.", "Each arrow is a flip.", "Continue when ready."]
+      }
+    },
+    {
       "beatId": "simulate",
       "required": true,
       "prompt": "Flip the coin and watch the state machine. Where does progress go on each flip?",
@@ -163,6 +180,7 @@
     {
       "beatId": "equation-tiles",
       "required": true,
+      "pattern": "HH",
       "prompt": "Here's the finished equation for the start state (E0) — we did this one for you. Build the next state (E1) the same way: every flip costs 1 flip, and then the coin sends you to one of two places, half the time to each. Tap the pieces into the slots.",
       "interaction": {
         "type": "equationTiles",

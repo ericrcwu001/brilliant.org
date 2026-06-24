@@ -14,6 +14,8 @@
 //    Konva rail below; tapping a rail node expands its detail inline (one at a time).
 
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { m } from 'motion/react'
+import { DUR, EASE } from '../motion/tokens'
 import type { Course, Progress } from '../content/schema'
 import type { Streak } from '../habit/streaks'
 import { MILESTONE_SEQUENCE } from '../habit/milestones'
@@ -57,6 +59,17 @@ export interface StudyDeskProps {
 const LAP = { top: 40, gap: 88, dotR: 20, spineX: 48, panelX: 156 }
 // Mobile compact rail geometry (px).
 const RAIL = { top: 26, gap: 58, dotR: 16, spineX: 30 }
+
+// Home reveal: the desk sections rise in sequence on load (reduced-motion drops
+// the slide via MotionConfig, leaving a plain fade).
+const deskContainer = {
+  hidden: {},
+  show: { transition: { staggerChildren: 0.08, delayChildren: 0.04 } },
+}
+const deskItem = {
+  hidden: { opacity: 0, y: 16 },
+  show: { opacity: 1, y: 0, transition: { duration: DUR.slow, ease: EASE.out } },
+}
 
 function laptopYs(n: number): number[] {
   return Array.from({ length: n }, (_, i) => LAP.top + i * LAP.gap)
@@ -196,25 +209,36 @@ function DeskBody({
   }
 
   return (
-    <>
-      <HabitPanel
-        streak={streak}
-        status={status}
-        reviewNote={note}
-        practiceNote={practiceNote}
-      />
+    <m.div
+      className="desk-reveal"
+      variants={deskContainer}
+      initial="hidden"
+      animate="show"
+    >
+      <m.div variants={deskItem}>
+        <HabitPanel
+          streak={streak}
+          status={status}
+          reviewNote={note}
+          practiceNote={practiceNote}
+        />
+      </m.div>
 
-      <SealGallery earned={earned} newlyEarned={newlyEarned} />
+      <m.div variants={deskItem}>
+        <SealGallery earned={earned} newlyEarned={newlyEarned} />
+      </m.div>
 
-      <p className="coursepath__section">Course</p>
-      {isLaptop ? (
-        <CoursePathLaptop {...pathProps} />
-      ) : (
-        <CoursePathMobile {...pathProps} />
-      )}
+      <m.div variants={deskItem}>
+        <p className="coursepath__section">Course</p>
+        {isLaptop ? (
+          <CoursePathLaptop {...pathProps} />
+        ) : (
+          <CoursePathMobile {...pathProps} />
+        )}
+      </m.div>
 
       {course.roadmap.length > 0 && (
-        <>
+        <m.div variants={deskItem}>
           <p className="coursepath__divider">On the roadmap</p>
           <ul className="roadmap">
             {course.roadmap.map((stub) => (
@@ -225,9 +249,9 @@ function DeskBody({
               />
             ))}
           </ul>
-        </>
+        </m.div>
       )}
-    </>
+    </m.div>
   )
 }
 

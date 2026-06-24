@@ -34,6 +34,7 @@ const FLAGSHIP: PhaseConfig = {
     'bias-sandbox': 'overlap',
     'primer-half': 'pattern-pick',
     'primer-state': 'pattern-pick',
+    'primer-graph': 'pattern-pick',
     'name-the-overlap': 'failure-edge',
     'ground-ev': 'equation-tiles',
   },
@@ -53,9 +54,85 @@ const FIRST_HEADS: PhaseConfig = {
   },
 }
 
+// L2 Penney's Game (proposed §5). Primers (whos-first, prob-vs-duration) are
+// off-rail scaffolds; the graded race/model spine is on-rail.
+const PENNEYS: PhaseConfig = {
+  phases: [
+    { id: 'Bet', beatIds: ['recall-6-4', 'open-bet'] },
+    { id: 'Explore', beatIds: ['race-the-tie', 'first-step-split'] },
+    { id: 'Model', beatIds: ['pick-your-counter', 'race-the-counter', 'win-prob-tiles'] },
+    { id: 'Prove', beatIds: ['non-transitive-loop', 'recap'] },
+  ],
+  offRailAfter: {
+    'whos-first-primer': 'recall-6-4',
+    'prob-vs-duration': 'race-the-counter',
+  },
+}
+
+// L3 Gambler's Ruin (proposed §6). The gambler's-fallacy primer + the hand-tally
+// grounding are off-rail.
+const GAMBLERS_RUIN: PhaseConfig = {
+  phases: [
+    { id: 'Bet', beatIds: ['recall-overlap', 'open-bet'] },
+    { id: 'Explore', beatIds: ['walk-once', 'boundary-edge'] },
+    { id: 'Model', beatIds: ['prob-tiles', 'duration-tiles', 'guided-solve'] },
+    { id: 'Prove', beatIds: ['house-edge', 'recap'] },
+  ],
+  offRailAfter: {
+    'gamblers-fallacy': 'open-bet',
+    'ground-both': 'boundary-edge',
+  },
+}
+
+// L4 Mixed Review & Streaks (proposed §7): an interleaved checkpoint.
+const STATES_STREAKS: PhaseConfig = {
+  phases: [
+    { id: 'Bet', beatIds: ['retrieval-grid'] },
+    { id: 'Explore', beatIds: ['which-waits-longest', 'race-or-wait'] },
+    { id: 'Model', beatIds: ['plus-one-or-not', 'weak-node'] },
+    { id: 'Prove', beatIds: ['recap-streak'] },
+  ],
+  offRailAfter: {
+    'mixed-primer': 'retrieval-grid',
+  },
+}
+
+// L5 Longer Patterns & Overlap (proposed §8): the transfer lesson (no retrieval
+// opener — the logged exception).
+const LONGER_PATTERNS: PhaseConfig = {
+  phases: [
+    { id: 'Bet', beatIds: ['open-bet', 'pattern-pick'] },
+    { id: 'Explore', beatIds: ['simulate', 'overlap-ruler'] },
+    { id: 'Model', beatIds: ['failure-edge', 'equation-tiles', 'guided-solve'] },
+    { id: 'Prove', beatIds: ['theory-vs-sim', 'border-sum', 'overlap-compare', 'recap'] },
+  ],
+  offRailAfter: {
+    'transfer-primer': 'pattern-pick',
+  },
+}
+
+// L6 The Overlap Shortcut (proposed §9): the capstone. The exponent primer is
+// off-rail but authored before sum-it.
+const OVERLAP_SHORTCUT: PhaseConfig = {
+  phases: [
+    { id: 'Bet', beatIds: ['recall-numbers'] },
+    { id: 'Explore', beatIds: ['self-overlap', 'sum-it'] },
+    { id: 'Model', beatIds: ['martingale', 'apply-THH', 'apply-HTH'] },
+    { id: 'Prove', beatIds: ['triangulation', 'recap'] },
+  ],
+  offRailAfter: {
+    'exponent-primer': 'self-overlap',
+  },
+}
+
 const LESSON_PHASES: Record<string, PhaseConfig> = {
   'lesson-pattern-hitting-times': FLAGSHIP,
   'lesson-first-heads': FIRST_HEADS,
+  'lesson-penneys-game': PENNEYS,
+  'lesson-gamblers-ruin': GAMBLERS_RUIN,
+  'lesson-states-streaks': STATES_STREAKS,
+  'lesson-longer-patterns': LONGER_PATTERNS,
+  'lesson-overlap-shortcut': OVERLAP_SHORTCUT,
 }
 
 function configFor(lessonId?: string): PhaseConfig {

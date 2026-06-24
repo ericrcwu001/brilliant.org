@@ -1,0 +1,163 @@
+{
+  "lessonId": "lesson-overlap-shortcut",
+  "courseId": "course-pattern-hitting-times",
+  "title": "The Overlap Shortcut",
+  "patternOptions": ["HH", "HT", "THH", "HTH"],
+  "milestoneId": "martingale-mastered",
+  "unlocks": null,
+  "schemaVersion": 1,
+  "beats": [
+    {
+      "beatId": "recall-numbers",
+      "required": true,
+      "prompt": "By now you've worked these out the long way. Match each pattern to its wait.",
+      "interaction": {
+        "type": "retrievalGrid",
+        "pairs": [
+          { "left": "HH", "right": "6" },
+          { "left": "HT", "right": "4" },
+          { "left": "THH", "right": "8" },
+          { "left": "HTH", "right": "10" }
+        ]
+      },
+      "feedback": {
+        "correct": "All four — now let's get them in seconds instead of a linear system.",
+        "hints": [
+          "Tap a pattern, then its wait.",
+          "HH = 6, HT = 4, THH = 8, HTH = 10.",
+          "Match them up."
+        ]
+      }
+    },
+    {
+      "beatId": "self-overlap",
+      "required": true,
+      "pattern": "HH",
+      "prompt": "Slide HH over itself. Each place the start reappears at the end is an overlap worth 2^L.",
+      "interaction": { "type": "autocorrelationRuler" },
+      "interviewNote": "These overlap lengths are the pattern's correlation/border set (Guibas\u2013Odlyzko); in binary the Conway leading number encodes the same thing.",
+      "feedback": {
+        "correct": "HH overlaps at lengths 1 and 2 \u2014 worth 2 and 4.",
+        "hints": [
+          "Check each shift for start-equals-end.",
+          "HH matches at length 2 (itself) and length 1 (the H).",
+          "Overlaps {1,2}."
+        ]
+      }
+    },
+    {
+      "beatId": "exponent-primer",
+      "required": false,
+      "prompt": "A 10-second refresher you'll lean on.",
+      "interaction": {
+        "type": "primer",
+        "variant": "exponent",
+        "title": "Powers of two",
+        "body": "2, 4, 8, 16, 32 \u2014 each is double the one before. 2^L just means \"multiply 2 by itself L times.\" That's every chip we're about to add.",
+        "collapsible": false
+      },
+      "feedback": {
+        "correct": "Doubling each step \u2014 that's all 2^L is.",
+        "hints": ["2, 4, 8, 16\u2026", "Each doubles the last.", "Continue."]
+      }
+    },
+    {
+      "beatId": "sum-it",
+      "required": true,
+      "pattern": "HH",
+      "introducesSymbol": "\u03a32^L",
+      "groundedBy": ["self-overlap"],
+      "prompt": "Drop a 2^L chip for each overlap you found, and add them up.",
+      "interaction": { "type": "sumTiles" },
+      "feedback": {
+        "correct": "4 + 2 = 6 \u2014 that's E[HH], straight off the overlaps. That sum is \u03a32^L.",
+        "hints": [
+          "One chip per overlap length.",
+          "Lengths 1 and 2 \u2192 chips 2 and 4.",
+          "2 + 4 = 6."
+        ]
+      }
+    },
+    {
+      "beatId": "martingale",
+      "required": true,
+      "pattern": "HH",
+      "prompt": "Why does \u03a32^L work? Run a fair-betting casino until HH appears: money in is the wait, money out is the surviving parlays. Watch them meet.",
+      "interaction": { "type": "gamblerLedger" },
+      "hero": {
+        "slowFirst": true,
+        "structuralReadout": "Average money in settles on the money out, \u03a32^L = 6, for HH.",
+        "reducedMotionFinalFrame": true
+      },
+      "interviewNote": "This is the martingale / optional-stopping argument (Li 1980, ABRACADABRA): a fair game has expected net zero, so E[T] = expected payout = \u03a32^L.",
+      "feedback": {
+        "correct": "Money in = money out in a fair game, so the wait equals \u03a32^L.",
+        "hints": [
+          "Run a batch of streams.",
+          "The average wait (money in) drifts toward the fixed payout (money out).",
+          "They meet at 6."
+        ]
+      }
+    },
+    {
+      "beatId": "apply-THH",
+      "required": true,
+      "pattern": "THH",
+      "prompt": "Now the shortcut, on THH. Find its overlaps and sum the chips.",
+      "interaction": { "type": "sumTiles" },
+      "feedback": {
+        "correct": "THH overlaps only at length 3 \u2192 2\u00b3 = 8. Done in seconds.",
+        "hints": [
+          "Where does THH's start reappear at its end?",
+          "Only the full length 3 overlaps.",
+          "2\u00b3 = 8."
+        ]
+      }
+    },
+    {
+      "beatId": "apply-HTH",
+      "required": true,
+      "pattern": "HTH",
+      "prompt": "And HTH \u2014 watch for the sneaky extra overlap.",
+      "interaction": { "type": "sumTiles" },
+      "feedback": {
+        "correct": "HTH overlaps at lengths 1 and 3 \u2192 2 + 8 = 10. The length-1 overlap is the trap.",
+        "hints": [
+          "HTH ends in H, and it starts with H\u2026",
+          "Overlaps at length 1 and length 3.",
+          "2 + 8 = 10."
+        ]
+      }
+    },
+    {
+      "beatId": "triangulation",
+      "required": true,
+      "comparison": true,
+      "prompt": "Three roads, one number. Will the recurrence, the martingale, and the simulation agree for HH?",
+      "interaction": {
+        "type": "tripletReveal",
+        "value": "6",
+        "display": "axis",
+        "lenses": [
+          { "label": "Recurrence", "body": "Solve E\u2080 = 1 + \u00bd\u00b7E\u2081 + \u00bd\u00b7E\u2080, E\u2081 = 1 + \u00bd\u00b7E\u2082 + \u00bd\u00b7E\u2080." },
+          { "label": "Overlap / martingale", "body": "\u03a32^L = 4 + 2 = the fair-game payout." },
+          { "label": "Simulation", "body": "The empirical mean of many runs settles here." }
+        ]
+      },
+      "feedback": {
+        "correct": "All three land on 6 \u2014 the long way, the shortcut, and the experiment agree.",
+        "hints": ["Reveal each road.", "They converge.", "All say 6."]
+      }
+    },
+    {
+      "beatId": "recap",
+      "required": true,
+      "prompt": "The capstone: one number, three ways.",
+      "interaction": { "type": "recap" },
+      "feedback": {
+        "correct": "Read the wait straight off the overlaps \u2014 and you know why it works.",
+        "hints": ["\u03a32^L over the overlaps.", "Proved by a fair-game martingale.", "Course complete."]
+      }
+    }
+  ]
+}

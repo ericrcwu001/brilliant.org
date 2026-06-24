@@ -1,0 +1,330 @@
+{
+  "lessonId": "lesson-gamblers-ruin",
+  "courseId": "course-pattern-hitting-times",
+  "title": "Gambler's Ruin",
+  "patternOptions": ["H"],
+  "milestoneId": "gamblers-ruin-solved",
+  "unlocks": "lesson-states-streaks",
+  "schemaVersion": 1,
+  "beats": [
+    {
+      "beatId": "recall-overlap",
+      "required": true,
+      "prompt": "Warm-up: while waiting for HH, you have one H and then flip a T. What happens to your progress?",
+      "interaction": {
+        "type": "mcq",
+        "options": [
+          { "id": "reset", "label": "It resets — you're back to needing HH from scratch", "correct": true },
+          { "id": "keep", "label": "You keep the H and just need one more", "correct": false },
+          { "id": "half", "label": "You lose half your progress", "correct": false }
+        ]
+      },
+      "feedback": {
+        "correct": "Right — a T after a lone H throws the progress away. Memory matters.",
+        "hints": ["No pressure — a quick recall.", "A T breaks the HH streak.", "You reset to the start."]
+      }
+    },
+    {
+      "beatId": "open-bet",
+      "required": true,
+      "prompt": "You have $2. Each flip: heads +$1, tails −$1, until you hit $4 or $0. The coin is fair — what's the chance you go broke first?",
+      "interaction": {
+        "type": "prediction",
+        "options": ["0% — a fair coin keeps me safe", "About 50%", "More than 50%"]
+      },
+      "feedback": {
+        "byOption": {
+          "0% — a fair coin keeps me safe": {
+            "note": "A fair coin doesn't mean safe — you can absolutely hit $0 first. Let's see how often.",
+            "correct": false
+          },
+          "About 50%": {
+            "note": "Good read — starting halfway between $0 and $4, it's a 50/50 by symmetry.",
+            "correct": true
+          },
+          "More than 50%": {
+            "note": "Close in spirit, but from the exact middle it's symmetric — 50/50.",
+            "correct": false
+          }
+        },
+        "hints": [
+          "No wrong guess yet — commit and we'll walk it.",
+          "You start exactly halfway between the walls.",
+          "By symmetry it's 50/50."
+        ]
+      }
+    },
+    {
+      "beatId": "gamblers-fallacy",
+      "required": false,
+      "prompt": "A myth to clear up before we walk.",
+      "interaction": {
+        "type": "primer",
+        "variant": "gamblersFallacy",
+        "title": "You're never \"due\"",
+        "body": "After three losses in a row it feels like a win is overdue. It isn't — each flip is still 50/50, with no memory of the streak. The coin doesn't owe you anything.",
+        "collapsible": false
+      },
+      "feedback": {
+        "correct": "Each flip is independent — no debt, no \"due.\"",
+        "hints": ["Streaks don't tilt the next flip.", "The coin has no memory.", "Continue."]
+      }
+    },
+    {
+      "beatId": "walk-once",
+      "required": true,
+      "prompt": "Watch one walk from $2. Heads steps right, tails steps left, until a wall.",
+      "interaction": {
+        "type": "walkBoard",
+        "n": 4,
+        "p": 0.5,
+        "start": 2,
+        "display": "single"
+      },
+      "hero": {
+        "slowFirst": true,
+        "structuralReadout": "From $2 on a fair coin: reach $4 half the time, go broke half the time.",
+        "reducedMotionFinalFrame": true
+      },
+      "feedback": {
+        "correct": "One token, random steps, until it hits a wall.",
+        "hints": ["Watch a single walk.", "Then run a batch.", "Roughly 50/50 either way."]
+      }
+    },
+    {
+      "beatId": "boundary-edge",
+      "required": true,
+      "prompt": "What happens when the walk reaches $0 or $4?",
+      "interaction": {
+        "type": "mcq",
+        "options": [
+          { "id": "absorb", "label": "It stops — those are the end states (walls)", "correct": true },
+          { "id": "bounce", "label": "It bounces back toward the middle", "correct": false },
+          { "id": "continue", "label": "It keeps flipping forever", "correct": false }
+        ]
+      },
+      "feedback": {
+        "correct": "Right — $0 and $4 absorb the walk. The game ends there.",
+        "hints": ["$0 = broke, $4 = goal.", "Those are the finish lines.", "The walk stops at a wall."]
+      }
+    },
+    {
+      "beatId": "ground-both",
+      "required": false,
+      "prompt": "Two questions, two quantities.",
+      "interaction": {
+        "type": "primer",
+        "variant": "custom",
+        "title": "Chance vs how long",
+        "body": "Run many walks. The CHANCE you reach $4 is the share of walks that end at the top. The DURATION is the average number of flips before a wall. Same walk, two different things to measure.",
+        "collapsible": true
+      },
+      "feedback": {
+        "correct": "Chance = share that win; duration = average flips.",
+        "hints": ["One is a fraction of walks.", "One is a flip count.", "Continue."]
+      }
+    },
+    {
+      "beatId": "prob-tiles",
+      "required": true,
+      "density": "merged",
+      "prompt": "Build the chance-of-reaching-$4 rule for $2. From $2, half the time you step to $3, half to $1 — and there's no per-flip cost for a chance.",
+      "interaction": {
+        "type": "equationTiles",
+        "bank": [
+          { "id": "c0", "kind": "const", "value": 0 },
+          { "id": "c1", "kind": "const", "value": 1 },
+          { "id": "p", "kind": "prob", "value": "1/2" },
+          { "id": "s1", "kind": "state", "value": "E1" },
+          { "id": "s2", "kind": "state", "value": "E2" },
+          { "id": "s3", "kind": "state", "value": "E3" }
+        ],
+        "rows": [
+          {
+            "lhs": "E0",
+            "target": { "lhs": "E0", "constant": 0, "terms": [] },
+            "graded": false,
+            "note": "$0 — broke. Chance of reaching $4 from here = 0."
+          },
+          {
+            "lhs": "E2",
+            "target": {
+              "lhs": "E2",
+              "constant": 0,
+              "terms": [
+                { "coeff": { "n": 1, "d": 2 }, "var": "E3" },
+                { "coeff": { "n": 1, "d": 2 }, "var": "E1" }
+              ]
+            },
+            "graded": true
+          },
+          {
+            "lhs": "E4",
+            "target": { "lhs": "E4", "constant": 1, "terms": [] },
+            "graded": false,
+            "note": "$4 — the goal. Chance of reaching $4 from here = 1."
+          }
+        ],
+        "copy": {
+          "legendLead": "P\u1D62 = the chance you reach $4 starting from $i.",
+          "legend": [
+            { "id": "E1", "text": "$1 — one slip from broke" },
+            { "id": "E2", "text": "$2 — your starting stack" },
+            { "id": "E3", "text": "$3 — one win from the goal" }
+          ],
+          "mistakeHints": {
+            "const-generic": [
+              "A chance has no per-flip cost — there's no \"+1\" here.",
+              "The first slot is 0: a probability just splits between the two neighbors."
+            ],
+            "wrong-var-generic": [
+              "From $2, one flip goes up to $3 and one goes down to $1.",
+              "Each branch lands on a neighbor: $3 (heads) or $1 (tails)."
+            ]
+          }
+        }
+      },
+      "feedback": {
+        "correct": "P\u2082 = \u00bd\u00b7P\u2083 + \u00bd\u00b7P\u2081 — no +1, just a split.",
+        "hints": [
+          "Start the row with the per-flip cost — but a chance has none.",
+          "Then split: half to the dollar above, half to the dollar below.",
+          "P\u2082 = 0 + \u00bd\u00b7P\u2083 + \u00bd\u00b7P\u2081."
+        ]
+      }
+    },
+    {
+      "beatId": "duration-tiles",
+      "required": true,
+      "density": "merged",
+      "maxHintLevel": 2,
+      "prompt": "Now build the AVERAGE-FLIPS rule for $2. It's the same split — but this time every flip costs 1, so the +1 comes back.",
+      "interaction": {
+        "type": "equationTiles",
+        "bank": [
+          { "id": "c0", "kind": "const", "value": 0 },
+          { "id": "c1", "kind": "const", "value": 1 },
+          { "id": "p", "kind": "prob", "value": "1/2" },
+          { "id": "s1", "kind": "state", "value": "E1" },
+          { "id": "s2", "kind": "state", "value": "E2" },
+          { "id": "s3", "kind": "state", "value": "E3" }
+        ],
+        "rows": [
+          {
+            "lhs": "E0",
+            "target": { "lhs": "E0", "constant": 0, "terms": [] },
+            "graded": false,
+            "note": "$0 — broke. The game is already over: 0 more flips."
+          },
+          {
+            "lhs": "E2",
+            "target": {
+              "lhs": "E2",
+              "constant": 1,
+              "terms": [
+                { "coeff": { "n": 1, "d": 2 }, "var": "E3" },
+                { "coeff": { "n": 1, "d": 2 }, "var": "E1" }
+              ]
+            },
+            "graded": true
+          },
+          {
+            "lhs": "E4",
+            "target": { "lhs": "E4", "constant": 0, "terms": [] },
+            "graded": false,
+            "note": "$4 — the goal. Already there: 0 more flips."
+          }
+        ],
+        "copy": {
+          "legendLead": "D\u1D62 = the average number of flips from $i until a wall.",
+          "legend": [
+            { "id": "E1", "text": "$1 — one slip from broke" },
+            { "id": "E2", "text": "$2 — your starting stack" },
+            { "id": "E3", "text": "$3 — one win from the goal" }
+          ],
+          "mistakeHints": {
+            "const-zero": [
+              "Zero would make this free — but you still flip a coin to move.",
+              "Every interior step costs 1 flip, so the first slot is 1, not 0."
+            ],
+            "const-generic": [
+              "The first slot is the flat cost every flip pays.",
+              "Each visit costs exactly 1 flip before the coin splits — set 1."
+            ],
+            "wrong-var-generic": [
+              "From $2, one flip goes up to $3 and one goes down to $1.",
+              "Each branch lands on a neighbor: $3 (heads) or $1 (tails)."
+            ]
+          }
+        }
+      },
+      "feedback": {
+        "correct": "D\u2082 = 1 + \u00bd\u00b7D\u2083 + \u00bd\u00b7D\u2081 — the +1 is the flip you just spent.",
+        "hints": [
+          "What does every flip cost, win or lose?",
+          "Same split as before, but a chance had no cost and a duration does.",
+          "D\u2082 = 1 + \u00bd\u00b7D\u2083 + \u00bd\u00b7D\u2081."
+        ]
+      }
+    },
+    {
+      "beatId": "guided-solve",
+      "required": true,
+      "prompt": "Solving both systems for the start at $2, what do you get?",
+      "interaction": {
+        "type": "mcq",
+        "options": [
+          { "id": "right", "label": "Chance of reaching $4 = \u00bd, average flips = 4", "correct": true },
+          { "id": "swap", "label": "Chance = 4, average flips = \u00bd", "correct": false },
+          { "id": "safe", "label": "Chance = 1, average flips = 2", "correct": false }
+        ]
+      },
+      "feedback": {
+        "correct": "Exactly — P = \u00bd and D = 4 = 2\u00b7(4\u22122).",
+        "hints": [
+          "By symmetry the chance is \u00bd.",
+          "The duration is i\u00b7(N\u2212i) = 2\u00b72.",
+          "Chance \u00bd, average 4 flips."
+        ]
+      }
+    },
+    {
+      "beatId": "house-edge",
+      "required": true,
+      "comparison": true,
+      "prompt": "Now tilt the coin to 60/40 against you (drag the bias). A tiny edge — how bad can it be?",
+      "interaction": {
+        "type": "walkBoard",
+        "n": 4,
+        "p": 0.4,
+        "start": 2,
+        "interactive": true,
+        "display": "landscape"
+      },
+      "hero": {
+        "slowFirst": true,
+        "structuralReadout": "With a 60/40 edge against you, from $2 you go broke about 69 of every 100 walks.",
+        "reducedMotionFinalFrame": true
+      },
+      "interviewNote": "This is the canonical first-passage / risk-of-ruin result: P_i = i/N when fair, and (1\u2212r^i)/(1\u2212r^N) with r = q/p when biased. It's why a small house edge compounds into near-certain ruin against a finite bankroll.",
+      "feedback": {
+        "correct": "A small edge is catastrophic — and the average walk is short, but a few run long.",
+        "hints": [
+          "Lower the bias and watch the reach curve sag.",
+          "60/40 turns a 50/50 into ~31% to win.",
+          "The landscape warps into a cliff."
+        ]
+      }
+    },
+    {
+      "beatId": "recap",
+      "required": true,
+      "prompt": "What you just proved.",
+      "interaction": { "type": "recap" },
+      "feedback": {
+        "correct": "Fair still ruins the shorter stack; a tiny edge makes ruin near-certain.",
+        "hints": ["P = i/N when fair.", "D = i\u00b7(N\u2212i).", "Done."]
+      }
+    }
+  ]
+}

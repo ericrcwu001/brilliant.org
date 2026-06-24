@@ -22,8 +22,10 @@ import {
 } from '../progress/functions'
 import { loadStreak, ZERO_STREAK, type Streak } from '../habit/streaks'
 import { milestoneMeta } from '../habit/milestones'
+import { MilestoneSeal } from '../habit/MilestoneSeal'
 import { StreakTally } from '../habit/StreakTally'
 import { analytics } from '../analytics/events'
+import { LessonCelebration } from './LessonCelebration'
 
 // `lesson` is optional: `/dev/lesson` renders the local fixture (no prop, no
 // persistence), while the authed route passes a Firestore-loaded lesson plus
@@ -77,6 +79,14 @@ export function LessonPlayer({
   const [maxHintLevelByBeat, setMaxHintLevelByBeat] = useState<
     Record<string, number>
   >(() => (initialSnapshot ? maxHintLevelsOf(initialSnapshot) : {}))
+  // Adaptive override (build-brief §4.10c): per-beat cap lift + re-prefill nonce.
+  // When a learner reaches a capped beat's hint cap while still wrong, the cap is
+  // lifted (the level-3 reveal becomes reachable — no dead-end) and, on an
+  // equationTiles beat, the assist nonce bumps to re-prefill all but the last term.
+  const [capLiftByBeat, setCapLiftByBeat] = useState<Record<string, boolean>>({})
+  const [assistNonceByBeat, setAssistNonceByBeat] = useState<
+    Record<string, number>
+  >({})
   const [lessonState, setLessonStateRaw] = useState<LessonState>(() =>
     initialSnapshot ? snapshotToLessonState(initialSnapshot) : {},
   )
@@ -84,10 +94,18 @@ export function LessonPlayer({
   // Habit loop (Phase 17): the streak tally shown in the top bar.
   const [streak, setStreak] = useState<Streak>(ZERO_STREAK)
   const reducedMotion = useReducedMotion()
+  // Ref for the post-completion CTA so focus moves to it when done.
+  const ctaRef = useRef<HTMLButtonElement>(null)
 
-  // The flagship lesson is HH-centric (HT is the side-by-side contrast); the
-  // engine-driven beats build the primary pattern's automaton.
-  const pattern = lesson.patternOptions[0]
+  // The shared hitting-time automaton for the lesson's primary pattern (the
+  // flagship is HH-centric; HT is the side-by-side contrast). Active-pattern
+  // convention (build-brief §4.3): race (L2) and walk (L3) beats IGNORE this
+  // shared automaton and build their own model (the OverlapBeat precedent), so
+  // those lessons keep patternOptions[0] a valid H/T placeholder (L3 uses ["H"]).
+  // Guard a missing/invalid placeholder so a mis-authored fixture can't crash the
+  // whole player before any beat renders (buildAutomaton throws on non-H/T).
+  const raw = lesson.patternOptions[0]
+  const pattern = raw && /^[HT]+$/.test(raw) ? raw : 'H'
   const automaton = useMemo(() => buildAutomaton(pattern, 0.5), [pattern])
   // The milestone this lesson awards, surfaced on the recap stamp (Phase 17).
   const milestone = useMemo(
@@ -124,8 +142,22 @@ export function LessonPlayer({
       // correct submit, so only the max records whether a beat was ever a
       // struggle (the per-lesson mastery signal reads this).
       setMaxHintLevelByBeat((prev) => bumpMaxHintLevel(prev, beat.beatId, level))
+      // Adaptive override: once the learner reaches a capped beat's fixture cap
+      // and is still wrong, lift the cap (so the reveal is reachable) and
+      // re-prefill all but the last term (equationTiles). Guarantees no capped
+      // beat can dead-end (build-brief §4.10c DoD).
+      const cap = beat.maxHintLevel
+      if (cap !== undefined && cap < 3 && level >= cap) {
+        setCapLiftByBeat((prev) =>
+          prev[beat.beatId] ? prev : { ...prev, [beat.beatId]: true },
+        )
+        setAssistNonceByBeat((prev) => ({
+          ...prev,
+          [beat.beatId]: (prev[beat.beatId] ?? 0) + 1,
+        }))
+      }
     },
-    [beat.beatId],
+    [beat.beatId, beat.maxHintLevel],
   )
 
   // --- Persistence (Phase 15) -------------------------------------------------
@@ -195,6 +227,18 @@ export function LessonPlayer({
       analytics.lessonCompleted({ lessonId, needsReview })
     }
   }, [done, lessonId, needsReview])
+
+  // On completion: scroll to top and move focus to the return CTA so the
+  // celebration is immediately in view (a11y + discoverability).
+  useEffect(() => {
+    if (!done) return
+    if (reducedMotion) {
+      window.scrollTo(0, 0)
+    } else {
+      window.scrollTo({ top: 0, behavior: 'smooth' })
+    }
+    ctaRef.current?.focus()
+  }, [done, reducedMotion])
 
   // --- Completion (Phase 16) --------------------------------------------------
   const completedOnce = useRef(false)
@@ -270,6 +314,58 @@ export function LessonPlayer({
   const atStart = index === 0
   const canExit = !!onExit
 
+  // Completion takeover: replaces the beat entirely so the celebration and the
+  // return CTA are right in front of the learner (not buried above the fold).
+  if (done) {
+    return (
+      <div className="lesson">
+        <header className="topbar">
+          <button
+            type="button"
+            className="topbar__back"
+            onClick={onExit}
+            disabled={!canExit}
+            aria-label="Back to course path"
+          >
+            ←
+          </button>
+          <div className="topbar__center">
+            <span className="topbar__title">{lesson.title}</span>
+          </div>
+          <StreakTally count={streak.count} compact />
+        </header>
+
+        <LessonCelebration>
+          <div className="done-note">
+            <p>
+              Lesson complete ✓
+              {mastered
+                ? ' · fully mastered'
+                : needsReview
+                  ? ' · review recommended'
+                  : ''}
+              {completion?.unlockedLessonId ? ' · next lesson unlocked' : ''}
+            </p>
+            <MilestoneSeal meta={milestone} earned />
+          </div>
+        </LessonCelebration>
+
+        <footer className="actionbar">
+          {canExit && (
+            <button
+              ref={ctaRef}
+              type="button"
+              className="btn btn--primary"
+              onClick={onExit}
+            >
+              Back to course path
+            </button>
+          )}
+        </footer>
+      </div>
+    )
+  }
+
   return (
     <div className="lesson">
       <header className="topbar">
@@ -306,28 +402,6 @@ export function LessonPlayer({
       <section className="prompt">
         {!beat.required && <p className="prompt__kicker">Extension</p>}
         <p className="prompt__text">{beat.prompt}</p>
-        {done && (
-          <div className="done-note">
-            <p>
-              Lesson complete ✓
-              {mastered
-                ? ' · fully mastered'
-                : needsReview
-                  ? ' · review recommended'
-                  : ''}
-              {completion?.unlockedLessonId ? ' · next lesson unlocked' : ''}
-            </p>
-            {canExit && (
-              <button
-                type="button"
-                className="btn btn--primary"
-                onClick={onExit}
-              >
-                Back to course path
-              </button>
-            )}
-          </div>
-        )}
       </section>
 
       <BeatView
@@ -347,6 +421,11 @@ export function LessonPlayer({
         setLessonState={setLessonState}
         initialHintLevel={hintLevelByBeat[beat.beatId]}
         onHintLevelChange={onHintLevelChange}
+        hintCapOverride={capLiftByBeat[beat.beatId] ? 3 : undefined}
+        assist={{
+          prefillToLastTerm: true,
+          nonce: assistNonceByBeat[beat.beatId] ?? 0,
+        }}
         milestone={milestone}
         lessonComplete={done}
       />

@@ -1,0 +1,292 @@
+{
+  "lessonId": "lesson-longer-patterns",
+  "courseId": "course-pattern-hitting-times",
+  "title": "Longer Patterns & Overlap",
+  "patternOptions": ["THH", "HTH"],
+  "milestoneId": "state-machine-builder",
+  "unlocks": "lesson-overlap-shortcut",
+  "schemaVersion": 1,
+  "beats": [
+    {
+      "beatId": "open-bet",
+      "required": true,
+      "prompt": "Two new patterns, both length 3: THH and HTH. One waits longer on a fair coin. Which?",
+      "interaction": {
+        "type": "prediction",
+        "options": ["THH waits longer", "HTH waits longer", "Same — both length 3"]
+      },
+      "feedback": {
+        "byOption": {
+          "THH waits longer": {
+            "note": "Close, but it's the other way — let's build both and see.",
+            "correct": false
+          },
+          "HTH waits longer": {
+            "note": "Good hunch — HTH waits 10 vs THH's 8. We'll show why.",
+            "correct": true
+          },
+          "Same — both length 3": {
+            "note": "Same length, but not the same wait — structure decides it.",
+            "correct": false
+          }
+        },
+        "hints": [
+          "No wrong guess yet — commit and we'll derive both.",
+          "Length is equal; self-overlap is not.",
+          "HTH waits longer (10 vs 8)."
+        ]
+      }
+    },
+    {
+      "beatId": "pattern-pick",
+      "required": true,
+      "prompt": "Lock in the pair we'll work with.",
+      "interaction": {
+        "type": "patternPick",
+        "patterns": ["THH", "HTH"],
+        "mode": "compare"
+      },
+      "feedback": {
+        "correct": "THH vs HTH — let's build them from scratch.",
+        "hints": ["Both length 3.", "We'll derive each wait.", "Continue."]
+      }
+    },
+    {
+      "beatId": "transfer-primer",
+      "required": false,
+      "prompt": "One word before we slide things around.",
+      "interaction": {
+        "type": "primer",
+        "variant": "custom",
+        "title": "Overlap = self-similarity",
+        "body": "A pattern \"overlaps itself\" when its start also appears at its end. Those overlaps are the only reason two same-length patterns can wait different amounts. We'll find them by sliding the pattern over itself.",
+        "collapsible": true
+      },
+      "feedback": {
+        "correct": "Overlaps drive the difference.",
+        "hints": ["Start = end?", "That's a self-overlap.", "Continue."]
+      }
+    },
+    {
+      "beatId": "simulate",
+      "required": true,
+      "prompt": "Flip until THH appears. Feel the deeper, 4-state graph — and watch a near-miss.",
+      "interaction": {
+        "type": "coinSim",
+        "mode": "free",
+        "gate": { "minFlips": 3 }
+      },
+      "feedback": {
+        "correct": "Notice how a stray flip can knock you back a step, not all the way.",
+        "hints": [
+          "Flip and watch the chip climb ∅ → T → TH → THH.",
+          "A bad flip falls back to a shorter match, not always to ∅.",
+          "Continue once THH lands."
+        ]
+      }
+    },
+    {
+      "beatId": "overlap-ruler",
+      "required": true,
+      "pattern": "HTH",
+      "prompt": "Slide HTH over itself. Where does the start reappear at the end? Each overlap adds a 2^L term.",
+      "interaction": { "type": "autocorrelationRuler" },
+      "interviewNote": "Sliding a pattern over itself is the autocorrelation / Guibas–Odlyzko correlation set; the border lengths are exactly the overlaps that set the expected wait.",
+      "feedback": {
+        "correct": "HTH overlaps at lengths 1 and 3 — that extra length-1 overlap is the source of the extra flips.",
+        "hints": [
+          "Check each shift for a start-equals-end overlap.",
+          "HTH matches at length 3 (itself) and length 1 (the H).",
+          "Overlaps {1,3} → 2 + 8 = 10."
+        ]
+      }
+    },
+    {
+      "beatId": "failure-edge",
+      "required": true,
+      "maxHintLevel": 2,
+      "prompt": "On the THH graph: you've matched TH. The next flip is make-or-break. Where does each outcome send you?",
+      "interaction": {
+        "type": "stateTap",
+        "transitions": [
+          { "from": "E2", "on": "H" },
+          { "from": "E2", "on": "T" }
+        ]
+      },
+      "feedback": {
+        "correct": "Right — from TH, an H completes THH, but a T falls back to E1 (you still have a T), not all the way to ∅.",
+        "hints": [
+          "From TH, which flip finishes THH?",
+          "A tail isn't a total reset here — you still hold a T.",
+          "E2 on H → done; E2 on T → E1."
+        ]
+      }
+    },
+    {
+      "beatId": "equation-tiles",
+      "required": true,
+      "pattern": "THH",
+      "maxHintLevel": 2,
+      "prompt": "Build the wait-time system for THH. E₀ is worked; complete E₁ and E₂.",
+      "interaction": {
+        "type": "equationTiles",
+        "bank": [
+          { "id": "c1", "kind": "const", "value": 1 },
+          { "id": "c0", "kind": "const", "value": 0 },
+          { "id": "p", "kind": "prob", "value": "1/2" },
+          { "id": "s0", "kind": "state", "value": "E0" },
+          { "id": "s1", "kind": "state", "value": "E1" },
+          { "id": "s2", "kind": "state", "value": "E2" },
+          { "id": "s3", "kind": "state", "value": "E3" }
+        ],
+        "rows": [
+          {
+            "lhs": "E0",
+            "target": {
+              "lhs": "E0",
+              "constant": 1,
+              "terms": [
+                { "coeff": { "n": 1, "d": 2 }, "var": "E0" },
+                { "coeff": { "n": 1, "d": 2 }, "var": "E1" }
+              ]
+            },
+            "graded": true
+          },
+          {
+            "lhs": "E1",
+            "target": {
+              "lhs": "E1",
+              "constant": 1,
+              "terms": [
+                { "coeff": { "n": 1, "d": 2 }, "var": "E2" },
+                { "coeff": { "n": 1, "d": 2 }, "var": "E1" }
+              ]
+            },
+            "graded": true
+          },
+          {
+            "lhs": "E2",
+            "target": {
+              "lhs": "E2",
+              "constant": 1,
+              "terms": [
+                { "coeff": { "n": 1, "d": 2 }, "var": "E3" },
+                { "coeff": { "n": 1, "d": 2 }, "var": "E1" }
+              ]
+            },
+            "graded": true
+          },
+          {
+            "lhs": "E3",
+            "target": { "lhs": "E3", "constant": 0, "terms": [] },
+            "graded": false,
+            "note": "THH matched — absorbing, so E\u2083 = 0."
+          }
+        ],
+        "copy": {
+          "workedExplanation": "From E\u2080 (no progress) one flip costs 1. Heads leaves you at E\u2080 (THH needs a T first); tails advances to E\u2081 (you've matched the T).",
+          "legend": [
+            { "id": "E0", "text": "no progress yet (\u2205)" },
+            { "id": "E1", "text": "matched T" },
+            { "id": "E2", "text": "matched TH" },
+            { "id": "E3", "text": "matched THH \u2014 done" }
+          ],
+          "mistakeHints": {
+            "wrong-var-generic": [
+              "From a matched prefix, heads and tails lead to different states \u2014 trace each.",
+              "One flip extends the match toward THH; the other falls back to a shorter matched prefix (not always \u2205)."
+            ]
+          }
+        }
+      },
+      "feedback": {
+        "correct": "That's the THH system \u2014 solving it gives E\u2080 = 8.",
+        "hints": [
+          "Every live state costs 1 per flip.",
+          "Split each row into the heads branch and the tails branch.",
+          "E\u2081 = 1 + \u00bd\u00b7E\u2082 + \u00bd\u00b7E\u2081; E\u2082 = 1 + \u00bd\u00b7E\u2083 + \u00bd\u00b7E\u2081."
+        ]
+      }
+    },
+    {
+      "beatId": "guided-solve",
+      "required": true,
+      "prompt": "Solve both systems. What are the waits?",
+      "interaction": {
+        "type": "mcq",
+        "options": [
+          { "id": "right", "label": "THH = 8, HTH = 10", "correct": true },
+          { "id": "swap", "label": "THH = 10, HTH = 8", "correct": false },
+          { "id": "same", "label": "Both 8", "correct": false }
+        ]
+      },
+      "feedback": {
+        "correct": "THH = 8, HTH = 10 \u2014 the extra overlap costs HTH 2 more flips.",
+        "hints": [
+          "THH has only the trivial overlap.",
+          "HTH has an extra length-1 overlap.",
+          "8 and 10."
+        ]
+      }
+    },
+    {
+      "beatId": "theory-vs-sim",
+      "required": true,
+      "prompt": "Run the simulation for THH. Does the empirical mean settle on 8?",
+      "interaction": { "type": "theorySimChart" },
+      "feedback": {
+        "correct": "It converges to 8 \u2014 theory and simulation agree.",
+        "hints": ["Run a batch.", "Watch the running mean settle.", "It lands near 8."]
+      }
+    },
+    {
+      "beatId": "border-sum",
+      "required": true,
+      "pattern": "HTH",
+      "introducesSymbol": "\u03a32^L",
+      "groundedBy": ["overlap-ruler"],
+      "prompt": "Add HTH's overlap chips. Each overlap length L drops a 2^L tile; the sum is the wait.",
+      "interaction": { "type": "sumTiles" },
+      "feedback": {
+        "correct": "2\u00b9 + 2\u00b3 = 2 + 8 = 10 \u2014 the border sum is the wait.",
+        "hints": [
+          "One chip per overlap you found.",
+          "Lengths 1 and 3 \u2192 2 and 8.",
+          "Add them: 10."
+        ]
+      }
+    },
+    {
+      "beatId": "overlap-compare",
+      "required": true,
+      "comparison": true,
+      "prompt": "What's the single difference that makes HTH wait longer than THH?",
+      "interaction": {
+        "type": "mcq",
+        "options": [
+          { "id": "selfloop", "label": "HTH keeps a matched H on a near-miss; THH doesn't", "correct": true },
+          { "id": "length", "label": "HTH is longer", "correct": false },
+          { "id": "luck", "label": "Nothing — it's random", "correct": false }
+        ]
+      },
+      "feedback": {
+        "correct": "Exactly \u2014 HTH's extra length-1 overlap lets a near-miss keep progress, which (paradoxically) lengthens the wait.",
+        "hints": [
+          "Look at the near-miss edges side by side.",
+          "One pattern preserves a matched head; the other resets.",
+          "HTH's extra overlap is the difference."
+        ]
+      }
+    },
+    {
+      "beatId": "recap",
+      "required": true,
+      "prompt": "What you transferred to brand-new patterns.",
+      "interaction": { "type": "recap" },
+      "feedback": {
+        "correct": "You built, solved, and overlap-checked two unseen patterns: THH = 8, HTH = 10.",
+        "hints": ["Same toolkit, new patterns.", "Overlap sets the extra wait.", "Done."]
+      }
+    }
+  ]
+}
