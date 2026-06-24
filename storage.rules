@@ -1,0 +1,13 @@
+rules_version = '2';
+
+// Default-deny. The app does not use Cloud Storage (the client never imports
+// firebase/storage). If Storage is ever introduced, replace this with explicit
+// owner-scoped match blocks; until then deny all client access. The Admin SDK
+// (server) bypasses these rules.
+service firebase.storage {
+  match /b/{bucket}/o {
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

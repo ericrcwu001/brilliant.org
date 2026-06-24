@@ -64,6 +64,21 @@ times** for coin flips (why `E[HH]=6` but `E[HT]=4`). Sequenced by `docs/mvp_prd
   tracks; `'graph'` primer variant in schema; `phases.ts` off-rail entry; beat count 15 → 16;
   one extra `clickPrimary` in `completeLessonTrackA`. All 42 e2e tests green.
 - **Finish → completion takeover — DONE:** Pressing "Finish" on the last beat now replaces the beat with a full-screen `LessonCelebration` (confetti + spring-in) containing the done-note text, the earned `MilestoneSeal`, and a sticky "Back to course path" CTA in the action bar. A `useEffect` on `done` scrolls to top and focuses the CTA. Previously the celebration rendered off-screen in the `.prompt` section while the recap + "Finish" stayed on-screen below the fold. `tsc`/`eslint` clean; e2e `.done-note` assertions unchanged.
+- **Security audit + hardening — DONE this session** (brief: `docs/security-audit.md`).
+  Multi-model audit (web research → `gemini-3-flash` evidence → `claude-opus-4-8` adjudication
+  → `composer` brief). Backend posture confirmed strong (owner-scoped rules, server-authoritative
+  callables, no secrets/eval). **Applied:** F2 HTTP security headers (CSP/HSTS/X-Frame-Options/
+  X-Content-Type-Options/Referrer-Policy/Permissions-Policy) in `firebase.json` hosting — the CSP
+  allowlists Google sign-in + reCAPTCHA/App Check + Firestore/Functions + Analytics; **validate
+  against a real deploy** (watch console for CSP violations). F5 default-deny `storage.rules` +
+  `firebase.json` `storage` block (deploy needs a provisioned bucket; else `firebase deploy --only
+  hosting,firestore,functions`). **Deferred (ready-to-apply code in the brief):** F1
+  `enforceAppCheck: true` on the callables + F3 client fail-loud — honoring the App-Check-OFF
+  directive below; turn both on together once console metrics show verified tokens. F4 npm
+  advisories are dev/CLI-only + unreachable (NO `firebase-admin@14` bump — latest `firebase-functions`
+  7.2.5 caps admin at ^13; bumping yields an invalid tree). Net code change = `firebase.json` +
+  new `storage.rules` + the brief. Verified green: `tsc -b`+`vite build`, 133 app + 7 functions
+  vitest, 12 rules tests, lint.
 - **Last verified green** (this session): `tsc -b`, `vitest run` (**133 app** + 7 functions),
   `validate` (all 7 fixtures + inclusivity gates + 2-beat engine cross-check), `lint`, `build`,
   **`e2e` all 3 projects** (chromium + mobile + reduced-motion, 42/42: flagship Track B + Track A
@@ -83,7 +98,9 @@ times** for coin flips (why `E[HH]=6` but `E[HT]=4`). Sequenced by `docs/mvp_prd
   Check API is enabled, but do NOT enforce (or set `enforceAppCheck: true` on the
   callables) until console metrics show real users getting verified tokens — else
   legit/low-score users get blocked. (Embedded webviews score as bots → 400; real
-  browsers get 200.)
+  browsers get 200.) The security audit (this session) honored this directive — enforcement
+  is NOT applied; `docs/security-audit.md` F1/F3 carry the ready-to-apply code + the
+  monitor-then-enforce rollout sequence.
 
 ## Environment Gotchas (these will bite you)
 
