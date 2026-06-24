@@ -2,11 +2,12 @@
 
 ## Design North Star
 
-The interface should feel like a polished mathematical notebook come alive. The product is serious quant-interview prep, not a game and not a dashboard. The "wow" comes from clarity, tactile interaction, and motion that explains the math: a flip moves through the state machine, a tile snaps into an equation, and simulation converges toward theory.
+The interface should feel like a polished mathematical notebook come alive. The product is serious quant-interview prep, not a game and not a SaaS analytics product. The signed-in **home** is a **study desk spread** — streak tally, earned milestone seals, and the course path laid out on one page — not a grid of KPI tiles or colored metric blocks. The "wow" comes from clarity, tactile interaction, and motion that explains the math: a flip moves through the state machine, a tile snaps into an equation, and simulation converges toward theory.
 
 ## Product Design Principles
 
-- **Notebook, not dashboard.** Use warm paper, ink, hairline rules, and subtle paper-grain texture. Avoid SaaS cards, glass effects, generic gradients, and colored KPI blocks.
+- **Notebook, not SaaS dashboard.** Use warm paper, ink, hairline rules, and subtle paper-grain texture. The home may surface habit and progress, but only through notebook metaphors: tally marks, stamped seals, index cards, and a vertical state-chain — never glass effects, generic gradients, donut charts, or colored KPI blocks.
+- **Study desk home.** After sign-in, one scrollable page shows streak, milestones, and course path in that order. The learner should see momentum (what they have done) and direction (what to do next) without leaving the notebook world.
 - **Math is the interface.** `H`, `T`, `E0`, `1/2`, arrows, equations, and state labels should do most of the visual work.
 - **Motion explains.** Animations should map to mathematical events: flip, state transition, tile snap, substitution, convergence.
 - **One thing per beat.** Each lesson screen should have one prompt, one interaction, one feedback area, and one primary action.
@@ -196,15 +197,26 @@ Respect `prefers-reduced-motion`: replace travel, pulse, shake, and convergence 
 
 ## App Shell
 
-### Top Bar
+The app has two shells: **Home** (signed-in study desk) and **Lesson** (in-lesson beats). Both use the same centered page column and paper-grain background.
 
-Both mobile and laptop:
+### Home Top Bar
 
-- Back control on the left.
+Signed-in home only — no back control, no beat rail.
+
+- **Left:** course wordmark, e.g. "Pattern Hitting Times" in IBM Plex Serif at label scale, `--ink`.
+- **Right:** profile control (display-name initial in an ink ring, or a settings glyph). Opens display-name edit and sign-out.
+
+Keep the bar lean: one hairline `--rule` bottom border, no streak here (streak lives in the habit panel below). On laptop, align to the centered page column.
+
+### Lesson Top Bar
+
+In-lesson only:
+
+- Back control on the left (returns to home).
 - Lesson short title and a horizontally scrollable per-beat progress rail in the center.
-- Streak chip on the right.
+- Compact streak tally chip on the right (same tally component as home, smaller).
 
-Use a lean bar, not a full dashboard header. On laptop, the bar aligns to the centered page column.
+Use a lean bar, not a SaaS header. On laptop, the bar aligns to the centered page column.
 
 **Per-beat progress rail:**
 
@@ -257,12 +269,12 @@ Beat-to-primary-action map (flagship lesson):
 
 Every data-backed screen must define non-happy-path states. Match the notebook identity: hairline skeletons over spinners where possible, quiet ink copy, no SaaS toasts with drop shadows.
 
-- **Loading (content fetch):** course path and lesson beats show a hairline skeleton of the layout, not a spinner. Target is the under-2-second first-interaction budget.
+- **Loading (content fetch):** home and lesson beats show a hairline skeleton of the layout, not a spinner. Home skeletons the habit panel, seal gallery, and index-card rows. Target is the under-2-second first-interaction budget.
 - **Restoring work:** while hydrating a snapshot, show a brief "Restoring your work…" line in the prompt strip; reveal the interaction once committed state is applied.
 - **Content / auth error:** inline ink message with a single `Retry` ghost action; never a blank screen. Auth field errors follow the `Inputs` spec.
 - **Offline:** a persistent quiet banner, "Saved locally — syncs when you're back online." Interactions stay fully usable; writes are fire-and-forget.
 - **Failed write:** non-blocking; do not interrupt the learner. If a restore fails entirely, offer "Start this lesson over" with the local mirror as the first fallback.
-- **Empty / not-yet-started:** course path shows available and locked nodes per the Course Path spec; no empty-state illustration.
+- **Empty / not-yet-started:** home shows the full study-desk layout per Signed-in Home; zero-day streak, one ghost seal, lesson 1 focused; no empty-state illustration.
 
 ## Component Specs
 
@@ -340,14 +352,48 @@ Use tally marks, not a flame. This keeps the habit loop inside the notebook iden
 - Every fifth day uses the diagonal slash.
 - On increment, draw the new stroke with a short stroke-dash animation.
 
+**Home habit panel (primary streak surface):**
+
+- Full-width `--paper-1` panel with `1px --rule` border and `--r-md` radius.
+- Tally marks at **display scale** (largest type on the home page).
+- Caption below: `{n}-day streak` in label style, `--graphite`.
+- Optional one-line status in `--graphite-soft`, e.g. "Resume Pattern Hitting Times · beat 5" or "Start States & Streaks" — derived from the recommended next action, not a separate widget.
+- If the learner has not qualified today: quiet `--mark` ink note, "Practice today to extend your streak." No countdown timers or red urgency.
+
+**Lesson top-bar chip (compact):**
+
+- Same tally component, smaller; tap opens home (optional) or is display-only.
+
 ### Milestones
 
 Use a stamped seal, not a badge.
 
-- Circular ink-ring seal.
-- `--mark` accent glyph such as `HH != HT`, `Σ`, or `✓x3`.
-- On earn, press the seal down with a short stamp animation.
-- Reduced motion: fade in only.
+- Circular ink-ring seal, 56px mobile / 64px laptop.
+- `--mark` accent glyph such as `HH ≠ HT`, `Σ`, or `✓×3` in IBM Plex Mono.
+- Reduced motion: fade in only (applies to both moments below).
+
+**Two earn moments (recap is primary):**
+
+1. **Recap beat (primary):** on lesson completion, the seal **presses down with a short stamp animation** — the conclusive earn moment.
+2. **Home return (secondary, quiet):** the **first** time Home loads after a new earn, the matching gallery seal does a quiet **ink fade-in** from ghost to inked (not a full stamp), then stays static on subsequent visits. Track a seen/unseen flag so the fade plays once. No re-staged celebration; the recap stamp is not repeated on Home.
+
+**Milestone seal gallery (home):**
+
+- Section label: "Milestones" in caption style, `--graphite-soft`.
+- Horizontal scroll of **all course milestones** on a `--paper-1` shelf panel from the first visit; no visible scrollbar; upcoming seals peek at the right edge.
+- **Fixed order** (lesson sequence, never sorted by earn date):
+  1. `hh-ht-mastered` — HH vs HT Mastered (L1)
+  2. `penneys-game-won` — Penney's Game Won (L2)
+  3. `gamblers-ruin-solved` — Gambler's Ruin Solved (L3)
+  4. `three-lessons-complete` — Three Lessons Complete (mid-course)
+  5. `first-pattern-cracked` — First Pattern Cracked (L4)
+  6. `state-machine-builder` — State Machine Builder (L5)
+  7. `martingale-mastered` — Martingale Mastered (L6)
+  8. `six-lessons-complete` — Six Lessons Complete (course completion)
+- **Earned:** full ink ring, glyph in `--mark`, title on hover/focus (laptop) or beneath (mobile).
+- **Unearned:** ghost seal — dashed `--graphite-soft` ring, glyph at 30% opacity, title in `--graphite-soft`. All unearned seals are visible from day one (stamp-album preview, not a progress bar).
+- Mobile: ~2.5 seals visible. Laptop: ~4.
+- Tapping an earned seal is optional (shows earned date + source lesson in a quiet inline expansion); tapping a ghost shows milestone title + unlock hint only. Never blocks navigation.
 
 ## Auth-First Onboarding
 
@@ -356,7 +402,7 @@ Flow:
 1. Landing page.
 2. Sign in or create account.
 3. Confirm display name.
-4. Course path.
+4. Home (study desk: habit panel, milestone gallery, course path).
 5. Start or resume lesson.
 
 Landing hero:
@@ -375,28 +421,127 @@ Landing hero (laptop):
 
 The tone should be confident and terse. Avoid generic marketing copy and exaggerated excitement.
 
-## Course Path
+## Signed-in Home (Study Desk)
 
-Use a vertical number-line / state-chain path.
+The signed-in home is a single vertically scrolling page — **dashboard-lite reframed as a notebook spread**. Three regions, top to bottom: habit panel, milestone seal gallery, course path. No tabs, no sidebar, no metric grid.
 
-- A central rule connects lesson nodes.
-- Each lesson appears as an index-card row attached to the line.
-- Mastered node: filled quill-blue state plus milestone stamp; label "Completed", or "Fully mastered" when `transferAttained` is true.
-- `needsReview` node: completed state with a `--mark` ring and a "Review recommended" caption; the course-path CTA points here before "Start next lesson".
-- Available node: ink ring with `Start` or `Resume`.
-- Locked node: faint rule and lock glyph.
-- Roadmap nodes appear below a divider as "On the roadmap" and are not tappable.
+### Page skeleton
+
+```text
+[home top bar: wordmark / profile]
+[habit panel: streak tally + one-line next-action status]
+[milestone seal gallery: earned + next ghost seals]
+[section label: "Course"]
+[course path: vertical graph-node chain]
+[section label: "On the roadmap"]
+[roadmap node stubs]
+```
+
+On laptop, all regions align to the centered page column (`--page-max`). Vertical rhythm between major regions: `--s6` mobile, `--s7` laptop.
+
+### Habit panel
+
+- First content below the home top bar; establishes momentum before the path.
+- Contains the primary streak tally (see Streak spec) and one derived **status line** pointing at the recommended lesson action (e.g. "Resume Pattern Hitting Times · beat 5").
+- **No primary button** in the habit panel. The status line is text-only; the focused lesson path node's detail panel holds the sole `Start`, `Resume`, or `Review` button.
+- Background: `--paper-1`, flat (no shadow). A single hairline `--rule` border — not a floating SaaS card.
+
+### Milestone seal gallery
+
+- Second region; see Milestones spec.
+- Separated from the habit panel by `--s5` / `--s6`.
+- If no milestones earned yet: all eight seals render as ghosts (full stamp-album preview).
+
+### Recommended-action priority
+
+The habit-panel status line and the course path must agree on the next action, in this order:
+
+1. **Resume** — any in-progress lesson with a saved snapshot. An active session always wins focus; review never interrupts it.
+2. **Review** — most recent `needsReview` completed lesson, **only when no lesson is in progress** (between lessons). Sets the `--mark` ring + "Review recommended" on that node and the focused detail panel.
+3. **Start** — next unlocked lesson not yet started.
+4. **Replay** — all lessons mastered; status reads "Course complete" and points at optional review or roadmap preview.
+
+The matching course-path node gets **focus emphasis** (quill ring; detail panel pinned open). Only one node is focused at a time.
+
+**`needsReview` while a lesson is in progress:** Resume stays focused. The `needsReview` lesson keeps its `--mark` ring and surfaces "Review recommended" via hover/focus detail only — it does not steal the pinned focus or the primary CTA. The habit-panel status line may carry a quiet `--mark` note (e.g. "Review recommended on Pattern Hitting Times") beneath the Resume status, but the single primary button still resumes the active lesson.
+
+### Home loading and empty states
+
+- **Loading:** skeleton the three regions — tally stroke placeholders, circular seal ghosts, spine + node dots — not a centered spinner.
+- **First visit (no progress):** habit panel shows `0-day streak`; gallery shows all eight milestone ghosts; L1 node focused with detail panel open; roadmap stubs visible below.
+
+## Course Path (Graph Nodes)
+
+The course path is the **third region of the signed-in home** (not a separate route in MVP). Lessons are **graph nodes** on a vertical spine — not index cards. Reuse the state-graph node vocabulary (circles, ink rings, mono glyphs) from the in-lesson Konva graphs. **Rendering (Q17/Q18):** a single Konva `<Stage>` draws the spine + a parallel transparent DOM-button overlay carries focus / keyboard / 44px / `aria`; detail panels are DOM (see `docs/adr/0001-konva-course-path-spine.md`).
+
+### Spine and node layout
+
+- Section label "Course" in caption style above the chain.
+- A central `--rule-faint` vertical rule connects node dots (same geometry as lesson state graphs).
+- Each lesson is one **path node**: a circle on the spine + a mono **lesson glyph** inside or centered on the dot (IBM Plex Mono).
+- **At rest (non-focused):** glyph inside the node dot only — no lesson number, no title.
+- **Detail panel (hover / focus on non-focused):** title (H2), one-line hook (`--graphite`), status caption — no primary button.
+- **Focused node (recommended action):** detail panel **pinned open on load** without hover; includes title, hook, status, and the sole primary `Start`, `Resume`, or `Review` button. Quill ring + `--mark-wash` beam to panel.
+
+### Per-lesson glyphs (fixed)
+
+| L | Glyph | Lesson |
+|---|-------|--------|
+| 1 | `HH` | Pattern Hitting Times |
+| 2 | `A≻B` | Penney's Game |
+| 3 | `i/N` | Gambler's Ruin |
+| 4 | `H` | States & Streaks |
+| 5 | `THH` | Longer Patterns & Overlap |
+| 6 | `Σ2^L` | The Overlap Shortcut |
+
+- **Active beam (focused node only):** a thin vertical `--mark-wash` hairline connects the quill ring on the dot to the detail panel — a flat 2D nod to a "light column," not a 3D glow stack.
+- Detail panel placement: to the right of the node on laptop. **Mobile (Q19)** diverges to a responsive layout — the focused node becomes a full-width DOM card (glyph + title + hook + live preview + CTA) atop a compact Konva rail of the remaining glyph-only nodes (see `docs/home-study-desk.md` §2.4).
+
+### Focused detail panel — live preview
+
+The **focused node's detail panel hosts a small looping live preview** of that lesson's signature interaction — the node dot keeps its static glyph; the motion lives in the panel. This is the single cinematic moment on Home (mirrors the landing-page state-machine motif), scoped to the focused lesson only. Non-focused panels (hover/focus) show title + hook + status with **no** preview.
+
+- Layout in the focused panel: title (H2) → hook (`--graphite`) → live preview region → status caption → primary CTA.
+- Preview region: edge-confined grid (`--rule-faint`) where coordinates matter, per the Background Texture policy; height ~120–160px mobile, taller on laptop; never taller than the CTA's reach.
+- Each preview loops gently and is **engine-driven where the engine exists** (reuse pure sims + seeded `mulberry32`); decorative-only loops are acceptable for not-yet-built lessons.
+
+Per-lesson preview intent:
+
+| L | Glyph | Live preview |
+|---|-------|--------------|
+| 1 | `HH` | 3-node state graph pulsing through a flip sequence (reuse `StateGraph`) |
+| 2 | `A≻B` | Two race lanes ticking; tally drifting toward 7:1 |
+| 3 | `i/N` | A token random-walking between two walls on a number line |
+| 4 | `H` | 2-node graph flipping until the first `H` |
+| 5 | `THH` | 4-node chain advancing then resetting on a near-miss |
+| 6 | `Σ2^L` | `2^L` chips dropping into a running sum landing on 6 |
+
+- **Reduced motion:** render the preview's final/representative static frame (no loop), per the global reduced-motion rule; the panel stays legible and the lesson reachable.
+- **Performance:** Konva previews use the same imperative-layer rule as in-lesson graphs (no per-frame React state); keep Home within the under-2-second first-interaction budget — lazy-load the preview after the spine and CTA paint.
+- **Build phasing (honesty):** only L1 is built, so ship the **L1 preview first** (reuse `StateGraph`); L2–L6 previews are authored as each lesson is built. Until then, a focused-but-unbuilt lesson shows a static glyph placeholder in the preview region (no fabricated animation).
+
+### Node states
+
+- **Focused (recommended action):** `--quill` ring, soft pulse (respect reduced motion); detail panel **pinned open** on load; primary CTA in panel. Beam to panel.
+- **Available (not focused):** ink ring; detail on hover/focus only; no CTA unless this node becomes focused.
+- **Completed (non-focused):** **filled quill dot** (solid `--quill` center, glyph in `--paper-0` or `--mark` on fill) vs hollow ink ring for available — progress visible at a glance without title or hover. Slight opacity recede (`~0.72`) optional until hover.
+- **needsReview:** completed styling + `--mark` ring; detail panel shows "Review recommended"; takes focus priority over Start next.
+- **Locked:** faint `--rule-faint` ring, lock glyph overlay, glyph at 30% opacity; detail panel on hover shows title + hook + "Locked" only — no prerequisite copy.
+
+### Interaction
+
+- **Laptop:** `mouseenter` / `focus` opens detail panel; `mouseleave` / `blur` closes unless this is the focused node (focused stays open).
+- **Mobile / touch:** first **tap** opens detail panel; second tap on focused node's CTA enters lesson. Tap elsewhere closes non-focused panels.
+- **Keyboard:** arrow keys move along spine; `Enter` opens focused node / activates CTA when focused node is selected.
+- Minimum hit target on each node dot: 44px (padding around glyph if needed).
+
+### Roadmap stubs
+
+Below "On the roadmap": smaller graph nodes (reduced dot size), title + hook in detail on hover only, not tappable.
 
 Course path (laptop):
 
-- Centered vertical state-chain column within the page max-width.
-- Larger index-card rows and type scale per laptop hierarchy.
-
-The path should always expose the next recommended action:
-
-- Resume current lesson.
-- Start next unlocked lesson.
-- Review a `needsReview` lesson.
+- Centered spine column within `--page-max`; detail panels align to a consistent right column so the chain reads like a labeled graph.
 
 ## Flagship Lesson Layout
 
@@ -452,7 +597,7 @@ Screen-by-screen direction:
    - Optional slider for coin bias `p`; reachable via the off-rail "Try bias" chip.
 
 11. **Review and next step**
-   - Recap, milestone stamp, next lesson recommendation. Course path shows "Fully mastered" when `transferAttained`, else "Completed".
+   - Recap, milestone stamp, next lesson recommendation. The **recap** shows "Fully mastered" when `transferAttained`, else "Completed"; the course-path node stays binary (completed / `needsReview`).
 
 ## Konva Visual Rules
 

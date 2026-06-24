@@ -136,7 +136,38 @@ export const LessonSchema = z.object({
   schemaVersion: z.number(),
 })
 
+// courses/{courseId} — seeded course metadata + ordered path. `lessons` is the
+// built/unlock-ordered path (a node may be `built: false` when its lesson
+// fixture isn't authored yet, so it has no lessons/{lessonId} doc); `roadmap`
+// is the visible-but-not-built stubs after the MVP path.
+const CourseLessonNodeSchema = z.object({
+  lessonId: z.string(),
+  title: z.string(),
+  summary: z.string(),
+  milestoneId: z.string(),
+  built: z.boolean(),
+})
+
+const CourseRoadmapNodeSchema = z.object({
+  lessonId: z.string(),
+  title: z.string(),
+  summary: z.string(),
+})
+
+export const CourseSchema = z.object({
+  courseId: z.string(),
+  title: z.string(),
+  description: z.string(),
+  persona: z.string(),
+  lessons: z.array(CourseLessonNodeSchema),
+  roadmap: z.array(CourseRoadmapNodeSchema),
+  completionMilestoneId: z.string(),
+  schemaVersion: z.number(),
+})
+
 // users/{uid}/snapshots/{lessonId} — client-written, authoritative for restore.
+// `equationTiles` values are per-slot token arrays that may contain nulls for
+// not-yet-filled slots, so an in-progress build round-trips exactly on restore.
 export const SnapshotSchema = z.object({
   lessonId: z.string(),
   beatId: z.string(),
@@ -144,13 +175,48 @@ export const SnapshotSchema = z.object({
   completedBeats: z.array(z.string()),
   interactionState: z
     .object({
-      equationTiles: z.record(z.string(), z.array(z.string())).optional(),
+      equationTiles: z
+        .record(z.string(), z.array(z.string().nullable()))
+        .optional(),
       prediction: z.unknown().optional(),
       hintLevelByBeat: z.record(z.string(), z.number()).optional(),
     })
     .loose(),
   updatedAt: z.string(),
   schemaVersion: z.number(),
+})
+
+// users/{uid}/progress/{lessonId} — Cloud-Function-written read cache for the
+// course path. Completion/mastery/unlock fields are trusted (Functions only);
+// the client reads this doc to render node state. Server timestamps and the
+// derived-field block are intentionally loose (Timestamps arrive as objects).
+export const ProgressDerivedSchema = z
+  .object({
+    initialPrediction: z.union([z.string(), z.number()]).nullable().optional(),
+    finalPrediction: z.number().nullable().optional(),
+    empiricalMean: z.number().nullable().optional(),
+    theoreticalValue: z.number().nullable().optional(),
+    predictionDeltaInitial: z.number().nullable().optional(),
+    simRuns: z.number().nullable().optional(),
+    transferAttained: z.boolean().optional(),
+  })
+  .loose()
+
+export const ProgressSchema = z.object({
+  currentBeat: z.string().optional(),
+  completionStatus: z.enum(['in_progress', 'completed']).optional(),
+  masteryStatus: z.enum(['not_mastered', 'mastered']).optional(),
+  needsReview: z.boolean().optional(),
+  completedBeats: z.array(z.string()).optional(),
+  attemptsByBeat: z.record(z.string(), z.number()).optional(),
+  derived: ProgressDerivedSchema.optional(),
+  unlocks: z.string().nullable().optional(),
+  unlockedBy: z.string().optional(),
+  // Firestore server timestamps deserialize to Timestamp objects, not strings.
+  unlockedAt: z.unknown().optional(),
+  completedAt: z.unknown().optional(),
+  updatedAt: z.unknown().optional(),
+  schemaVersion: z.number().optional(),
 })
 
 export type CanonicalRecurrence = z.infer<typeof CanonicalRecurrenceSchema>
@@ -161,4 +227,7 @@ export type Interaction = z.infer<typeof InteractionSchema>
 export type Feedback = z.infer<typeof FeedbackSchema>
 export type Beat = z.infer<typeof BeatSchema>
 export type Lesson = z.infer<typeof LessonSchema>
+export type Course = z.infer<typeof CourseSchema>
 export type Snapshot = z.infer<typeof SnapshotSchema>
+export type Progress = z.infer<typeof ProgressSchema>
+export type ProgressDerived = z.infer<typeof ProgressDerivedSchema>

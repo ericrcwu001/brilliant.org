@@ -34,6 +34,16 @@ firestore-export/
 firestore-backup/
 *.firestore-export
 
+# Firebase CLI / emulator artifacts
+.firebase/
+firebase-debug.log
+firestore-debug.log
+ui-debug.log
+database-debug.log
+pubsub-debug.log
+*-debug.log
+firebase-export-*
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

@@ -4,7 +4,7 @@
   "title": "Pattern Hitting Times",
   "patternOptions": ["HH", "HT"],
   "milestoneId": "hh-ht-mastered",
-  "unlocks": "lesson-longer-patterns",
+  "unlocks": "lesson-penneys-game",
   "schemaVersion": 1,
   "beats": [
     {

@@ -14,6 +14,7 @@ import { resolveFeedback } from '../feedback'
 import type { FeedbackView } from '../FeedbackStrip'
 import { SimChart } from '../konva/SimChart'
 import { useElementWidth } from '../konva/useElementWidth'
+import { analytics } from '../../analytics/events'
 
 const BATCH = 500
 const DURATION_MS = 5000
@@ -21,7 +22,7 @@ const DURATION_MS = 5000
 const CONVERGED_AT = 120
 
 export function TheorySimChartBeat(props: BeatProps) {
-  const { beat, pattern, automaton, isLast, onAdvance } = props
+  const { beat, lessonId, pattern, automaton, reducedMotion, isLast, onAdvance } = props
   const [boxRef, width] = useElementWidth<HTMLDivElement>()
   const [points, setPoints] = useState<number[]>([])
   const [running, setRunning] = useState(false)
@@ -74,6 +75,24 @@ export function TheorySimChartBeat(props: BeatProps) {
     }
     setBatchStart(countRef.current)
     const target = countRef.current + BATCH
+    analytics.simulationRun({ lessonId, beatId: beat.beatId, n: BATCH })
+
+    // Reduced motion: skip the ~5s animated sweep and render the converged curve
+    // in a single update (the global CSS reduce rule can't stop a JS rAF loop).
+    if (reducedMotion) {
+      const batch: number[] = []
+      while (countRef.current < target) {
+        sumRef.current += flipsToAbsorption(automaton)
+        countRef.current += 1
+        batch.push(sumRef.current / countRef.current)
+      }
+      setPoints((p) => p.concat(batch))
+      persist()
+      setAnnounce(
+        `Done. ${countRef.current} total runs, empirical mean ${(sumRef.current / countRef.current).toFixed(2)} versus theory ${theory}.`,
+      )
+      return
+    }
 
     setRunning(true)
     setAnnounce(`Simulating ${BATCH} runs, plotting the empirical mean live.`)

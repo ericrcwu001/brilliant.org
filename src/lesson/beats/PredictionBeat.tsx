@@ -8,9 +8,11 @@ import type { BeatProps } from './types'
 import { BeatShell } from '../BeatShell'
 import { resolveFeedback } from '../feedback'
 import type { FeedbackView } from '../FeedbackStrip'
+import { analytics } from '../../analytics/events'
 
 export function PredictionBeat({
   beat,
+  lessonId,
   pattern,
   isLast,
   onAdvance,
@@ -38,7 +40,14 @@ export function PredictionBeat({
         label: isLast ? 'Finish' : 'Continue',
         enabled: selected !== null,
         onClick: () => {
-          if (selected !== null) setLessonState({ initialPrediction: selected })
+          if (selected !== null) {
+            setLessonState({ initialPrediction: selected })
+            analytics.predictionSet({
+              lessonId,
+              beatId: beat.beatId,
+              value: selected,
+            })
+          }
           onAdvance()
         },
       }}

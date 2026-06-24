@@ -7,13 +7,15 @@
 // -> simulation), and a forward bridge to the THH-vs-HTH transfer. All numbers
 // come straight from the engine; only `needsReview` softens the praise.
 
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import type { BeatProps } from './types'
 import type { Automaton, Rational, StateId } from '../../engine/types'
 import { buildAutomaton } from '../../engine/automaton'
 import { BeatShell } from '../BeatShell'
 import { resolveFeedback } from '../feedback'
 import type { FeedbackView } from '../FeedbackStrip'
+import { MilestoneSeal } from '../../habit/MilestoneSeal'
+import { analytics } from '../../analytics/events'
 
 type RecallId = 'length' | 'overlap' | 'rarity'
 
@@ -89,6 +91,17 @@ export function RecapBeat(props: BeatProps) {
     () => (contrastPattern ? buildAutomaton(contrastPattern, automaton.p) : null),
     [contrastPattern, automaton.p],
   )
+
+  // review_recommended_shown (Phase 19): fire once when the recap surfaces the
+  // review recommendation (a needsReview lesson, once the recap is revealed).
+  const reviewShown = useRef(false)
+  useEffect(() => {
+    const visible = needsReview && (picked !== null || revealedAnyway)
+    if (visible && !reviewShown.current) {
+      reviewShown.current = true
+      analytics.reviewRecommendedShown({ lessonId: props.lessonId })
+    }
+  }, [needsReview, picked, revealedAnyway, props.lessonId])
 
   if (beat.interaction.type !== 'recap') return null
 
@@ -166,6 +179,14 @@ export function RecapBeat(props: BeatProps) {
   return (
     <BeatShell feedback={view} primary={primary} secondary={secondary}>
       <div className="recap">
+        {props.lessonComplete && props.milestone && (
+          <div
+            className={`recap__stamp${reducedMotion ? '' : ' recap__stamp--press'}`}
+          >
+            <p className="recap__stamp-kicker">Milestone earned</p>
+            <MilestoneSeal meta={props.milestone} earned />
+          </div>
+        )}
         <div className="recap__retrieve">
           <p className="recap__q">
             Before you finish — why does HH wait longer than HT?

@@ -8,9 +8,11 @@ import type { BeatProps } from './types'
 import { BeatShell } from '../BeatShell'
 import { resolveFeedback } from '../feedback'
 import type { FeedbackView } from '../FeedbackStrip'
+import { analytics } from '../../analytics/events'
 
 export function SliderBeat(props: BeatProps) {
-  const { beat, pattern, automaton, reducedMotion, isLast, onAdvance, setLessonState } = props
+  const { beat, lessonId, pattern, automaton, reducedMotion, isLast, onAdvance, setLessonState } =
+    props
   const interaction = beat.interaction
   const slider = interaction.type === 'slider' ? interaction : null
   const min = slider?.min ?? 0
@@ -67,6 +69,11 @@ export function SliderBeat(props: BeatProps) {
                 setLessonState({
                   finalPrediction: value,
                   theoreticalValue: automaton.expectedTimes.E0,
+                })
+                analytics.predictionSet({
+                  lessonId,
+                  beatId: beat.beatId,
+                  value,
                 })
               },
             }

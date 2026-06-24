@@ -41,9 +41,12 @@ export function StateGraph({
 }) {
   const { states, transitions } = automaton
   const n = states.length
-  const radius = Math.min(34, Math.max(22, width / (n * 3)))
+  // Many-node automata (length-4+ patterns, n>=5) need smaller nodes + tighter
+  // side padding to fit a phone width without colliding; the flagship's n<=4
+  // graphs keep their original sizing.
+  const radius = Math.min(34, Math.max(n > 4 ? 14 : 22, width / (n * 3)))
   const nodeY = height * 0.5
-  const padX = radius + 30
+  const padX = radius + (n > 4 ? 16 : 30)
   const innerW = Math.max(1, width - padX * 2)
   const xOf = (i: number) => (n <= 1 ? width / 2 : padX + (innerW * i) / (n - 1))
   const indexOf = (id: StateId) => states.findIndex((s) => s.id === id)

@@ -1,578 +1,658 @@
-# Proposed Next Lessons — Pattern Hitting Times course
+# Proposed Lessons — Inclusive Redesign (next-to-zero foundation)
 
-**What this is.** A proposal for the **3 lessons that come after the current flagship**
-(`lesson-pattern-hitting-times`, "why `E[HH]=6` but `E[HT]=4`"). It was produced by
-5 parallel research agents (quant-interview canon, Markov-chain theory, combinatorics-on-
-words, interaction/widget design, and curriculum/pedagogy), each grounded in the repo
-(engine, schema, widget catalog, design system, beat rubric) and in the math literature.
-Their full notes live in `audits/ideation/agent-{1..5}-*.md`.
+**What this is.** A rethink of the Pattern Hitting Times course — the proposed extension/capstone
+lessons **and** the on-ramp to the built flagship — so the product works for a learner **starting
+from next-to-zero foundation** (may not know what a fraction `½`, "probability," "expected value,"
+or basic algebra are; may have math anxiety) **without gutting the depth** that serves the
+quant-interview learner. It supersedes the earlier "three picks" framing of this file; the verified
+math, widget catalog, and engine plans are preserved and folded into an inclusivity-first structure.
 
-**The headline.** All five agents independently converged on the same spine:
-**Penney's Game** (recommended by all 5) and a deep **overlap/martingale** lesson
-(recommended by 4) plus **Gambler's Ruin** (recommended by 4). The proposed slate is:
+**Companion documents.**
+- The implemented flagship (L1) has its own implementation-ready change spec:
+  **`docs/l1-inclusive-redesign-spec.md`** (a future agent applies those edits to
+  `fixtures/lesson-pattern-hitting-times.json` and the beat components).
+- The learning-science basis for everything here is five parallel research memos:
+  `audits/ideation/inclusive-research-1-cognitive-load.md` (cognitive load / expertise reversal),
+  `-2-prerequisites-misconceptions.md` (prerequisite map + misconception inventory),
+  `-3-representations-cra.md` (concrete→abstract / notation ladder),
+  `-4-motivation-anxiety.md` (persona, copy, math anxiety),
+  `-5-progression-assessment.md` (sequencing, mastery, spacing/interleaving).
+- Detailed beat-by-beat math specs for L2/L3/L5/L6 still live in `audits/ideation/plan-L{2..6}-*.md`
+  (treat their math as canonical; treat their *sequencing/copy* as superseded by this file).
 
-| # | Lesson | One-line | Varies | Recommended by |
-|---|--------|----------|--------|----------------|
-| **L4** | **Penney's Game** — "The Bet Where Going Second Wins" | Two patterns race on one stream; who appears *first* is decoupled from expected wait, and it's **non-transitive**. | the **question** (how long → who's first) | A1#1, A2, A3, A4#1, A5#1 (all 5) |
-| **L5** | **Gambler's Ruin** — "How a Fair Game Still Breaks You" | The same first-step machine on a number line with two walls → a **probability** *and* a **duration**; a tiny edge is catastrophic. | the **arena** (coin patterns → random walk) | A1#2, A2#1, A4#3, A5 (alt) |
-| **L6** | **The Overlap Shortcut** — "Read the Wait Off the Pattern" | `E[wait] = Σ 2^(overlap length)`, proved by a **fair-casino martingale**; re-derives 6, 4, 8, 10 in one line. | the **method** (solve a system → a closed form) | A1#3, A3#1+#2, A5#2 |
+---
 
-Each lesson is **10–12 beats**, **problem-first**, **no AI**, completable tap-only + reduced-
-motion, and—per your priority—**packed with interactable widgets**: ~a dozen new ones across the
-slate (plus heavy reuse of the existing 10), and **every lesson has at least one living graph +
-simulation you watch resolve** — a swarm of races settling on 7:1, ~100 walkers flowing to the walls
-while the ruin curve warps, three methods snapping onto one value. See [§6](#widget-catalog).
+## 0. The headline reframe
+
+Five independent learning-science audits converged on one diagnosis and one fix.
+
+**Diagnosis — the course is expert-optimized, and that *actively* hurts beginners.** Every strong
+choice for the stated persona ("a university underclassman preparing for quant interviews [who]
+know[s] the Green Book") is, by the **expertise-reversal effect** (Kalyuga 2007; 2025 meta-analysis),
+a *negative* for a near-zero learner: cold notation, predict-then-reveal "traps," and dense
+multi-equation systems that assume `½`, expected value, variables, and recurrences are already
+automatic. The product hasn't mis-designed for its persona — it **mis-scoped the persona**.
+
+**Fix — scaffold by default, let experts opt out.** The reversal is *asymmetric*: withholding help
+from a novice costs more (*d*≈0.51) than giving "too much" help to an expert (*d*≈−0.43), and
+"assistance to novices matters more than withholding it for experts." So the inclusive design is not
+a dumbing-down; it is **one adaptive spine** with:
+
+1. **An optional, diagnostic-gated on-ramp (L0)** that teaches the *simplest* case first (`E[H]=2`).
+2. **A two-track experience** — a short pre-check routes a beginner through primers and expanded
+   beats, and lets a fluent learner skip straight to depth.
+3. **Just-in-time primers + a concrete→abstract notation ladder** so no symbol arrives before its
+   referent.
+4. **Elicit-and-refute misconception handling** (per-option feedback), faded worked examples,
+   systematic retrieval/spacing/interleaving, and a light non-blocking mastery signal.
+5. **De-gatekept, warm-but-precise copy**, with the quant framing preserved in opt-in
+   "**For the interview**" notes.
+
+Everything below is the application of that fix, lesson by lesson and course-wide.
 
 ---
 
 ## Table of contents
 
-1. [Why these three (cross-agent convergence)](#why-these-three)
-2. [How they continue the current lesson](#how-they-continue)
-3. [Lesson L4 — Penney's Game](#l4-penneys-game)
-4. [Lesson L5 — Gambler's Ruin](#l5-gamblers-ruin)
-5. [Lesson L6 — The Overlap Shortcut (Conway + Martingale)](#l6-overlap-shortcut)
-6. [New interactable-widget catalog](#widget-catalog)
-7. [Engine & schema additions](#engine-additions)
-8. [Course-path integration (IDs, unlock order, milestones)](#course-path)
-9. [Alternates considered & deferred](#alternates)
-10. [Math sources](#sources)
+1. [The revised course map](#course-map)
+2. [Cross-cutting inclusivity system](#system) — the rules every lesson inherits
+   - 2.1 [Two-track architecture + diagnostic pre-check](#two-track)
+   - 2.2 [Just-in-time primers + the notation onboarding ladder](#ladder)
+   - 2.3 [Faded worked examples (worked → completion → independent)](#fading)
+   - 2.4 [Misconception elicitation & refutation](#refute)
+   - 2.5 [Retrieval, spacing & interleaving](#retrieval)
+   - 2.6 [Light, non-blocking mastery signal](#mastery)
+   - 2.7 [Copy & tone (de-gatekeeping)](#tone)
+   - 2.8 [Widget & animation load rules](#widget-load)
+3. [L0 — The First Heads (new on-ramp)](#l0)
+4. [L1 — Pattern Hitting Times (inclusive deltas → see L1 spec)](#l1)
+5. [L2 — Penney's Game](#l2)
+6. [L3 — Gambler's Ruin](#l3)
+7. [L4 — Mixed Review & Streaks (repurposed)](#l4)
+8. [L5 — Longer Patterns & Overlap (transfer)](#l5)
+9. [L6 — The Overlap Shortcut (capstone)](#l6)
+10. [Engine, schema & infra additions](#engine)
+11. [Course-path integration (IDs, order, milestones)](#course-path)
+12. [Open questions & tradeoffs (for the human)](#open)
+13. [Sources](#sources)
 
 ---
 
-<a name="why-these-three"></a>
-## 1. Why these three (cross-agent convergence)
+<a name="course-map"></a>
+## 1. The revised course map
 
-Five agents, five lenses, one slate. The vote tally:
+Canonical unlock order is unchanged in number and gate; the inclusive design **adds an optional L0
+on-ramp** and **repurposes the L4 slot** from re-deriving the simplest case (now taught in L0) into
+interleaved mixed review.
 
-| Candidate lesson | A1 quant | A2 markov | A3 pattern | A4 widgets | A5 curric. | In slate? |
-|---|:--:|:--:|:--:|:--:|:--:|:--:|
-| **Penney's Game** | #1 | ✓ (bridge) | #3 | #1 | #1 | **Yes (unanimous)** |
-| **Gambler's Ruin** | #2 | #1 | — | #3 | alt/L7 | **Yes** |
-| **Overlap shortcut / Martingale** | #3 | ✓ | #1 & #2 | (in L2) | #2 | **Yes** |
-| Weighted Coins & Dice | bridge | — | — | — | #3 | Alternate |
-| Fundamental Matrix | — | #2 | — | — | — | Deferred |
-| Stationary / Mean recurrence | — | #3 | — | — | — | Deferred |
-| Coupon Collector | #4 | — | — | #4 | future | Deferred |
-| Litt's Game (clumping) | — | — | #4 | — | — | Deferred |
+| Slot | lessonId | Title | New vs prior | Track | Inclusive role |
+|---|---|---|---|---|---|
+| **L0** *(new, optional, ungated)* | `lesson-first-heads` | The First Heads | the machine, at minimum size (`E[H]=2`, 2 states, no reset) | **Beginner** (expert skips via pre-check) | The true on-ramp: builds *state*, `½`, "on average" on the smallest possible example |
+| **L1** | `lesson-pattern-hitting-times` | Pattern Hitting Times *(built)* | overlap / near-miss memory (`HH`=6 vs `HT`=4) | Both | Flagship "wow"; beginner gets split `simulate` + collapsed primers (see `docs/l1-inclusive-redesign-spec.md`) |
+| **L2** | `lesson-penneys-game` | Penney's Game | the **question** (how long → who's first) | Both | Interleaves L1's `6≠4` against the `HH`/`HT` race **tie** |
+| **L3** | `lesson-gamblers-ruin` | Gambler's Ruin | the **arena** (patterns → a walk between walls) | Both | Probability-recurrence vs duration-recurrence contrast; mid-course checkpoint after L3 |
+| **L4** | `lesson-states-streaks` | Mixed Review & Streaks *(repurposed)* | consolidation **by interleaving**, not re-derivation | Both | Spaced-retrieval checkpoint across `H`/`HH`/`HT`/race/ruin |
+| **L5** | `lesson-longer-patterns` | Longer Patterns & Overlap | **transfer** to an unseen pair (`THH`=8 vs `HTH`=10) | Both | Faded hints; the course's transfer test |
+| **L6** | `lesson-overlap-shortcut` | The Overlap Shortcut | the **method** (linear system → `Σ2^L` + martingale) | Both | Cumulative retrieval capstone; the most idealized content, last |
 
-The three picks aren't just popular—they form a deliberate arc. Borrowing A5's framing,
-each lesson changes **exactly one variable** from the base course, so the learner reuses the
-machine they already trust and isolates one genuinely new idea:
-
-```
-Base (L1–L3):   fair coin · one pattern · EXPECTED TIME · solved by a state system
-L4 Penney's:    vary the QUESTION   (how long  →  who's first)
-L5 Gambler's:   vary the ARENA      (coin patterns → a walk between two walls)
-L6 Shortcut:    vary the METHOD     (solve a system → a one-line closed form + proof)
-```
-
-Ordering rationale: **Penney's first** (stays on the fair coin, only competition is new, and
-delivers the biggest "wow" to sustain momentum); **Gambler's Ruin second** (proves the method
-is an arena-independent tool); **the Shortcut last** (it's a *retrieval capstone*—it re-derives
-`6, 4, 8, 10` a new way, so it only lands once the learner has computed them the long way).
+- `courseId`: `course-pattern-hitting-times` (unchanged). Roadmap stub after L6: `lesson-weighted-coins`.
+- **Milestones:** `three-lessons-complete` after L3; `six-lessons-complete` after L6 (unchanged).
+  L0 awards an optional, non-gating `first-heads-found` (or no milestone — see [§11](#course-path)).
+- **Ordering note (discrepancy resolved):** this file uses the **PRD/`CONTEXT.md` canonical order**
+  (States & Streaks = L4, Longer Patterns = L5, Overlap Shortcut = L6 **last**). `docs/future_ideas.md`
+  and the `plan-L*` filenames use a *different* back-half order (Overlap Shortcut at L4). All five
+  research memos flag this; concreteness-fading also argues the most idealized lesson (the martingale
+  shortcut) belongs **last**. Reconcile `future_ideas.md` to match (tracked in [§12](#open)).
 
 ---
 
-<a name="how-they-continue"></a>
-## 2. How they continue the current lesson
+<a name="system"></a>
+## 2. Cross-cutting inclusivity system
 
-The flagship installs seven transferable ideas. Every proposed lesson explicitly re-uses a
-subset and extends one:
+These rules apply to **every** lesson (L0–L6). They are the heart of the redesign; the per-lesson
+sections ([§3](#l0)–[§9](#l6)) only note lesson-specific applications.
 
-| Current-lesson concept | L4 Penney's | L5 Gambler's Ruin | L6 Overlap Shortcut |
-|---|---|---|---|
-| **States** | combined race chain (progress on *both* patterns) | wealth `0..N` on a line | self-overlap positions |
-| **Transitions** (advance/self-loop/reset) | forks toward **two** absorbing states | ±1 steps to two walls | borders = the reset depths |
-| **Overlap is memory** | **cross**-overlap decides the race | (n/a) | self-overlap **is the closed form** (`Σ2^L`) |
-| **First-step recurrence** | a **win-probability** recurrence (no `1+`, boundary 1/0) | **two** recurrences: probability *and* duration | re-derived by a martingale, not first-step |
-| **Linear-system solve** | same rational solver, new boundaries | same solver, twice | bypassed by the shortcut, validated against it |
-| **Simulation vs theory** | empirical win-rate → Conway odds | empirical ruin-rate/duration → `i/N`, `i(N−i)` | empirical mean → the `Σ2^L` value |
-| **Parameter sensitivity (p)** | a biased coin can **flip** who wins | the **house edge** is the emotional core | the base generalizes (`Σ q^L`, e.g. dice) |
+<a name="two-track"></a>
+### 2.1 Two-track architecture + diagnostic pre-check
 
-A single object threads all three: the **overlap set**. In the flagship it was a near-miss edge;
-in L4 it becomes the cross-correlation that decides a race; in L6 it becomes a sum of `2^L` chips
-and a row of surviving gamblers. The **AutocorrelationRuler** widget (below) is literally the
-same component in self-mode (L6) and cross-mode (L4).
+The expertise-reversal effect makes a single linear path impossible to optimize for both audiences.
+The resolution is **one content spine, two render modes**, chosen by a tiny pre-check — *not* two
+lesson trees.
 
----
+- **Diagnostic pre-check (≈60s, course entry).** 4–5 hand-authored micro-items, e.g.:
+  (1) "½ of 8 = ?"; (2) "the average of 2, 4, 6?"; (3) tap how much of `HH` you've matched after one
+  `H` (reads a 1-arrow diagram); (4) "you flip a fair coin; after H, H, H, is T more likely next?"
+  (gambler's-fallacy probe); (5) "on average, how many flips to get your first H?" (EV probe).
+- **Routing.** ≥4 correct → **Track B** (start at L1; L0 offered as "skip/optional"; primers and
+  worked steps collapsed; hints uncapped until the transfer lessons). Otherwise → **Track A**
+  (start at L0; primers expanded; high-load beats split; full hint ladder incl. reveal).
+- **Never forced, always recoverable.** L0 is always *offered* ("New to this? Start here"); Track B's
+  primers are one tap away; the adaptive fade (§2.3) re-expands support on struggle. A coarse 5-item
+  check *will* mis-route some learners — design so mis-routing self-corrects, never dead-ends.
+- **State.** A single `track: 'A' | 'B'` on the user/progress doc; the renderer chooses beat density
+  and default-collapsed depth from it. This is conditional rendering, not duplicate content.
 
-<a name="l4-penneys-game"></a>
-## 3. Lesson L4 — Penney's Game: "The Bet Where Going Second Wins"
+**Anti-boredom guarantee for the quant learner.** Track B is essentially today's experience
+(flagship-first, merged beats, primers hidden, expert notes available). Every inclusivity addition is
+*invisible* to them by construction.
 
-**Hook.** *"You proved `HH` is slower than `HT` (6 vs 4). So on one shared stream of flips,
-`HT` shows up first more often — right?"* (It's a perfect **tie**, ½ each.) *"Now pick any
-3-flip pattern. I'll pick second and beat you 7 to 1."*
+<a name="ladder"></a>
+### 2.2 Just-in-time primers + the notation onboarding ladder
 
-**Core learning promise (one idea).** Model two patterns racing on **one** coin stream as a
-single absorbing chain with **two** absorbing states; "appears first" is **decoupled** from
-"expected wait," and the beats-relation is **non-transitive**—there is no best pattern, and the
-second mover always has an edge.
+**Rule: no symbol before its referent.** For every abstract object the course introduces, the
+authoring order is **① concrete grounding (do it) → ② linked intermediate (see it) → ③ symbol
+(named as shorthand, last)**. Primers are **micro-interactions, not text walls** (the "doer effect":
+doing ≈ 6× the learning of reading the same content), delivered *just-in-time* at the beat where the
+prerequisite first bites, **collapsed by default for Track B**.
 
-**Why it matters for quant.** The canonical intuition-breaker (Penney 1969; Gardner 1974;
-Conway). Interviewers use it to see whether you can resist "the stronger/rarer pattern wins" and
-reason about competing absorbing states ("which event happens first")—and the second-mover edge
-is a clean no-arbitrage story.
-
-### The math (worked, engine-verifiable)
-
-- **Combined automaton.** State = longest current suffix of the stream that is a prefix of `A`
-  **or** `B` (KMP over the merged pattern set). Two absorbing states: `A matched`, `B matched`.
-- **Win probability** `w_s = P(A first | state s)`: `w_s = Σ_c P(c)·w_{δ(s,c)}`, with
-  `w_{A}=1`, `w_{B}=0`. *No `1+` term*—this is the muscle-memory trap the lesson exploits.
-  Solved by the existing rational `solveLinearSystem`.
-- **Expected game length** `g_s = 1 + Σ_c P(c)·g_{δ(s,c)}`, both absorbing `= 0`.
-- **Conway's leading-number shortcut.** Odds `B≻A = (AA − AB) : (BB − BA)`, where `XY` is the
-  base-2 overlap number of `X`'s suffixes against `Y`'s prefixes.
-- **Worked headline.** `A=HHH`, `B=THH`: `AA=7, AB=0, BB=4, BA=3` ⇒ `B` wins
-  `(7−0):(4−3) = 7:1`, i.e. **`P(THH first)=7/8`**. (Reason: reaching `HHH` requires first
-  building `HH`, and the flip before it is almost always a `T`—which *is* the start of `THH`.)
-- **The opener tie.** `HH` vs `HT` on a shared stream: both need an `H` first; the very next
-  flip decides (`H`→HH, `T`→HT), so **½ each**—despite `6 ≠ 4`. Perfect callback to the flagship.
-- **Second-player rule (length 3).** Beat `a₁a₂a₃` with `B = (¬a₂) a₁ a₂`. So `HHH→THH`,
-  `HHT→THH`, `HTH→HHT`, `HTT→HHT`, … The "beats" arrows form a **cycle** (rock-paper-scissors).
-- **Non-transitivity, sourced.** `THH ≻ HHT` and `HHT ≻ HTT`, yet `THH ⊁ HTT`.
-- **Paradox beat.** `HHH (E=14)` vs `HHT (E=8)` is a **1:1 tie**; `THTH (E=20)` *beats*
-  `HTHH (E=18)` at `9/14`—so a longer expected wait can win the race.
-
-### Beat-by-beat (11 beats)
-
-| # | beatId | interaction | phase | Teaches (one thing) | Wrong-path it manufactures |
-|---|--------|-------------|-------|---------------------|----------------------------|
-| 1 | `open-bet` | `prediction` | Bet | "Who's first" ≠ "how long." | Pick `HT` "because 4<6"; it's a tie. |
-| 2 | `race-the-tie` | **raceSim** (new) | Explore | `HH` vs `HT` tie at ~50/50 on a shared stream. | Expect `HT` to dominate; tally won't budge. |
-| 3 | `first-step-split` | `stateTap` | Model | From "one H", `H`→HH wins, `T`→HT wins—one flip decides. | Tap extra intermediate states. |
-| 4 | `new-contender` | `prediction` | Bet | Length-3: a second mover can win big. | Believe `HHH` is unbeatable. |
-| 5 | `pick-your-counter` | `patternPick` (graded) | Model | Odds depend on overlap **with the opponent**, not your pattern's strength. | Pick a "strong-looking" `HHT`; lose the odds check. |
-| 6 | `race-the-counter` | **raceSim** (batch) | Prove | Empirical `P(THH first)` → 0.875. | Call early noise "luck." |
-| 7 | `win-prob-tiles` | `equationTiles` | Model | The **win-probability** recurrence: no `1+`, boundaries 1/0. | Reflexively place a `1+` cost (3 lessons of habit). |
-| 8 | `solve-the-odds` | `substitution` (choose-the-step) | Model | Solve the P-system to `7/8`. | Mis-order the substitutions. |
-| 9 | `conway-aligner` | **autocorrelationRuler** (cross mode) | Model | Conway numbers: slide `A` under `B` for `AB≠BA`; odds `=(AA−AB):(BB−BA)`. | Miss a shifted match. |
-| 10 | `non-transitive-loop` | **dominanceWheel** (new) | Prove | The wow: every pattern has a beater; the relation cycles. | "Just pick the best one"—each pick gets a beater shown. |
-| 11 | `recap` | `recap` | Prove | Race ≠ wait; P-recurrence; overlap sets odds; no best pattern. | (retrieval-first recap) |
-
-**Faded scaffolding / transfer signal.** Cap hints at `maxHintLevel: 2` on `pick-your-counter`
-and `win-prob-tiles` (mirrors L3). `transferAttained = true` iff the learner picks a *winning*
-counter for `HHH` **and** builds the P-recurrence without hitting the cap.
-
-### Interactable widgets (the heart of the lesson)
-
-**Signature visual moment — the odds emerge.** The Prove beats are a live spectacle: hundreds of
-races stream across the shared-stream **RaceTrack** while a **win-probability needle (OddsDial)**
-swings and settles on **7:1**, and two stacked outcome columns fill chip-by-chip — you literally
-*watch* `THH` pull away from `HHH`. Then the **DominanceWheel** lights its non-transitive cycle as a
-glowing rock-paper-scissors loop, and a **TournamentHeatmap** of all 8×8 matchups fills in so "no
-best pattern" is something you *see*, not read.
-
-- **RaceTrack / PatternDuel** *(new, large — centerpiece).* Two lanes (A top, B bottom), each a
-  compact matched-prefix progress chain reusing `StateGraph` geometry; one shared `CoinStream`
-  ribbon feeds both. *Manipulate:* `Flip` (single) or `Run 200 races` (batch); pick/swap
-  patterns. *Responds:* each lane advances/resets per flip (the **reset is the overlap lesson in
-  motion**), the winner flashes, two converging win-rate bars + a live tally ("you 138 · them 62")
-  approach the Conway odds. *Feedback loop:* a wrong winner prediction triggers the ladder pointed
-  at the cross-overlap (`AB` vs `BA`). *Build:* Konva lanes/ribbon + DOM `aria-live` "A wins / B
-  wins" + DOM bars as the accessible mirror; reduced-motion resolves instantly and animates only
-  the tally.
-- **AutocorrelationRuler (cross mode)** *(new, small — shared with L6).* Two mono rows; the learner
-  taps ◀/▶ to shift one pattern under the other and taps each aligned column "same/different."
-  Matching full-overlaps light green; the binary leading number assembles; the odds fraction
-  updates. *Feedback loop:* each tap is graded against the engine's correlation, 3-step ladder on a
-  miss. Pure DOM (44px cells, tactile like equation tiles).
-- **DominanceWheel** *(new, large).* The 8 length-3 patterns on a ring with "beats" arrows. *Manipulate:*
-  tap a node → outgoing green arrows to everyone it beats, incoming red from its predator; a mini
-  quiz "tap the pattern that beats this one" grades against the pairwise matrix. *Responds:* tracing
-  the ring reveals a directed cycle—visual proof there's no best pattern. *Build:* Konva radial graph
-  reusing `StateGraph` node/arrow primitives + `winMatrix(patterns,p)`.
-- **Reused:** `prediction`, `patternPick` (now **graded + high-agency**, which fixes the cycle-1
-  "passive confirmation screen" finding), `equationTiles` (P-targets), `substitution`
-  (choose-the-step, fixing the cycle-1 low-agency reveal), `theorySimChart` (win-rate target line),
-  optional bias sandbox (a biased coin can flip the winner), `recap`.
-
-**Feasibility.** *New engine (pure, golden-testable):* `buildRaceAutomaton(a,b,p)` (merged-KMP
-product chain, two absorbers; the trickiest new math, but bounded—cap at length-3, ≤7 merged
-states) and `conwayLeadingNumbers(a,b,q)`. Golden test: `penneyOdds(HHH,THH)=7:1` and MC win-rate
-within tolerance (seeded `mulberry32`). *New widgets:* RaceTrack (large), DominanceWheel (large),
-AutocorrelationRuler (small). Everything else reuses the catalog.
-
-**Misconceptions targeted.** "faster expected wait ⇒ wins the race"; "there's a strongest pattern";
-"adding a `1+` cost to a probability recurrence"; "pick your counter by your own pattern's strength."
-
----
-
-<a name="l5-gamblers-ruin"></a>
-## 4. Lesson L5 — Gambler's Ruin: "How a Fair Game Still Breaks You"
-
-**Hook.** *"You have \$2. Flip a fair coin: heads +\$1, tails −\$1, until you hit \$4 or \$0.
-The coin is fair—so what's the chance you go broke first, and how long will it take?"*
-
-**Core learning promise (one idea).** First-step analysis isn't about coin patterns—it's a
-**universal tool**. On a walk between two barriers it computes **two** things: a **probability**
-(reach the top before broke?) and an **expected duration**—and it shows that against a deep-pocketed
-opponent ruin is near-certain, and a *tiny* edge is catastrophic.
-
-**Why it matters for quant.** The single most-asked Markov / first-passage problem (Green Book Ch. 5,
-Mosteller, Joshi). It is the prototype for risk-of-ruin, stop-loss/target reasoning, and "probability
-of hitting one barrier before another."
-
-### The math (worked, engine-verifiable)
-
-- States `0..N` (wealth), `0` and `N` absorbing; up prob `p`, down `q = 1−p`.
-- **Reach-`N` probability** `P_i = p·P_{i+1} + q·P_{i-1}`, `P_0=0`, `P_N=1`.
-  - Fair (`p=½`): **`P_i = i/N`** (linear). Ruin `= (N−i)/N`.
-  - Biased: `P_i = (1−r^i)/(1−r^N)`, `r = q/p`.
-- **Expected duration** `D_i = 1 + p·D_{i+1} + q·D_{i-1}`, `D_0 = D_N = 0`. Fair: **`D_i = i(N−i)`**.
-- **Worked, `N=4`, fair:** `i=2` → `P=½`, `D = 2·2 = 4`; `i=1` → `P=¼`, `D = 1·3 = 3`. The midpoint
-  lasts longest.
-- **Worked, the house edge (`N=4`, `i=2`, `p=0.4`, `r=1.5`):**
-  `P = (1−1.5²)/(1−1.5⁴) ≈ 0.31` ⇒ **ruin ≈ 0.69**. A 10-cent edge turns a coin-flip into a 31%
-  shot. As `N→∞` (the casino's bankroll), a *fair* player is ruined with **probability 1**.
-
-The two recurrences are the whole lesson: the **probability** recurrence has **no `1+`** and
-boundary `1`; the **duration** recurrence has the familiar `1+` and boundary `0`. Building them
-back-to-back is a direct compare/contrast with everything the learner already knows.
-
-### Beat-by-beat (11 beats)
-
-| # | beatId | interaction | phase | Teaches (one thing) | Wrong-path |
-|---|--------|-------------|-------|---------------------|-----------|
-| 1 | `open-bet` | `prediction` | Bet | Fair ≠ safe; ask for P(broke first). | "0%, it's fair" / "always 50/50." |
-| 2 | `walk-once` | **walkBoard** (single) | Explore | A token random-walks to a wall. | Expect it to "even out" and never end. |
-| 3 | `ruin-board` | **walkBoard** (live solve) | Model/Prove | Drag start, walls, and `p`; P(reach N) vs P(ruin) + duration recompute live. | Drag toward a wall and expect the bar not to tilt. |
-| 4 | `boundary-edge` | `stateTap` | Model | From `i`, H→`i+1`, T→`i−1`; the two walls absorb. | Tap the wrong neighbor / miss a wall. |
-| 5 | `ruin-tiles` | `equationTiles` | Model | The **probability** recurrence—**no `1+`**, boundary 1/0. | Reflexively add a `1+` cost. |
-| 6 | `duration-tiles` | `equationTiles` | Model | The **duration** recurrence—`1+` returns, boundary 0. | Drop the `1+`; mix up the boundary. |
-| 7 | `predict-duration` | `slider` | Model | Commit a guess for `D_2`. | Guess linear in stake. |
-| 8 | `guided-solve` | `substitution` (choose-the-step) | Model | Solve to `P_2=½`, `D_2=4`. | Mis-order the symmetric solve. |
-| 9 | `prove-sim` | `theorySimChart` (walk variant) | Prove | Empirical ruin-rate → `i/N`; mean steps → `i(N−i)`. | Trust a tiny sample. |
-| 10 | `house-edge` | **walkBoard** + `BiasChart` | Prove | Ruin-vs-`p` has a cliff near ½; a small edge is brutal. | Expect a gentle, linear response. |
-| 11 | `recap` | `recap` | Prove | `P=i/N`, `D=i(N−i)`; fair still ruins you vs an infinite bankroll. | (retrieval-first) |
-
-**Faded scaffolding / transfer signal.** Cap hints on `ruin-tiles` + `duration-tiles`;
-`transferAttained = true` iff both recurrences are built without reveal (the probability-vs-time
-contrast is the transferable skill).
-
-### Interactable widgets
-
-**Signature visual moment — the walker swarm + living landscape.** Release a **swarm of ~100 tokens
-(WalkerSwarm)** that random-walk the number line at once, each flashing as it's absorbed at a wall,
-while the outcome bar fills and a **ruin-probability landscape** (`P_i = i/N`) plus the **duration
-parabola** (`i(N−i)`) draw themselves from the data. Drag the bias `p` and the whole landscape
-**warps live** from a straight line into a steep cliff — the house edge made visible — then the
-**DistributionHistogram** fills bin-by-bin into its fat-tailed shape. The most cinematic graph +
-simulation moment in the slate.
-
-- **WalkBoard / RuinBoard** *(new, large — the single most tactile widget in the slate).* A 1-D
-  lattice lane. *Manipulate:* drag the **start token** and both **wall handles** (0 and N), and a
-  **coin-bias** control (all three also exposed as sliders for the tap-only path). *Responds:* a
-  stacked **outcome bar** (reach-N vs ruin) and an **E[duration]** readout recompute on every change;
-  "Walk" plays one trajectory as a sparkline; a faint **ruin-heat ribbon** tints each start position
-  by its ruin probability so the learner sees the whole landscape at once. *Feedback loop:* dragging
-  toward a wall visibly tilts the bar; nudging `p` off ½ collapses the favorable outcome—the "aha"
-  lives in the drag. *Build:* Konva lattice + draggable handles (commit on drag-end only, per the
-  tile-layer rule) + heat ribbon; DOM sliders + numeric `aria-live` mirror; reduced-motion updates
-  bars instantly with no token animation. Reuses `StateGraph`'s left-to-right node layout (it *is* a
-  number line) + the rational `solveLinearSystem` (twice).
-- **DistributionHistogram** *(new, medium — debuts here, broadly reusable).* "Run 1,000 walks" bins
-  outcomes (durations / which wall) into a live Konva histogram with mean & ±σ markers—showing the
-  famously **fat** duration spread that the current mean-only `SimChart` cannot. DOM table fallback.
-- **Reused:** `prediction`, `stateTap` (pointed at the walk chain), `equationTiles` ×2 (the
-  probability/time contrast), `slider`, `substitution`, `theorySimChart` (walk variant), `BiasChart`
-  (ruin-vs-`p` curve), `recap`.
-
-**Feasibility.** *New engine (pure):* `buildWalk(N,p)` (birth–death band, two absorbers; returns the
-same `Automaton`-shaped contract) + a ruin-probability boundary vector + `simulateWalk` recording
-which end absorbed. **Lowest new-math cost in the slate**—the solver and chart already exist; only
-the builder and the WalkBoard view are new. Keep `N ≤ 6` for mobile legibility.
-
-**Misconceptions targeted.** "a fair game can't ruin you"; "a small per-step edge ≈ a small overall
-edge"; "expected duration is short / linear in stake" (it's `i(N−i)`, peaking in the middle);
-conflating the probability recurrence (no `1+`, boundary 1) with the time recurrence (`1+`, boundary 0).
-
----
-
-<a name="l6-overlap-shortcut"></a>
-## 5. Lesson L6 — The Overlap Shortcut: "Read the Wait Off the Pattern" (Conway + Martingale)
-
-**Hook.** *"You solved four linear systems to get `6, 4, 8, 10`. A quant hands you `HTHT` and 30
-seconds. There's a one-line rule—let's earn it, and prove it with a casino that can't make a profit."*
-
-**Core learning promise (one idea).** For a fair coin, the expected wait is
-**`E[wait] = Σ 2^(overlap length)`** over every prefix that is also a suffix (including the full
-length)—and a **fair-betting (martingale) argument** shows *why* it's exact: money in `=` flips `= T`,
-money out `= Σ 2^L` (only the gamblers aligned to a self-overlap survive), so `E[T] = Σ 2^L`.
-
-**Why it matters for quant.** "Expected flips until `THTH`?" takes minutes by recurrence and seconds
-by the slide trick. More deeply, **martingales + optional stopping + no-arbitrage** are the dividing
-line between "can grind a recurrence" and "thinks like a quant"—the same instinct behind derivatives
-pricing. This is the canonical `ABRACADABRA` problem (Li 1980; Gardner), explicitly deferred from the
-MVP, taught by *doing*.
-
-### The math (worked, cross-checked against the engine's golden values)
-
-- **Autocorrelation / borders.** The overlaps of a word are the lengths `L` where the length-`L`
-  prefix equals the length-`L` suffix (always including the full `L=ℓ`). These are exactly the KMP
-  borders the engine's `prefixFunction` already finds, and the flagship's `overlapHighlights`.
-- **Fair-coin closed form.** `E[A] = Σ_{borders L} 2^L = 2 · (Conway leading number)`. Verified:
-
-  | Pattern | borders | `Σ 2^L` | engine `E[E0]` |
-  |---|---|---|---|
-  | `HT` | {2} | 4 | 4 ✓ |
-  | `HH` | {2,1} | 4+2 = **6** | 6 ✓ |
-  | `THH` | {3} | 8 | 8 ✓ |
-  | `HTH` | {3,1} | 8+2 = **10** | 10 ✓ |
-  | `HHH` | {3,2,1} | 8+4+2 = **14** | 14 ✓ |
-  | `HTHT` | {4,2} | 16+4 = **20** | — |
-
-  The *only* reason `HH` (6) beats `HT` (4) is the extra `2¹` term—the length-1 self-overlap that the
-  flagship renders as `HH`'s near-miss reset. **Overlap → an extra `2^L` term → a longer wait.**
-- **Martingale proof.** A fresh \$1 gambler enters before each flip and bets the pattern, parlaying
-  on each correct flip (a fair 2:1 payout) and busting on a wrong one. At stop time `T`: total
-  wagered `= T` (one gambler per flip); total held `= Σ_{overlaps L} 2^L` (a gambler `L` letters in
-  holds `2^L` and is still alive iff its run is a border). Fairness (optional stopping) ⇒
-  `E[T] = Σ 2^L`. Ledger: `HH → $4+$2 = 6`; `HT → $4 = 4`; `HHH → $8+$4+$2 = 14`.
-- **Generalization.** Over a `q`-letter alphabet, `E = Σ q^L`. Die "two sixes": `6²+6¹ = 42`.
-  `ABRACADABRA` (q=26): `26¹¹+26⁴+26¹`.
-- **Correctness contract.** `expectedWaitFair(pattern) === buildAutomaton(pattern, 0.5).expectedTimes.E0`
-  for every curated pattern—the two engines must agree (a strong golden test). *Note:* we use the
-  rigorous `2·CLN` values (14, 10); one stray preprint prints `16`/`14` and is wrong.
-
-### Beat-by-beat (11 beats)
-
-| # | beatId | interaction | phase | Teaches (one thing) | Wrong-path |
-|---|--------|-------------|-------|---------------------|-----------|
-| 1 | `recall-grid` | `prediction` (match) | Bet | Spaced retrieval of `6,4,8,10`; tease "one rule for all." | Misremember a value → instant correction. |
-| 2 | `self-overlap` | **autocorrelationRuler** (self) | Explore | Overlaps = shifts where prefix=suffix. | Find only the trivial full overlap; miss `HH`'s shift-1. |
-| 3 | `overlap-to-power` | `stateTap`-like | Model | Each overlap `L` contributes `2^L`. | Assign `2^L` to a non-matching shift. |
-| 4 | `sum-it` | **sumTiles** (new) | Model | `E = Σ 2^L`; `HH → 4+2 = 6`. | Omit the `k=1` term → get 4 (known-wrong for HH). |
-| 5 | `casino-intuition` | **gamblerLedger** (new) | Explore | *Why*: money in `= T`, money out `= Σ2^L`. | Step gamblers; see most bust, a few survive. |
-| 6 | `who-survives` | `stateTap` (on the ledger) | Model | Survivors ≡ the overlaps. | Tap a busted gambler. |
-| 7 | `apply-THH` | ruler + sumTiles | Model | Transfer: `THH → {3} → 8`. | Invent spurious `TH`/`HH` overlaps. |
-| 8 | `apply-HTH` | ruler + sumTiles | Model | Transfer: `HTH → {3,1} → 10`. | Miss the `H_H` shift-1 → get 8 (known-wrong). |
-| 9 | `cross-check` | `theorySimChart` | Prove | Simulation → the shortcut's value; three methods agree. | "New trick, probably approximate." |
-| 10 | `surprise-pattern` | `prediction` + ruler | Prove | `HHH → {3,2,1} → 14`, vs same-length `THH = 8`. | Predict ~8 by length; it's 14. |
-| 11 | `recap` | `recap` | Prove | `Σ2^L` over self-overlaps; the casino reason; matches states + sim. | (course-capstone milestone) |
-
-**Faded scaffolding / transfer signal.** Most retrieval-heavy lesson (testing effect): it re-solves
-known problems a new way. Cap hints on `apply-THH` + `apply-HTH`; `transferAttained = true` iff both
-clear without reveal. An optional Extension generalizes the base (payout `=1/P`, `Σ q^L`, the
-`ABRACADABRA` cameo) and bridges to a future Weighted-Coins/Dice lesson.
-
-### Interactable widgets
-
-**Signature visual moment — the triangulation.** The payoff is three methods agreeing on one number:
-on a single value axis (**TriangulationStrip**) the **recurrence** solve drops a marker, the
-**martingale chips** sum to a marker, and the **simulation mean** converges a line — all snapping onto
-the same value. Around it, the **GamblerLedger** flows like a city skyline (parlay-stacks rise, busts
-collapse, the few overlap-aligned survivors glow gold) and the **fairness meter** shows money-in and
-money-out lines converging. Overlap stops being a metaphor and becomes a picture.
-
-- **AutocorrelationRuler (self mode)** *(new, small — the shared hero, also used in L4).* A fixed top
-  pattern and a draggable/`Shift →` bottom copy. *Manipulate:* shift the copy one cell at a time;
-  optionally tap the predicted match-bit (1/0). *Responds:* overlapping cells flash ✓/✗ (never color
-  alone); a bit drops into the autocorrelation register; each `1` animates a `2^L` chip into a running
-  **expected-wait total**. *Feedback loop:* a wrong bit-tap triggers the 3-step ladder
-  ("compare these two cells" → highlight the mismatch → reveal the bit). Konva travel + DOM 44px taps
-  + `aria-live` register; reduced-motion snaps shifts. Drives the pure `correlation()`.
-- **SumTiles / TermLedger** *(new, small — broadly reusable).* Generalizes `equationTiles` from one
-  equation to a **series**: tap a `2^L` chip per overlap into a running ledger; the partial sum updates
-  and snaps onto the theory value when complete (`6 = 4+2`). *Feedback loop:* a wrong/duplicate term is
-  rejected with a targeted hint; the final sum is checked against `expectedTimes.E0`. Reuses tile
-  components + `--correct` flash. (Also powers the Gambler's-Ruin/coupon series sums.)
-- **GamblerLedger ("the gambler army")** *(new, medium — the martingale visual).* A shared `CoinStream`
-  across the top; a grid where row `t` is the gambler who entered before flip `t`. *Manipulate:* `Flip`
-  to drive the stream; **tap the survivors** at the stop; **place `2^L` chips** into the total.
-  *Responds:* stacks double on a win, busts grey out, survivors glow `--mark`, the payout total tallies
-  and is compared to the flip count (the **fairness meter**, a thin `SimChart` variant where mean(in)
-  and mean(out) converge to the same value). *Feedback loop:* mis-tapping a busted gambler →
-  ladder ("did this run stay a prefix of the pattern?" → highlight its first wrong flip → reveal).
-  Konva chips + DOM tap layer + `aria-live`; reduced-motion shows instant stacks. Pure `gamblerLedger`.
-- **Reused:** `prediction`/match, `stateTap` (survivor grading), `theorySimChart`, `recap`, plus the
-  flagship `overlap` mini-graphs to bridge "alive gambler ≡ overlap ≡ near-miss edge."
-
-**Feasibility.** *New engine (pure, low cost):* `correlation(v,w)` / `autocorrelation(pattern,q)` →
-`{bits, overlaps, sum}` (≈30 lines off the existing `prefixFunction`) and `gamblerLedger(pattern,
-stream)` (deterministic given stream + pattern). Golden tests: the agreement contract above, and
-`gamblerLedger` payout `=== expectedWaitFair`. *Pedagogy risk* (optional stopping is the most abstract
-idea in the slate) is mitigated by re-deriving numbers the learner already proved and never invoking
-measure theory—the "fair game ⇒ in = out" instinct carries it.
-
-**Misconceptions targeted.** "`E = 1/P(pattern)` so `E[HH]=4`"; "only the full overlap counts" (the
-`k=1` omission, surfaced again from the flagship); "longer pattern ⇒ longer wait" (`HHH=14` vs
-`THH=8`); "a clever stopping rule beats a fair game."
-
----
-
-<a name="widget-catalog"></a>
-## 6. New interactable-widget catalog
-
-A dozen new widgets — five substantial carriers (RaceTrack, WalkBoard, AutocorrelationRuler,
-GamblerLedger, DominanceWheel) plus lighter visual heroes — power the slate; all run on the same
-pure-engine pattern (*build a chain → solve a rational linear system → Monte-Carlo a stream*), so the
-engineering is incremental. Ranked by reuse value:
-
-| Widget | Lessons | Size | Manipulate → respond → feedback | Build sketch |
+| Object | ① Concrete grounding | ② Linked intermediate | ③ Symbol (introduce last) | First needed |
 |---|---|---|---|---|
-| **RaceTrack / PatternDuel** | L4 | large | run shared-stream races → two converging win-rate bars + tally → ladder on wrong-winner | Konva dual lane + `CoinStream`; `buildRaceAutomaton` solved by existing solver; `simulateRace` |
-| **WalkBoard / RuinBoard** | L5 | large | drag start/walls/bias → outcome bar + duration + ruin-heat ribbon → "aha" is in the drag | Konva lattice, commit-on-drag-end; `buildWalk` + two solver passes; DOM slider mirror |
-| **AutocorrelationRuler** | L4 (cross) + L6 (self) | small | shift a pattern under (itself/another) + tap match bits → leading number + `2^L` total → ladder per bit | DOM mono rows + offset; pure `correlation()` from `prefixFunction` |
-| **GamblerLedger + fairness meter** | L6 | medium | flip + tap survivors + place chips → doubling stacks, payout tally vs flip count → ladder | Konva chips + DOM grid; pure `gamblerLedger`; `SimChart` variant |
-| **DominanceWheel** | L4 | large | tap a pattern → beats/loses arrows; trace the cycle → mini-quiz graded vs matrix | Konva radial graph reusing `StateGraph` primitives; `winMatrix` |
-| **SumTiles / TermLedger** | L6 (+L5) | small | tap `2^L`/series chips → running sum snaps to closed form → reject wrong term | reuse equation-tile components + `--correct` flash |
-| **DistributionHistogram** | L5 (+future) | medium | "Run 1,000" → live binned histogram + mean/±σ markers | Konva bars reusing `SimChart` axes/theme; binning is pure UI |
-| **OddsDial** | L4 | small | races stream in → a needle swings and settles on the live odds (7:1) | Konva gauge fed one `Rational`; reduced-motion = static split |
-| **TournamentHeatmap** | L4 | medium | scan an 8×8 who-beats-whom grid → the non-transitive cycle lights as a loop | Konva grid colored by `winMatrix`; pure |
-| **WalkerSwarm** | L5 | medium | release ~100 tokens that walk at once → each flashes at its wall; outcome bar fills | Konva particle layer over seeded `simulateWalk`; imperative anim |
-| **RuinLandscape** | L5 | small | drag `p` → the `P_i=i/N` line warps into a steep curve across all starts | Konva line reusing `BiasChart` conventions; closed-form |
-| **TriangulationStrip** | L6 | small | recurrence + martingale + simulation markers converge on one value with a snap | reuses `SimChart` value axis; three markers |
+| **A "state"** | Find the longest tail of the stream that starts the target ("how much of `HH` have I built?") | A "progress so far" chip showing `∅ / H / HH`, copied from the highlighted suffix | `E0/E1/E2` as a *nickname* for each chip, shown **on the node** | L0/L1 simulate |
+| **Transition diagram** | Replay your own flips; move a token between chips | 3-node graph, edges marked H/T, traced by your stream | the directed graph + advance/self-loop/reset words | L1 simulate |
+| **Probability `½`** | Flip many; tally H vs T; see ~half | a two-way split off a node | `½` *as a weight on a branch* (distinct from ½-as-frequency — say so) | L0/L1 |
+| **Expected value** | **Run "wait until HH" by hand many times; write each count; average them** | a running-average line settling on a value | `E0` = "average extra flips from here"; the recurrence as a way to get it *without* simulating | **L0; L1 before the slider** |
+| **Recurrence `E0=1+½E1+½E0`** | narrate one flip aloud ("I must flip (1); then half the time I'm at H, half back at start") | a one-flip probability tree, built in stages: `1+` → first branch → second branch | the tile equation, assembled to mirror the story | L1 equation-tiles |
+| **"Overlap is memory"** | flip the near-miss for each pattern; cross out lost progress | two highlighted edges: reset-down vs self-loop-up; learner *taps* which keeps progress | the extra `½E0` term (L1); later the extra `2^1` (L6) | L1 overlap |
+| **Win-probability** | run ~10 shared-stream races by hand; tally "A first / B first"; see the share | a converging win-rate bar; one slow race before the swarm | `w_s`, the **no-`1+`/boundary-1·0** recurrence — taught *as a contrast* | L2 |
+| **Random walk (two walls)** | move a token on a money number line by hand flips; stop at `$0`/`$N` | the WalkBoard + outcome bar; one walker before the swarm | `P_i=i/N`, `D_i=i(N−i)`; `r=q/p` last, as "the tilt" | L3 |
+| **`Σ 2^L` closed form** | find each overlap; drop one chip worth `2^(that length)`; add the chips | SumTiles: `4+2`, `8`, `8+2` snapping to the known answer | `Σ2^L` notation — **last**; show `6 = 4+2 = Σ2^L` | L6 |
+| **Martingale / optional stopping** | on one short stream, count money in (`$1`/flip) and money out (surviving stacks); watch the means converge | GamblerLedger + fairness meter | `E[T]=Σ2^L`; defer the words "martingale/optional stopping" to an expert note | L6 |
 
-Reused verbatim or retargeted across all three: `prediction`, `patternPick`, `coinSim`/`StateGraph`/
-`CoinStream`, `stateTap`, `equationTiles` (+ `equationDiagnosis`), `slider`, `substitution`,
-`theorySimChart`/`SimChart`, `overlap`, `BiasChart`, `recap`, `hintLadder`, `useReducedMotion`,
-`useElementWidth`, `mulberry32`.
+**Course-wide representation conventions:** (1) one name per object, shown linked — wherever an
+`E`-id appears, its concrete label appears too (and vice-versa); (2) **dyna-link** interactions
+across representations (placing a tile highlights the matching edge); (3) ground every
+"average/probability/expected" word in a hand-count *before* naming it; (4) **reveals become
+comparisons** — any beat that *states* a contrast should make the learner align and articulate it;
+(5) spectacle is subordinate to one structural number (§2.8).
 
-> **Authoring caveat (flagged by the curriculum agent).** `equationDiagnosis.ts` per-slot hint copy is
-> hardwired to the `HH` `{E0,E2}` target. The L4 win-probability tiles and L5 biased/duration tiles
-> need either a generalized diagnosis table or a fallback to the coarser row-level `equationChecker.ts`.
-> Budget this; don't let HH-specific copy leak into new lessons.
+<a name="fading"></a>
+### 2.3 Faded worked examples (worked → completion → independent)
 
-### Visual & motion design (pretty *and* honest)
+Open every new mechanic with a **fully worked example**, then a **completion problem**, then
+**independent build** — never a blank. Fade **backward** (remove the last steps first) and
+**adaptively** (on success, not on lesson index). L1's equation beat already does *one* completion
+problem (worked `E0`, build `E1`) — generalize that into a deliberate slope across the course:
 
-- **One hero per beat, inside the notebook identity.** Cinematic but never game-y: ink + paper,
-  `--quill` (active/empirical), `--heads`/`--tails` for coins, hairline `--rule-faint` grids, KaTeX
-  numerals, the milestone-stamp / streak-tally vocabulary. The "wow" comes from motion that *maps to
-  the math* (a race resolving, a landscape warping, three methods snapping together) — the same
-  principle as the existing flip → node-pulse → edge-travel moment.
-- **Everything animated is engine-driven.** The new visuals are Konva canvas heroes fed by the
-  *existing* pure sims (`simulateRace`, `simulateWalk`, `flipsToAbsorption`) with a seeded
-  `mulberry32`, animated **imperatively on a Konva layer** — no per-frame React state, no writes
-  during animation (the rule `SimChart`/`StateGraph` already follow) — so they hold ~60fps on mobile.
-- **Reduced-motion + tap-only never lose the lesson.** Each hero has a reduced-motion path that skips
-  travel/particles and renders the final curve, bars, or markers instantly, plus a DOM/`aria-live`
-  mirror (odds readout, tally text, bin table) so the beat stays completable and legible without motion.
+| Lesson | Equation / solve scaffolding | Hint policy |
+|---|---|---|
+| L0 (beginner) | all rows pre-filled except the last | full 3-level ladder **incl. reveal** |
+| L1 | pre-fill `E0`, grade `E1` *(current — keep)*; beginner track may also pre-fill the `1+` and grade only the coin-split | full ladder incl. reveal |
+| L2, L3 | grade more rows; pre-fill fewer | full ladder; **cap setup beats at level 2** for Track B only |
+| L5 (transfer) | grade all non-absorbing rows | `maxHintLevel: 2` on `failure-edge` + `equation-tiles` |
+| L6 (capstone) | no worked steps; retrieval-only | `maxHintLevel: 2` on `apply-*` |
+
+**Adaptive override (the key two-track hook):** a learner struggling (≥2 wrong on consecutive graded
+beats) gets the cap *lifted* and a row *re-pre-filled*; a learner clearing first-try gets rows
+removed faster. Reuses the existing hint ladder + `maxHintLevel` + completion-problem plumbing.
+
+**Productive failure needs a floor.** Keep the predict-then-reveal "bet" for everyone (it drives
+transfer and exploits the hypercorrection effect) — but a true novice can only "fail productively" if
+they have the *tools* to represent the problem. So the bet stays first; the *formalization* that
+follows is scaffolded, and each high-load beat is **gated behind its primer**.
+
+<a name="refute"></a>
+### 2.4 Misconception elicitation & refutation
+
+Conceptual change requires **eliciting the specific wrong model, marking it false, and explaining
+why** (refutation outperforms neutral exposition). Two structural fixes:
+
+- **Make `prediction` graded / per-option.** Today the prediction beat shows the same "Good guess!"
+  for every choice (verified in `PredictionBeat.tsx`), so it cannot refute. Add `feedback.byOption`
+  so the learner who picks the equiprobability trap and the learner who picks correctly get
+  *different*, targeted responses.
+- **Promote refutations out of hint-level-2 into the reveal**, and make every graded beat's
+  level-1 hint *name the likely wrong model* ("You added a `1+` — but a probability has no per-flip
+  cost"), not just "Try again."
+
+**Misconceptions that are currently unaddressed and must be confronted (spaced, re-elicited):**
+
+| Misconception | Where it fires now | Inclusive fix |
+|---|---|---|
+| **Gambler's fallacy** ("a T is due after HHHH") | L1 `simulate` live stream; L3 walk | refutation micro-beat at the first ≥3-run; re-elicit on the L3 walk |
+| **Equiprobability bias** ("both length-2 ⇒ both wait 4") | L1 `open-bet` "tie" option | per-option refutation; generalize ("structure, not length, sets the wait") |
+| **"Average = typical"** | L1 `theory-vs-sim`; acute in L3's fat-tailed duration | one line: "6 is the *average* — most runs are shorter, a few long" |
+| **"Outcome approach"** (predict the next flip, not the distribution) | L1 `simulate`/`theory-vs-sim` | frame the sim as "we're counting *how long*, many times" |
+| **"Expected wait = 1/P"** → 4 for both | implicit in the L1 "tie at 4" option | a micro-beat: 1/P works for one flip (`H`→2) but overlap changes it; note the trap that `HT` *is* genuinely 4 (half-right is what confuses) |
+| **"Self-referential equation is circular"** | L1 `equation-tiles` (`E0` on both sides) | inline aside: "`E0` on both sides is allowed — it's an equation to solve, like `x = 1 + ½x`" |
+
+<a name="retrieval"></a>
+### 2.5 Retrieval, spacing & interleaving
+
+The 6-lesson path is a natural spacing engine — the unlock order *is* the schedule. Systematize it:
+
+- **Every L2+ lesson opens with a graded retrieval warm-up** of the prior headline (testing effect:
+  retrieval beats re-reading at a 1-week delay), *then* springs the new hook. (Needs a graded
+  recall variant — see [§10](#engine).)
+- **Recaps are generate-then-reveal**, never re-read summaries.
+- **Re-surface each headline at expanding gaps:** `E[HH]=6,E[HT]=4` introduced L1 → recalled L2 (the
+  tie) → L4 (mixed review) → L6 (capstone); `E[H]=2` introduced L0 → reappears L4, L6; `THH/HTH`
+  introduced L5 → re-derived L6.
+- **Interleave where confusions cluster:** (a) wait vs race (L2 + L4); (b) probability-recurrence vs
+  duration-recurrence / the `1+` trap (L3 + L4); (c) which-pattern-waits-longest across lengths
+  (L4 + L6). Prefer **mixed sets over blocked**. Interleaving *feels* harder and *performs* better —
+  warn authors not to "fix" the difficulty away, and place heavy interleaving *after* initial
+  competence (L4+, not L0).
+
+<a name="mastery"></a>
+### 2.6 Light, non-blocking mastery signal
+
+`completion = mastery` captures *doing* but discards the **feedback-corrective loop** that is the
+active ingredient of mastery learning. Generalize L5/L6's `transferAttained` into a per-lesson signal:
+
+- **`mastered`** iff the lesson's graded beats are first-try-correct with **no full reveal**;
+  otherwise **`completed — review`**. Reuses `ProgressDerived` + the existing "Fully mastered" UI.
+- **Non-blocking unlock stays** (momentum). The signal's job is to **drive spaced re-surfacing** and
+  the next-step recommender — the corrective loop made motivational, not punitive.
+- **Two cumulative retrieval checkpoints** become the existing milestones: mid-course after L3, and
+  the L6 capstone — each a short low-stakes retest of earlier lessons at the longest gaps.
+
+<a name="tone"></a>
+### 2.7 Copy & tone (de-gatekeeping)
+
+**Principle: two registers, one spine.** Default copy = curiosity + plain language (serves everyone);
+an opt-in **"For the interview"** note carries the quant framing, formal names, and citations.
+Nothing is removed; the *gate* is. Voice stays the design system's **warm-but-precise** (not bubbly,
+not childish, not condescending).
+
+- **Reframe the persona** from an identity gate to an invitation (full rewrite in
+  `docs/l1-inclusive-redesign-spec.md` §persona): primary user = *a curious person who wants to
+  understand probability by doing*; **assume no prior probability, statistics, or algebra**;
+  quant-interview prep is a **named, fully-served optional track**, not the doorman.
+- **Landing subline:** "State thinking for quant interviews." → "Learn probability by playing with
+  it." (optional reassurance: "Deep enough for quant-interview prep.") The universal headline stays.
+- **De-gatekeep every "Why it matters for quant" line.** Replace evaluator framings ("interviewers
+  use it to see whether you can…", "the dividing line between 'can grind a recurrence' and 'thinks
+  like a quant'") with curiosity/capability framings; move the interview phrasing into the opt-in
+  note. Per-lesson before→after copy is in [§5](#l2)–[§9](#l6).
+- **Retire adversarial metaphors** ("trap," "penalty") in favor of "the thing to watch," and surface
+  the internal `needsReview` only as a gentle "worth another look," never a demerit.
+- **Optional anxiety/belonging on-ramp (~20s, opt-in):** "Feeling rusty with math? That's normal,
+  and it fades fast once you start. This course begins from zero — no formulas required to walk in."
+- **Learner-generated relevance:** a light onboarding question — "What brings you here? [Just curious]
+  [Brushing up] [Prepping for quant/tech interviews]" — sets tone and surfaces the "For the interview"
+  notes by default for the quant choice. It does **not** fork content.
+
+<a name="widget-load"></a>
+### 2.8 Widget & animation load rules
+
+The "watch it resolve" heroes (race swarm, ~100-token walker swarm, gambler skyline) are the brand,
+but transient animation overloads a novice and rich surface detail can crowd out structure. So:
+
+- **One slow instance before the swarm.** Always play a single, paced instance the learner can follow
+  before batching to the spectacle.
+- **One large, plain structural read-out per hero** ("THH won ~7 of every 8"; "ruin 51 / win 49 of
+  100") — the number is the point; the needle/skyline is the garnish.
+- **Learner-paced + replayable.** Single-step / pause / replay on every transient hero; signal the
+  one thing to watch; reduced-motion renders the final frame instantly with an `aria-live` mirror.
+- **Cut redundant chrome.** Don't show a worked row + a 5-line legend + per-tile tooltips + the build
+  row + the palette simultaneously (the current `EquationTilesBeat` does); reveal on demand.
 
 ---
 
-<a name="engine-additions"></a>
-## 7. Engine & schema additions
+<a name="l0"></a>
+## 3. L0 — The First Heads (new on-ramp)
 
-All pure, dependency-free, exact-rational, golden-testable—matching `src/engine/automaton.ts` style.
+**Status:** new, **optional**, ungated. **Track A starts here; Track B may skip it via the
+pre-check.** Engine cost ≈ 0 — `buildAutomaton("H", 0.5)` already yields `E0 = 2` (add one golden
+test). This is the single highest-impact inclusivity change: it gives a beginner the gentlest possible
+first contact with *every* threshold (state, `½`, "on average," recurrence) on **two nodes, no
+near-miss**, then L1 reuses the identical machinery on three nodes.
+
+**Hook (Track A):** *"Flip a fair coin until you see your first heads. How many flips do you think
+that takes, on average — and want to find out for real?"* (Trap: "1 flip — it's 50/50 on the first
+try." Answer: **2**.) This is the cleanest possible elicitation of the expected-value threshold.
+
+**Core promise (one idea):** the average wait for the first `H` is **2** — and you can *find* that by
+flipping many times and averaging, *then* prove it with a tiny machine.
+
+**Beat sequence (≈6 beats, all micro-interactions, fully scaffolded):**
+
+| # | beatId | interaction | Teaches (one thing) | Inclusive notes |
+|---|--------|-------------|---------------------|-----------------|
+| 1 | `bet-first-h` | `prediction` (graded, per-option) | commit a guess (trap: "1 flip") | refute the "1 flip" pick directly (§2.4); "no wrong guess yet" framing |
+| 2 | `what-is-half` | `primer` (micro) | `½` = 1 in 2 (flip-and-tally) | grounds `½` before it's a weight (§2.2) |
+| 3 | `count-by-hand` | `coinSim` ("count to first H") | "average" = run it many times, average the counts | **this is the concrete definition of expected value**, before any symbol |
+| 4 | `meet-the-state` | `coinSim` + 2-node `StateGraph` (hero) | a "state" = how much you've matched (`∅`, `H`) | dual-label nodes `∅=E0`, `H=E1` from the start |
+| 5 | `build-E0` | `equationTiles` (all pre-filled but last) | `E0 = 1 + ½E1 + ½E0`, `E1 = 0` | worked → completion fade at max support (§2.3) |
+| 6 | `recap-two` | `recap` | every lens says **2**; "look what you did — by hand" | attribute the win to the learner; tease L1 |
+
+**Why optional, not a forced first lesson:** learning-trajectory evidence is that early levels are
+*facilitative, not always necessary*, and forcing the primer on an expert *harms* them
+(expertise-reversal). So L0 is a gate-free, skippable on-ramp — the lowest-risk way to fix the
+buried-simplest-case problem without editing the built flagship's spine.
+
+**Fallback if an L0 lesson is out of scope:** ship the same content as the first beat-group of L1,
+expanded for Track A and auto-skipped for Track B. Less clean (edits the built fixture) but preserves
+the on-ramp.
+
+---
+
+<a name="l1"></a>
+## 4. L1 — Pattern Hitting Times (inclusive deltas)
+
+L1 is **built**; its inclusive changes are surgical and mostly *additive (skippable) depth*, so the
+Track-B path is effectively unchanged. The full, implementation-ready spec — per-beat before→after
+copy, component changes, schema additions, verification plan — lives in
+**`docs/l1-inclusive-redesign-spec.md`**. Summary of what changes:
+
+- **Track-A `simulate` split** into 2–3 micro-beats (flip & watch → meet the graph → spot the
+  near-miss); Track B keeps the merged beat.
+- **Repurpose `pattern-pick`** (a passive confirm) into a collapsed primer trio (`½`, "average," "a
+  state"), or insert a primer beat before `open-bet`.
+- **Ground "expected wait"** as the average of many hand-counted runs **before** `refine-prediction`
+  and the algebra (pull the L5-planned `FirstSuccessTimeline` forward).
+- **Fix the unlinked-representation bug:** dual-label `StateGraph` nodes (`∅` *and* `E0`), bridge
+  `failure-edge`/`equation-tiles` copy, and dyna-link tiles ↔ edges. The `Automaton` data already
+  carries both `id` and `label` — this is a render-only fix.
+- **Re-stage the recurrence** as a one-flip story built in stages (`1+` → first branch → second
+  branch) instead of one symbol avalanche; cut redundant chrome (§2.8).
+- **Turn `overlap` into a comparison** the learner makes (tap which near-miss keeps progress) rather
+  than a narration; name "overlap" qualitatively right after `failure-edge`.
+- **Per-option `open-bet` feedback** (refute the "tie"); reconcile the prompt's "by how much" with the
+  options; soften "trap"/"penalty"; reuse the opening bet at the recap as a belief-change measure.
+- **Plain-language `guided-solve`** ("drop that 0 into the E1 line"), with the formal algebra as a
+  collapsible "Show algebra" expert path.
+- **Light mastery signal** (§2.6) added; re-surface `failure-edge` in the L4 review.
+
+---
+
+<a name="l2"></a>
+## 5. L2 — Penney's Game: "The race where going second wins"
+
+**Quant grounding (kept, verified):** Penney-Ante (1969), Gardner (1974), Conway leading numbers
+(Nishiyama 2010), Guibas–Odlyzko correlation polynomial (1981). Headline math (engine-verified):
+`HH` vs `HT` race is a **tie (½ each)** despite `6 ≠ 4`; `HHH` vs `THH` → **`P(THH first)=7/8`**;
+second-player rule `B=(¬a₂)a₁a₂`; the "beats" relation is **non-transitive** (a 4-cycle, per the L2
+hardening review — *not* a 3-cycle). Detailed beat math: `audits/ideation/plan-L2-penneys-game.md`.
+
+**Hook — before → after (de-gatekept, §2.7):**
+> *Before:* "You proved HH is slower than HT (6 vs 4). So HT shows up first more often — right? … I'll
+> pick second and beat you 7 to 1."
+> *After:* "Last lesson, HH took longer than HT — 6 flips versus 4. So if we both watch the **same**
+> coin, HT should win the race to show up first, right?" (It's a dead tie — 50/50.) "New game: you
+> pick any 3-letter pattern; I'll pick mine after you and win about **7 times out of 8**. Want to try
+> to beat me?"
+
+**"Why it matters" — default (everyone):** "The pattern that *waits longer on its own* can still
+*win the race* — and there's no single 'best' pattern, because every pattern can be beaten by another."
+**"For the interview" (opt-in note):** "A classic trading-desk puzzle; it probes separating *which*
+event happens first from *how long* it takes, competing absorbing states, and the second-mover edge
+as a no-arbitrage argument."
+
+**Inclusive beat sequence (~9–10 beats; the L2 review's own cut to ~8 + retrieval opener):**
+
+| # | beatId | interaction | Teaches | Inclusive notes |
+|---|--------|-------------|---------|-----------------|
+| 1 | `recall-6-4` | `mcq`/retrieval (graded) | retrieve `E[HH]=6`, `E[HT]=4` | standard retrieval opener (§2.5) |
+| 2 | `whos-first-primer` | `primer` (micro) | "who's first" ≠ "how long" | concrete: two friends watch one stream (§2.2) |
+| 3 | `open-bet` | `prediction` (per-option) | bet the race winner (trap: HT, "4<6") | refute the pick (§2.4) |
+| 4 | `race-the-tie` | RaceTrack (slow-first, then batch) | the tie at ~50/50 | one slow race, then swarm + plain "≈50/50" readout (§2.8) |
+| 5 | `first-step-split` | `stateTap` (worked first) | one flip after the first H decides | animate one decided race, *then* tap |
+| 6 | `pick-your-counter` | `patternPick` (graded) + OddsDial | a second mover can counter `HHH` | grade the counter; refute "pick the strong-looking one" |
+| 7 | `race-the-counter` | RaceTrack + OddsDial | **7:1 emerges** from many races | slow race → swarm; "THH won ~7 of 8" readout |
+| 8 | `prob-vs-duration` | `primer` + side-by-side compare | a *probability* recurrence has **no `1+`**, ends 1·0 | the inclusive complement to the trap: name it qualitatively *before* tiles |
+| 9 | `win-prob-tiles` | `equationTiles` (**2-state HH/HT**) | build the P-recurrence at lowest load | retarget off the cyclic 5-state system (review's cut); show `1/8` via ruler+sim, not a 5-row solve |
+| 10 | `non-transitive-loop` | DominanceWheel (narrative) | every pattern has a beater (4-cycle) | pre-teach transitivity first; signal the cycle, never gate it |
+| 11 | `recap` | `recap` | race ≠ wait; second-mover rule | generate-then-reveal |
+
+**Misconceptions:** "faster wait ⇒ wins the race" (refute at `open-bet`); "there's a strongest
+pattern"; "add a `1+` to a probability" (defused by beat 8 *before* the tiles).
+
+---
+
+<a name="l3"></a>
+## 6. L3 — Gambler's Ruin: "How a fair game still breaks you"
+
+**Quant grounding (kept):** Grinstead & Snell Ch. 12, Green Book Ch. 5, Joshi/Mosteller. Headline math
+(engine-verified, corrected per the L3 review): fair `N=4`, start `i=2` → `P(reach $4)=½`,
+`P(ruin)=½`, `E[duration]=4=2·(4−2)`; biased `p=0.4`, `i=2` → `P=4/13`, ruin `9/13`, `D=50/13`; guard
+`r=q/p=1` (the `0/0` fair case). Detailed math: `audits/ideation/plan-L3-gamblers-ruin.md`.
+
+**Hook:** keep nearly as-is — it's the **accessibility model** for the whole course (concrete,
+dollars, no jargon): *"You have \$2. Flip a fair coin: heads +\$1, tails −\$1, until you hit \$4 or
+\$0. The coin is fair — so what's the chance you go broke first, and how long will it take?"* Optional
+warmth: "You don't need any probability for this yet — just a guess."
+
+**"Why it matters" — default:** "Even in a *fair* game, the player with less money tends to go broke
+first — and the tiniest edge for the house turns 'fair' into 'almost certain to lose.' It's why the
+casino always wins." **"For the interview":** "The most-asked first-passage / Markov problem; the
+prototype for risk-of-ruin and stop-loss/target reasoning."
+
+**Inclusive beat sequence (~11 beats):**
+
+| # | beatId | interaction | Teaches | Inclusive notes |
+|---|--------|-------------|---------|-----------------|
+| 1 | `recall-overlap` | retrieval (graded) | retrieve that a near-miss for `HH` resets | retrieval opener (§2.5) |
+| 2 | `open-bet` | `prediction` (per-option) | P(broke first)? (trap: "fair ⇒ safe") | refute "0%/always 50-50" |
+| 3 | `gamblers-fallacy` | `primer` / refutation | "after 3 losses you're **not** due for a win" | **the unaddressed bug** — name & refute (§2.4); re-elicits on the walk |
+| 4 | `walk-once` | WalkBoard (single walker) | one token random-walks to a wall | the concrete body of the abstraction |
+| 5 | `boundary-edge` | `stateTap` | H→`i+1`, T→`i−1`; the two walls absorb | "the number line is a state machine" primer first |
+| 6 | `ground-both` | hand-tally (micro) | P = share of walks that reach top; D = average steps | grounds *both* quantities before symbols (§2.2) |
+| 7 | `prob-tiles` | `equationTiles` (**fair only**) | P-recurrence: **no `1+`**, boundary 1·0 | keep ratios `q/p` out of graded tiles |
+| 8 | `duration-tiles` | `equationTiles` (**fair only**) | D-recurrence: `1+` returns, boundary 0 | teach the **two** differences as two signaled contrasts (the `1+`; *and* boundary 1·0 vs 0·0) |
+| 9 | `guided-solve` | `substitution` | solve to `P=½`, `D=4` | plain-language steps |
+| 10 | `house-edge` | WalkBoard + WalkerSwarm + RuinLandscape | a small edge is catastrophic | slow-first; land the concrete ("60/40 → broke ~69%") *before* the `(1−r^i)/(1−r^N)` form; "average ≠ typical" at the fat-tailed histogram |
+| 11 | `recap` | `recap` | `P=i/N`, `D=i(N−i)`; fair still ruins you | generate-then-reveal; mid-course `three-lessons-complete` |
+
+**Note:** the probability-vs-duration contrast is the course's best built-in interleaving — keep the
+two recurrences **in one lesson, side by side**; do not split into separate lessons.
+
+---
+
+<a name="l4"></a>
+## 7. L4 — Mixed Review & Streaks (repurposed)
+
+**Change of role:** with `E[H]=2` now taught in L0, re-deriving it here would be *massed
+re-teaching*. Repurpose the slot (keep `lessonId: lesson-states-streaks` to avoid ID churn) into an
+**interleaved mixed-review checkpoint** — the higher-value desirable difficulty (mixed practice
+≫ blocked). It is the course's spaced-retrieval hinge and a diagnostic of weak nodes.
+
+**Hook:** *"You've waited for patterns, raced them, and walked to ruin. Let's see how it all connects
+— mixed together, the way a real problem arrives."*
+
+**Beat sequence (~6–8 interleaved beats):**
+
+| # | beatId | interaction | Teaches | Inclusive notes |
+|---|--------|-------------|---------|-----------------|
+| 1 | `retrieval-grid` | retrievalGrid (graded) | match `{2,4,6,8,10,7/8,i(N−i)}` → lessons | spaced retrieval at expanding gap |
+| 2 | `which-waits-longest` | ranked tap (mixed set) | rank `{H,HT,THH,HH,HTH,HHH}` by wait | forces discrimination, not single recall |
+| 3 | `race-or-wait` | mixed `prediction` | who's-first (L2) vs how-long (L1) | interleave the most-confused contrast |
+| 4 | `plus-one-or-not` | mixed tiles | probability-recurrence vs duration shape | re-confront the `1+` trap (L3) |
+| 5 | `weak-node` | re-test (adaptive) | the beat the learner most struggled on (L1–L3) | the corrective loop (§2.6) |
+| 6 | `recap-streak` | `recap` | connections + streak; award milestone | generate-then-reveal |
+
+**Milestone:** keep `first-pattern-cracked` (id stable; consider re-toning its *description* to
+"patterns connected"). `E[H]=2` reappears here as **one card among many** (retrieval, not
+re-derivation).
+
+---
+
+<a name="l5"></a>
+## 8. L5 — Longer Patterns & Overlap (transfer)
+
+**Role unchanged — the transfer test.** Novel pair **`THH` vs `HTH`** (`E=8` vs `10`) with **no
+HH/HT recap** in the opener and **faded scaffolding**. Headline math: `THH` borders `{3}`→`2³=8`;
+`HTH` borders `{1,3}`→`2¹+2³=10` (the `H_H` shift-1, like HT's self-loop). Detailed:
+`audits/ideation/plan-L6-longer-patterns.md` (note legacy filename L6).
+
+**Inclusive deltas:**
+- **Keep the concrete discovery first.** Do **not** cut `overlap-ruler` (sliding `THH`/`HTH` over
+  themselves) to save beats — it's the concrete on-ramp to *why* the extra 2 flips exist, and belongs
+  ahead of the graded setup beats.
+- **Faded hints, but never a dead-end.** `maxHintLevel: 2` is right for the expert signal; for a
+  beginner who hits the cap and is still wrong, offer a one-time "walk me through it" path (records
+  `needsReview`, forfeits the badge, doesn't dead-end). Better: the adaptive override (§2.3) lifts the
+  cap on struggle. Fairness over signal-purity, since `transferAttained` is non-gating.
+- **`overlap-compare` becomes an articulation**, not a narration: side-by-side 4-node graphs (nearly
+  free via `OverlapBeat`) + a one-tap "what's the single difference?" (HTH keeps a matched `H`; THH
+  doesn't).
+- **Border-sum chips before the `Σ` symbol** (one chip per overlap found), `Σ` named last.
+- **Transfer signal:** `transferAttained = true` iff the learner clears `failure-edge` **and**
+  `equation-tiles` for **both** `THH` and `HTH` without hitting the cap → "Fully mastered" vs
+  "Completed". (Requires per-pattern split + a persisted hint **high-water mark** — see [§10](#engine).)
+
+---
+
+<a name="l6"></a>
+## 9. L6 — The Overlap Shortcut (capstone, last)
+
+**Role unchanged — the cumulative retrieval capstone.** Re-derives `6,4,8,10` a new way, so it lands
+only after the learner computed them the long way. **The most idealized content in the course belongs
+here, last** (concreteness fading). Headline: `E[wait] = Σ 2^(overlap length)`, proved by a fair-coin
+martingale. Verified table (kept):
+
+| Pattern | borders | `Σ 2^L` | engine `E0` |
+|---|---|---|---|
+| `HT` | {2} | 4 | 4 ✓ |
+| `HH` | {2,1} | 4+2 = **6** | 6 ✓ |
+| `THH` | {3} | 8 | 8 ✓ |
+| `HTH` | {3,1} | 8+2 = **10** | 10 ✓ |
+| `HHH` | {3,2,1} | 8+4+2 = **14** | 14 ✓ |
+| `HTHT` | {4,2} | 16+4 = **20** | — |
+
+Detailed: `audits/ideation/plan-L4-overlap-shortcut.md` (legacy filename L4).
+
+**Hook — before → after:**
+> *Before:* "You solved four linear systems to get 6, 4, 8, 10. A quant hands you HTHT and 30 seconds.
+> There's a one-line rule — let's earn it…"
+> *After:* "By now you've worked out four of these waiting times the long way: 6, 4, 8, and 10. What
+> if there were a **one-line shortcut** that gives you all four in seconds — with a genuinely fun
+> reason *why*, involving a casino that can never turn a profit? Let's earn it together."
+(Drops the stranger-evaluator + 30-second stopwatch — the choking trigger; keeps the shortcut tease
+and the casino anchor.)
+
+**"Why it matters" — default:** "In a game nobody can beat, the money going in must equal the money
+coming out — one of the most powerful tricks in all of probability. It's the same instinct used to
+price financial options." **"For the interview":** "Martingales, optional stopping, and no-arbitrage —
+the ABRACADABRA problem (Li 1980); the move from grinding a recurrence to *seeing the structure*."
+
+**Inclusive deltas:**
+- **Gate behind an exponent primer** ("powers of two: 2, 4, 8, 16"); the `SumTiles` widget already
+  de-symbolizes `Σ` into a running sum — lean on it; show `6 = 4+2 = Σ2^L` as the fade.
+- **Give the martingale the fullest ladder** (it's the hardest reification in the course): lead with
+  the *deterministic-payout* intuition on **one short stream** (money in = `$1`/flip; money out = the
+  few surviving stacks), **show running mean(in) and mean(out) converge** *before* asserting
+  `E[T]=Σ2^L`; defer the words "martingale/optional stopping" to an expert note.
+- **Retrieval-first opener** recalling *all* prior numbers at the longest gap; **triangulation**
+  (recurrence = martingale = simulation) framed as a prediction ("will the three agree?") then a
+  snap-together reveal.
+
+---
+
+<a name="engine"></a>
+## 10. Engine, schema & infra additions
+
+All pure, dependency-free, golden-testable, **no AI** (Phase-1 constraint holds — all checks are
+client-side against the engine; all primers are hand-authored micro-interactions).
+
+**Lesson math engines (unchanged from prior plans):**
 
 ```ts
-// src/engine/race.ts        (L4)
-buildRaceAutomaton(a: string, b: string, p: number): RaceAutomaton  // merged-KMP product, 2 absorbers
-conwayLeadingNumbers(a: string, b: string, q: number): { AA; AB; BB; BA }
-penneyOdds(a: string, b: string): { aBeatsB: Rational; bBeatsA: Rational }   // (AA−AB):(BB−BA)
-bestBeater(a: string): string                                                 // (¬a₂)a₁…a_{ℓ-1}
-simulateRace(a, b, p, rng): 'A' | 'B'          // one shared stream, two KMP tracks
-winMatrix(patterns: string[], p: number): Rational[][]                        // DominanceWheel
-
-// src/engine/walk.ts        (L5)
-buildWalk(N: number, p: number): Automaton     // birth–death band, absorbing 0 and N
-simulateWalk(i, N, p, rng): { end: 0 | 'N'; steps: number }
-// solve twice with the existing solveLinearSystem: P (boundary 1/0, no +1) and D (+1, boundary 0)
-
-// src/engine/correlation.ts (L6)
-correlation(v: string, w: string): { bits: number[]; cln: number; overlaps: number[] }
-expectedWaitFair(pattern: string): number      // Σ 2^L  (=== expectedTimes.E0; the golden contract)
-gamblerLedger(pattern: string, stream: string): { rows: {enter; stack; alive}[]; payout: number }
+// src/engine/race.ts        (L2)  buildRaceAutomaton, conwayLeadingNumbers, penneyOdds, simulateRace, winMatrix
+// src/engine/walk.ts        (L3)  buildWalk(N,p), simulateWalk, batchWalkStats   // solve P (no +1, bdry 1·0) and D (+1, bdry 0)
+// src/engine/correlation.ts (L6)  correlation, expectedWaitFair, gamblerLedger   // expectedWaitFair === buildAutomaton(p,0.5).E0
+// src/engine/automaton.ts   (L0)  buildAutomaton("H", 0.5) → E0 = 2  (add golden test)
 ```
 
-**Schema (`src/content/schema.ts`).** Add to the `Interaction` discriminated union, same style as
-today: `raceSim`, `walkBoard`, `autocorrelationRuler`, `gamblerLedger`, `sumTiles`, `dominanceWheel`
-(+ `distributionHistogram` as a `theorySimChart` variant). Each new beat view composes `BeatShell`
-(region → `FeedbackStrip` → sticky action bar) and a Konva-or-DOM hero exactly like the existing 10.
+**New infra for inclusivity (the part this redesign adds):**
 
-**`StateGraph` layout.** L4's combined chain is a small DAG and L5's walk is a number line; both want a
-light layout option beyond strict left-to-right. Either accept a tidy linear order of merged states or
-add a positions-per-node prop (small).
+| Item | Purpose | Notes |
+|---|---|---|
+| **Graded recall variant** (`mcq` / `retrievalGrid`) | retrieval openers, mixed review, the diagnostic pre-check | `prediction` is ungraded by design; this is reused ≥5× (L2/L3/L4/L6 + pre-check) |
+| **`primer` / `concept-card` beat type** | JIT micro-interaction primers (½, average, state, exponents) and the notation ladder | narrative-class; can piggyback the recap/overlap render path; never `required`, never sets `needsReview` |
+| **Per-option feedback** (`Feedback.byOption`) | refutational prediction (§2.4) | branch on the selected option in `PredictionBeat` |
+| **`track: 'A' \| 'B'`** on user/progress | two-track render mode | set by the pre-check; renderer chooses density + default-collapsed depth |
+| **`beat.density` / variant (or beginner-only beat group)** | render split vs merged beats by track (e.g. L1 `simulate`) | avoids duplicate fixtures |
+| **Collapsible content blocks** (`primer` / `expertNote`) | "Going deeper / For the interview" + collapsed primers | default-collapsed; never `required` |
+| **Persisted hint high-water mark** (`maxHintLevelByBeat`) | the light mastery signal (§2.6) and `transferAttained` (L5) | `onCorrect` currently resets level → 0; record the high-water mark instead |
+| **Generalized `transferAttained` → per-lesson mastery** | drive spaced re-surfacing | reuses `ProgressDerived` + "Fully mastered" UI |
+
+**Authoring blocker to clear first (flagged by every prior review):** `equationDiagnosis.ts` per-slot
+hint copy is **hardwired to HH's `{E0,E2}` target**, and `EquationTilesBeat` overrides authored hints
+with it — so authored `byPattern` hints are dead for non-HH and learners get misleading nudges. Make
+the copy fixture-authored (this doubles as the §2.2 "fade + prefix↔id bridge" hook) **before** any new
+`equationTiles` beat ships.
 
 ---
 
 <a name="course-path"></a>
-## 8. Course-path integration
+## 11. Course-path integration
 
 | Order | lessonId | title | milestoneId | unlocks |
 |---|---|---|---|---|
-| L1 | `lesson-states-streaks` | States & Streaks | `first-pattern-cracked` | `lesson-pattern-hitting-times` |
-| L2 | `lesson-pattern-hitting-times` | Pattern Hitting Times | `hh-ht-mastered` | `lesson-longer-patterns` |
-| L3 | `lesson-longer-patterns` | Longer Patterns & Overlap | `state-machine-builder` | **`lesson-penneys-game`** |
-| **L4** | **`lesson-penneys-game`** | Penney's Game: Who Gets There First? | `penneys-game-won` | `lesson-gamblers-ruin` |
-| **L5** | **`lesson-gamblers-ruin`** | Gambler's Ruin: How a Fair Game Breaks You | `gamblers-ruin-solved` | `lesson-overlap-shortcut` |
-| **L6** | **`lesson-overlap-shortcut`** | The Overlap Shortcut: Read the Wait Off the Pattern | `martingale-mastered` | `null` |
+| **L0** | `lesson-first-heads` *(optional)* | The First Heads | `first-heads-found` *(optional, non-gating)* or none | `lesson-pattern-hitting-times` |
+| L1 | `lesson-pattern-hitting-times` | Pattern Hitting Times | `hh-ht-mastered` | `lesson-penneys-game` |
+| L2 | `lesson-penneys-game` | Penney's Game | `penneys-game-won` | `lesson-gamblers-ruin` |
+| L3 | `lesson-gamblers-ruin` | Gambler's Ruin | `gamblers-ruin-solved` | `lesson-states-streaks` |
+| L4 | `lesson-states-streaks` | Mixed Review & Streaks | `first-pattern-cracked` | `lesson-longer-patterns` |
+| L5 | `lesson-longer-patterns` | Longer Patterns & Overlap | `state-machine-builder` | `lesson-overlap-shortcut` |
+| L6 | `lesson-overlap-shortcut` | The Overlap Shortcut | `martingale-mastered` | `null` |
 
-- `courseId`: `course-pattern-hitting-times` (unchanged).
-- **Course-completion milestone:** add `full-course-mastered` on finishing all six; keep
-  `three-lessons-complete` as the mid-course mark.
-- **patternOptions:** L4 the eight length-3 words `["HHH","HHT","HTH","HTT","THH","THT","TTH","TTT"]`
-  (race/counter set) with the `HH`/`HT` opener; L5 is parameter-driven (`N`, `p`) rather than pattern-
-  driven—store walk params in the interaction (or extend the schema); L6 `["HH","HT","THH","HTH","HHH"]`
-  (retrieval/transfer set) + die "66" in the Extension.
-- **Roadmap after the slate:** promote **Weighted Coins & Dice** and **Coupon Collector** to the
-  visible-but-locked roadmap nodes (the prior `lesson-weighted-coins` stub stays).
+- **Mid-course milestone:** `three-lessons-complete` after L1–L3. **Completion:** `six-lessons-complete`
+  after L6. L0 is optional and does not gate L1 (a beginner who completes L0 is routed to L1; an expert
+  reaches L1 directly).
+- **Ordering reconciliation (action item):** adopt this PRD/CONTEXT canonical order everywhere; update
+  `docs/future_ideas.md` (currently lists Overlap Shortcut at L4) and rename the legacy
+  `audits/ideation/plan-L4/L5/L6` files' L-numbers (or add a note) so the docs stop disagreeing.
+- **patternOptions:** L0 `["H"]`; L1 `["HH","HT"]`; L2 the length-3 words; L3 parameter-driven (`N`,`p`);
+  L4 retrieval set `["H","HT","THH","HH","HTH","HHH"]`; L5 `["THH","HTH"]`; L6 `["HH","HT","THH","HTH"]`.
 
 ---
 
-<a name="alternates"></a>
-## 9. Alternates considered & deferred
+<a name="open"></a>
+## 12. Open questions & tradeoffs (for the human)
 
-Strong ideas that didn't make the top 3, with the reason:
+These are genuine decisions the research surfaced; they are *not* resolved here.
 
-- **Weighted Coins & Dice** *(A5#3, A1 bridge).* Generalizes `½ → p, 1−p` (tiles already exist),
-  finds the golden-ratio crossing where `E[HH]=E[HT]`, reuses the already-built `BiasChart`. **Deferred**
-  because it adds the **fewest new widgets** (your priority is widgets) and its bias-sensitivity story is
-  partly covered by L5's house-edge sandbox and the flagship's existing bias sandbox. **Best alternate**
-  if you'd prefer a gentler consolidation lesson as L5 instead of Gambler's Ruin.
-- **The Fundamental Matrix** *(A2#2).* The theory capstone—every recurrence is a row of `(I−Q)t=1`,
-  with `N=(I−Q)⁻¹` giving expected time (row sums) and exit odds (`N·R`). Its **Fundamental-Matrix
-  "x-ray" card** (tap a cell for expected visits, sweep a row to sum into the hitting time) is a gorgeous
-  widget. **Deferred** as more abstract/linear-algebra-forward than the persona needs right now; a great
-  **Phase-3 "theory" capstone** once the three concrete lessons land.
-- **Stationary Distributions & Mean Recurrence** *(A2#3).* Pivots to ergodic chains: return time
-  `= 1/π_i` (Kac), recasting even the warm-up's `E[H]=2`. **Deferred**—it's a different sub-field
-  (long-run behavior) and breaks the "absorbing/first-passage" through-line of this slate.
-- **Coupon Collector** *(A1#4, A4#4).* `E = n·H_n ≈ 14.7` via a sum of geometrics; lovely
-  CollectionGrid + PhaseLadder widgets. **Deferred** to the roadmap—it leans hardest on the self-loop
-  mechanics the flagship already taught and wants a larger alphabet, so it pairs naturally with Weighted
-  Coins & Dice.
-- **Litt's Game / clumping** *(A3#4).* `HT` beats `HH` on *frequency* over 100 flips even with equal
-  expected counts (overlap → clumping → variance). **Deferred** as a future "Variance & Tails" capstone;
-  it's off the expected-wait spine and its proof is variance-level.
+1. **L0 as a separate lesson vs a Track-A beat-group inside L1.** Separate lesson = cleanest pedagogy
+   + clean expert skip, but one more fixture before the gate. Beat-group = no new node, but edits the
+   built flagship. Recommendation: separate, optional L0; fallback to a beat-group if the gate is at
+   risk.
+2. **Branching/diagnostic in scope for Phase 1?** The two-track design needs a graded `mcq` variant +
+   a `track` flag + conditional rendering. If that's too much for the gate, ship inclusivity as
+   *always-on, dismissible JIT primers* (simpler, slightly noisier for experts) and add the pre-check
+   later.
+3. **Depth vs accessibility / who maintains two copy registers?** The "For the interview" notes ≈
+   double authoring on jargon-heavy beats. Start with the worst offenders (L2/L3/L6 "why" lines, L1
+   `guided-solve`/`equation-tiles`), not every beat.
+4. **Non-blocking mastery vs real mastery.** Should the mid-course (L3) checkpoint be the *one* place a
+   soft corrective re-test is (gently) required, to get a Bloom-style loop without a hard gate
+   everywhere?
+5. **Milestone churn.** Repurposing L4 changes `first-pattern-cracked`'s meaning; renaming risks ID
+   churn across the fixture/Functions/`CONTEXT.md`. Keep the id, re-tone the description.
+6. **Animation spectacle vs structural clarity (the Kaminski tension).** "Lean + mapped + slow-first"
+   is recommended, but how lean per widget is a brand-vs-pedagogy judgment.
+7. **Warmth vs the "serious notebook" voice.** Adopt the de-gatekeeping (high confidence); tune warmth
+   conservatively so it never reads bubbly.
+8. **The biggest validity risk:** the persona literally selected *against* the beginners we now want
+   to serve, so we have **no novices in the user pool to test with**. Every calibration above (where's
+   the ZPD cliff, does H-before-HH actually help, pre-check accuracy) needs testing with real
+   beginners. The planned `answer_submitted {first_try, hintLevel}` and reveal-rate KPIs are a usable
+   load/difficulty proxy — treat high reveal/hint rates on a beat as evidence of an un-budgeted load
+   spike to fix.
 
 ---
 
 <a name="sources"></a>
-## 10. Math sources
+## 13. Sources
 
-Compiled from the agents' research (full citations in `audits/ideation/`):
+Full citations (with years, effect sizes, and per-beat grounding) live in the five research memos:
+- `audits/ideation/inclusive-research-1-cognitive-load.md` — Sweller CLT & element interactivity;
+  Cowan ~4 chunks; Kalyuga expertise-reversal + 2025 meta-analysis; Renkl/Atkinson faded worked
+  examples; Mayer pretraining/segmenting/signaling; Kapur productive-failure-needs-a-floor.
+- `audits/ideation/inclusive-research-2-prerequisites-misconceptions.md` — Ausubel; Vygotsky ZPD;
+  Wood/Bruner/Ross scaffolding; Meyer & Land threshold concepts; Kahneman & Tversky; Konold outcome
+  approach; Lecoutre equiprobability; Posner conceptual change; refutation texts; Kapur.
+- `audits/ideation/inclusive-research-3-representations-cra.md` — CRA/Bruner; concreteness fading
+  (Fyfe/Goldstone); Kaminski caution + Trninic rebuttal; Ainsworth DeFT; Paivio/Mayer; Gick–Holyoak &
+  Gentner; Sfard reification; Nathan & Koedinger expert blind spot.
+- `audits/ideation/inclusive-research-4-motivation-anxiety.md` — Ashcraft math anxiety; Bandura
+  self-efficacy; Keller ARCS; Deci & Ryan SDT; Eccles/Wigfield expectancy-value-cost; Dweck/Moser;
+  Bjork desirable difficulties; Steele / Walton & Cohen belonging.
+- `audits/ideation/inclusive-research-5-progression-assessment.md` — Clements & Sarama learning
+  trajectories; Bloom mastery / 2-sigma; Roediger & Karpicke testing effect; Cepeda spacing; Rohrer &
+  Taylor interleaving; Black & Wiliam / Hattie feedback; Koedinger & Aleven assistance dilemma;
+  VanLehn; Koedinger doer effect.
 
-- **Penney's game / Conway numbers / non-transitivity.** Penney, "Problem 95: Penney-Ante," *J.
-  Recreational Math.* (1969); Gardner, "Mathematical Games," *Scientific American* (1974); Nishiyama,
-  "Pattern matching probabilities and paradoxes," *IJPAM* 59(3) (2010); *The Penney's Game with Group
-  Action*, arXiv:2009.06080 (Conway leading number, `E=2·CLN`, second-player theorem, game length);
-  "Penney's game odds from no-arbitrage," *Theory and Decision* (Springer, 2026).
-- **Autocorrelation / correlation polynomial / closed form.** Guibas & Odlyzko, "String overlaps,
-  pattern matching, and nontransitive games," *J. Combin. Theory A* 30 (1981); Flajolet & Sedgewick,
-  *Analytic Combinatorics* §I.4.2; Wikipedia, "Autocorrelation (words)."
-- **Martingale / optional stopping (ABRACADABRA).** Li, "A martingale approach to the study of
-  occurrence of sequences of patterns," *Ann. Probability* 8 (1980); Williams, *Probability with
-  Martingales*; Doob's Optional Stopping Theorem.
-- **Gambler's ruin / random walks / Markov chains.** Grinstead & Snell, *Introduction to Probability*,
-  Ch. 11–12 (absorbing chains, fundamental matrix, gambler's ruin); Norris, *Markov Chains*; Ross,
-  *Introduction to Probability Models*, Ch. 4; Pólya's recurrence theorem; Kac's lemma.
-- **Quant-interview canon.** Zhou, *A Practical Guide to Quantitative Finance Interviews* (the Green
-  Book), Ch. 4–5; Crack, *Heard on the Street*; Mosteller, *Fifty Challenging Problems in Probability*;
-  Joshi, *Quant Job Interview Questions and Answers*.
-
-All worked values were cross-checked against this repo's engine golden values
-(`E[HH]=6, E[HT]=4, E[THH]=8, E[HTH]=10, E[HHH]=14`); where a source disagreed (one preprint printing
-`HHH=16`), the rigorous `2·CLN` value is used.
-
----
-
-### Appendix — agent ideation files
-
-- `audits/ideation/agent-1-quant-canon.md` — quant-interview canon (Penney's, Gambler's Ruin, Martingale Casino, Coupon Collector)
-- `audits/ideation/agent-2-markov-theory.md` — Markov theory (Gambler's Ruin, Fundamental Matrix, Stationary/Recurrence, Penney's)
-- `audits/ideation/agent-3-pattern-theory.md` — combinatorics on words (Conway shortcut, Gambler Army/martingale, Penney's, Litt's game)
-- `audits/ideation/agent-4-widgets.md` — interaction design (Penney's, Longer Patterns reshaped, Gambler's Ruin, Coupon; + 14 reusable widget primitives)
-- `audits/ideation/agent-5-curriculum.md` — curriculum/pedagogy (Penney's, Weighted Coins, Martingale; sequencing, scaffolding, cut lines)
+Math values cross-checked against the repo engine golden tests at `p = 0.5`
+(`E[H]=2, E[HH]=6, E[HT]=4, E[THH]=8, E[HTH]=10, E[HHH]=14`).

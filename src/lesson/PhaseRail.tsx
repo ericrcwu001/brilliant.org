@@ -1,7 +1,13 @@
 import { useEffect, useRef } from 'react'
 import { getRail } from './phases'
 
-export function PhaseRail({ beatId }: { beatId: string }) {
+export function PhaseRail({
+  beatId,
+  reducedMotion,
+}: {
+  beatId: string
+  reducedMotion?: boolean
+}) {
   const segments = getRail(beatId)
   const currentRef = useRef<HTMLLIElement>(null)
 
@@ -10,9 +16,9 @@ export function PhaseRail({ beatId }: { beatId: string }) {
     currentRef.current?.scrollIntoView({
       inline: 'center',
       block: 'nearest',
-      behavior: 'smooth',
+      behavior: reducedMotion ? 'auto' : 'smooth',
     })
-  }, [beatId])
+  }, [beatId, reducedMotion])
 
   return (
     <ol className="rail" aria-label="Lesson progress">

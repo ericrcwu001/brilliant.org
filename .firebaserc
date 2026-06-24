@@ -1,0 +1,7 @@
+{
+  "projects": {
+    "default": "brilliant-org",
+    "dev": "brilliant-org",
+    "prod": "brilliant-phht-prod"
+  }
+}

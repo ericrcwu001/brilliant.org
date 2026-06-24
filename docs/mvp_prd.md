@@ -40,8 +40,8 @@ After the MVP lesson, the learner should understand:
 - Emergency-only fallback (does not satisfy acceptance): static typed lesson fixtures imported at build time if the Firestore seed pipeline fails outright.
 - React + Konva for the flagship interactive lesson.
 - Programmatic KMP-style state construction for coin-pattern automata.
-- Three built lessons in a coherent path.
-- Two future roadmap lessons visible but not built.
+- Six-lesson unlock path in a coherent order (see Course Path); L1 (`lesson-pattern-hitting-times`) built for the gate; L2–L6 fixtures phased per Implementation Phases.
+- Future roadmap stubs after L6 (Weighted Coins & Dice).
 - Completion equals mastery for MVP.
 - Lightweight `needsReview` flag when the learner repeatedly misses a required interaction or reveals the answer.
 - Full interaction snapshot persistence.
@@ -55,17 +55,37 @@ After the MVP lesson, the learner should understand:
 - Performance-threshold mastery.
 - Separate retrieval-practice mastery checks.
 - Variance and tails lesson.
-- Martingale method lesson.
 - Admin content editor.
 - Fully general arbitrary-length pattern UI.
 - Raw animation-frame persistence.
 
 ## Course Path
 
-### Built for MVP
+### Unlock order (L1–L6)
 
-1. **States & Streaks** (`lesson-states-streaks`, milestone `first-pattern-cracked`)
-   - Warm-up lesson. Single fixed target: first `H` (`patternOptions: ["H"]`, no compare mode).
+The course opens with the flagship hook, varies the question and the arena (Penney's → Gambler's Ruin), consolidates the fundamentals (States & Streaks → Longer Patterns), and closes with the Overlap Shortcut as a retrieval capstone — it re-derives the earlier values a new way, so it only lands once the learner has computed them the long way. The three extension/capstone lessons are specced in `docs/proposed-lessons.md`.
+
+1. **Pattern Hitting Times** (`lesson-pattern-hitting-times`, milestone `hh-ht-mastered`) — **built for gate**
+   - Flagship lesson; compares `HH` vs `HT`.
+   - Includes simulation, state-machine animation, equation tiles, expected-time solve, theory-vs-simulation comparison, and overlap explanation.
+   - Key fair-coin results: `E[HH] = 6`, `E[HT] = 4`.
+   - Beat inventory is the 11-beat list in `Flagship Lesson Flow` below.
+   - Unlocks L2.
+
+2. **Penney's Game** (`lesson-penneys-game`, milestone `penneys-game-won`) — **not built; spec in `docs/proposed-lessons.md` §L4**
+   - Two patterns race on one shared stream; win probability is decoupled from expected wait; non-transitive beats relation.
+   - Headline result: `P(THH first | vs HHH) = 7/8`.
+   - New engine/widgets: `buildRaceAutomaton`, RaceTrack, DominanceWheel, AutocorrelationRuler (cross mode).
+   - Unlocks L3.
+
+3. **Gambler's Ruin** (`lesson-gamblers-ruin`, milestone `gamblers-ruin-solved`) — **not built; spec in `docs/proposed-lessons.md` §L5**
+   - Random walk between two walls; probability recurrence (no `1+`) and duration recurrence (`1+`) side by side.
+   - Fair-coin headline: `P_i = i/N`, `D_i = i(N−i)`.
+   - New engine/widgets: `buildWalk`, WalkBoard, DistributionHistogram.
+   - Unlocks L4. Completing L1–L3 earns the mid-course `three-lessons-complete` milestone.
+
+4. **States & Streaks** (`lesson-states-streaks`, milestone `first-pattern-cracked`) — **not built**
+   - Consolidation lesson after the extension arc. Single fixed target: first `H` (`patternOptions: ["H"]`, no compare mode).
    - Engine: 2 states (`∅`, `H`), `E0 = 1 + 1/2 E1 + 1/2 E0`, `E1 = 0`, `E[H] = 2`.
    - Beat inventory (all Required unless noted):
 
@@ -76,35 +96,31 @@ After the MVP lesson, the learner should understand:
    | `reset-edge` | `stateTap` | Tap where `∅` goes on `T` (self-loop) vs `H` advancing to the absorbing state. |
    | `equation-tiles` | `equationTiles` | Build `E0 = 1 + 1/2 E1 + 1/2 E0` and `E1 = 0`. |
    | `guided-solve` | `substitution` | Tap through steps to `E[H] = 2`. |
-   | `recap` | `recap` | Recap state thinking; tease `HH` vs `HT`. |
+   | `recap` | `recap` | Recap state thinking; spaced retrieval of the course so far. |
 
-   - Omitted vs flagship: pattern pick, refine-prediction, theory-vs-sim, overlap, bias sandbox.
-   - **Cut line if slipping:** may drop to a ≤5-beat warm-up (simulate + one graded check + recap); do not block the gate on L1 parity with the flagship.
+   - **Cut line if slipping:** may drop to a ≤5-beat warm-up (simulate + one graded check + recap).
+   - Unlocks L5.
 
-2. **Pattern Hitting Times** (`lesson-pattern-hitting-times`, milestone `hh-ht-mastered`)
-   - Flagship lesson.
-   - Compares `HH` vs `HT`.
-   - Includes simulation, state-machine animation, equation tiles, expected-time solve, theory-vs-simulation comparison, and overlap explanation.
-   - Key fair-coin results: `E[HH] = 6`, `E[HT] = 4`.
-   - Beat inventory is the 11-beat list in `Flagship Lesson Flow` below.
-
-3. **Longer Patterns & Overlap** (`lesson-longer-patterns`, milestone `state-machine-builder`)
+5. **Longer Patterns & Overlap** (`lesson-longer-patterns`, milestone `state-machine-builder`) — **not built**
    - **Transfer lesson.** Uses the matched contrast `THH` vs `HTH` — patterns the learner was not hand-held through — to verify the method transfers to a novel case.
    - Reuses the flagship beat skeleton; per-beat content comes from `buildAutomaton(selectedPattern, 0.5)` (4 states `E0..E3`, `E3 = 0`). Key fair-coin results: `E[THH] = 8`, `E[HTH] = 10`.
    - Deltas vs flagship: opening bet is prediction-only (no `HH`/`HT` recap); `failure-edge` and `equation-tiles` are the transfer "setup" beats; the equation builder has 4 rows.
    - **Faded scaffolding:** on the setup beats (`failure-edge`, `equation-tiles`), hints are capped at level 2 (`maxHintLevel: 2`) with no level-3 reveal. Reaching the cap still records `needsReview` but never blocks completion.
    - **Transfer signal:** `derived.transferAttained = true` iff the learner passes the setup beats for **both** `THH` and `HTH` without reaching the hint cap. This does not change the unlock rule; see `Mastery and Progress`.
-   - **Cut line if slipping:** may reduce to ≤8 Required beats (failure-edge, equation-tiles, refine-prediction, theory-vs-sim, overlap, recap) reusing flagship interaction types.
+   - **Cut line if slipping:** may reduce to ≤8 Required beats reusing flagship interaction types.
+   - Unlocks L6. Solving `THH`/`HTH` the long way here sets up the L6 shortcut that re-derives them in one line.
 
-Completing all three lessons earns the `three-lessons-complete` milestone.
+6. **The Overlap Shortcut** (`lesson-overlap-shortcut`, milestone `martingale-mastered`) — **not built; spec in `docs/proposed-lessons.md` §L6**
+   - **Retrieval capstone (final lesson).** Re-derives `6, 4, 8, 10` a new way, so it lands only after the learner has computed them the long way (L1 and L5).
+   - Closed form `E[wait] = Σ 2^(overlap length)` and fair-casino martingale proof.
+   - New engine/widgets: `correlation`, `expectedWaitFair`, GamblerLedger, AutocorrelationRuler (self mode), SumTiles.
+   - Unlocks nothing (`unlocks: null`).
 
-### Visible Roadmap After MVP
+Completing all six lessons earns the `six-lessons-complete` milestone.
 
-4. **Penney's Game**
-   - Race two patterns to see which appears first.
-   - Teaches competing absorbing states.
+### Visible roadmap after L6
 
-5. **Weighted Coins & Dice**
+7. **Weighted Coins & Dice** (`lesson-weighted-coins`)
    - Generalizes the method beyond fair binary flips.
    - Introduces biased coins and larger alphabets.
 
@@ -415,7 +431,7 @@ The internal `masteryStatus: mastered` is the unlock signal and is unchanged by 
 - **Fully mastered** when `derived.transferAttained` is true (the learner passed the `failure-edge` and `equation-tiles` setup beats for both `THH` and `HTH` without reaching the hint cap).
 - **Completed** otherwise, with the course path recommending a review of the setup beats.
 
-`transferAttained` is written only by the Cloud Function on lesson completion and never gates unlocking. The "Fully mastered" badge appears on the course path and the recap.
+`transferAttained` is written only by the Cloud Function on lesson completion and never gates unlocking. The "Fully mastered" badge appears in the **recap** only; the Home course-path node stays binary (completed / `needsReview`).
 
 MVP still records `needsReview` when the learner reveals an answer or repeatedly misses core interactions. `needsReview` does not block unlocking in Phase 1, but the course path should recommend reviewing that lesson before advancing too far.
 
@@ -468,10 +484,14 @@ MVP includes streaks and milestones.
 
 Use hand-authored milestones such as:
 
-- `First Pattern Cracked`
-- `HH vs HT Mastered`
-- `State Machine Builder`
-- `Three Lessons Complete`
+- `HH vs HT Mastered` (L1)
+- `Penney's Game Won` (L2)
+- `Gambler's Ruin Solved` (L3)
+- `Three Lessons Complete` (mid-course, after L3)
+- `First Pattern Cracked` (L4)
+- `State Machine Builder` (L5)
+- `Martingale Mastered` (L6)
+- `Six Lessons Complete` (course completion)
 
 Milestones should appear on the course path and after lesson completion.
 
@@ -526,7 +546,7 @@ The MVP is acceptable when:
 - Feedback appears instantly and includes specific explanations for both correct and incorrect answers.
 - The learner can leave mid-lesson and return with the last committed interaction state restored (per the resume contract; uncommitted mid-drag work may be lost).
 - Completing a lesson marks it mastered and unlocks the next lesson, written only by a Cloud Function.
-- On `lesson-longer-patterns`, hints are capped at level 2 (no reveal) on the `failure-edge` and `equation-tiles` setup beats, and `derived.transferAttained` is set true only when the learner clears those setup beats for both `THH` and `HTH` without reaching the cap. The course path and recap show "Fully mastered" when true and "Completed" otherwise.
+- On `lesson-longer-patterns`, hints are capped at level 2 (no reveal) on the `failure-edge` and `equation-tiles` setup beats, and `derived.transferAttained` is set true only when the learner clears those setup beats for both `THH` and `HTH` without reaching the cap. The **recap** shows "Fully mastered" when true and "Completed" otherwise (the course-path node stays binary).
 - The lesson is marked `needsReview` per the defined thresholds (reveal, or 3+ wrong submits, on any Required beat), and the course path recommends review.
 - Streak and milestones persist in Firestore and cannot be written by the client.
 - Firestore security rules and App Check are deployed before the public URL.
@@ -682,7 +702,7 @@ Each phase below replaces a stub renderer with the real interaction and its inst
 
 #### Phase 17 — Streaks & milestones
 - **Goal:** Habit loop persisted server-side.
-- **Build:** Function-owned streak increment (once per local calendar day on first qualifying action; store `lastActiveDate` + IANA tz; idempotent same-day); milestone awards (`first-pattern-cracked`, `hh-ht-mastered`, `state-machine-builder`, `three-lessons-complete`); surface streak + milestones on the course path and post-completion.
+- **Build:** Function-owned streak increment (once per local calendar day on first qualifying action; store `lastActiveDate` + IANA tz; idempotent same-day); milestone awards (`hh-ht-mastered`, `penneys-game-won`, `gamblers-ruin-solved`, `martingale-mastered`, `three-lessons-complete`, `first-pattern-cracked`, `state-machine-builder`, `six-lessons-complete`); surface streak + milestones on the home study desk and post-completion.
 - **Manual test:** Complete a Required beat and confirm the streak increments; repeat the same day and confirm no second increment; confirm milestones appear after completion; confirm a non-qualifying action (bias sandbox only) does not increment.
 - **Done when:** Streaks increment once per local day and milestones are awarded correctly.
 
@@ -700,31 +720,49 @@ Each phase below replaces a stub renderer with the real interaction and its inst
 
 ### Group D — Remaining lessons, polish & deploy
 
-#### Phase 20 — Lesson 1 (`lesson-states-streaks`)
-- **Goal:** The warm-up lesson, reusing existing renderers.
-- **Build:** Author + validate the L1 fixture (single fixed target `H`; beats `open-hook`, `simulate`, `reset-edge`, `equation-tiles`, `guided-solve`, `recap`); seed; wire milestone `first-pattern-cracked`. Apply the ≤5-beat cut line only if slipping.
-- **Manual test:** Complete L1 end-to-end; confirm `E[H]=2` derivation and milestone award; confirm it unlocks the flagship.
-- **Done when:** L1 is completable from Firestore content and unlocks Lesson 2.
+#### Phase 20 — L2 Penney's Game (`lesson-penneys-game`)
+- **Goal:** First extension lesson — racing patterns on a shared stream.
+- **Build:** Per `docs/proposed-lessons.md` §L4: `buildRaceAutomaton`, RaceTrack, DominanceWheel, AutocorrelationRuler (cross); author + validate fixture; seed; wire milestone `penneys-game-won`.
+- **Manual test:** Complete L2 end-to-end; confirm `P(THH first vs HHH) ≈ 7/8` and milestone award; confirm it unlocks L3.
+- **Done when:** L2 is completable from Firestore content and unlocks L3.
 
-#### Phase 21 — Lesson 3 (`lesson-longer-patterns`) + transfer logic
-- **Goal:** The transfer lesson with faded scaffolding for `THH` vs `HTH`.
-- **Build:** Author + validate the L3 fixture (4-row equation builder; prediction-only opener; `failure-edge` + `equation-tiles` as setup beats with `maxHintLevel: 2`); engine-driven content via `buildAutomaton`; Function computes `derived.transferAttained` (passes both setup beats for both patterns without hitting the cap; never gates unlock); learner-facing "Fully mastered" vs "Completed" labels.
-- **Manual test:** Complete L3 clearing setup beats for both patterns without hitting the cap and confirm "Fully mastered"; repeat hitting the cap and confirm "Completed" + review recommendation; confirm no level-3 reveal on the capped setup beats; confirm `three-lessons-complete` on course completion.
-- **Done when:** Transfer label and `transferAttained` behave per acceptance and unlock is unaffected.
+#### Phase 21 — L3 Gambler's Ruin (`lesson-gamblers-ruin`)
+- **Goal:** First-passage on a number line — probability and duration recurrences.
+- **Build:** Per `docs/proposed-lessons.md` §L5: `buildWalk`, WalkBoard, DistributionHistogram; author + validate fixture; seed; wire milestone `gamblers-ruin-solved` and mid-course `three-lessons-complete` on L3 completion.
+- **Manual test:** Complete L3; confirm `P_2 = 1/2`, `D_2 = 4` for `N=4`, `i=2`; confirm L3 unlocks L4 and mid-course milestone fires.
+- **Done when:** L3 is completable and unlocks L4.
 
-#### Phase 22 — Course path, unlock gating & review recommendations
-- **Goal:** A coherent path tying the three lessons + two roadmap stubs together.
-- **Build:** Course-path node states (locked/available/completed/mastered, "Fully mastered" badge); unlock order enforcement; visible-but-locked roadmap nodes (`lesson-penneys-game`, `lesson-weighted-coins`); review recommendation when `needsReview`.
-- **Manual test:** Confirm locked lessons are not enterable; complete in order and watch nodes unlock; confirm a `needsReview` lesson shows a review recommendation; confirm roadmap stubs are visible but locked.
+#### Phase 22 — L4 States & Streaks (`lesson-states-streaks`)
+- **Goal:** Warm-up repositioned as consolidation after the extension arc.
+- **Build:** Author + validate the L4 fixture (single fixed target `H`; beats `open-hook`, `simulate`, `reset-edge`, `equation-tiles`, `guided-solve`, `recap`); seed; wire milestone `first-pattern-cracked`. Apply the ≤5-beat cut line only if slipping.
+- **Manual test:** Complete L4 end-to-end; confirm `E[H]=2` derivation and milestone award; confirm it unlocks L5.
+- **Done when:** L4 is completable from Firestore content and unlocks L5.
+
+#### Phase 23 — L5 Longer Patterns (`lesson-longer-patterns`) + transfer logic
+- **Goal:** Transfer lesson with faded scaffolding for `THH` vs `HTH`.
+- **Build:** Author + validate the L5 fixture (4-row equation builder; prediction-only opener; `failure-edge` + `equation-tiles` as setup beats with `maxHintLevel: 2`); engine-driven content via `buildAutomaton`; Function computes `derived.transferAttained`; learner-facing "Fully mastered" vs "Completed" labels.
+- **Manual test:** Complete L5 clearing setup beats for both patterns without hitting the cap and confirm "Fully mastered"; repeat hitting the cap and confirm "Completed" + review recommendation; confirm it unlocks L6.
+- **Done when:** Transfer label and `transferAttained` behave per acceptance and unlock advances to L6.
+
+#### Phase 24 — L6 Overlap Shortcut (`lesson-overlap-shortcut`) + course completion
+- **Goal:** Martingale retrieval capstone — `E = Σ 2^L` closed form; final lesson.
+- **Build:** Per `docs/proposed-lessons.md` §L6: `correlation`, `expectedWaitFair`, GamblerLedger, SumTiles; author + validate fixture (`unlocks: null`); seed; wire milestone `martingale-mastered` and the `six-lessons-complete` course-completion milestone.
+- **Manual test:** Complete L6; confirm the shortcut agrees with engine golden values for HH/HT/THH/HTH; confirm `martingale-mastered` and `six-lessons-complete` both award; confirm nothing further unlocks.
+- **Done when:** L6 is completable and course completion is recorded exactly once.
+
+#### Phase 25 — Course path, unlock gating & review recommendations
+- **Goal:** A coherent six-lesson path plus post-L6 roadmap stub.
+- **Build:** Study-desk home per `docs/ui_design_system.md`; course-path node states (locked/available/completed/`needsReview`); the "Fully mastered" quality label is recap-only, not a node state; unlock order enforcement for L1–L6; visible-but-locked roadmap node (`lesson-weighted-coins`); review recommendation when `needsReview`.
+- **Manual test:** Confirm locked lessons are not enterable; complete in order and watch nodes unlock; confirm a `needsReview` lesson shows a review recommendation; confirm roadmap stub is visible but locked.
 - **Done when:** The path enforces unlock order and surfaces mastery/review states correctly.
 
-#### Phase 23 — Responsive (mobile + laptop), accessibility & performance pass
+#### Phase 26 — Responsive (mobile + laptop), accessibility & performance pass
 - **Goal:** Meet the responsive/a11y/performance acceptance bars on both mobile and laptop.
 - **Build:** Responsive layouts per `docs/ui_design_system.md` (centered laptop column, laptop type scale, canvas min-height, hover affordances); complete the lesson via tap-only and reduced-motion paths; 44px targets, focus management, `aria-live` feedback; verify performance targets.
 - **Manual test:** Complete the flagship lesson on a phone-sized viewport with touch using only tap-to-place; complete it again on a laptop viewport (side-by-side beats stay side-by-side, per-beat rail shows ~6 beats); complete once more with reduced motion; spot-check feedback <100ms and Konva at ~60fps during drag/animation.
 - **Done when:** The lesson is fully completable on mobile and laptop, tap-only, and reduced-motion, within performance targets.
 
-#### Phase 24 — Public deploy
+#### Phase 27 — Public deploy
 - **Goal:** Live on Firebase Hosting with a public URL.
 - **Build:** Hosting config; deploy prod rules + App Check first; deploy the app; smoke-test the public URL.
 - **Manual test:** From a fresh browser/incognito, sign up, complete a lesson, refresh to confirm restore, and confirm streak/milestone persist; confirm no AI features are present.
@@ -738,16 +776,16 @@ These are the contracts an implementer (or coding agent) must follow. Define the
 
 ```text
 courseId:   course-pattern-hitting-times
-lessonIds:  lesson-states-streaks | lesson-pattern-hitting-times | lesson-longer-patterns
-roadmapIds: lesson-penneys-game | lesson-weighted-coins   (locked stubs, not built)
-milestoneIds: first-pattern-cracked | hh-ht-mastered | state-machine-builder | three-lessons-complete
-unlock order: lesson-states-streaks -> lesson-pattern-hitting-times -> lesson-longer-patterns
+lessonIds:  lesson-pattern-hitting-times | lesson-penneys-game | lesson-gamblers-ruin | lesson-states-streaks | lesson-longer-patterns | lesson-overlap-shortcut
+roadmapIds: lesson-weighted-coins   (locked stub after L6, not built)
+milestoneIds: hh-ht-mastered | penneys-game-won | gamblers-ruin-solved | three-lessons-complete | first-pattern-cracked | state-machine-builder | martingale-mastered | six-lessons-complete
+unlock order: lesson-pattern-hitting-times -> lesson-penneys-game -> lesson-gamblers-ruin -> lesson-states-streaks -> lesson-longer-patterns -> lesson-overlap-shortcut
 AUTH: email/password + Google; display name on first sign-in
 CONTENT: Firestore-hosted, seeded from committed fixtures (runtime reads from Firestore)
 WRITES: Cloud Functions own completion/mastery/streak/milestone/unlock; client owns snapshots + drafts
 ```
 
-Beat IDs are stable kebab-case strings. Flagship: `open-bet`, `pattern-pick`, `simulate` (merged simulate + state-machine), `failure-edge`, `equation-tiles`, `refine-prediction`, `guided-solve`, `theory-vs-sim`, `overlap`, `bias-sandbox`, `recap`. Lessons may add their own IDs (e.g. L1 `open-hook`, `reset-edge`). Milestone mapping: `lesson-states-streaks` → `first-pattern-cracked`, `lesson-pattern-hitting-times` → `hh-ht-mastered`, `lesson-longer-patterns` → `state-machine-builder`; `three-lessons-complete` on course completion.
+Beat IDs are stable kebab-case strings. Flagship (L1): `open-bet`, `pattern-pick`, `simulate` (merged simulate + state-machine), `failure-edge`, `equation-tiles`, `refine-prediction`, `guided-solve`, `theory-vs-sim`, `overlap`, `bias-sandbox`, `recap`. L4 (States & Streaks) adds `open-hook`, `reset-edge`. L2/L3/L6 beat inventories live in `docs/proposed-lessons.md`. Milestone mapping: `lesson-pattern-hitting-times` → `hh-ht-mastered`, `lesson-penneys-game` → `penneys-game-won`, `lesson-gamblers-ruin` → `gamblers-ruin-solved`, `lesson-states-streaks` → `first-pattern-cracked`, `lesson-longer-patterns` → `state-machine-builder`, `lesson-overlap-shortcut` → `martingale-mastered`; `three-lessons-complete` after L3; `six-lessons-complete` on course completion.
 
 ### Lesson and beat schema (shape)
 
@@ -882,7 +920,8 @@ Author one complete, schema-validated fixture `fixtures/lesson-pattern-hitting-t
 - Cycle 1 — 2026-06-23 — Resolved Phase 1 forks (Cloud Functions required, Firestore-hosted content, email/Google auth, local-timezone streaks, full analytics). Added engine contract, Firestore rules matrix + App Check, resume/restore contract, `needsReview` and hint-ladder definitions, checker normalization rules, Konva/React-Compiler scope, success metrics, and a Data Contracts appendix with canonical IDs and a golden fixture. Owner kept all three lessons as the Wednesday gate against the Scope expert's recommendation.
 - Cycle 2 — 2026-06-23 — Added beat inventories for Lessons 1 and 3 with cut lines; designated Lesson 3 as the transfer lesson (faded hints, `transferAttained` for both `THH` and `HTH`, learner-facing "Fully mastered" label, non-blocking). Merged flagship beats 3 and 4 into one (11 beats, renumbered). Switched the mobile beat rail to a 4-phase rail. Fleshed out the Data Contracts appendix (engine `Automaton`, `Tile`, `EquationRow`, `SubstitutionStep`, `overlap` interaction, interaction modes, `maxHintLevel`). Added analytics, substitution, and bias-sandbox cut lines. Aligned the design system (Top Bar phase rail, CTA matrix, mobile layout, course-path node states).
 - Cycle 3 — 2026-06-23 — Added an `Implementation Phases` section breaking the MVP into 25 granular, independently testable phases (Groups A–D: foundations, flagship interactions, Firebase backend, remaining lessons/polish/deploy). Each phase specifies Goal, Build, Manual test, and Done-when criteria, and follows a local-first, one-interaction-per-phase strategy so each feature can be built and manually tested before the next.
-- Cycle 4 — 2026-06-23 — Aligned PRD with updated `docs/ui_design_system.md`: scrollable per-beat progress rail (replacing 4-segment phase rail), mobile + laptop responsive strategy, paper-grain background with edge-confined grid, and expanded Phase 23 responsive/a11y scope.
+- Cycle 5 — 2026-06-23 — Reordered course path to six lessons: L1 Pattern Hitting Times (gate), L2 Penney's, L3 Gambler's Ruin, L4 Overlap Shortcut, L5 States & Streaks, L6 Longer Patterns; Weighted Coins remains post-L6 roadmap stub; mid-course milestone after L3.
+- Cycle 6 — 2026-06-23 — Moved the Overlap Shortcut to the end as a retrieval capstone (final order: L1 Pattern Hitting Times, L2 Penney's, L3 Gambler's Ruin, L4 States & Streaks, L5 Longer Patterns, L6 Overlap Shortcut). Rewired the code to match: six-lesson course fixture, Cloud Function milestone map (six lesson milestones + mid-course `three-lessons-complete` after L1–L3 + `six-lessons-complete` after all six), and the client seal-gallery sequence. Reframed Home as the dashboard-lite "study desk" with a graph-node course path (hover-reveal detail, per-lesson glyphs + focused live preview).
 
 ## Open Questions
 

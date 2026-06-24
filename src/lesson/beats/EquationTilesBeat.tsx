@@ -5,7 +5,17 @@
 // targeted/varied hint addresses the single most useful mistake, and the hint
 // ladder still drives level escalation + the level-3 answer reveal.
 
-import { cloneElement, isValidElement, useId, useState, type ReactElement, type ReactNode } from 'react'
+import {
+  cloneElement,
+  isValidElement,
+  useEffect,
+  useId,
+  useLayoutEffect,
+  useRef,
+  useState,
+  type ReactElement,
+  type ReactNode,
+} from 'react'
 import type { BeatProps } from './types'
 import type { CanonicalRecurrence, Tile } from '../../content/schema'
 import type { StateId } from '../../engine/types'
@@ -105,7 +115,29 @@ function InfoTip({
   className?: string
 }) {
   const [open, setOpen] = useState(false)
+  const [leftPx, setLeftPx] = useState<number | null>(null)
   const tipId = useId()
+  const wrapRef = useRef<HTMLSpanElement>(null)
+  const bubbleRef = useRef<HTMLSpanElement>(null)
+
+  // Pin the (absolutely positioned) bubble inside the viewport with an explicit
+  // left offset. A trigger near a screen edge would otherwise center a wide
+  // bubble past the edge — clipping the tooltip and, because the hidden bubble
+  // still occupies layout, adding horizontal page scroll. We position via `left`
+  // (not `transform`) so the clamped box stays out of the scrollable overflow,
+  // and compute it for every bubble (open or not) so closed tips can't overflow.
+  useLayoutEffect(() => {
+    const wrap = wrapRef.current
+    const bubble = bubbleRef.current
+    if (!wrap || !bubble) return
+    const margin = 8
+    const vw = document.documentElement.clientWidth
+    const rect = wrap.getBoundingClientRect()
+    const w = bubble.offsetWidth
+    const desired = rect.left + rect.width / 2 - w / 2
+    const clamped = Math.max(margin, Math.min(desired, vw - margin - w))
+    setLeftPx(Math.round(clamped - rect.left))
+  }, [open, tip])
 
   const trigger = isValidElement(children)
     ? cloneElement<InfoTipTriggerProps>(children, {
@@ -128,11 +160,18 @@ function InfoTip({
 
   return (
     <span
+      ref={wrapRef}
       className={['infotip', className].filter(Boolean).join(' ')}
       data-open={open || undefined}
     >
       {trigger}
-      <span className="infotip__bubble" id={tipId} role="tooltip">
+      <span
+        ref={bubbleRef}
+        className="infotip__bubble"
+        id={tipId}
+        role="tooltip"
+        style={leftPx === null ? undefined : { left: `${leftPx}px`, transform: 'none' }}
+      >
         {tip}
       </span>
     </span>
@@ -233,23 +272,45 @@ function isExampleRow(row: { lhs: string; target: CanonicalRecurrence }): boolea
 }
 
 export function EquationTilesBeat(props: BeatProps) {
-  const { beat, pattern, automaton, isLast, onAdvance, reportNeedsReview, setLessonState } =
-    props
+  const {
+    beat,
+    pattern,
+    automaton,
+    isLast,
+    onAdvance,
+    reportNeedsReview,
+    lessonState,
+    setLessonState,
+  } = props
   const interaction = beat.interaction
   const rows = interaction.type === 'equationTiles' ? interaction.rows : []
   const bank = interaction.type === 'equationTiles' ? interaction.bank : []
   // Example rows (E0) are shown pre-filled and never graded interactively.
   const buildableRows = rows.filter((r) => r.graded && !isExampleRow(r))
 
+  // Restore placements persisted into LessonState (Phase 15): a saved row of the
+  // matching slot length seeds the build; otherwise start from empty slots.
   const [filled, setFilled] = useState<Record<string, (string | null)[]>>(() => {
+    const saved = lessonState.equationTiles
     const init: Record<string, (string | null)[]> = {}
     for (const row of rows) {
       if (row.graded && !isExampleRow(row)) {
-        init[row.lhs] = slotTemplate(row.target).map(() => null)
+        const template = slotTemplate(row.target)
+        const savedRow = saved?.[row.lhs]
+        init[row.lhs] =
+          savedRow && savedRow.length === template.length
+            ? [...savedRow]
+            : template.map(() => null)
       }
     }
     return init
   })
+
+  // Mirror placements back into LessonState so they persist across navigation
+  // and into the restore snapshot. `setLessonState` is referentially stable.
+  useEffect(() => {
+    setLessonState({ equationTiles: filled })
+  }, [filled, setLessonState])
   const [selTile, setSelTile] = useState<string | null>(null)
   const [selSlot, setSelSlot] = useState<{ row: string; idx: number } | null>(null)
   // True while a Check verdict is on screen; cleared by any edit so green/wrong
@@ -288,6 +349,9 @@ export function EquationTilesBeat(props: BeatProps) {
     required: beat.required,
     maxHintLevel: beat.maxHintLevel,
     onNeedsReview: reportNeedsReview,
+    initialLevel: props.initialHintLevel,
+    onLevelChange: props.onHintLevelChange,
+    event: { lessonId: props.lessonId, beatId: beat.beatId },
   })
 
   const revealed = ladder.view.kind === 'hint' && ladder.view.revealed

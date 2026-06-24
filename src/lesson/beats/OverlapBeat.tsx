@@ -4,6 +4,7 @@
 // not graded.
 
 import { useMemo } from 'react'
+import type { Automaton } from '../../engine/types'
 import type { BeatProps } from './types'
 import { buildAutomaton } from '../../engine/automaton'
 import { BeatShell } from '../BeatShell'
@@ -13,7 +14,6 @@ import { useElementWidth } from '../konva/useElementWidth'
 
 export function OverlapBeat(props: BeatProps) {
   const { beat, pattern, patternOptions, reducedMotion, isLast, onAdvance } = props
-  const [boxRef, width] = useElementWidth<HTMLDivElement>()
 
   const automata = useMemo(
     () => patternOptions.map((p) => buildAutomaton(p, 0.5)),
@@ -21,10 +21,6 @@ export function OverlapBeat(props: BeatProps) {
   )
 
   if (beat.interaction.type !== 'overlap') return null
-
-  const cols = automata.length || 1
-  const stageW = width > 0 ? Math.floor((width - 12 * (cols - 1)) / cols) : 0
-  const stageH = Math.max(180, Math.round(stageW * 0.72))
 
   return (
     <BeatShell
@@ -35,43 +31,62 @@ export function OverlapBeat(props: BeatProps) {
         onClick: onAdvance,
       }}
     >
-      <div className="overlap" ref={boxRef}>
+      <div className="overlap">
         <div className="overlap__cols">
           {automata.map((a) => (
-            <figure className="overlap__col" key={a.pattern}>
-              <figcaption className="overlap__cap mono">{a.pattern}</figcaption>
-              <div className="canvas-frame">
-                {stageW > 0 && (
-                  <StateGraph
-                    automaton={a}
-                    width={stageW}
-                    height={stageH}
-                    highlight={a.overlapHighlights}
-                    reducedMotion={reducedMotion}
-                  />
-                )}
-              </div>
-              <p className="overlap__note">
-                {a.overlapHighlights.map((h) => {
-                  const t = a.transitions.find(
-                    (e) => e.from === h.from && e.on === h.on,
-                  )!
-                  const to = a.states.find((s) => s.id === t.to)!
-                  return (
-                    <span key={`${h.from}-${h.on}`}>
-                      Near-miss <span className="mono">{h.on}</span>{' '}
-                      {t.kind === 'reset'
-                        ? `resets to ${to.label}`
-                        : `keeps progress at ${to.label}`}
-                      .
-                    </span>
-                  )
-                })}
-              </p>
-            </figure>
+            <OverlapColumn key={a.pattern} automaton={a} reducedMotion={reducedMotion} />
           ))}
         </div>
       </div>
     </BeatShell>
+  )
+}
+
+// Each column measures its own frame so the canvas fills whatever width the
+// layout gives it: full width when the columns stack on mobile, ~half when they
+// sit side by side on laptop. (Measuring one shared width and dividing by the
+// column count left the stacked mobile graphs at half size.)
+function OverlapColumn({
+  automaton,
+  reducedMotion,
+}: {
+  automaton: Automaton
+  reducedMotion: boolean
+}) {
+  const [frameRef, width] = useElementWidth<HTMLDivElement>()
+  const stageH = Math.max(180, Math.round(width * 0.72))
+
+  return (
+    <figure className="overlap__col">
+      <figcaption className="overlap__cap mono">{automaton.pattern}</figcaption>
+      <div className="canvas-frame" ref={frameRef}>
+        {width > 0 && (
+          <StateGraph
+            automaton={automaton}
+            width={width}
+            height={stageH}
+            highlight={automaton.overlapHighlights}
+            reducedMotion={reducedMotion}
+          />
+        )}
+      </div>
+      <p className="overlap__note">
+        {automaton.overlapHighlights.map((h) => {
+          const t = automaton.transitions.find(
+            (e) => e.from === h.from && e.on === h.on,
+          )!
+          const to = automaton.states.find((s) => s.id === t.to)!
+          return (
+            <span key={`${h.from}-${h.on}`}>
+              Near-miss <span className="mono">{h.on}</span>{' '}
+              {t.kind === 'reset'
+                ? `resets to ${to.label}`
+                : `keeps progress at ${to.label}`}
+              .
+            </span>
+          )
+        })}
+      </p>
+    </figure>
   )
 }

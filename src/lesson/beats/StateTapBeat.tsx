@@ -27,6 +27,9 @@ export function StateTapBeat(props: BeatProps) {
     required: beat.required,
     maxHintLevel: beat.maxHintLevel,
     onNeedsReview: props.reportNeedsReview,
+    initialLevel: props.initialHintLevel,
+    onLevelChange: props.onHintLevelChange,
+    event: { lessonId: props.lessonId, beatId: beat.beatId },
   })
 
   if (beat.interaction.type !== 'stateTap') return null
@@ -79,8 +82,8 @@ export function StateTapBeat(props: BeatProps) {
       feedback={ladder.view}
       onTryAgain={revealed ? retry : undefined}
     >
-      <div className="tapbeat" ref={boxRef}>
-        <div className="canvas-frame">
+      <div className="tapbeat">
+        <div className="canvas-frame" ref={boxRef}>
           {width > 0 && (
             <StateGraph
               automaton={automaton}

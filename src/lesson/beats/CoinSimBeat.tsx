@@ -150,8 +150,8 @@ export function CoinSimBeat({
       primary={{ label: primaryLabel, enabled: primaryEnabled, onClick: onPrimary }}
       secondary={secondary}
     >
-      <div className="coinsim" ref={boxRef}>
-        <div className="canvas-frame">
+      <div className="coinsim">
+        <div className="canvas-frame" ref={boxRef}>
           {width > 0 && (
             <StateGraph
               automaton={automaton}

@@ -42,6 +42,12 @@
   --font-mono: 'IBM Plex Mono', ui-monospace, 'SF Mono', Consolas, monospace;
   --font-serif: 'IBM Plex Serif', Georgia, 'Times New Roman', serif;
 
+  /* Global font-size scale. Every font-size in app.css is written as
+     calc(<px> * var(--fs)), so this single knob scales all type at once.
+     Stays 1 on mobile (sizes render at their literal px); bumped on
+     laptop+ below. Tune the desktop value to taste. */
+  --fs: 1;
+
   /* Spacing (4px base, 8px rhythm) */
   --s1: 4px;
   --s2: 8px;
@@ -71,4 +77,11 @@
   --ease-out: cubic-bezier(0.2, 0.7, 0.2, 1);
   --ease-spring: cubic-bezier(0.2, 1.2, 0.3, 1);
   --ease-inout: cubic-bezier(0.5, 0, 0.2, 1);
+}
+
+/* Laptop+ : scale every font-size up uniformly (desktop only). */
+@media (min-width: 768px) {
+  :root {
+    --fs: 1.15;
+  }
 }

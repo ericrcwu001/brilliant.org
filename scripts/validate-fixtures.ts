@@ -8,6 +8,7 @@ import { dirname, join } from 'node:path'
 import { z } from 'zod'
 import {
   CanonicalRecurrenceSchema,
+  CourseSchema,
   LessonSchema,
   SnapshotSchema,
 } from '../src/content/schema'
@@ -34,6 +35,7 @@ const lesson = validate(
   'lesson-pattern-hitting-times.json',
   LessonSchema,
 ) as z.infer<typeof LessonSchema>
+validate('course-pattern-hitting-times.json', CourseSchema)
 validate('example-snapshot.json', SnapshotSchema)
 validate('canonical.example.json', CanonicalRecurrenceSchema)
 
