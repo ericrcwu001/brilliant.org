@@ -8,7 +8,9 @@ test('flagship lesson loads and the opening bet gates Continue', async ({
 }) => {
   await page.goto('/dev/lesson')
 
-  await expect(page.locator('.prompt__text')).toContainText('Which wait is longer')
+  await expect(page.locator('.prompt__text')).toContainText(
+    'which one makes you wait longer',
+  )
 
   const continueBtn = page.getByRole('button', { name: 'Continue' })
   await expect(continueBtn).toBeDisabled()

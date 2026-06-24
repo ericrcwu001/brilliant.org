@@ -22,7 +22,7 @@ const DURATION_MS = 5000
 const CONVERGED_AT = 120
 
 export function TheorySimChartBeat(props: BeatProps) {
-  const { beat, lessonId, pattern, automaton, reducedMotion, isLast, onAdvance } = props
+  const { beat, lessonId, pattern, automaton, isLast, onAdvance } = props
   const [boxRef, width] = useElementWidth<HTMLDivElement>()
   const [points, setPoints] = useState<number[]>([])
   const [running, setRunning] = useState(false)
@@ -77,23 +77,11 @@ export function TheorySimChartBeat(props: BeatProps) {
     const target = countRef.current + BATCH
     analytics.simulationRun({ lessonId, beatId: beat.beatId, n: BATCH })
 
-    // Reduced motion: skip the ~5s animated sweep and render the converged curve
-    // in a single update (the global CSS reduce rule can't stop a JS rAF loop).
-    if (reducedMotion) {
-      const batch: number[] = []
-      while (countRef.current < target) {
-        sumRef.current += flipsToAbsorption(automaton)
-        countRef.current += 1
-        batch.push(sumRef.current / countRef.current)
-      }
-      setPoints((p) => p.concat(batch))
-      persist()
-      setAnnounce(
-        `Done. ${countRef.current} total runs, empirical mean ${(sumRef.current / countRef.current).toFixed(2)} versus theory ${theory}.`,
-      )
-      return
-    }
-
+    // NOTE: intentionally NOT gated on prefers-reduced-motion. The live sweep is
+    // the lesson's content (watching the empirical mean converge), not decorative
+    // motion — a smoothly drawn line has no vestibular triggers — so it always
+    // animates. Do not re-add a reducedMotion short-circuit here; it makes the
+    // 500 runs land instantly for anyone with Reduce Motion enabled.
     setRunning(true)
     setAnnounce(`Simulating ${BATCH} runs, plotting the empirical mean live.`)
     const startTime = performance.now()

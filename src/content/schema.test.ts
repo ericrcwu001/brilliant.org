@@ -8,7 +8,10 @@ describe('flagship fixture', () => {
 
   it('validates against the lesson schema', () => {
     expect(lesson.lessonId).toBe('lesson-pattern-hitting-times')
-    expect(lesson.beats).toHaveLength(11)
+    // 11 core beats + 4 Track-A inclusivity beats (2 primers, name-the-overlap,
+    // the EV grounding); the Track-A beats are required:false so the Cloud
+    // Function's required-beat check still passes for either track.
+    expect(lesson.beats).toHaveLength(15)
   })
 
   it('equation-tile targets equal the engine recurrences for HH', () => {

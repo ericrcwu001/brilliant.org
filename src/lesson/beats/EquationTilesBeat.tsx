@@ -21,6 +21,8 @@ import type { CanonicalRecurrence, Tile } from '../../content/schema'
 import type { StateId } from '../../engine/types'
 import { BeatShell } from '../BeatShell'
 import { resolveFeedback, useHintLadder } from '../feedback'
+import { StateGraph, type EdgeRef } from '../konva/StateGraph'
+import { useElementWidth } from '../konva/useElementWidth'
 import {
   aggregateProgress,
   a11ySummary,
@@ -60,11 +62,13 @@ function displayTokenValue(token: string): ReactNode {
   return value
 }
 
-// HH-specific copy for the worked E0 example and per-token palette tooltips.
-const E0_WORKED_EXPLANATION =
+// Generic fallback copy for the worked E0 example and per-token palette tooltips.
+// Fixture-authored `interaction.copy` (de-hardcode, L1 §5.3) overrides these so
+// other patterns (L2–L6) can reuse the beat; absent fields fall back here.
+const DEFAULT_WORKED_EXPLANATION =
   'From state E₀ (no H matched yet), one flip always costs 1. With probability ½ you flip H and advance to E₁; with probability ½ you flip T and fall back to E₀.'
 
-const E0_TERM_TIPS: Record<string, string> = {
+const DEFAULT_TERM_TIPS: Record<string, string> = {
   const: 'Every flip costs 1 — count the flip you are about to take.',
   'prob-e1': 'Probability ½ of flipping H and advancing to E₁ (one H matched).',
   'var-e1': 'Expected extra flips still needed once one H is matched.',
@@ -72,7 +76,7 @@ const E0_TERM_TIPS: Record<string, string> = {
   'var-e0': 'Expected extra flips still needed from the start state.',
 }
 
-const TOKEN_TIPS: Record<string, string> = {
+const DEFAULT_TOKEN_TIPS: Record<string, string> = {
   'const:1': 'Every flip costs 1 — add this constant to each recurrence.',
   'const:0': 'The absorbing state E₂ needs zero extra flips — already done.',
   'prob:1/2': 'Fair coin: each branch has probability ½.',
@@ -80,6 +84,8 @@ const TOKEN_TIPS: Record<string, string> = {
   'var:E1': 'Expected extra flips from E₁ — one H matched, one flip from HH.',
   'var:E2': 'Expected extra flips from E₂ — HH matched; absorbing, so E₂ = 0.',
 }
+
+const DEFAULT_ABSORBING_NOTE = 'Absorbing state — HH matched, no extra flips needed.'
 
 function slotKindFor(token: string | null, fallback: SlotKind): SlotKind {
   if (!token) return fallback
@@ -89,11 +95,43 @@ function slotKindFor(token: string | null, fallback: SlotKind): SlotKind {
   return 'const'
 }
 
-const STATE_LEGEND: { id: string; text: string }[] = [
+const DEFAULT_LEGEND: { id: string; text: string }[] = [
   { id: 'E0', text: 'matched none of HH yet (start)' },
   { id: 'E1', text: 'matched one H (one flip from HH)' },
   { id: 'E2', text: 'matched HH — done, so E₂ = 0' },
 ]
+
+// Resolved per-beat copy: fixture `interaction.copy` over the generic defaults.
+type EqCopy = {
+  workedExplanation: string
+  termTips: Record<string, string>
+  tokenTips: Record<string, string>
+  legend: { id: string; text: string }[]
+  mistakeHints?: Record<string, [string, string]>
+  primer?: { title: string; body: string }
+}
+
+function resolveEqCopy(
+  copy:
+    | {
+        workedExplanation?: string
+        termTips?: Record<string, string>
+        tokenTips?: Record<string, string>
+        legend?: { id: string; text: string }[]
+        mistakeHints?: Record<string, [string, string]>
+        primer?: { title: string; body: string }
+      }
+    | undefined,
+): EqCopy {
+  return {
+    workedExplanation: copy?.workedExplanation ?? DEFAULT_WORKED_EXPLANATION,
+    termTips: { ...DEFAULT_TERM_TIPS, ...(copy?.termTips ?? {}) },
+    tokenTips: { ...DEFAULT_TOKEN_TIPS, ...(copy?.tokenTips ?? {}) },
+    legend: copy?.legend ?? DEFAULT_LEGEND,
+    mistakeHints: copy?.mistakeHints,
+    primer: copy?.primer,
+  }
+}
 
 type InfoTipTriggerProps = {
   onClick?: (e: React.MouseEvent) => void
@@ -208,8 +246,12 @@ function tokenCategory(token: string): 'const' | 'prob' | 'state' {
   return 'const'
 }
 
-function prefilledSlotTip(target: CanonicalRecurrence, idx: number): string {
-  if (idx === 0) return E0_TERM_TIPS.const
+function prefilledSlotTip(
+  target: CanonicalRecurrence,
+  idx: number,
+  copy: EqCopy,
+): string {
+  if (idx === 0) return copy.termTips.const
   const termIdx = (idx - 1) >> 1
   const isProb = ((idx - 1) & 1) === 0
   const term = target.terms[termIdx]
@@ -217,20 +259,20 @@ function prefilledSlotTip(target: CanonicalRecurrence, idx: number): string {
   if (target.lhs === 'E0') {
     const tipKeys = ['prob-e1', 'var-e1', 'prob-e0', 'var-e0'] as const
     const key = tipKeys[idx - 1]
-    if (key) return E0_TERM_TIPS[key]
+    if (key) return copy.termTips[key]
   }
   if (isProb) {
     return `Probability ${ratStr(term.coeff)} of taking the branch that leads to ${term.var}.`
   }
-  return TOKEN_TIPS[`var:${term.var}`] ?? `Expected extra flips from ${term.var}.`
+  return copy.tokenTips[`var:${term.var}`] ?? `Expected extra flips from ${term.var}.`
 }
 
-function PrefilledRow({ target }: { target: CanonicalRecurrence }) {
+function PrefilledRow({ target, copy }: { target: CanonicalRecurrence; copy: EqCopy }) {
   const values = correctFill(target)
 
   function placedTile(token: string, idx: number): ReactNode {
     const cat = tokenCategory(token)
-    const tip = prefilledSlotTip(target, idx)
+    const tip = prefilledSlotTip(target, idx, copy)
     return (
       <InfoTip key={`prefill-${target.lhs}-${idx}`} label={valueOfToken(token)} tip={tip}>
         <span
@@ -262,7 +304,7 @@ function PrefilledRow({ target }: { target: CanonicalRecurrence }) {
         <span className="eqline__lhs">{stateLabel(target.lhs)} =</span>
         {nodes}
       </div>
-      <p className="eqline__explain">{E0_WORKED_EXPLANATION}</p>
+      <p className="eqline__explain">{copy.workedExplanation}</p>
     </div>
   )
 }
@@ -285,11 +327,24 @@ export function EquationTilesBeat(props: BeatProps) {
   const interaction = beat.interaction
   const rows = interaction.type === 'equationTiles' ? interaction.rows : []
   const bank = interaction.type === 'equationTiles' ? interaction.bank : []
+  const eqCopy = resolveEqCopy(
+    interaction.type === 'equationTiles' ? interaction.copy : undefined,
+  )
   // Example rows (E0) are shown pre-filled and never graded interactively.
   const buildableRows = rows.filter((r) => r.graded && !isExampleRow(r))
 
+  // Track A (density 'split') gets the scaffolded rendering: a dyna-link graph,
+  // a staged reveal (worked row first, build on tap), and "faded" rungs.
+  const split = props.density === 'split'
+  // Track-A staged faded rung (L1 §4.6): a graded row flagged `faded` renders
+  // with every slot but its final term pre-filled + locked, so the learner
+  // completes only the last piece. Only applied on Track A.
+  const isFaded = (r: { lhs: string; faded?: boolean }) => split && !!r.faded
+  const fadedOpenIdx = (target: CanonicalRecurrence) => slotTemplate(target).length - 1
+
   // Restore placements persisted into LessonState (Phase 15): a saved row of the
-  // matching slot length seeds the build; otherwise start from empty slots.
+  // matching slot length seeds the build; otherwise start from empty slots (or,
+  // for a faded rung, the correct fill with only the last term left open).
   const [filled, setFilled] = useState<Record<string, (string | null)[]>>(() => {
     const saved = lessonState.equationTiles
     const init: Record<string, (string | null)[]> = {}
@@ -297,10 +352,15 @@ export function EquationTilesBeat(props: BeatProps) {
       if (row.graded && !isExampleRow(row)) {
         const template = slotTemplate(row.target)
         const savedRow = saved?.[row.lhs]
-        init[row.lhs] =
-          savedRow && savedRow.length === template.length
-            ? [...savedRow]
-            : template.map(() => null)
+        if (savedRow && savedRow.length === template.length) {
+          init[row.lhs] = [...savedRow]
+        } else if (split && row.faded) {
+          const fill = correctFill(row.target)
+          const open = template.length - 1
+          init[row.lhs] = fill.map((tok, i) => (i === open ? null : tok))
+        } else {
+          init[row.lhs] = template.map(() => null)
+        }
       }
     }
     return init
@@ -317,6 +377,24 @@ export function EquationTilesBeat(props: BeatProps) {
   // markers and hints never describe a stale attempt.
   const [checked, setChecked] = useState(false)
   const [solved, setSolved] = useState(false)
+
+  // Track-A dyna-link (L1 §5.2): placing a destination-state tile briefly
+  // highlights the matching graph edge, bridging the prefix label (∅/H) shown in
+  // the graph to the E-id the tile carries. Only rendered when density='split'.
+  const [boxRef, gWidth] = useElementWidth<HTMLDivElement>()
+  const [dynaEdge, setDynaEdge] = useState<EdgeRef | null>(null)
+  const dynaTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  useEffect(
+    () => () => {
+      if (dynaTimer.current) clearTimeout(dynaTimer.current)
+    },
+    [],
+  )
+  // Track-A staged reveal (L1 §4.6): show the worked row (+ graph + variable
+  // primer) first; reveal the legend, build row, and palette on a tap. Track B
+  // shows everything at once (buildShown starts true).
+  const [buildShown, setBuildShown] = useState(!split)
+  const [primerOpen, setPrimerOpen] = useState(false)
 
   // Per-slot diagnosis of the current placements, recomputed each render. Used
   // for green highlighting, the targeted glow, the progress line, and to derive
@@ -337,8 +415,8 @@ export function EquationTilesBeat(props: BeatProps) {
     ? {
         correct: base.correct,
         hints: [
-          hintForMistake(primaryMistake, 1),
-          hintForMistake(primaryMistake, 2),
+          hintForMistake(primaryMistake, 1, eqCopy.mistakeHints),
+          hintForMistake(primaryMistake, 2, eqCopy.mistakeHints),
           base.hints[2],
         ] as [string, string, string],
       }
@@ -395,6 +473,16 @@ export function EquationTilesBeat(props: BeatProps) {
     setChecked(false)
     // Editing the row drops the stale verdict from the previous Check.
     ladder.clear()
+    // Dyna-link: a destination-state tile lights its graph edge for a beat.
+    if (split && kindOfToken(token) === 'var') {
+      const dest = valueOfToken(token)
+      const edge = automaton.transitions.find((t) => t.from === row && t.to === dest)
+      if (edge) {
+        setDynaEdge({ from: edge.from, on: edge.on })
+        if (dynaTimer.current) clearTimeout(dynaTimer.current)
+        dynaTimer.current = setTimeout(() => setDynaEdge(null), 1400)
+      }
+    }
   }
 
   function onSlotTap(row: string, idx: number) {
@@ -474,14 +562,19 @@ export function EquationTilesBeat(props: BeatProps) {
       verdictActive && hintLevel >= 2 ? diagByRow[row.lhs].glowIndex : null
   }
 
-  const primary = solved
-    ? { label: isLast ? 'Finish' : 'Continue', enabled: true, onClick: onAdvance }
-    : { label: 'Check', enabled: allFilled, onClick: onCheck }
+  const primary = !buildShown
+    ? { label: 'Now your turn', enabled: true, onClick: () => setBuildShown(true) }
+    : solved
+      ? { label: isLast ? 'Finish' : 'Continue', enabled: true, onClick: onAdvance }
+      : { label: 'Check', enabled: allFilled, onClick: onCheck }
 
   function slot(row: (typeof buildableRows)[number], idx: number, kind: SlotKind): ReactNode {
     const rowId = row.lhs
     const value = (displayed[rowId] ?? [])[idx]
     const status = diagByRow[rowId]?.slotStatus[idx]
+    // A faded rung pre-fills + locks every slot but its final term, so the
+    // learner only completes the last piece (Track A staged scaffold).
+    const locked = isFaded(row) && idx !== fadedOpenIdx(row.target)
     // Per-tile verdict: correct tiles lock in green; wrong ones get a quiet
     // marker. Only show while a verdict is active (not mid-edit, not reveal).
     const showCorrect = (verdictActive && status === 'correct') || solved
@@ -497,12 +590,15 @@ export function EquationTilesBeat(props: BeatProps) {
       value ? 'slot--filled' : 'slot--empty',
       isSel ? 'slot--selected' : '',
       glow ? 'slot--glow' : '',
+      locked ? 'slot--locked' : '',
       showCorrect ? 'slot--correct' : showWrong ? 'slot--wrong' : '',
     ]
       .filter(Boolean)
       .join(' ')
     const verdict = showCorrect ? ', correct' : showWrong ? ', recheck this' : ''
-    const label = `${rowId} ${kind} slot${value ? `, holds ${valueOfToken(value)}` : ', empty'}${verdict}`
+    const label = `${rowId} ${kind} slot${value ? `, holds ${valueOfToken(value)}` : ', empty'}${
+      locked ? ', given' : verdict
+    }`
     // No tooltip on build slots — explaining what each slot expects would give
     // away the answer the learner is supposed to assemble.
     return (
@@ -512,7 +608,7 @@ export function EquationTilesBeat(props: BeatProps) {
         className={classes}
         aria-label={label}
         onClick={() => onSlotTap(rowId, idx)}
-        disabled={solved || revealed}
+        disabled={solved || revealed || locked}
       >
         {value ? displayTokenValue(value) : placeholder}
       </button>
@@ -540,7 +636,7 @@ export function EquationTilesBeat(props: BeatProps) {
       <div className="eqline eqline--static" key={row.lhs}>
         <span className="eqline__lhs">{stateLabel(row.lhs)} =</span>
         <span className="eqline__static">{targetStatic(row.target)}</span>
-        <p className="eqline__note">Absorbing state — HH matched, no extra flips needed.</p>
+        <p className="eqline__note">{row.note ?? DEFAULT_ABSORBING_NOTE}</p>
       </div>
     )
   }
@@ -551,77 +647,130 @@ export function EquationTilesBeat(props: BeatProps) {
   return (
     <BeatShell feedback={ladder.view} onTryAgain={handleTryAgain} primary={primary}>
       <div className="eqtiles">
+        {split && (
+          <div className="eqtiles__graph canvas-frame" ref={boxRef}>
+            {gWidth > 0 && (
+              <StateGraph
+                automaton={automaton}
+                width={gWidth}
+                height={Math.max(150, Math.round(gWidth * 0.42))}
+                labelMode="dual"
+                highlight={dynaEdge ? [dynaEdge] : []}
+                reducedMotion={props.reducedMotion}
+              />
+            )}
+          </div>
+        )}
+        {split && eqCopy.primer && (
+          <div className="eqtiles__primer">
+            {primerOpen ? (
+              <div className="primer__card">
+                <p className="primer__kicker">Quick refresher</p>
+                <h2 className="primer__title">{eqCopy.primer.title}</h2>
+                <p className="primer__body">{eqCopy.primer.body}</p>
+              </div>
+            ) : (
+              <button
+                type="button"
+                className="primer__disclosure"
+                aria-expanded={false}
+                onClick={() => setPrimerOpen(true)}
+              >
+                <span className="primer__kicker">Quick refresher</span>
+                <span className="primer__title">{eqCopy.primer.title}</span>
+                <span className="primer__chevron" aria-hidden="true">
+                  +
+                </span>
+              </button>
+            )}
+          </div>
+        )}
+
         {exampleRow && (
           <section className="eqtiles__example" aria-label="Worked example">
             <p className="eqtiles__example-kicker">Worked example</p>
-            <PrefilledRow target={exampleRow.target} />
+            <PrefilledRow target={exampleRow.target} copy={eqCopy} />
           </section>
         )}
 
-        <div className="eqtiles__legend">
-          <p className="eqtiles__legend-lead">
-            E<sub>i</sub> = average extra flips still needed from state i.
-          </p>
-          <ul className="eqtiles__legend-list">
-            {STATE_LEGEND.map(({ id, text }) => (
-              <li key={id}>
-                <span className="eqtiles__legend-id">{stateLabel(id)}</span>: {text}
-              </li>
-            ))}
-          </ul>
-        </div>
+        {buildShown && (
+          <>
+            <div className="eqtiles__legend">
+              <p className="eqtiles__legend-lead">
+                E<sub>i</sub> = average extra flips still needed from state i.
+              </p>
+              <ul className="eqtiles__legend-list">
+                {eqCopy.legend.map(({ id, text }) => (
+                  <li key={id}>
+                    <span className="eqtiles__legend-id">{stateLabel(id)}</span>: {text}
+                  </li>
+                ))}
+              </ul>
+            </div>
 
-        <div className="eqtiles__rows">
-          {buildRows.map((row) =>
-            row.graded ? (
-              <div className="eqline eqline--build" key={row.lhs}>
-                <p className="eqline__kicker">Your turn — build this row</p>
-                <div className="eqline__body">
-                  <span className="eqline__lhs">{stateLabel(row.lhs)} =</span>
-                  {renderSlots(row)}
-                </div>
+            <div className="eqtiles__rows">
+              {buildRows.map((row) =>
+                row.graded ? (
+                  <div className="eqline eqline--build" key={row.lhs}>
+                    <p className="eqline__kicker">
+                      {isFaded(row)
+                        ? 'Almost there — fill the last piece'
+                        : 'Your turn — build this row'}
+                    </p>
+                    <div className="eqline__body">
+                      <span className="eqline__lhs">{stateLabel(row.lhs)} =</span>
+                      {renderSlots(row)}
+                    </div>
+                  </div>
+                ) : (
+                  renderStaticRow(row)
+                ),
+              )}
+            </div>
+
+            {split && (
+              <p className="eqtiles__selfexplain">
+                Why does the tail term point back at E₀, not E₁?
+              </p>
+            )}
+
+            {verdictActive && !solved && (
+              <p
+                className={`eqprogress${progress.structurallyValid ? '' : ' eqprogress--invalid'}`}
+              >
+                {progressLine(progress)}
+              </p>
+            )}
+            <p className="sr-only" role="status" aria-live="polite">
+              {verdictActive ? a11ySummary(progress) : ''}
+            </p>
+
+            <div className="palette">
+              <p className="palette__label">
+                {selSlot ? 'Tap a tile to fill the selected slot' : 'Tap a tile, then a slot'}
+              </p>
+              <div className="token-row">
+                {palette.map((tile) => {
+                  const token = tokenOf(tile)
+                  const cat =
+                    tile.kind === 'state' ? 'state' : tile.kind === 'prob' ? 'prob' : 'const'
+                  const selected = selTile === token
+                  return (
+                    <button
+                      key={token}
+                      type="button"
+                      className={`token token--${cat}${selected ? ' token--selected' : ''}`}
+                      aria-pressed={selected}
+                      onClick={() => onTileTap(token)}
+                    >
+                      {tile.kind === 'state' ? stateLabel(String(tile.value)) : tile.value}
+                    </button>
+                  )
+                })}
               </div>
-            ) : (
-              renderStaticRow(row)
-            ),
-          )}
-        </div>
-
-        {verdictActive && !solved && (
-          <p
-            className={`eqprogress${progress.structurallyValid ? '' : ' eqprogress--invalid'}`}
-          >
-            {progressLine(progress)}
-          </p>
+            </div>
+          </>
         )}
-        <p className="sr-only" role="status" aria-live="polite">
-          {verdictActive ? a11ySummary(progress) : ''}
-        </p>
-
-        <div className="palette">
-          <p className="palette__label">
-            {selSlot ? 'Tap a tile to fill the selected slot' : 'Tap a tile, then a slot'}
-          </p>
-          <div className="token-row">
-            {palette.map((tile) => {
-              const token = tokenOf(tile)
-              const cat =
-                tile.kind === 'state' ? 'state' : tile.kind === 'prob' ? 'prob' : 'const'
-              const selected = selTile === token
-              return (
-                <button
-                  key={token}
-                  type="button"
-                  className={`token token--${cat}${selected ? ' token--selected' : ''}`}
-                  aria-pressed={selected}
-                  onClick={() => onTileTap(token)}
-                >
-                  {tile.kind === 'state' ? stateLabel(String(tile.value)) : tile.value}
-                </button>
-              )
-            })}
-          </div>
-        </div>
       </div>
     </BeatShell>
   )

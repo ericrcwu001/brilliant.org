@@ -50,6 +50,28 @@ export const EquationRowSchema = z.object({
   lhs: StateIdSchema,
   target: CanonicalRecurrenceSchema,
   graded: z.boolean(),
+  // Track-A staged reveal (L1 §4.6): when true the row renders "faded" with
+  // every slot but the final term pre-filled, so the learner completes only the
+  // last piece. Default (absent) = a fully-empty build row (today's behavior).
+  faded: z.boolean().optional(),
+  // Fixture-authored note for a non-graded (e.g. absorbing) row, de-hardcoding
+  // the previously HH-specific "Absorbing state…" copy.
+  note: z.string().optional(),
+})
+
+// Fixture-authored copy for the equation-tiles beat, de-hardcoding the
+// previously HH-specific strings (E0 explanation, legend, tooltips, per-mistake
+// hints) so other patterns (L2–L6) can reuse the beat. All fields optional: the
+// component falls back to its generic defaults, keeping HH behavior unchanged.
+export const EquationCopySchema = z.object({
+  workedExplanation: z.string().optional(),
+  termTips: z.record(z.string(), z.string()).optional(),
+  tokenTips: z.record(z.string(), z.string()).optional(),
+  legend: z.array(z.object({ id: StateIdSchema, text: z.string() })).optional(),
+  // Per-mistake [level-1, level-2] hint copy; overrides the generic module copy.
+  mistakeHints: z.record(z.string(), z.tuple([z.string(), z.string()])).optional(),
+  // Collapsed "variable" primer card shown above the build (Track A).
+  primer: z.object({ title: z.string(), body: z.string() }).optional(),
 })
 
 export const SubstitutionStepSchema = z.object({
@@ -76,6 +98,9 @@ export const InteractionSchema = z.discriminatedUnion('type', [
     gate: z
       .union([z.literal('near-miss'), z.object({ minFlips: z.number() })])
       .optional(),
+    // Track-A gambler's-fallacy refutation, surfaced once a run of >=3 same-face
+    // flips appears (L1 §4.3). Fixture-authored; falls back to a default line.
+    gamblerNote: z.string().optional(),
   }),
   z.object({
     type: z.literal('stateTap'),
@@ -85,6 +110,7 @@ export const InteractionSchema = z.discriminatedUnion('type', [
     type: z.literal('equationTiles'),
     bank: z.array(TileSchema),
     rows: z.array(EquationRowSchema),
+    copy: EquationCopySchema.optional(),
   }),
   z.object({
     type: z.literal('slider'),
@@ -102,6 +128,22 @@ export const InteractionSchema = z.discriminatedUnion('type', [
   }),
   z.object({ type: z.literal('theorySimChart') }),
   z.object({ type: z.literal('recap') }),
+  // JIT primer: a tiny tap micro-interaction that names a prerequisite before it
+  // bites (L1 §3.2). Never graded, never required; collapsible on Track B.
+  z.object({
+    type: z.literal('primer'),
+    variant: z.enum(['half', 'average', 'state', 'exponent', 'transitivity', 'custom']),
+    body: z.string(),
+    title: z.string().optional(),
+    collapsible: z.boolean().optional(),
+  }),
+  // Graded single-select for retrieval / the diagnostic pre-check (L1 §3.2).
+  z.object({
+    type: z.literal('mcq'),
+    options: z.array(
+      z.object({ id: z.string(), label: z.string(), correct: z.boolean() }),
+    ),
+  }),
 ])
 
 const HintTripleSchema = z.tuple([z.string(), z.string(), z.string()])
@@ -114,6 +156,15 @@ const FeedbackTripleSchema = z.object({
 export const FeedbackSchema = z.union([
   FeedbackTripleSchema,
   z.object({ byPattern: z.record(z.string(), FeedbackTripleSchema) }),
+  // Per-option refutation for an (ungraded) prediction beat (L1 §3.1): keyed by
+  // the exact option string. `hints` (optional) backs the idle/caption copy.
+  z.object({
+    byOption: z.record(
+      z.string(),
+      z.object({ note: z.string(), correct: z.boolean().optional() }),
+    ),
+    hints: HintTripleSchema.optional(),
+  }),
 ])
 
 export const BeatSchema = z.object({
@@ -123,6 +174,12 @@ export const BeatSchema = z.object({
   interaction: InteractionSchema,
   feedback: FeedbackSchema,
   maxHintLevel: z.union([z.literal(1), z.literal(2), z.literal(3)]).optional(),
+  // Two-track gate (L1 §3.3). Which track renders this beat; default (absent) =
+  // 'both'. Track-exclusive beats MUST be `required: false` so the Cloud
+  // Function's required-beat check (which sees the full fixture) still passes.
+  track: z.enum(['A', 'B', 'both']).optional(),
+  // Render density for CoinSim/EquationTiles by track; default (absent) = 'merged'.
+  density: z.enum(['split', 'merged']).optional(),
 })
 
 export const LessonSchema = z.object({
@@ -146,6 +203,9 @@ const CourseLessonNodeSchema = z.object({
   summary: z.string(),
   milestoneId: z.string(),
   built: z.boolean(),
+  // Optional on-ramp (L1 §6): available + enterable, but ungated — it never
+  // locks its successor and is skipped by the recommended-action chain.
+  optional: z.boolean().optional(),
 })
 
 const CourseRoadmapNodeSchema = z.object({
@@ -180,6 +240,10 @@ export const SnapshotSchema = z.object({
         .optional(),
       prediction: z.unknown().optional(),
       hintLevelByBeat: z.record(z.string(), z.number()).optional(),
+      // High-water mark of the hint level ever reached per beat (L1 §3.4).
+      // `hintLevelByBeat` resets to 0 on a correct submit, so this is the only
+      // signal of peak struggle — the input to the per-lesson mastery signal.
+      maxHintLevelByBeat: z.record(z.string(), z.number()).optional(),
     })
     .loose(),
   updatedAt: z.string(),
@@ -199,10 +263,18 @@ export const ProgressDerivedSchema = z
     predictionDeltaInitial: z.number().nullable().optional(),
     simRuns: z.number().nullable().optional(),
     transferAttained: z.boolean().optional(),
+    // Light, non-blocking per-lesson mastery signal (L1 §9): true iff the graded
+    // beats were first-try-correct with no full reveal. Generalizes
+    // transferAttained; never gates unlock.
+    mastered: z.boolean().optional(),
   })
   .loose()
 
 export const ProgressSchema = z.object({
+  // Two-track selection from the diagnostic pre-check (L1 §3.3), written
+  // client-side to users/{uid}/progress/{courseId}. Not in the rules deny-list,
+  // so the client may write it; absent ⇒ default Track B in the renderer.
+  track: z.enum(['A', 'B']).optional(),
   currentBeat: z.string().optional(),
   completionStatus: z.enum(['in_progress', 'completed']).optional(),
   masteryStatus: z.enum(['not_mastered', 'mastered']).optional(),
@@ -222,6 +294,7 @@ export const ProgressSchema = z.object({
 export type CanonicalRecurrence = z.infer<typeof CanonicalRecurrenceSchema>
 export type Tile = z.infer<typeof TileSchema>
 export type EquationRow = z.infer<typeof EquationRowSchema>
+export type EquationCopy = z.infer<typeof EquationCopySchema>
 export type SubstitutionStep = z.infer<typeof SubstitutionStepSchema>
 export type Interaction = z.infer<typeof InteractionSchema>
 export type Feedback = z.infer<typeof FeedbackSchema>

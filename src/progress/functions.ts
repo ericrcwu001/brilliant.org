@@ -21,6 +21,9 @@ export type CompleteLessonInput = {
     empiricalMean: number | null
     theoreticalValue: number | null
     simRuns: number | null
+    // Light per-lesson mastery signal (L1 §9): graded beats first-try-correct,
+    // no full reveal. Non-blocking; persisted under derived for a future review.
+    mastered: boolean
   }
 }
 

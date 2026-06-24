@@ -7,6 +7,14 @@
   "schemaVersion": 1,
   "lessons": [
     {
+      "lessonId": "lesson-first-heads",
+      "title": "Watch the First Heads",
+      "summary": "Optional warm-up: flip until the first heads and see why E[H] = 2 — the gentle on-ramp to the flagship.",
+      "milestoneId": "first-heads-found",
+      "built": true,
+      "optional": true
+    },
+    {
       "lessonId": "lesson-pattern-hitting-times",
       "title": "Pattern Hitting Times",
       "summary": "The flagship: compare HH against HT and prove why E[HH] = 6 but E[HT] = 4.",

@@ -278,8 +278,16 @@ const MISTAKE_HINTS: Record<MistakeId, [string, string]> = {
   ],
 }
 
-export function hintForMistake(mistake: MistakeId, level: 1 | 2): string {
-  return MISTAKE_HINTS[mistake][level - 1]
+// Fixture-authored copy may override the generic module hints per mistake (L1
+// §5.6), so non-HH equationTiles beats (L2–L6) and L1's own authored hints can
+// win without changing the module's graceful generic fallback.
+export function hintForMistake(
+  mistake: MistakeId,
+  level: 1 | 2,
+  overrides?: Record<string, [string, string]>,
+): string {
+  const pair = overrides?.[mistake] ?? MISTAKE_HINTS[mistake]
+  return pair[level - 1]
 }
 
 export type Progress = {

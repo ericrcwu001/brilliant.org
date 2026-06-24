@@ -25,6 +25,11 @@ export type BeatProps = {
   patternOptions: string[] // the compare set, e.g. ["HH", "HT"]
   automaton: Automaton
   reducedMotion: boolean
+  // Render density for this beat, resolved by the LessonPlayer from the learner's
+  // track + the beat's `density` flag (L1 §3.3). 'split' = Track-A segmented /
+  // scaffolded rendering (CoinSim micro-steps, EquationTiles dyna-link graph +
+  // staged reveal); 'merged' (default) = today's single-beat rendering.
+  density: 'split' | 'merged'
   isLast: boolean
   onAdvance: () => void
   reportNeedsReview: () => void

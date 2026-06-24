@@ -10,7 +10,7 @@
     {
       "beatId": "open-bet",
       "required": true,
-      "prompt": "You flip a fair coin until you see HH. Then again until you see HT. Which wait is longer, and by how much?",
+      "prompt": "You flip a fair coin over and over until HH shows up, and count the flips. Do it again for HT. On average, which one makes you wait longer?",
       "interaction": {
         "type": "prediction",
         "options": [
@@ -20,10 +20,23 @@
         ]
       },
       "feedback": {
-        "correct": "Good instinct. We'll prove HH takes longer — and pin down exactly by how much.",
+        "byOption": {
+          "Waiting for HH takes longer": {
+            "note": "Good instinct — we'll prove HH takes longer and pin down by exactly how much.",
+            "correct": true
+          },
+          "Waiting for HT takes longer": {
+            "note": "Let's test it — watch which near-miss throws your progress away.",
+            "correct": false
+          },
+          "They tie — both take 4 flips on average": {
+            "note": "This is the natural guess — but length isn't the whole story. A near-miss costs HH and HT differently, and that gap is exactly what we'll find.",
+            "correct": false
+          }
+        },
         "hints": [
           "There's no wrong guess yet. Commit to one so you can test it against the math.",
-          "Most people pick the tie. Notice the trap: both patterns have length 2, but a near-miss doesn't cost the same.",
+          "Most people pick the tie — it's the natural guess. Here's the thing to watch: both are length 2, but a near-miss doesn't cost the same for each.",
           "You'll revisit this prediction once you've built the equations."
         ]
       }
@@ -47,6 +60,40 @@
       }
     },
     {
+      "beatId": "primer-half",
+      "required": false,
+      "track": "A",
+      "prompt": "Before we flip, a quick refresher.",
+      "interaction": {
+        "type": "primer",
+        "variant": "half",
+        "title": "½ means 1 in 2",
+        "body": "A fair coin is 50/50. \"½\" just means 1 out of 2 equally likely outcomes — heads or tails.",
+        "collapsible": false
+      },
+      "feedback": {
+        "correct": "Got it.",
+        "hints": ["Tap an outcome.", "One of two equally likely.", "Continue when ready."]
+      }
+    },
+    {
+      "beatId": "primer-state",
+      "required": false,
+      "track": "A",
+      "prompt": "One more idea before we flip.",
+      "interaction": {
+        "type": "primer",
+        "variant": "state",
+        "title": "What a \"state\" is",
+        "body": "A \"state\" is just how much of the pattern you've matched so far: none, one H, or done.",
+        "collapsible": false
+      },
+      "feedback": {
+        "correct": "Got it.",
+        "hints": ["Tap each state.", "None, one H, or done.", "Continue when ready."]
+      }
+    },
+    {
       "beatId": "simulate",
       "required": true,
       "prompt": "Flip the coin and watch the state machine. Where does progress go on each flip?",
@@ -67,7 +114,7 @@
     {
       "beatId": "failure-edge",
       "required": true,
-      "prompt": "After matching one H, the next flip is the near-miss. Where does the state machine go?",
+      "prompt": "You've got one H so far. The next flip is the make-or-break moment. On the diagram, where does your progress go?",
       "interaction": {
         "type": "stateTap",
         "transitions": [
@@ -97,11 +144,35 @@
       }
     },
     {
+      "beatId": "name-the-overlap",
+      "required": false,
+      "track": "A",
+      "prompt": "What just happened?",
+      "interaction": {
+        "type": "primer",
+        "variant": "custom",
+        "title": "What just happened",
+        "body": "A tail after one H throws HH all the way back to the start — but for HT, an extra H keeps your progress. Hold that thought: now we'll put a number on it.",
+        "collapsible": false
+      },
+      "feedback": {
+        "correct": "Onward.",
+        "hints": ["Reflect on the two near-misses.", "One resets, one keeps progress.", "Continue."]
+      }
+    },
+    {
       "beatId": "equation-tiles",
       "required": true,
-      "prompt": "Here's the equation for E0, worked out. Build E1 the same way: every flip costs 1, then split by the coin.",
+      "prompt": "Here's the finished equation for the start state (E0) — we did this one for you. Build the next state (E1) the same way: every flip costs 1 flip, and then the coin sends you to one of two places, half the time to each. Tap the pieces into the slots.",
       "interaction": {
         "type": "equationTiles",
+        "copy": {
+          "workedExplanation": "Start at E₀ (no H yet). One flip always costs 1. Then the coin splits: half the time an H sends you to E₁ (one H matched), half the time a T leaves you at E₀ (back to the start).",
+          "primer": {
+            "title": "Why E₀ can appear on both sides",
+            "body": "E₀ is a number we don't know yet — the average flips left from the start. It can show up on both sides because after a tail you're back at the start, just like x = 1 + ½x."
+          }
+        },
         "bank": [
           { "id": "t-const-1", "kind": "const", "value": 1 },
           { "id": "t-const-0", "kind": "const", "value": 0 },
@@ -130,6 +201,7 @@
           {
             "lhs": "E1",
             "graded": true,
+            "faded": true,
             "target": {
               "lhs": "E1",
               "constant": 1,
@@ -147,12 +219,29 @@
         ]
       },
       "feedback": {
-        "correct": "That's the system. The 1/2 E0 term in E1 is HH's penalty: a near-miss falls all the way back.",
+        "correct": "That's the whole setup. See the 1/2 E0 piece in the E1 line? That's HH's catch: one wrong flip sends you all the way back to the start — which is exactly why HH takes longer.",
         "hints": [
           "Each non-absorbing state starts with the 1 flip cost, then a 1/2 chance to each next state.",
           "Look again at where E1 goes on a tail — that term should point at E0, not E1.",
           "E0 = 1 + 1/2 E1 + 1/2 E0 and E1 = 1 + 1/2 E2 + 1/2 E0, with E2 = 0."
         ]
+      }
+    },
+    {
+      "beatId": "ground-ev",
+      "required": false,
+      "track": "A",
+      "prompt": "Before you pick a number, let's watch what \"average\" really means.",
+      "interaction": {
+        "type": "primer",
+        "variant": "average",
+        "title": "Watch the average settle",
+        "body": "\"On average\" means: if you ran this many times, the typical number of flips. Run it a few times and watch the running average settle toward a steady value.",
+        "collapsible": false
+      },
+      "feedback": {
+        "correct": "That settling value is the expected wait.",
+        "hints": ["Run several times.", "The average steadies as runs grow.", "Continue when ready."]
       }
     },
     {
@@ -172,7 +261,7 @@
     {
       "beatId": "guided-solve",
       "required": true,
-      "prompt": "Tap through the substitution to solve the system for E0.",
+      "prompt": "Tap through the steps to find E0 — the average number of flips until HH. Each step plugs a value we already know into the next line.",
       "interaction": {
         "type": "substitution",
         "steps": [
@@ -192,23 +281,23 @@
       "feedback": {
         "correct": "E[HH] = 6. Substituting the absorbing state and solving gives the exact expected wait.",
         "hints": [
-          "Start from the absorbing state E2 = 0 and work backward.",
-          "Substitute E2 into E1, then E1 into E0, and isolate E0.",
-          "Solving 1/2 E0 = 3 gives E0 = 6."
+          "Start with the part you already know: once you've seen HH, you're done — so its wait is 0. Build out from there.",
+          "Drop that 0 into the E1 line to get a number for E1. Then drop E1's number into the E0 line.",
+          "E1 works out to 4. Put it into E0 = 1 + 1/2 E1 + 1/2 E0; the two 1/2 E0 pieces combine, and you get E0 = 6 — about 6 flips, on average, to see HH."
         ]
       }
     },
     {
       "beatId": "theory-vs-sim",
       "required": true,
-      "prompt": "Run simulations and watch the empirical average converge toward the theory line.",
+      "prompt": "Run simulations and watch the empirical mean (the average of your runs) converge toward the theory line.",
       "interaction": { "type": "theorySimChart" },
       "feedback": {
         "correct": "The empirical mean settles near 6 — simulation confirms the recurrence.",
         "hints": [
-          "Run more simulations; the average steadies as the count grows.",
-          "Your prediction marker stays fixed while the empirical line converges.",
-          "The theory line sits at 6 for HH."
+          "Run more simulations; the average steadies as the count grows — more trials means steadier, not 'due'.",
+          "6 is the average — most runs are shorter, a few are long. Your prediction marker stays fixed while the empirical line converges.",
+          "The theory line sits at 6 for HH; the empirical mean settles toward it."
         ]
       }
     },
@@ -252,7 +341,7 @@
       "prompt": "Recap: your prediction, the theory, the simulation, and the overlap insight.",
       "interaction": { "type": "recap" },
       "feedback": {
-        "correct": "You modeled HH vs HT as states, built the recurrences, and proved E[HH] = 6 > E[HT] = 4.",
+        "correct": "Look what you just did: you turned a coin question into a little machine, built its equations, and proved HH takes about 6 flips while HT takes 4 — by hand. That's the exact method professionals use.",
         "hints": [
           "Overlap structure — not pattern length — sets the expected wait.",
           "The 1/2 E0 reset term is what makes HH slower.",

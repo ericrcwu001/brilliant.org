@@ -3,12 +3,14 @@ import { getRail } from './phases'
 
 export function PhaseRail({
   beatId,
+  lessonId,
   reducedMotion,
 }: {
   beatId: string
+  lessonId?: string
   reducedMotion?: boolean
 }) {
-  const segments = getRail(beatId)
+  const segments = getRail(beatId, lessonId)
   const currentRef = useRef<HTMLLIElement>(null)
 
   // Keep the current beat in view as the learner advances.

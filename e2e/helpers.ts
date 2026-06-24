@@ -94,3 +94,87 @@ export async function completeLesson(page: Page) {
 
   await expect(page.locator('.done-note')).toContainText('Lesson complete')
 }
+
+// Track A (the inclusive, scaffolded path): same lesson with the additive
+// primers + name-the-overlap, the split (segmented) simulate, the staged/faded
+// equation build, and the interactive overlap comparison. Drives /dev/lesson
+// with ?track=A. Tap-only + reduced-motion safe like the Track-B helper.
+export async function completeLessonTrackA(page: Page) {
+  const primary = primaryOf(page)
+  await page.goto('/dev/lesson?track=A')
+
+  // open-bet
+  await expect(primary).toBeDisabled()
+  await page.getByRole('radio', { name: /Waiting for HH takes longer/ }).click()
+  await clickPrimary(page, 'Continue')
+
+  // pattern-pick, then the two prerequisite primers (Track A)
+  await clickPrimary(page, 'Continue') // pattern-pick
+  await clickPrimary(page, 'Continue') // primer: ½
+  await clickPrimary(page, 'Continue') // primer: state
+
+  // simulate (split): stream warm-up -> reveal graph -> gate -> single-step replay
+  const flip = page.getByRole('button', { name: 'Flip', exact: true })
+  await flip.click()
+  await flip.click()
+  await clickPrimary(page, 'Show the machine')
+  for (let i = 0; i < 12; i++) await flip.click()
+  await expect(primary).toHaveText('Continue')
+  await primary.click() // begin the single-stepped replay
+  await clickPrimary(page, 'Step')
+  // The near-miss annotation always appears in the done state (a gambler's-
+  // fallacy note may also be present, so target this one specifically).
+  await expect(
+    page.locator('.hint-note--mark', { hasText: 'Near-miss' }),
+  ).toBeVisible()
+  await clickPrimary(page, 'Continue')
+
+  // failure-edge
+  const cards = page.locator('.tap-card')
+  await cards.nth(0).getByRole('radio', { name: /E0/ }).click()
+  await cards.nth(1).getByRole('radio', { name: /E2/ }).click()
+  await clickPrimary(page, 'Check')
+  await clickPrimary(page, 'Continue')
+
+  // name-the-overlap (Track A reflection primer)
+  await clickPrimary(page, 'Continue')
+
+  // equation-tiles (split + faded): reveal the build, then fill only the last term.
+  await clickPrimary(page, 'Now your turn')
+  await placeTile(page, /^E\s*0$/, 4)
+  await clickPrimary(page, 'Check')
+  await clickPrimary(page, 'Continue')
+
+  // ground-ev (EV grounding primer): Continue is always enabled.
+  await clickPrimary(page, 'Continue')
+
+  // refine-prediction (slider)
+  const range = page.locator('.numline__range')
+  await range.focus()
+  await range.press('Home')
+  for (let i = 0; i < 4; i++) await range.press('ArrowRight')
+  await clickPrimary(page, 'Lock prediction')
+  await clickPrimary(page, 'Continue')
+
+  // guided-solve
+  await page.getByRole('button', { name: 'Show algebra' }).click()
+  await clickPrimary(page, 'Continue')
+
+  // theory-vs-sim
+  await page.getByRole('button', { name: /Run \d+ simulations/ }).click()
+  await page.getByRole('button', { name: 'Continue', exact: true }).click()
+
+  // overlap (split): tap the pattern whose near-miss keeps progress (HT).
+  await page.locator('.overlap__tap .statechip', { hasText: 'HT' }).click()
+  await clickPrimary(page, 'Check')
+  await clickPrimary(page, 'Continue')
+
+  // bias-sandbox (Extension)
+  await clickPrimary(page, 'Continue')
+
+  // recap
+  await page.getByRole('radio', { name: /near-miss resets HH/ }).click()
+  await clickPrimary(page, 'Finish')
+
+  await expect(page.locator('.done-note')).toContainText('Lesson complete')
+}

@@ -41,16 +41,6 @@ export const FULL_COURSE_PATH = [
   'lesson-overlap-shortcut',
 ]
 
-export const ALL_MILESTONES = new Set<string>([
-  ...Object.values(LESSON_MILESTONES),
-  MID_COURSE_MILESTONE,
-  COURSE_COMPLETION_MILESTONE,
-])
-
-export function isKnownMilestone(id: unknown): id is string {
-  return typeof id === 'string' && ALL_MILESTONES.has(id)
-}
-
 // Idempotent award: writes users/{uid}/milestones/{milestoneId} only if it does
 // not already exist. Returns true iff this call created the doc.
 export async function awardMilestone(

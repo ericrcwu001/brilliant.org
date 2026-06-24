@@ -37,6 +37,9 @@ type DerivedInput = {
   empiricalMean?: number | null
   theoreticalValue?: number | null
   simRuns?: number | null
+  // Light per-lesson mastery signal (L1 §9), computed client-side from the hint
+  // high-water mark. Non-blocking: stored for review, never gates unlock.
+  mastered?: boolean
 }
 
 type CompleteLessonData = {
@@ -103,6 +106,7 @@ function buildDerived(input: DerivedInput | undefined): Record<string, unknown> 
     theoreticalValue,
     simRuns,
     predictionDeltaInitial,
+    mastered: input?.mastered === true,
   }
 }
 

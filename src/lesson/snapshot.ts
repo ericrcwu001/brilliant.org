@@ -41,6 +41,10 @@ export type SnapshotInput = {
   completedBeats: string[]
   lessonState: LessonState
   hintLevelByBeat: Record<string, number>
+  // High-water mark of the hint level ever reached per beat (L1 §3.4). The
+  // visible level resets to 0 on a correct submit, so this is the only durable
+  // signal of peak struggle — the input to the per-lesson mastery signal.
+  maxHintLevelByBeat: Record<string, number>
 }
 
 const localKey = (uid: string, lessonId: string) =>
@@ -61,6 +65,7 @@ function toSnapshot(input: SnapshotInput, updatedAt: string): Snapshot {
   const interactionState: Snapshot['interactionState'] = {
     prediction,
     hintLevelByBeat: input.hintLevelByBeat,
+    maxHintLevelByBeat: input.maxHintLevelByBeat,
   }
   // Omit the key entirely when absent so we never write `undefined` to Firestore.
   if (ls.equationTiles) interactionState.equationTiles = ls.equationTiles
@@ -92,6 +97,10 @@ export function snapshotToLessonState(snap: Snapshot): LessonState {
 
 export function hintLevelsOf(snap: Snapshot): Record<string, number> {
   return snap.interactionState.hintLevelByBeat ?? {}
+}
+
+export function maxHintLevelsOf(snap: Snapshot): Record<string, number> {
+  return snap.interactionState.maxHintLevelByBeat ?? {}
 }
 
 function readLocalSnapshot(uid: string, lessonId: string): Snapshot | null {

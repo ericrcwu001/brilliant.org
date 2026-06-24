@@ -9,13 +9,22 @@ import { useAuth } from '../auth/authContext'
 import { loadLessonFromFirestore } from '../content/loader'
 import { loadSnapshot } from '../lesson/snapshot'
 import { LessonPlayer } from '../lesson/LessonPlayer'
+import { loadTrack, saveTrack, type Track } from '../progress/track'
+import { DiagnosticGate } from './DiagnosticGate'
 import type { Lesson, Snapshot } from '../content/schema'
-import { ROUTES, type NavigateFn } from './routes'
+import { ROUTES, FLAGSHIP_LESSON_ID, type NavigateFn } from './routes'
 
 type LoadState =
   | { status: 'loading' }
   | { status: 'error'; lessonId: string; message: string }
-  | { status: 'ready'; lessonId: string; lesson: Lesson; snapshot: Snapshot | null }
+  | {
+      status: 'ready'
+      lessonId: string
+      lesson: Lesson
+      snapshot: Snapshot | null
+      // null ⇒ the diagnostic hasn't run; the flagship shows DiagnosticGate.
+      track: Track | null
+    }
 
 export function LessonPage({
   navigate,
@@ -33,13 +42,16 @@ export function LessonPage({
     let cancelled = false
     void (async () => {
       try {
-        // Lesson content + restore snapshot resolve together so the player mounts
-        // once with its restored initial state (no post-mount state reset).
-        const [lesson, snapshot] = await Promise.all([
+        // Lesson content + restore snapshot + the course-level track resolve
+        // together so the player mounts once with its restored initial state and
+        // the right track (no post-mount reset). Missing track → Track B.
+        const [lesson, snapshot, track] = await Promise.all([
           loadLessonFromFirestore(lessonId),
           loadSnapshot(uid, lessonId),
+          loadTrack(uid),
         ])
-        if (!cancelled) setState({ status: 'ready', lessonId, lesson, snapshot })
+        if (!cancelled)
+          setState({ status: 'ready', lessonId, lesson, snapshot, track })
       } catch (err) {
         if (!cancelled) {
           setState({
@@ -60,12 +72,26 @@ export function LessonPage({
   // skeleton (not the wrong lesson) until the new fetch resolves — without a
   // synchronous setState reset in the effect.
   if (state.status === 'ready' && state.lessonId === lessonId && user) {
+    // First time into the flagship with no track yet → run the diagnostic, then
+    // persist the choice and continue into the lesson on that track.
+    if (state.track === null && lessonId === FLAGSHIP_LESSON_ID) {
+      const uid = user.uid
+      return (
+        <DiagnosticGate
+          onDone={(track) => {
+            void saveTrack(uid, track).catch(() => {})
+            setState({ ...state, track })
+          }}
+        />
+      )
+    }
     return (
       <LessonPlayer
         key={lessonId}
         lesson={state.lesson}
         initialSnapshot={state.snapshot}
         persistence={{ uid: user.uid, lessonId }}
+        track={state.track ?? 'B'}
         onExit={() => navigate(ROUTES.coursePath)}
       />
     )

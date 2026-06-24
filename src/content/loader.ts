@@ -17,10 +17,8 @@ export {
   loadCourseFromFirestore,
 } from './firestoreLoader'
 
-// Canonical IDs (mirror docs/mvp_prd.md Data Contracts). Shared by the seed
-// script, the runtime loader, and the future course path.
+// Canonical course id (mirrors docs/mvp_prd.md Data Contracts).
 export const COURSE_ID = 'course-pattern-hitting-times'
-export const FLAGSHIP_LESSON_ID = 'lesson-pattern-hitting-times'
 
 export function loadFlagshipLesson(): Lesson {
   return LessonSchema.parse(lessonFixture)

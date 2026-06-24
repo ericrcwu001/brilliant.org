@@ -4,6 +4,11 @@
 // change) the primary swaps to Continue, which runs a scripted guided replay to
 // the annotated near-miss before advancing. Only the flip count and the last
 // committed stream segment are kept in component state — never per-frame.
+//
+// Track B (density 'merged') keeps the original single-beat flow, byte-for-byte.
+// Track A (density 'split', L1 §4.3/§5.4) segments it: (1) a stream-only warm-up,
+// (2) the graph appears, (3) a single-stepped near-miss replay with the other
+// channels dimmed. A >=3 same-face run surfaces a one-time gambler's-fallacy note.
 
 import { useEffect, useRef, useState } from 'react'
 import type { BeatProps } from './types'
@@ -17,19 +22,29 @@ import { useElementWidth } from '../konva/useElementWidth'
 const labelOf = (automaton: BeatProps['automaton'], id: StateId) =>
   automaton.states.find((s) => s.id === id)?.label ?? ''
 
+const DEFAULT_GAMBLER_NOTE =
+  "A long streak feels 'due' to break, but each flip is independent — the coin has no memory."
+
+type Phase = 'stream' | 'free' | 'replaying' | 'done'
+
 export function CoinSimBeat({
   beat,
   automaton,
   reducedMotion,
+  density,
   isLast,
   onAdvance,
 }: BeatProps) {
+  const split = density === 'split'
+  const interaction = beat.interaction
   const minFlips =
-    beat.interaction.type === 'coinSim' &&
-    beat.interaction.gate &&
-    typeof beat.interaction.gate !== 'string'
-      ? beat.interaction.gate.minFlips
+    interaction.type === 'coinSim' &&
+    interaction.gate &&
+    typeof interaction.gate !== 'string'
+      ? interaction.gate.minFlips
       : 3
+  const gamblerNote =
+    (interaction.type === 'coinSim' && interaction.gamblerNote) || DEFAULT_GAMBLER_NOTE
 
   const [stream, setStream] = useState<Flip[]>([])
   const [state, setState] = useState<StateId>(automaton.states[0].id)
@@ -37,8 +52,14 @@ export function CoinSimBeat({
   const [sawChange, setSawChange] = useState(false)
   const [activeEdge, setActiveEdge] = useState<EdgeRef | null>(null)
   const [pulseKey, setPulseKey] = useState(0)
-  const [phase, setPhase] = useState<'free' | 'replaying' | 'done'>('free')
+  // Track A opens on a stream-only warm-up; Track B opens with the graph visible.
+  const [phase, setPhase] = useState<Phase>(split ? 'stream' : 'free')
   const [announce, setAnnounce] = useState('Flip the coin to begin.')
+  const [gambler, setGambler] = useState<string | null>(null)
+
+  // Same-face run tracker for the one-time gambler's-fallacy note (Track A).
+  const run = useRef<{ face: 'H' | 'T' | null; len: number }>({ face: null, len: 0 })
+  const gamblerShown = useRef(false)
 
   const [boxRef, width] = useElementWidth<HTMLDivElement>()
   const timers = useRef<ReturnType<typeof setTimeout>[]>([])
@@ -51,6 +72,7 @@ export function CoinSimBeat({
 
   const stageH = Math.max(220, Math.round((width || 320) * 0.52))
   const gated = flipCount >= minFlips && sawChange
+  const showGraph = phase !== 'stream'
 
   const e0 = automaton.states[0].id
   const isAbsorbing = (id: StateId) =>
@@ -73,30 +95,61 @@ export function CoinSimBeat({
     const on: 'H' | 'T' = Math.random() < automaton.p ? 'H' : 'T'
     setStream((s) => [...s, { on, key: `f${s.length}-${Math.random()}` }])
     setFlipCount((c) => c + 1)
+    // One-time gambler's-fallacy note when a >=3 same-face run appears (Track A).
+    if (run.current.face === on) run.current.len += 1
+    else run.current = { face: on, len: 1 }
+    if (split && run.current.len >= 3 && !gamblerShown.current) {
+      gamblerShown.current = true
+      setGambler(gamblerNote)
+    }
     applyFlip(fromState(state), on, 'Free')
   }
 
-  // Scripted near-miss replay: advance to E1, then take the failing edge the
-  // engine flags in overlapHighlights. Gates Continue until it finishes.
+  // Near-miss replay setup shared by both tracks: advance to the prefix state,
+  // then take the failing edge the engine flags in overlapHighlights.
+  function replayAnnotation(nearMiss: EdgeRef): string {
+    const advanceOn = automaton.pattern[0]
+    const target = nextStateOf(automaton, nearMiss.from, nearMiss.on)
+    const verb =
+      target === e0 ? 'resets all the way to ∅' : 'keeps your matched progress'
+    return `Near-miss: after one ${advanceOn}, a ${nearMiss.on} ${verb}.`
+  }
+
   function startReplay() {
     setPhase('replaying')
     const advanceOn = automaton.pattern[0] as 'H' | 'T'
     const nearMiss = automaton.overlapHighlights[0]
-    const e0 = automaton.states[0].id
+
+    // Guard (L1 §5.7): single-letter patterns (the L0 "H" on-ramp) have no
+    // near-miss edge, so there is nothing to replay — finish gracefully.
+    if (!nearMiss) {
+      setStream([{ on: advanceOn, key: 'r0' }])
+      setState(e0)
+      applyFlip(e0, advanceOn, 'Replay')
+      setAnnounce('The pattern just appears on its own schedule — each flip is independent.')
+      setPhase('done')
+      return
+    }
+
     const replayFlips: Flip[] = [
       { on: advanceOn, key: 'r0' },
       { on: nearMiss.on, key: 'r1' },
     ]
-    const target = nextStateOf(automaton, nearMiss.from, nearMiss.on)
-    const verb =
-      target === e0 ? 'resets all the way to ∅' : 'keeps your matched progress'
-    const annotation = `Near-miss: after one ${advanceOn}, a ${nearMiss.on} ${verb}.`
+    const annotation = replayAnnotation(nearMiss)
 
-    setStream(replayFlips)
     setState(e0)
     setActiveEdge(null)
 
-    const run = (i: number) => {
+    // Track A: single-step. Show the advance flip now; the learner taps Step for
+    // the near-miss, so the reset is a deliberate, watched moment.
+    if (split) {
+      setStream([replayFlips[0]])
+      applyFlip(e0, advanceOn, 'Replay')
+      return
+    }
+
+    setStream(replayFlips)
+    const apply = (i: number) => {
       if (i === 0) {
         applyFlip(e0, advanceOn, 'Replay')
       } else {
@@ -107,15 +160,31 @@ export function CoinSimBeat({
     }
 
     if (reducedMotion) {
-      // Immediate: skip the timed travel, land on the near-miss.
       setState(nextStateOf(automaton, e0, advanceOn))
       applyFlip(nearMiss.from, nearMiss.on, 'Replay')
       setAnnounce(annotation)
       setPhase('done')
       return
     }
-    timers.current.push(setTimeout(() => run(0), 250))
-    timers.current.push(setTimeout(() => run(1), 950))
+    timers.current.push(setTimeout(() => apply(0), 250))
+    timers.current.push(setTimeout(() => apply(1), 950))
+  }
+
+  // Track A single-step: advance the replay to the near-miss on a tap.
+  function stepReplay() {
+    const advanceOn = automaton.pattern[0] as 'H' | 'T'
+    const nearMiss = automaton.overlapHighlights[0]
+    if (!nearMiss) {
+      setPhase('done')
+      return
+    }
+    setStream([
+      { on: advanceOn, key: 'r0' },
+      { on: nearMiss.on, key: 'r1' },
+    ])
+    applyFlip(nearMiss.from, nearMiss.on, 'Replay')
+    setAnnounce(replayAnnotation(nearMiss))
+    setPhase('done')
   }
 
   const annotationDone = phase === 'done'
@@ -123,7 +192,15 @@ export function CoinSimBeat({
   let primaryLabel: string
   let primaryEnabled = true
   let onPrimary: () => void
-  if (phase === 'free') {
+  if (phase === 'stream') {
+    if (flipCount >= 2) {
+      primaryLabel = 'Show the machine'
+      onPrimary = () => setPhase('free')
+    } else {
+      primaryLabel = 'Flip'
+      onPrimary = flipOnce
+    }
+  } else if (phase === 'free') {
     if (gated) {
       primaryLabel = 'Continue'
       onPrimary = startReplay
@@ -132,46 +209,81 @@ export function CoinSimBeat({
       onPrimary = flipOnce
     }
   } else if (phase === 'replaying') {
-    primaryLabel = 'Replaying…'
-    primaryEnabled = false
-    onPrimary = () => {}
+    if (split) {
+      primaryLabel = 'Step'
+      onPrimary = stepReplay
+    } else {
+      primaryLabel = 'Replaying…'
+      primaryEnabled = false
+      onPrimary = () => {}
+    }
   } else {
     primaryLabel = isLast ? 'Finish' : 'Continue'
     onPrimary = onAdvance
   }
 
   const secondary =
-    (phase === 'free' && gated) || phase === 'done'
+    ((phase === 'free' && gated) || phase === 'done') || (phase === 'stream' && flipCount >= 2)
       ? { label: 'Flip', onClick: flipOnce }
       : undefined
+
+  // Track A dims the stream while the replay/near-miss is the focus.
+  const dimStream = split && (phase === 'replaying' || phase === 'done')
 
   return (
     <BeatShell
       primary={{ label: primaryLabel, enabled: primaryEnabled, onClick: onPrimary }}
       secondary={secondary}
     >
-      <div className="coinsim">
-        <div className="canvas-frame" ref={boxRef}>
-          {width > 0 && (
-            <StateGraph
-              automaton={automaton}
-              width={width}
-              height={stageH}
-              activeState={state}
-              activeEdge={activeEdge}
-              reducedMotion={reducedMotion}
-              pulseKey={pulseKey}
+      <div className={`coinsim${dimStream ? ' coinsim--focus' : ''}`}>
+        {showGraph && (
+          <div className="canvas-frame" ref={boxRef}>
+            {width > 0 && (
+              <StateGraph
+                automaton={automaton}
+                width={width}
+                height={stageH}
+                activeState={state}
+                activeEdge={activeEdge}
+                reducedMotion={reducedMotion}
+                pulseKey={pulseKey}
+                labelMode={split ? 'dual' : 'prefix'}
+              />
+            )}
+          </div>
+        )}
+        {split ? (
+          <div
+            className={
+              dimStream ? 'coinsim__stream coinsim__stream--dim' : 'coinsim__stream'
+            }
+          >
+            <CoinStream
+              flips={stream}
+              stateLabel={labelOf(automaton, state)}
+              announce={announce}
             />
-          )}
-        </div>
-        <CoinStream
-          flips={stream}
-          stateLabel={labelOf(automaton, state)}
-          announce={announce}
-        />
+          </div>
+        ) : (
+          <CoinStream
+            flips={stream}
+            stateLabel={labelOf(automaton, state)}
+            announce={announce}
+          />
+        )}
+        {phase === 'stream' && (
+          <p className="hint-note">
+            Just watch the H/T stream and the chip for now — flip a couple of times.
+          </p>
+        )}
         {phase === 'free' && !gated && (
           <p className="hint-note">
             Flip a few times — watch the active state chip after each flip.
+          </p>
+        )}
+        {gambler && (
+          <p className="hint-note hint-note--mark" role="status" aria-live="polite">
+            {gambler}
           </p>
         )}
         {annotationDone && <p className="hint-note hint-note--mark">{announce}</p>}

@@ -3,7 +3,6 @@
 // module exports no components so Fast Refresh stays happy.
 
 import { useEffect, useRef, useState } from 'react'
-import type { Feedback } from '../content/schema'
 import {
   initialLadder,
   isRevealed,
@@ -14,21 +13,17 @@ import {
   type LadderState,
 } from './hintLadder'
 import { analytics } from '../analytics/events'
+import {
+  resolveFeedback,
+  resolveOptionFeedback,
+  type FeedbackTriple,
+  type OptionFeedback,
+} from './feedbackResolve'
 
-export type FeedbackTriple = { correct: string; hints: [string, string, string] }
-
-// Compare lessons key feedback by the active pattern; flagship beats use a
-// single triple. Falls back to the first authored pattern if unkeyed.
-export function resolveFeedback(
-  feedback: Feedback,
-  pattern: string,
-): FeedbackTriple {
-  if ('byPattern' in feedback) {
-    return (feedback.byPattern[pattern] ??
-      Object.values(feedback.byPattern)[0]) as FeedbackTriple
-  }
-  return feedback as FeedbackTriple
-}
+// Re-export the pure resolvers (defined in feedbackResolve.ts so they stay
+// node-testable, free of the React/analytics imports below).
+export { resolveFeedback, resolveOptionFeedback }
+export type { FeedbackTriple, OptionFeedback }
 
 export type FeedbackView =
   | { kind: 'idle' }

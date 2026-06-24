@@ -1,42 +1,150 @@
 // Phase 12 — Discover overlap. Side-by-side mini state graphs for the compare
 // set emphasize each pattern's near-miss edge (the engine's overlapHighlights):
-// HH's failing edge resets to ∅, HT's preserves progress. Narrative highlight,
-// not graded.
+// HH's failing edge resets to ∅, HT's preserves progress.
+//
+// Track B (density 'merged') keeps the original narrative-highlight, ungraded
+// view. Track A (density 'split') turns it into an action (L1 §4.10): the learner
+// taps which pattern's near-miss *keeps* progress, graded stateTap-style, before
+// the 2-flip consequence is revealed.
 
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import type { Automaton } from '../../engine/types'
 import type { BeatProps } from './types'
 import { buildAutomaton } from '../../engine/automaton'
 import { BeatShell } from '../BeatShell'
-import { resolveFeedback } from '../feedback'
+import { resolveFeedback, useHintLadder } from '../feedback'
 import { StateGraph } from '../konva/StateGraph'
 import { useElementWidth } from '../konva/useElementWidth'
 
+// A pattern "keeps progress" on its near-miss when that edge self-loops rather
+// than resetting to the start (HT keeps, HH throws it away).
+function keepsProgress(a: Automaton): boolean {
+  const h = a.overlapHighlights[0]
+  if (!h) return false
+  const t = a.transitions.find((e) => e.from === h.from && e.on === h.on)
+  return !!t && t.kind !== 'reset'
+}
+
 export function OverlapBeat(props: BeatProps) {
-  const { beat, pattern, patternOptions, reducedMotion, isLast, onAdvance } = props
+  const { beat, pattern, patternOptions, reducedMotion, density, isLast, onAdvance } =
+    props
 
   const automata = useMemo(
     () => patternOptions.map((p) => buildAutomaton(p, 0.5)),
     [patternOptions],
   )
 
+  const ladder = useHintLadder({
+    feedback: resolveFeedback(beat.feedback, pattern),
+    required: beat.required,
+    maxHintLevel: beat.maxHintLevel,
+    onNeedsReview: props.reportNeedsReview,
+    initialLevel: props.initialHintLevel,
+    onLevelChange: props.onHintLevelChange,
+    event: { lessonId: props.lessonId, beatId: beat.beatId },
+  })
+  const [picked, setPicked] = useState<string | null>(null)
+  const [solved, setSolved] = useState(false)
+
   if (beat.interaction.type !== 'overlap') return null
+
+  // Track B: the original passive narrative view, byte-for-byte unchanged.
+  if (density !== 'split') {
+    return (
+      <BeatShell
+        feedback={{
+          kind: 'correct',
+          text: resolveFeedback(beat.feedback, pattern).correct,
+        }}
+        primary={{
+          label: isLast ? 'Finish' : 'Continue',
+          enabled: true,
+          onClick: onAdvance,
+        }}
+      >
+        <div className="overlap">
+          <div className="overlap__cols">
+            {automata.map((a) => (
+              <OverlapColumn key={a.pattern} automaton={a} reducedMotion={reducedMotion} />
+            ))}
+          </div>
+        </div>
+      </BeatShell>
+    )
+  }
+
+  // Track A: tap which near-miss keeps progress, then reveal the consequence.
+  const correctPattern = automata.find(keepsProgress)?.pattern
+  const revealed = ladder.view.kind === 'hint' && ladder.view.revealed
+  const emphasize = solved || (ladder.view.kind === 'hint' && ladder.view.level >= 2)
+
+  function check() {
+    if (picked === correctPattern) {
+      ladder.submitCorrect()
+      setSolved(true)
+    } else {
+      ladder.submitWrong()
+    }
+  }
+
+  const primary = solved
+    ? { label: isLast ? 'Finish' : 'Continue', enabled: true, onClick: onAdvance }
+    : { label: 'Check', enabled: picked !== null, onClick: check }
 
   return (
     <BeatShell
-      feedback={{ kind: 'correct', text: resolveFeedback(beat.feedback, pattern).correct }}
-      primary={{
-        label: isLast ? 'Finish' : 'Continue',
-        enabled: true,
-        onClick: onAdvance,
-      }}
+      feedback={ladder.view}
+      onTryAgain={revealed ? () => { ladder.tryAgain(); setPicked(null) } : undefined}
+      primary={primary}
     >
       <div className="overlap">
         <div className="overlap__cols">
           {automata.map((a) => (
-            <OverlapColumn key={a.pattern} automaton={a} reducedMotion={reducedMotion} />
+            <OverlapColumn
+              key={a.pattern}
+              automaton={a}
+              reducedMotion={reducedMotion}
+              emphasize={emphasize}
+              showNote={solved || revealed}
+            />
           ))}
         </div>
+        <fieldset className="overlap__tap">
+          <legend className="overlap__tap-q">
+            Tap the pattern whose near-miss keeps your progress.
+          </legend>
+          <div className="tap-choices" role="radiogroup">
+            {automata.map((a) => {
+              const isPick = picked === a.pattern
+              const graded = ladder.view.kind === 'hint' && !solved
+              const showCorrect =
+                ((revealed || solved) && a.pattern === correctPattern) ||
+                (graded && isPick && a.pattern === correctPattern)
+              const showWrong = graded && isPick && a.pattern !== correctPattern
+              return (
+                <button
+                  type="button"
+                  role="radio"
+                  aria-checked={isPick}
+                  key={a.pattern}
+                  disabled={solved || revealed}
+                  className={
+                    'statechip' +
+                    (isPick ? ' statechip--on' : '') +
+                    (showCorrect ? ' statechip--correct' : '') +
+                    (showWrong ? ' statechip--wrong' : '')
+                  }
+                  onClick={() => {
+                    setPicked(a.pattern)
+                    ladder.clear()
+                  }}
+                >
+                  <span className="statechip__label mono">{a.pattern}</span>
+                </button>
+              )
+            })}
+          </div>
+        </fieldset>
       </div>
     </BeatShell>
   )
@@ -49,9 +157,15 @@ export function OverlapBeat(props: BeatProps) {
 function OverlapColumn({
   automaton,
   reducedMotion,
+  emphasize = true,
+  showNote = true,
 }: {
   automaton: Automaton
   reducedMotion: boolean
+  // Track A withholds the edge glow + spelled-out note until the learner has
+  // answered, so the tap is a genuine prediction. Track B keeps both on (default).
+  emphasize?: boolean
+  showNote?: boolean
 }) {
   const [frameRef, width] = useElementWidth<HTMLDivElement>()
   const stageH = Math.max(180, Math.round(width * 0.72))
@@ -65,11 +179,12 @@ function OverlapColumn({
             automaton={automaton}
             width={width}
             height={stageH}
-            highlight={automaton.overlapHighlights}
+            highlight={emphasize ? automaton.overlapHighlights : []}
             reducedMotion={reducedMotion}
           />
         )}
       </div>
+      {showNote && (
       <p className="overlap__note">
         {automaton.overlapHighlights.map((h) => {
           const t = automaton.transitions.find(
@@ -87,6 +202,7 @@ function OverlapColumn({
           )
         })}
       </p>
+      )}
     </figure>
   )
 }

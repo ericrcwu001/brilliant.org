@@ -29,6 +29,7 @@ export function StateGraph({
   highlight = [],
   reducedMotion,
   pulseKey = 0,
+  labelMode = 'prefix',
 }: {
   automaton: Automaton
   width: number
@@ -38,6 +39,10 @@ export function StateGraph({
   highlight?: EdgeRef[]
   reducedMotion?: boolean
   pulseKey?: number
+  // 'dual' renders the symbolic E-id (E0) beneath the prefix label (∅) so the
+  // notation ladder is visible at a glance (L1 §5.2 dual-label). Default
+  // 'prefix' keeps the single-label rendering used by every existing beat.
+  labelMode?: 'prefix' | 'dual'
 }) {
   const { states, transitions } = automaton
   const n = states.length
@@ -216,16 +221,32 @@ export function StateGraph({
             key={`lbl-${s.id}`}
             text={s.label}
             x={xOf(i) - radius}
-            y={nodeY - 11}
+            y={nodeY - (labelMode === 'dual' ? 19 : 11)}
             width={radius * 2}
             align="center"
             fontFamily={FONT_MONO}
             fontStyle="600"
-            fontSize={s.label.length > 1 ? 16 : 20}
+            fontSize={labelMode === 'dual' ? 16 : s.label.length > 1 ? 16 : 20}
             fill={s.id === activeState ? C.quillStrong : C.ink}
             listening={false}
           />
         ))}
+        {labelMode === 'dual' &&
+          states.map((s, i) => (
+            <Text
+              key={`id-${s.id}`}
+              text={s.id}
+              x={xOf(i) - radius}
+              y={nodeY + 4}
+              width={radius * 2}
+              align="center"
+              fontFamily={FONT_MONO}
+              fontStyle="600"
+              fontSize={12}
+              fill={s.id === activeState ? C.quill : C.graphite}
+              listening={false}
+            />
+          ))}
         {transitions.map((t, i) => edgeLabel(t, `el${i}`))}
       </Layer>
     </Stage>

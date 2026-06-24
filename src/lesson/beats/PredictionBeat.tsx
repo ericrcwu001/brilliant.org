@@ -6,7 +6,7 @@
 import { useState } from 'react'
 import type { BeatProps } from './types'
 import { BeatShell } from '../BeatShell'
-import { resolveFeedback } from '../feedback'
+import { resolveFeedback, resolveOptionFeedback } from '../feedback'
 import type { FeedbackView } from '../FeedbackStrip'
 import { analytics } from '../../analytics/events'
 
@@ -22,16 +22,24 @@ export function PredictionBeat({
   if (beat.interaction.type !== 'prediction') return null
   const { options } = beat.interaction
   const fb = resolveFeedback(beat.feedback, pattern)
+  const optionFb =
+    selected !== null ? resolveOptionFeedback(beat.feedback, selected) : null
 
-  // The open bet is not graded and has no per-option correct answer, so the
-  // strip is an answer-agnostic acknowledgement framed as a guess. We avoid
-  // fb.correct ("…we'll prove HH takes longer…") since it would reveal the
-  // result and congratulate every pick, including the traps. hints[2] confirms
-  // the guess is provisional and will be revisited downstream.
-  const view: FeedbackView =
-    selected !== null
-      ? { kind: 'note', text: fb.hints[2], label: 'Good guess!' }
-      : { kind: 'idle' }
+  // The open bet is ungraded. With `byOption` feedback (L1 §3.1) we refute or
+  // affirm the *specific* pick: the right instinct gets an encouraging green
+  // affordance, while a trap gets a soft, non-punishing note ("there's no wrong
+  // answer yet"). Triple feedback falls back to the prior answer-agnostic
+  // acknowledgement (hints[2]) so legacy fixtures keep working.
+  let view: FeedbackView = { kind: 'idle' }
+  if (selected !== null) {
+    if (optionFb) {
+      view = optionFb.correct
+        ? { kind: 'correct', text: optionFb.note }
+        : { kind: 'note', text: optionFb.note, label: 'Worth testing' }
+    } else {
+      view = { kind: 'note', text: fb.hints[2], label: 'Good guess!' }
+    }
+  }
 
   return (
     <BeatShell

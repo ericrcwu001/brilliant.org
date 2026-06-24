@@ -4,11 +4,13 @@ import { loadFlagshipLesson } from '../content/loader'
 import type { Lesson, Snapshot } from '../content/schema'
 import { PhaseRail } from './PhaseRail'
 import { biasChipState } from './phases'
+import { computeMastered, bumpMaxHintLevel } from './mastery'
 import { useReducedMotion } from './useReducedMotion'
 import { BeatView } from './beats'
 import type { LessonState } from './beats/types'
 import {
   hintLevelsOf,
+  maxHintLevelsOf,
   snapshotToLessonState,
   useSnapshotWriter,
   type SnapshotInput,
@@ -33,19 +35,35 @@ export function LessonPlayer({
   initialSnapshot,
   persistence,
   onExit,
+  track = 'B',
 }: {
   lesson?: Lesson
   initialSnapshot?: Snapshot | null
   persistence?: { uid: string; lessonId: string }
   onExit?: () => void
+  // Two-track selection (L1 §3.3). Default 'B' = today's experience. Track 'A'
+  // reveals the additive scaffolds (primers, split density, name-the-overlap).
+  track?: 'A' | 'B'
 } = {}) {
   const [lesson] = useState<Lesson>(() => lessonProp ?? loadFlagshipLesson())
   const persist = !!persistence?.uid
   const lessonId = persistence?.lessonId ?? lesson.lessonId
 
+  // Beats render for a track when they carry no `track` (or 'both'), or match
+  // the active track. Track-exclusive beats are authored `required: false`, so
+  // the Cloud Function's required-beat check (which sees the full fixture)
+  // always passes regardless of which track a learner took.
+  const visibleBeats = useMemo(
+    () =>
+      lesson.beats.filter(
+        (b) => !b.track || b.track === 'both' || b.track === track,
+      ),
+    [lesson, track],
+  )
+
   const [index, setIndex] = useState<number>(() => {
     if (!initialSnapshot) return 0
-    const i = lesson.beats.findIndex((b) => b.beatId === initialSnapshot.beatId)
+    const i = visibleBeats.findIndex((b) => b.beatId === initialSnapshot.beatId)
     return i >= 0 ? i : 0
   })
   const [done, setDone] = useState(false)
@@ -56,6 +74,9 @@ export function LessonPlayer({
   const [hintLevelByBeat, setHintLevelByBeat] = useState<Record<string, number>>(
     () => (initialSnapshot ? hintLevelsOf(initialSnapshot) : {}),
   )
+  const [maxHintLevelByBeat, setMaxHintLevelByBeat] = useState<
+    Record<string, number>
+  >(() => (initialSnapshot ? maxHintLevelsOf(initialSnapshot) : {}))
   const [lessonState, setLessonStateRaw] = useState<LessonState>(() =>
     initialSnapshot ? snapshotToLessonState(initialSnapshot) : {},
   )
@@ -74,9 +95,18 @@ export function LessonPlayer({
     [lesson.milestoneId],
   )
 
-  const beat = lesson.beats[index]
-  const isLast = index === lesson.beats.length - 1
+  const beat = visibleBeats[index]
+  const isLast = index === visibleBeats.length - 1
   const chip = biasChipState(beat.beatId)
+  // Density is resolved by track: Track A gets the segmented/scaffolded rendering
+  // unless a beat pins its own `density`. Track B stays 'merged' (today).
+  const density = beat.density ?? (track === 'A' ? 'split' : 'merged')
+
+  // Per-lesson mastery signal (L1 §9): the required graded beats first-try-
+  // correct with no hint ever shown (the hint high-water mark stays 0).
+  // Non-blocking — surfaced on the done note + persisted via derived.mastered;
+  // never gates unlock. A future L4 mixed review re-surfaces beats when false.
+  const mastered = computeMastered(visibleBeats, maxHintLevelByBeat)
 
   // Referentially stable so the equation-builder's report-up effect doesn't loop.
   const setLessonState = useCallback(
@@ -86,10 +116,15 @@ export function LessonPlayer({
   )
 
   const onHintLevelChange = useCallback(
-    (level: number) =>
+    (level: number) => {
       setHintLevelByBeat((prev) =>
         prev[beat.beatId] === level ? prev : { ...prev, [beat.beatId]: level },
-      ),
+      )
+      // Persist the high-water mark too: the visible level resets to 0 on a
+      // correct submit, so only the max records whether a beat was ever a
+      // struggle (the per-lesson mastery signal reads this).
+      setMaxHintLevelByBeat((prev) => bumpMaxHintLevel(prev, beat.beatId, level))
+    },
     [beat.beatId],
   )
 
@@ -108,8 +143,17 @@ export function LessonPlayer({
       completedBeats,
       lessonState,
       hintLevelByBeat,
+      maxHintLevelByBeat,
     }),
-    [lessonId, beat.beatId, pattern, completedBeats, lessonState, hintLevelByBeat],
+    [
+      lessonId,
+      beat.beatId,
+      pattern,
+      completedBeats,
+      lessonState,
+      hintLevelByBeat,
+      maxHintLevelByBeat,
+    ],
   )
 
   // Mirror every committed change (debounced remote write + synchronous local
@@ -200,6 +244,7 @@ export function LessonPlayer({
             empiricalMean: lessonState.empiricalMean ?? null,
             theoreticalValue: lessonState.theoreticalValue ?? null,
             simRuns: lessonState.simRuns ?? null,
+            mastered,
           },
         })
           .then((res) => {
@@ -214,7 +259,7 @@ export function LessonPlayer({
       }
       return
     }
-    setIndex((i) => Math.min(i + 1, lesson.beats.length - 1))
+    setIndex((i) => Math.min(i + 1, visibleBeats.length - 1))
   }
 
   function back() {
@@ -240,7 +285,11 @@ export function LessonPlayer({
         <div className="topbar__center">
           <span className="topbar__title">{lesson.title}</span>
           <div className="rail-row">
-            <PhaseRail beatId={beat.beatId} reducedMotion={reducedMotion} />
+            <PhaseRail
+              beatId={beat.beatId}
+              lessonId={lesson.lessonId}
+              reducedMotion={reducedMotion}
+            />
             {chip !== 'hidden' && (
               <span
                 className={`biaschip biaschip--${chip}`}
@@ -260,7 +309,12 @@ export function LessonPlayer({
         {done && (
           <div className="done-note">
             <p>
-              Lesson complete ✓{needsReview ? ' · review recommended' : ''}
+              Lesson complete ✓
+              {mastered
+                ? ' · fully mastered'
+                : needsReview
+                  ? ' · review recommended'
+                  : ''}
               {completion?.unlockedLessonId ? ' · next lesson unlocked' : ''}
             </p>
             {canExit && (
@@ -284,6 +338,7 @@ export function LessonPlayer({
         patternOptions={lesson.patternOptions}
         automaton={automaton}
         reducedMotion={reducedMotion}
+        density={density}
         isLast={isLast}
         onAdvance={advance}
         reportNeedsReview={() => setNeedsReview(true)}

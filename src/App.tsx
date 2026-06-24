@@ -123,8 +123,13 @@ function App() {
   const { path, navigate } = useRouter()
 
   // Dev fixture routes: no auth, no Firebase mount (Group A / e2e entry point +
-  // the Study Desk reskin harness).
-  if (path === ROUTES.devLesson) return <LessonPlayer />
+  // the Study Desk reskin harness). `?track=A` exercises the Track-A scaffolds
+  // locally (and in the e2e Track-A pass); default is Track B.
+  if (path === ROUTES.devLesson) {
+    const track =
+      new URLSearchParams(window.location.search).get('track') === 'A' ? 'A' : 'B'
+    return <LessonPlayer track={track} />
+  }
   if (path === ROUTES.devHome) return <DevHomePage />
 
   return (

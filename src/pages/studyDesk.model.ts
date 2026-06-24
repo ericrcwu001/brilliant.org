@@ -19,8 +19,8 @@ export interface DeskNode {
   title: string
   hook: string
   glyph: string
-  milestoneId: string
   built: boolean
+  optional: boolean
   index: number
   state: DeskNodeState
 }
@@ -28,6 +28,7 @@ export interface DeskNode {
 // Per-lesson spine glyphs (docs/ui_design_system.md "Per-lesson glyphs").
 // Rendered in IBM Plex Mono inside the node dot.
 export const LESSON_GLYPHS: Record<string, string> = {
+  'lesson-first-heads': 'H?',
   'lesson-pattern-hitting-times': 'HH',
   'lesson-penneys-game': 'A≻B',
   'lesson-gamblers-ruin': 'i/N',
@@ -51,12 +52,15 @@ function nodeState(
   built: boolean,
   progress: Progress | undefined,
   predecessorCompleted: boolean,
+  optional: boolean,
 ): DeskNodeState {
   if (progress?.completionStatus === 'completed') {
     return progress.needsReview ? 'needsReview' : 'completed'
   }
   if (!built) return 'locked'
-  if (lessonId === FLAGSHIP_LESSON_ID) return 'available'
+  // The flagship and any optional on-ramp (L1 §6) are always available; the
+  // on-ramp is ungated so it never locks behind a predecessor.
+  if (lessonId === FLAGSHIP_LESSON_ID || optional) return 'available'
   if (progress?.unlockedAt != null || progress?.completionStatus === 'in_progress') {
     return 'available'
   }
@@ -78,14 +82,15 @@ export function resolveNodes(
       title: lesson.title,
       hook: lesson.summary,
       glyph: glyphFor(lesson.lessonId),
-      milestoneId: lesson.milestoneId,
       built: lesson.built,
+      optional: lesson.optional ?? false,
       index,
       state: nodeState(
         lesson.lessonId,
         lesson.built,
         progressById[lesson.lessonId],
         predecessorCompleted,
+        lesson.optional ?? false,
       ),
     }
   })
@@ -114,17 +119,21 @@ export function recommendedAction(
   const review = nodes.find((n) => n.state === 'needsReview')
   if (review) return { kind: 'review', lessonId: review.lessonId }
 
+  // The optional on-ramp is enterable but never the recommended next step — the
+  // chain steers toward the required spine (so it isn't nagged forever).
   const start = nodes.find(
     (n) =>
+      !n.optional &&
       n.state === 'available' &&
       progressById[n.lessonId]?.completionStatus == null,
   )
   if (start) return { kind: 'start', lessonId: start.lessonId }
 
-  const anyAvailable = nodes.find((n) => n.state === 'available')
+  const anyAvailable = nodes.find((n) => !n.optional && n.state === 'available')
   if (anyAvailable) return { kind: 'start', lessonId: anyAvailable.lessonId }
 
-  return { kind: 'replay', lessonId: nodes[0]?.lessonId ?? null }
+  const firstRequired = nodes.find((n) => !n.optional) ?? nodes[0]
+  return { kind: 'replay', lessonId: firstRequired?.lessonId ?? null }
 }
 
 function titleOf(nodes: DeskNode[], lessonId: string | null): string {

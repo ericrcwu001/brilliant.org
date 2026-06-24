@@ -28,27 +28,29 @@ describe('studyDesk model — gate (L1-only)', () => {
     expect(glyphFor('unknown')).toBe('·')
   })
 
-  it('first visit: L1 available, the other five locked ghosts', () => {
+  it('first visit: the optional L0 on-ramp + the flagship are available, rest locked', () => {
     const nodes = resolveNodes(course, {})
-    expect(nodes).toHaveLength(6)
-    expect(nodes[0].state).toBe('available')
-    expect(nodes.slice(1).every((n) => n.state === 'locked')).toBe(true)
+    expect(nodes).toHaveLength(7)
+    expect(nodes[0].state).toBe('available') // L0 on-ramp (optional)
+    expect(nodes[0].optional).toBe(true)
+    expect(nodes[1].state).toBe('available') // L1 flagship
+    expect(nodes.slice(2).every((n) => n.state === 'locked')).toBe(true)
   })
 
-  it('first visit recommends Start on the focused L1 node', () => {
+  it('first visit recommends Start on the flagship, skipping the optional on-ramp', () => {
     const nodes = resolveNodes(course, {})
     const action = recommendedAction(nodes, {})
     expect(action).toEqual({ kind: 'start', lessonId: L1 })
     expect(statusLine(action, nodes)).toBe('Start Pattern Hitting Times')
     expect(reviewNote(action, nodes)).toBeNull()
-    expect(nodeCtaLabel(nodes[0], undefined)).toBe('Start')
+    expect(nodeCtaLabel(nodes[1], undefined)).toBe('Start')
   })
 
   it('an unbuilt lesson stays locked even if the server reports it unlocked', () => {
     const progress: Record<string, Progress> = { [L2]: { unlockedAt: 1 } }
     const nodes = resolveNodes(course, progress)
-    expect(nodes[1].state).toBe('locked')
-    expect(nodeCtaLabel(nodes[1], progress[L2])).toBeNull()
+    expect(nodes[2].state).toBe('locked')
+    expect(nodeCtaLabel(nodes[2], progress[L2])).toBeNull()
   })
 })
 
@@ -60,7 +62,7 @@ describe('studyDesk model — recommended-action priority (Q9)', () => {
     const nodes = resolveNodes(builtCourse, progress)
     const action = recommendedAction(nodes, progress)
     expect(action).toEqual({ kind: 'resume', lessonId: L1 })
-    expect(nodeCtaLabel(nodes[0], progress[L1])).toBe('Resume')
+    expect(nodeCtaLabel(nodes[1], progress[L1])).toBe('Resume')
   })
 
   it('Resume beats a separate needsReview, which surfaces as a quiet note', () => {
@@ -84,8 +86,8 @@ describe('studyDesk model — recommended-action priority (Q9)', () => {
     const nodes = resolveNodes(builtCourse, progress)
     const action = recommendedAction(nodes, progress)
     expect(action).toEqual({ kind: 'review', lessonId: L1 })
-    expect(nodes[0].state).toBe('needsReview')
-    expect(nodeCtaLabel(nodes[0], progress[L1])).toBe('Review')
+    expect(nodes[1].state).toBe('needsReview')
+    expect(nodeCtaLabel(nodes[1], progress[L1])).toBe('Review')
     expect(reviewNote(action, nodes)).toBeNull()
   })
 
@@ -95,9 +97,9 @@ describe('studyDesk model — recommended-action priority (Q9)', () => {
       [L2]: { unlockedAt: 1 },
     }
     const nodes = resolveNodes(builtCourse, progress)
-    expect(nodes[0].state).toBe('completed')
-    expect(nodes[1].state).toBe('available')
-    expect(nodes[2].state).toBe('locked') // only the immediate next unlocks
+    expect(nodes[1].state).toBe('completed') // L1
+    expect(nodes[2].state).toBe('available') // L2 unlocked
+    expect(nodes[3].state).toBe('locked') // only the immediate next unlocks
     const action = recommendedAction(nodes, progress)
     expect(action).toEqual({ kind: 'start', lessonId: L2 })
   })

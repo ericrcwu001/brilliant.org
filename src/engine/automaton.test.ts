@@ -6,6 +6,9 @@ const findEdge = (ts: Transition[], from: string, on: 'H' | 'T') =>
   ts.find((t) => t.from === from && t.on === on)!
 
 describe('buildAutomaton — golden expected times at p = 0.5', () => {
+  it('E[H] = 2 (L0 on-ramp)', () => {
+    expect(buildAutomaton('H', 0.5).expectedTimes.E0).toBe(2)
+  })
   it('E[HH] = 6', () => {
     expect(buildAutomaton('HH', 0.5).expectedTimes.E0).toBe(6)
   })

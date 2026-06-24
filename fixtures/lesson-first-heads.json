@@ -1,0 +1,113 @@
+{
+  "lessonId": "lesson-first-heads",
+  "courseId": "course-pattern-hitting-times",
+  "title": "Watch the First Heads",
+  "patternOptions": ["H"],
+  "milestoneId": "first-heads-found",
+  "unlocks": null,
+  "schemaVersion": 1,
+  "beats": [
+    {
+      "beatId": "l0-bet",
+      "required": true,
+      "prompt": "You flip a fair coin until the first heads, counting flips. On average, how many flips does that take?",
+      "interaction": {
+        "type": "prediction",
+        "options": ["About 2 flips", "About 4 flips", "About 6 flips"]
+      },
+      "feedback": {
+        "byOption": {
+          "About 2 flips": {
+            "note": "Good instinct — let's prove it's about 2 by simulating.",
+            "correct": true
+          },
+          "About 4 flips": {
+            "note": "Let's test it — watch how quickly the first heads usually shows up.",
+            "correct": false
+          },
+          "About 6 flips": {
+            "note": "Let's test it — the first heads tends to come sooner than that.",
+            "correct": false
+          }
+        },
+        "hints": [
+          "There's no wrong guess yet. Commit to one so you can test it.",
+          "Heads is 50/50, so it usually doesn't take long.",
+          "We'll measure it by simulating many runs."
+        ]
+      }
+    },
+    {
+      "beatId": "l0-half",
+      "required": false,
+      "prompt": "Before we flip, a quick refresher.",
+      "interaction": {
+        "type": "primer",
+        "variant": "half",
+        "title": "½ means 1 in 2",
+        "body": "A fair coin is 50/50. \"½\" just means 1 out of 2 equally likely outcomes — heads or tails.",
+        "collapsible": false
+      },
+      "feedback": {
+        "correct": "Got it.",
+        "hints": ["Tap an outcome.", "One of two.", "Continue when ready."]
+      }
+    },
+    {
+      "beatId": "l0-flip",
+      "required": true,
+      "prompt": "Flip the coin and watch the state chip. How quickly does the first heads arrive?",
+      "interaction": {
+        "type": "coinSim",
+        "mode": "free",
+        "gate": { "minFlips": 2 },
+        "gamblerNote": "A long tails streak feels 'due' to flip heads, but each flip is independent — the coin has no memory."
+      },
+      "feedback": {
+        "correct": "Once heads appears, you're done — that's the absorbing state.",
+        "hints": [
+          "Flip a few times and watch the chip move from ∅ to H.",
+          "Heads ends the wait immediately.",
+          "Continue when you've seen it land on H."
+        ]
+      }
+    },
+    {
+      "beatId": "l0-ground",
+      "required": false,
+      "prompt": "Before you commit to a number, let's watch what \"average\" really means.",
+      "interaction": {
+        "type": "primer",
+        "variant": "average",
+        "title": "Watch the average settle",
+        "body": "\"On average\" means: if you ran this many times, the typical number of flips. Run it a few times and watch the running average settle toward a steady value.",
+        "collapsible": false
+      },
+      "feedback": {
+        "correct": "That settling value is the expected wait.",
+        "hints": ["Run several times.", "The average steadies.", "Continue when ready."]
+      }
+    },
+    {
+      "beatId": "l0-count",
+      "required": true,
+      "prompt": "So, on average, how many flips until the first heads?",
+      "interaction": {
+        "type": "mcq",
+        "options": [
+          { "id": "two", "label": "About 2 flips", "correct": true },
+          { "id": "four", "label": "About 4 flips", "correct": false },
+          { "id": "ten", "label": "About 10 flips", "correct": false }
+        ]
+      },
+      "feedback": {
+        "correct": "Exactly — E[H] = 2. On average, two flips to see the first heads. Now you're ready for HH.",
+        "hints": [
+          "Look at where the running average settled.",
+          "Heads is 50/50, so the wait is short.",
+          "The average lands at 2."
+        ]
+      }
+    }
+  ]
+}

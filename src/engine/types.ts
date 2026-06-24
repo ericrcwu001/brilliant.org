@@ -21,18 +21,6 @@ export type CanonicalRecurrence = {
   terms: Array<{ coeff: Rational; var: StateId }> // probability-weighted next states
 }
 
-export type Tile =
-  | { id: string; kind: 'state'; value: StateId } // E0, E1
-  | { id: string; kind: 'prob'; value: '1/2' | 'p' | '1-p' }
-  | { id: string; kind: 'const'; value: number } // 0, 1
-  | { id: string; kind: 'op'; value: '+' | '-' | '=' }
-
-export type EquationRow = {
-  lhs: StateId
-  target: CanonicalRecurrence
-  graded: boolean
-}
-
 export type SubstitutionStep = {
   display: string // e.g. "E1 = 1 + 1/2 E2 + 1/2 E0"
   substitute: StateId // which value is being substituted in this step

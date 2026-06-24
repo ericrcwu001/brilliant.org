@@ -370,35 +370,6 @@ button {
 .token--const {
   color: var(--graphite);
 }
-.token--op {
-  color: var(--ink);
-}
-
-.eqrow {
-  font-family: var(--font-mono);
-  font-size: calc(16px * var(--fs));
-  padding: var(--s2) 0;
-  border-bottom: 1px dashed var(--rule);
-  color: var(--ink);
-}
-.eqrow:last-child {
-  border-bottom: none;
-}
-
-.edge {
-  font-family: var(--font-mono);
-  font-size: calc(15px * var(--fs));
-  padding: var(--s2) 0;
-  color: var(--ink);
-}
-.edge--H {
-  border-left: 3px solid var(--heads);
-  padding-left: var(--s3);
-}
-.edge--T {
-  border-left: 3px solid var(--tails);
-  padding-left: var(--s3);
-}
 
 /* --- Konva canvas regions (state graph, chart) --- */
 
@@ -653,10 +624,6 @@ button {
 }
 .sim-stat--ink b {
   color: var(--ink);
-}
-.sim-stat__of {
-  font-size: calc(14px * var(--fs));
-  color: var(--graphite-soft);
 }
 
 .sim-progress {
@@ -1136,39 +1103,6 @@ button {
   margin: 0 0 var(--s3);
 }
 
-/* --- Dev landing --- */
-
-.landing {
-  max-width: 560px;
-  margin: 0 auto;
-  padding: var(--s8) var(--s4);
-  text-align: center;
-}
-.landing h1 {
-  font-family: var(--font-serif);
-  font-size: calc(30px * var(--fs));
-  line-height: 36px;
-  font-weight: 600;
-  letter-spacing: -0.01em;
-  color: var(--ink);
-}
-.landing h1 code {
-  font-family: var(--font-mono);
-}
-.landing p {
-  color: var(--graphite);
-}
-.landing a {
-  display: inline-block;
-  margin-top: var(--s5);
-  padding: var(--s3) var(--s5);
-  background: var(--quill);
-  color: var(--paper-0);
-  text-decoration: none;
-  border-radius: var(--r-md);
-  font-weight: 600;
-}
-
 /* Visually-hidden, screen-reader-only live region. */
 .sr-only {
   position: absolute;
@@ -1308,9 +1242,6 @@ button {
   align-items: center;
   gap: var(--s2);
 }
-.eqline__term-group {
-  white-space: nowrap;
-}
 .eqline__explain,
 .eqline__note {
   margin: var(--s2) 0 0;
@@ -1359,8 +1290,7 @@ button {
   color: var(--graphite-soft);
 }
 @media (hover: hover) {
-  .slot--empty:hover:not(:disabled),
-  .infotip--slot:hover .slot--empty:not(:disabled) {
+  .slot--empty:hover:not(:disabled) {
     border-color: var(--quill);
     background: var(--quill-tint);
     color: var(--ink);
@@ -1371,8 +1301,7 @@ button {
   background: var(--paper-0);
 }
 @media (hover: hover) {
-  .slot--filled:hover:not(:disabled):not(.slot--correct):not(.slot--wrong),
-  .infotip--slot:hover .slot--filled:not(:disabled):not(.slot--correct):not(.slot--wrong) {
+  .slot--filled:hover:not(:disabled):not(.slot--correct):not(.slot--wrong) {
     border-color: var(--quill);
     background: var(--quill-tint);
   }
@@ -1494,42 +1423,9 @@ button {
   box-shadow: var(--e1);
 }
 
-/* Worked-example term buttons + hover/tap tooltips */
-.eqterm {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 32px;
-  min-height: 32px;
-  padding: 0 var(--s1);
-  border: 1px solid transparent;
-  border-radius: var(--r-sm);
-  background: var(--paper-0);
-  font-family: var(--font-mono);
-  font-weight: 500;
-  font-size: calc(18px * var(--fs));
-  cursor: help;
-}
-.eqterm--const {
-  color: var(--graphite);
-}
-.eqterm--prob {
-  color: var(--heads);
-}
-.eqterm--var {
-  color: var(--quill);
-}
-.eqterm:hover,
-.eqterm:focus-visible {
-  border-color: var(--quill);
-  outline: none;
-}
-
+/* Hover/tap tooltips */
 .infotip {
   position: relative;
-  display: inline-flex;
-}
-.infotip--slot {
   display: inline-flex;
 }
 .infotip__bubble {
@@ -2229,123 +2125,6 @@ button {
   flex: 1 1 auto;
   padding: var(--s5) var(--s4) var(--s8);
 }
-.coursepath__kicker {
-  margin: 0 0 var(--s2);
-  font-family: var(--font-mono);
-  font-size: calc(12px * var(--fs));
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  color: var(--quill-strong);
-}
-.coursepath__heading {
-  margin: 0 0 var(--s6);
-  font-size: calc(24px * var(--fs));
-  line-height: 30px;
-  font-weight: 600;
-  color: var(--ink);
-}
-
-/* Vertical state-chain path; a hairline rule connects the node markers. */
-.pathline {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-}
-.pathnode {
-  position: relative;
-  display: flex;
-  gap: var(--s4);
-  padding-bottom: var(--s5);
-}
-.pathnode::before {
-  content: '';
-  position: absolute;
-  left: 17px;
-  top: 36px;
-  bottom: 0;
-  width: 2px;
-  background: var(--rule);
-}
-.pathnode:last-child::before {
-  display: none;
-}
-.pathnode__marker {
-  position: relative;
-  z-index: 1;
-  flex: 0 0 auto;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 36px;
-  height: 36px;
-  border: 2px solid var(--rule);
-  border-radius: var(--r-pill);
-  background: var(--paper-0);
-  font-family: var(--font-mono);
-  font-weight: 600;
-}
-.pathnode__card {
-  flex: 1 1 auto;
-  padding: var(--s4);
-  border: 1px solid var(--rule);
-  border-radius: var(--r-lg);
-  background: var(--paper-1);
-}
-.pathnode__title {
-  margin: 0 0 var(--s1);
-  font-size: calc(18px * var(--fs));
-  font-weight: 600;
-  color: var(--ink);
-}
-.pathnode__blurb {
-  margin: 0 0 var(--s2);
-  font-size: calc(14px * var(--fs));
-  color: var(--graphite);
-}
-.pathnode__state {
-  margin: 0;
-  font-family: var(--font-mono);
-  font-size: calc(11px * var(--fs));
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  color: var(--graphite-soft);
-}
-.pathnode__cta {
-  margin-top: var(--s3);
-  padding: 0 var(--s5);
-}
-
-.pathnode--completed .pathnode__marker {
-  border-color: var(--quill);
-  background: var(--quill);
-  color: var(--paper-0);
-}
-.pathnode--available .pathnode__marker {
-  border-color: var(--ink);
-  color: var(--ink);
-}
-.pathnode--available .pathnode__card {
-  border-color: var(--quill);
-}
-.pathnode--available .pathnode__state {
-  color: var(--quill-strong);
-}
-.pathnode--locked .pathnode__marker,
-.pathnode--roadmap .pathnode__marker {
-  color: var(--graphite-soft);
-}
-.pathnode--locked .pathnode__card,
-.pathnode--roadmap .pathnode__card {
-  border-style: dashed;
-  background: var(--paper-0);
-}
-.pathnode--locked .pathnode__title,
-.pathnode--roadmap .pathnode__title {
-  color: var(--graphite);
-}
-.pathnode--roadmap .pathnode__marker {
-  border-style: dashed;
-}
 
 .coursepath__divider {
   margin: var(--s4) 0;
@@ -2354,16 +2133,6 @@ button {
   letter-spacing: 0.04em;
   text-transform: uppercase;
   color: var(--graphite-soft);
-}
-
-@media (min-width: 768px) {
-  .coursepath__heading {
-    font-size: calc(32px * var(--fs));
-    line-height: 40px;
-  }
-  .pathnode__title {
-    font-size: calc(19px * var(--fs));
-  }
 }
 
 /* --- Profile --- */
@@ -2556,24 +2325,6 @@ button {
   letter-spacing: 0.04em;
   text-transform: uppercase;
   color: var(--graphite-soft);
-}
-.pathnode__label {
-  margin: 0 0 var(--s1);
-  font-family: var(--font-mono);
-  font-size: calc(11px * var(--fs));
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  color: var(--graphite-soft);
-}
-/* Focus emphasis on the recommended-action node (2px quill left rule). */
-.pathnode__card--focus {
-  border-left: 2px solid var(--quill);
-}
-.pathnode__review {
-  margin: var(--s1) 0 0;
-  font-size: calc(12px * var(--fs));
-  font-weight: 500;
-  color: var(--mark);
 }
 
 /* Recap milestone stamp (Phase 17): pressed seal on the recap flow. */
@@ -3038,4 +2789,260 @@ button {
   .desk .node-card--focused .node-card__state {
     margin-top: var(--s2);
   }
+}
+
+/* === L1 inclusive redesign (Track-A scaffolds) ============================
+   All mobile-first: column layouts, >=44px tap targets, no hover-only
+   affordances, fluid Konva widths (sized by the host), reduced-motion-safe. */
+
+/* --- JIT primer cards (PrimerBeat + the equation variable primer) --- */
+.primer {
+  display: flex;
+  flex-direction: column;
+}
+.primer__disclosure {
+  display: flex;
+  align-items: center;
+  gap: var(--s2);
+  width: 100%;
+  min-height: 44px;
+  padding: var(--s3) var(--s4);
+  border: 1px solid var(--rule);
+  border-radius: var(--r-lg);
+  background: var(--paper-1);
+  cursor: pointer;
+  text-align: left;
+  color: var(--ink);
+}
+.primer__disclosure:focus-visible {
+  outline: 2px solid var(--quill);
+  outline-offset: 2px;
+}
+.primer__chevron {
+  margin-left: auto;
+  font-family: var(--font-mono);
+  font-size: calc(20px * var(--fs));
+  color: var(--quill-strong);
+}
+.primer__card,
+.eqtiles__primer .primer__card {
+  border: 1px solid var(--rule);
+  border-radius: var(--r-lg);
+  background: var(--paper-1);
+  padding: var(--s4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--s3);
+}
+.primer__kicker {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: calc(12px * var(--fs));
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--quill-strong);
+}
+.primer__title {
+  margin: 0;
+  font-size: calc(18px * var(--fs));
+  font-weight: 600;
+}
+.primer__body {
+  margin: 0;
+  font-size: calc(15px * var(--fs));
+  line-height: 22px;
+  color: var(--graphite);
+}
+.primer__demo {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s2);
+}
+.primer__cells {
+  display: flex;
+  gap: var(--s2);
+  flex-wrap: wrap;
+}
+.primer__cell {
+  flex: 1 1 0;
+  min-width: 56px;
+  min-height: 48px;
+  border: 1.5px solid var(--rule);
+  border-radius: var(--r-md);
+  background: var(--paper-0);
+  font-family: var(--font-mono);
+  font-size: calc(18px * var(--fs));
+  color: var(--ink);
+  cursor: pointer;
+}
+.primer__cell--on {
+  border-color: var(--quill);
+  background: var(--quill-tint);
+  color: var(--quill-strong);
+}
+.primer__cell:focus-visible {
+  outline: 2px solid var(--quill);
+  outline-offset: 2px;
+}
+.primer__readout {
+  margin: 0;
+  min-height: 20px;
+  font-size: calc(14px * var(--fs));
+  color: var(--graphite);
+}
+
+/* --- Graded single-select (McqBeat + DiagnosticGate) --- */
+.mcq {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s3);
+}
+.mcq__option {
+  width: 100%;
+  min-height: 48px;
+  padding: var(--s3) var(--s4);
+  border: 1.5px solid var(--rule);
+  border-radius: var(--r-md);
+  background: var(--paper-0);
+  text-align: left;
+  font-family: var(--font-sans);
+  font-size: calc(16px * var(--fs));
+  color: var(--ink);
+  cursor: pointer;
+}
+.mcq__option:focus-visible {
+  outline: 2px solid var(--quill);
+  outline-offset: 2px;
+}
+.mcq__option--on {
+  border-color: var(--quill);
+  background: var(--quill-tint);
+  color: var(--quill-strong);
+}
+.mcq__option--correct {
+  border-color: var(--correct);
+  background: var(--correct-tint);
+}
+.mcq__option--wrong {
+  border-color: var(--wrong);
+  background: var(--wrong-tint);
+}
+.mcq__option:disabled {
+  cursor: default;
+}
+
+/* --- First-success grounding timeline --- */
+.fst {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s3);
+}
+.fst__chart {
+  position: relative;
+  height: 140px;
+  border: 1px solid var(--rule);
+  border-radius: var(--r-md);
+  background: var(--paper-0);
+  padding: var(--s2);
+  overflow: hidden;
+}
+.fst__theory {
+  position: absolute;
+  left: 0;
+  right: 0;
+  border-top: 2px dashed var(--quill);
+  pointer-events: none;
+}
+.fst__theory-label {
+  position: absolute;
+  right: var(--s2);
+  top: -10px;
+  font-family: var(--font-mono);
+  font-size: calc(11px * var(--fs));
+  color: var(--quill-strong);
+  background: var(--paper-0);
+  padding: 0 4px;
+}
+.fst__bars {
+  position: absolute;
+  inset: var(--s2);
+  display: flex;
+  align-items: flex-end;
+  gap: 3px;
+}
+.fst__bar {
+  flex: 1 1 0;
+  min-width: 3px;
+  background: var(--heads);
+  border-radius: 2px 2px 0 0;
+}
+.fst__empty {
+  margin: auto;
+  font-size: calc(13px * var(--fs));
+  color: var(--graphite-soft);
+}
+.fst__readout {
+  margin: 0;
+  min-height: 20px;
+  font-size: calc(14px * var(--fs));
+  color: var(--graphite);
+}
+.fst__controls {
+  display: flex;
+  gap: var(--s2);
+  flex-wrap: wrap;
+}
+
+/* --- Equation-tiles Track-A extras --- */
+.eqtiles__graph {
+  margin: 0;
+}
+.eqtiles__primer {
+  display: flex;
+  flex-direction: column;
+}
+.eqtiles__selfexplain {
+  margin: 0;
+  font-size: calc(14px * var(--fs));
+  font-style: italic;
+  color: var(--graphite);
+}
+.slot--locked {
+  background: var(--paper-2);
+  border-style: dashed;
+  color: var(--graphite);
+  cursor: default;
+}
+
+/* --- CoinSim Track-A channel dimming --- */
+.coinsim__stream--dim {
+  opacity: 0.45;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .coinsim__stream {
+    transition: opacity var(--dur-base) var(--ease-out);
+  }
+}
+
+/* --- Overlap tap-which-edge comparison --- */
+.overlap__tap {
+  margin: 0;
+  border: 1px solid var(--rule);
+  border-radius: var(--r-lg);
+  background: var(--paper-1);
+  padding: var(--s3) var(--s4) var(--s4);
+}
+.overlap__tap-q {
+  padding: 0 var(--s2);
+  font-size: calc(15px * var(--fs));
+  color: var(--ink);
+}
+.recap__belief {
+  margin: 0;
+  padding: var(--s2) var(--s3);
+  border-left: 3px solid var(--quill);
+  background: var(--quill-tint);
+  border-radius: var(--r-xs);
+  font-size: calc(14px * var(--fs));
+  color: var(--ink);
 }

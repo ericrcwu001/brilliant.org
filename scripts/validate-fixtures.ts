@@ -35,9 +35,18 @@ const lesson = validate(
   'lesson-pattern-hitting-times.json',
   LessonSchema,
 ) as z.infer<typeof LessonSchema>
+validate('lesson-first-heads.json', LessonSchema)
 validate('course-pattern-hitting-times.json', CourseSchema)
 validate('example-snapshot.json', SnapshotSchema)
 validate('canonical.example.json', CanonicalRecurrenceSchema)
+
+// L0 on-ramp golden (L1 §5.7): the single-letter "H" automaton waits 2 flips.
+const hAutomaton = buildAutomaton('H', 0.5)
+if (hAutomaton.expectedTimes.E0 !== 2) {
+  console.error(`\n✗ E[H] expected 2, got ${hAutomaton.expectedTimes.E0}`)
+  process.exit(1)
+}
+console.log('✓ E[H] = 2 (L0 on-ramp)')
 
 // Cross-check: the engine's generated recurrences must equal the fixture's
 // equation-tile targets, so the content and the engine never drift apart.

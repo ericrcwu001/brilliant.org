@@ -140,6 +140,20 @@ export function RecapBeat(props: BeatProps) {
 
   const narrative = openingBetNote(lessonState.initialPrediction)
 
+  // Hypercorrection (L1 §4.11): re-present the opening bet against the proven
+  // numbers. Confronting a confident wrong guess with the result makes the
+  // correction stick harder than never having guessed.
+  const initial = lessonState.initialPrediction
+  let beliefUpdate: string | null = null
+  if (initial && eHT !== undefined) {
+    if (initial.startsWith('They tie'))
+      beliefUpdate = `You bet they'd tie — but it's E[${pattern}] = ${eHH} vs E[${contrastPattern}] = ${eHT}. The near-miss is what splits them.`
+    else if (initial === `Waiting for ${pattern} takes longer`)
+      beliefUpdate = `You bet ${pattern} takes longer — and the model agrees: ${eHH} vs ${eHT}.`
+    else
+      beliefUpdate = `You bet the other way — but it lands at E[${pattern}] = ${eHH} vs E[${contrastPattern}] = ${eHT}. The states set it straight.`
+  }
+
   // Generation must precede praise: no verdict strip until the learner commits,
   // and never a green "Correct" for someone who reached it only via reveals.
   let view: FeedbackView = { kind: 'idle' }
@@ -293,6 +307,7 @@ export function RecapBeat(props: BeatProps) {
             )}
 
             <div className="recap__path">
+              {beliefUpdate && <p className="recap__belief">{beliefUpdate}</p>}
               {narrative && <p className="recap__narrative">{narrative}</p>}
               <div className="recap__trio">
                 {metrics.map((mt) => (
