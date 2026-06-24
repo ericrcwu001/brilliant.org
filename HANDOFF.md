@@ -9,8 +9,9 @@ Brilliant-style learn-by-doing web app. Flagship lesson teaches **pattern hittin
 times** for coin flips (why `E[HH]=6` but `E[HT]=4`). Sequenced by `docs/mvp_prd.md`
 (Groups A–D).
 
-- Match `docs/ui_design_system.md` ("Clean Mathematical Notebook", IBM Plex, design
-  tokens, sticky action bar).
+- Match `docs/ui_design_system.md` ("The Living Notebook" — bolder cinematic evolution of
+  the notebook; IBM Plex + Fraunces display, design tokens, sticky action bar). The
+  bolder-identity pivot is recorded in `docs/adr/0002-bolder-living-notebook.md`.
 - KMP engine stays **pure / dependency-free** (exact rational arithmetic, no floats).
 - Surgical changes, simplicity first, no speculative scope (`AGENTS.md`).
 
@@ -54,10 +55,20 @@ times** for coin flips (why `E[HH]=6` but `E[HT]=4`). Sequenced by `docs/mvp_prd
   unchanged (e2e `lesson-complete` still green). **Re-seed required** (emulator/prod, user's
   terminal) so Firestore picks up the updated L1 fixture **+ the new L0 and L2–L6 lesson
   fixtures + the `built:true` course nodes** (seed reads `fixtures/lesson-*.json`).
-- **Git:** branch `main`, 3 commits on remote; **all of Group C + Study Desk + docs/
-  ideation are uncommitted** in the working tree. Don't commit unless asked.
-- **Seeded:** only `course-pattern-hitting-times` + `lesson-pattern-hitting-times` in
-  prod. L2–L6 are locked stubs (design-only).
+- **Git:** branch `main` in sync with `origin/main` at `5db37ea` (Group C + Study
+  Desk + all 7 lessons + security hardening **are committed/pushed** — the older
+  "everything uncommitted" note was stale). Working tree only has `CONTEXT.md`/
+  `HANDOFF.md`/`docs/ui_design_system.md` modified + a few untracked docs/rules.
+  Don't commit unless asked.
+- **Seeded (prod brilliant-org — DONE this session):** **all 7 lessons** (L0 +
+  L1–L6) + the course doc (every node `built:true`) are now live in prod Firestore
+  via `SEED_TARGET=prod GOOGLE_CLOUD_PROJECT=brilliant-org tsx scripts/seed-firestore.ts`
+  (Admin SDK + gcloud ADC; no Java/emulator needed for a prod seed). Read-back
+  confirmed `courses/course-pattern-hitting-times` + 7 `lessons/*` docs. The
+  deployed hosting bundle (built/deployed earlier today) already contains the
+  L2–L6 beat renderers, so the live client can render them — no redeploy needed.
+  Still gated on auth to *enter* lessons (email/password only; Google sign-in off);
+  unlock chain + L2–L6 milestone awarding unverified on a live authed walk.
 - **State-graph explainer — DONE this session** (per `docs/state-graph-explainer-brief.md`):
   Track-A `primer-graph` beat (static mini dual-label `StateGraph` + annotated key) inserted
   before `simulate`; compact non-interactive `coinsim__legend` added to `simulate` for both
@@ -239,7 +250,26 @@ agency), both **staged proposals, not yet applied**. O4 (perf) **n/a — not ins
 
 ## Premium-UI / Market-Ready (research + IMPLEMENTED motion layer)
 
-**Shipped this session — Motion 12.41 + 5 "wow" moments. Verified: tsc + lint +
+**DIRECTION UPDATE (latest session) — pivoted to a BOLDER "Living Notebook".** A grill-me
+session + a 4-agent council (2 codebase crawls + 2 web-research) converged on a bolder,
+cinematic evolution — NOT the earlier "stay restrained / thin additive layer" verdict,
+which is now **superseded**. Full spec is the overhauled `docs/ui_design_system.md` ("The
+Living Notebook"); rationale + trade-offs in `docs/adr/0002-bolder-living-notebook.md`.
+Decisions: intensify the notebook (same world); add **Fraunces** variable display serif
+over IBM Plex; **tactile letterpress/deboss depth** (relax flat-by-default, palette kept);
+**cinematic + ambient motion** on ONE timeline-token clock (unified flip clock + one-shot
+edge "packet", streak stroke-on, equation-tile drag layer, **replace confetti with the
+wax-seal ink stamp**); **layered anim toolset** (keep motion + native View Transitions +
+Konva + **GSAP** scoped to SplitText/hero/recap); **full-foundational infra** (**Style
+Dictionary** single token source → CSS+Konva+motion/GSAP, **CSS Modules** + `@layer`/
+`@property`, migrate sliders/dialogs/tooltips to **Radix Primitives + React Aria**,
+**KaTeX** typeset results); uniform premium across all surfaces; **Playwright
+visual-regression** as the polish ratchet; light-only stays. The "do NOT reskin / thin
+layer" research below is retained as history but no longer governs. NOTHING implemented
+yet for this pivot — doc + ADR + the hand-off execution brief
+(`docs/build-brief-living-notebook.md`: sub-agent waves, file ownership, DoD gates) only.
+
+**Shipped (prior session) — Motion 12.41 + 5 "wow" moments. Verified: tsc + lint +
 `vite build` green; e2e 42/42 (chromium / mobile / reduced-motion).** Files:
 `src/motion/{tokens.ts,MotionProvider.tsx}` (mounted in `main.tsx`: LazyMotion
 `domMax`+`strict`, `MotionConfig reducedMotion="user"`; tokens = JS mirror of
@@ -282,9 +312,10 @@ no SEO/prerender. Suggested order: Phase 0 code-split + error boundaries + WCAG 
 
 ## Next Steps (priority order)
 
-0. **Remaining-lessons follow-ups:** (a) **re-seed** Firestore (emulator + prod) so the new
-   L0 + L2–L6 fixtures + `built:true` course nodes go live, then **live-walk the unlock chain
-   + milestones** (`three-/six-lessons-complete`) on an authed path — the `/dev/lesson` route
+0. **Remaining-lessons follow-ups:** (a) **prod re-seed DONE** (all 7 lessons + `built:true`
+   course nodes live in prod brilliant-org); **still TODO: live-walk the unlock chain
+   + milestones** (`three-/six-lessons-complete`) on an authed path (and re-seed the local
+   emulator when next testing there) — the `/dev/lesson` route
    is Firebase-less so the L4 cross-lesson weak-node reader (`src/progress/recommend.ts`) and
    mastery persistence are only exercisable against the emulator/authed path; (b) the L4
    `weak-node` beat is currently a **fixed re-test** (dev-route-safe) — wire it to call
@@ -319,9 +350,10 @@ no SEO/prerender. Suggested order: Phase 0 code-split + error boundaries + WCAG 
   `docs/home-study-desk.md`, `docs/beat-audit-rubric.md`, `docs/proposed-lessons.md`,
   `docs/future_ideas.md`, `docs/proposed-lessons.md`, `docs/l1-inclusive-redesign-spec.md`,
   `docs/build-brief-remaining-lessons.md` (L0/L2–L6 build orchestration),
+  `docs/build-brief-living-notebook.md` (premium-UI "Living Notebook" overhaul orchestration),
   `docs/state-graph-explainer-brief.md` (ready-to-implement: state-graph explainer —
   Track-A `primer-graph` beat + inline legend in `simulate`),
-  `docs/adr/0001-*.md`, `CONTEXT.md` (glossary); audits in
+  `docs/adr/{0001,0002}-*.md` (0002 = bolder "Living Notebook" pivot), `CONTEXT.md` (glossary); audits in
   `audits/ideation/{inclusive-research-*,tech-review-build-brief}.md`
 - **Engine:** `src/engine/{automaton,simulate,types,index}.ts`
 - **Content:** `src/content/{schema,loader,firestoreLoader}.ts`, `fixtures/` (lesson +
@@ -346,3 +378,10 @@ no SEO/prerender. Suggested order: Phase 0 code-split + error boundaries + WCAG 
   all `users/*` (profile + progress/snapshots/milestones/streaks), keeps seeded
   courses/lessons; flagship stays available so no lockout. Scope to one learner with
   `users/<uid>` (uid from console Auth), or per-subcollection to keep the profile.
+  Does NOT touch Firebase **Auth** (separate store): the same browser still
+  auto-logs-in (persisted session, same uid), but the now-missing profile doc →
+  guard routes to `/onboarding/name` for a fresh start. To wipe accounts too (kills
+  auto-login — deleting a user revokes its tokens), run
+  `GOOGLE_CLOUD_PROJECT=brilliant-org ./node_modules/.bin/tsx scripts/delete-auth-users.ts`
+  (Admin SDK `deleteUsers()`; needs gcloud ADC). No bulk `firebase auth:delete` CLI;
+  console Auth works for a manual delete.

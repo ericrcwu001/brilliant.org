@@ -14,6 +14,14 @@ The visual identity of Home: streak tally, milestone seal gallery, and course pa
 
 The vertical state-chain list of six unlock-ordered lessons on Home, plus locked roadmap stubs below a divider.
 
+## L0 / The introduction
+
+The optional warm-up lesson `lesson-first-heads` ("Watch the First Heads"): flip until the first heads and discover `E[H] = 2`. It is the gentle on-ramp that sits *before* the flagship in the course path but is **outside the L1–L6 numbering** — never required, never a prerequisite, and never the recommended next action. Also called "the introduction" or "the intro."
+
+## Welcome screen
+
+The first-run greeting shown once to a brand-new account, right after they create their account (and pick a display name) and before the course path. It welcomes the learner by name and offers the optional introduction (L0): they can start the intro or skip straight to the path. Distinct from the pre-auth Landing hero, which is the public "welcome" shown to signed-out visitors.
+
 ## Lesson order (L1–L6)
 
 1. Pattern Hitting Times — flagship hook (`lesson-pattern-hitting-times`)
