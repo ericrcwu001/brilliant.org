@@ -1,0 +1,260 @@
+{
+  "lessonId": "lesson-combinatorics-2",
+  "courseId": "course-combinatorics",
+  "title": "Permutations & Combinations",
+  "patternOptions": ["H"],
+  "milestoneId": "combinatorics-perms-mastered",
+  "unlocks": "lesson-combinatorics-3",
+  "schemaVersion": 1,
+  "beats": [
+    {
+      "beatId": "l2-primer",
+      "required": false,
+      "prompt": "Before we count arrangements, refresh two tools: factorial and exact fractions.",
+      "interaction": {
+        "type": "primer",
+        "variant": "custom",
+        "title": "n! and fractions — a quick refresh",
+        "body": "**n! (n factorial)** = n·(n−1)·…·1. Quick table: 3!=6, 4!=24, 5!=120. An **exact fraction** like 5/54 means 5 favourable outcomes out of 54 total — no decimals, no rounding. These two tools power everything in this lesson.",
+        "collapsible": true
+      },
+      "feedback": {
+        "correct": "Two tools ready — n! and exact fractions.",
+        "hints": [
+          "Read the card, then tap Continue.",
+          "n! = n·(n−1)·…·1. Table: 3!=6, 4!=24, 5!=120.",
+          "A fraction like 5/54 is exact: 5 favourable out of 54 total."
+        ]
+      }
+    },
+    {
+      "beatId": "l2-recall",
+      "required": true,
+      "prompt": "Match each factorial to its value — these shrinking products power everything ahead.",
+      "interaction": {
+        "type": "retrievalGrid",
+        "pairs": [
+          { "left": "3!", "right": "6" },
+          { "left": "4!", "right": "24" },
+          { "left": "5!", "right": "120" }
+        ]
+      },
+      "feedback": {
+        "correct": "3!=6, 4!=24, 5!=120 — the shrinking products that power nPk.",
+        "hints": [
+          "Multiply down from n: 3·2·1=?",
+          "4! = 4·3·2·1 = 24.",
+          "3!=6, 4!=24, 5!=120."
+        ]
+      }
+    },
+    {
+      "beatId": "l2-bet",
+      "required": true,
+      "prompt": "From 5 candidates pick 3. Case A: they become President, VP, and Treasurer. Case B: they're just '3 people on a committee.' Same number of ways — or different?",
+      "interaction": {
+        "type": "prediction",
+        "options": [
+          "Same number of ways",
+          "Different — the roles version is bigger",
+          "Different — the committee is bigger"
+        ]
+      },
+      "feedback": {
+        "byOption": {
+          "Same number of ways": {
+            "note": "The classic trap — roles make order matter, so ranked slots count k!=6× more than a committee."
+          },
+          "Different — the roles version is bigger": {
+            "note": "Right — ranked roles distinguish orderings: 60 ordered vs 10 unordered, ×3! apart.",
+            "correct": true
+          },
+          "Different — the committee is bigger": {
+            "note": "They differ, but adding order can only raise the count: 60 ordered > 10 unordered."
+          }
+        }
+      }
+    },
+    {
+      "beatId": "l2-win",
+      "required": true,
+      "prompt": "The 5 candidates are Anya, Ben, Cara, Dan, and Eva. Tap 3 to fill the President, VP, and Treasurer slots — then tap Submit to count how many ways.",
+      "interaction": {
+        "type": "selectionGrid",
+        "n": 5,
+        "k": 3,
+        "order": "on",
+        "labels": ["Anya", "Ben", "Cara", "Dan", "Eva"],
+        "accept": ["60"]
+      },
+      "maxHintLevel": 3,
+      "interviewNote": "The 52! possible orderings of a full 52-card deck (Knuth/Fisher–Yates shuffle, GB p.89) are nP52 = 52! — nPk with k=n. Every permutation equally likely. That's the natural scale-up from 5·4·3 = 60.",
+      "feedback": {
+        "correct": "Yes — 5·4·3=60; ranked slots mean order matters, each pick shrinks the pool.",
+        "hints": [
+          "How many choices for slot 1? For slot 2? For slot 3?",
+          "The pool shrinks with each pick: 5 choices, then 4, then 3 — multiply them.",
+          "5·4·3 = 60."
+        ]
+      }
+    },
+    {
+      "beatId": "l2-scaffold",
+      "required": false,
+      "track": "A",
+      "prompt": "Read through the worked example — nPk(5,3) step by step — then continue.",
+      "interaction": {
+        "type": "primer",
+        "variant": "custom",
+        "title": "nPk(5,3) = 5·4·3 — the shrinking-product structure",
+        "body": "Slot 1: 5 choices. Slot 2: 4 remain (the chosen person can't reappear). Slot 3: 3 remain. Product: 5·4·3 = 60. General: nPk = n·(n−1)·…·(n−k+1) = n!/(n−k)!.",
+        "collapsible": true
+      },
+      "feedback": {
+        "correct": "nPk = n!/(n−k)! — the shrinking-product formula.",
+        "hints": [
+          "Slot 1: 5 choices; slot 2: 4 remain; slot 3: 3 remain.",
+          "5·4·3=60 = 5!/(5−3)! = 5!/2!.",
+          "Continue."
+        ]
+      }
+    },
+    {
+      "beatId": "l2-explore",
+      "required": false,
+      "comparison": true,
+      "prompt": "Select any 3 people, then flip the Order toggle ON↔OFF. Watch the count jump between 60 and 10 — why are they exactly ×3! apart?",
+      "interaction": {
+        "type": "selectionGrid",
+        "n": 5,
+        "k": 3,
+        "order": "toggle",
+        "labels": ["Anya", "Ben", "Cara", "Dan", "Eva"]
+      },
+      "hero": {
+        "slowFirst": true,
+        "structuralReadout": "Order ON → 60 (nPk); Order OFF → 10 (nCk); 60÷10=3!=6.",
+        "reducedMotionFinalFrame": true
+      },
+      "feedback": {
+        "correct": "Order ON=60(nPk), OFF=10(nCk). Gap=×3!=6 — each set of 3 has exactly 6 ordered versions.",
+        "hints": [
+          "Set order ON first and count; then flip the toggle OFF.",
+          "Order OFF groups k! re-orderings of each set into one — count shrinks by k!=3!=6.",
+          "nPk(5,3)=60 ÷ 3! = 10 = nCk(5,3)."
+        ]
+      }
+    },
+    {
+      "beatId": "l2-model",
+      "required": false,
+      "introducesSymbol": "nPk, nCk",
+      "groundedBy": ["l2-win", "l2-explore"],
+      "interviewNote": "C(52,5) = 2,598,960 total five-card hands (GB p.34). Four-of-a-kind = 13 × 48 = 624 (13 ranks × 48 remaining cards). Any combinatorics interview question about card games bottoms out at C(52,5) and these counts.",
+      "prompt": "Tap each lens card to reveal the formula — then watch all three converge on C(52,5) = 2,598,960.",
+      "interaction": {
+        "type": "tripletReveal",
+        "value": "C(52,5)=2,598,960",
+        "display": "cards",
+        "lenses": [
+          {
+            "label": "nPk",
+            "body": "nPk = n!/(n−k)!. Ordered: nPk(52,5) = 52·51·50·49·48 = 311,875,200."
+          },
+          {
+            "label": "nCk = nPk/k!",
+            "body": "nCk = nPk/k! = n!/(k!(n−k)!). Each set of 5 cards has 5!=120 orderings → 311,875,200 ÷ 120 = 2,598,960."
+          },
+          {
+            "label": "×k! link",
+            "body": "nPk = nCk × k!. So 2,598,960 unordered hands × 120 orderings = 311,875,200 ordered arrangements."
+          }
+        ]
+      },
+      "feedback": {
+        "correct": "nPk ordered, nCk=nPk/k! unordered. C(52,5)=2,598,960 five-card hands — the formula scales.",
+        "hints": [
+          "Reveal the nPk card first.",
+          "nCk = nPk/k! — divides out the k! orderings of each set.",
+          "×k! link: nPk = nCk × k!."
+        ]
+      }
+    },
+    {
+      "beatId": "l2-fraction",
+      "required": true,
+      "maxHintLevel": 3,
+      "prompt": "Three dice each show a different value. Step 1: what fraction of all orderings of those 3 values is strictly increasing? Step 2: what is the probability all three dice come up in strictly increasing order?",
+      "interaction": {
+        "type": "answerEntry",
+        "fields": [
+          {
+            "id": "step1",
+            "label": "P(one specific order of 3 values)",
+            "accept": ["1/6"],
+            "placeholder": "?/?",
+            "suffix": ""
+          },
+          {
+            "id": "step2",
+            "label": "P(strictly increasing)",
+            "accept": ["5/54", "20/216"],
+            "placeholder": "?/?",
+            "suffix": ""
+          }
+        ]
+      },
+      "feedback": {
+        "correct": "Right — only 1 of 3!=6 orderings is increasing → 1/6; full P = C(6,3)/6³ = 20/216 = 5/54.",
+        "hints": [
+          "Three distinct values have 3!=6 equally likely orderings; exactly 1 is strictly increasing → 1/3!=1/6.",
+          "P(one specific order) = 1/6. Full prob: C(6,3)=20 triples of distinct values from 6; total outcomes 6³=216.",
+          "Step 1: 1/6. Step 2: 20/216 = 5/54."
+        ]
+      }
+    },
+    {
+      "beatId": "l2-prove",
+      "required": true,
+      "maxHintLevel": 3,
+      "prompt": "Deal a standard 52-card deck to 4 players (13 cards each). The 4 aces land in 4 distinct piles. How many ways can the aces be distributed — one per pile?",
+      "interaction": {
+        "type": "masteryChallenge",
+        "scenario": "The aces look identical in rank — but the 4 piles are distinct destinations. Does order matter here?",
+        "fields": [
+          {
+            "id": "aces",
+            "label": "Number of arrangements",
+            "accept": ["24"],
+            "placeholder": "?",
+            "suffix": "arrangements"
+          }
+        ]
+      },
+      "feedback": {
+        "correct": "Exactly — 4!=24; the piles are distinct destinations, so the aces' order matters.",
+        "hints": [
+          "Each ace lands in a different pile — are the 4 piles distinguishable?",
+          "The piles are distinct (each player's hand) → 4 distinct slots → 4! = 4·3·2·1.",
+          "4! = 24."
+        ]
+      }
+    },
+    {
+      "beatId": "l2-recap",
+      "required": true,
+      "prompt": "Tap through the recap cards — and catch the bridge to Lesson 3.",
+      "interaction": {
+        "type": "recap"
+      },
+      "feedback": {
+        "correct": "Order matters → nPk; order doesn't → nCk=nPk/k!. These nCk are the binomial coefficients — L3 builds Pascal's triangle from them.",
+        "hints": [
+          "Order matters → nPk = n!/(n−k)!.",
+          "Order doesn't → nCk = nPk/k! = n!/(k!(n−k)!).",
+          "L3 preview: every nCk is a binomial coefficient."
+        ]
+      }
+    }
+  ]
+}

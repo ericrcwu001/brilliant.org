@@ -1,0 +1,158 @@
+/* === SelectionGridBeat (lesson-combinatorics-2) ============================
+   Pick-k-of-n pool with order on/off toggle, live count badge, hero fan
+   animation. All sizes ≥44px tap targets; compositor-only transforms; tokens
+   only (no raw hex). Reduced-motion branch collapses animation to instant. */
+
+.sel-grid {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s3);
+}
+
+/* Pool group */
+.sel-grid__pool {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s2);
+}
+
+.sel-grid__item {
+  min-width: 64px;
+  min-height: 44px;
+  padding: var(--s2) var(--s3);
+  border: 2px solid var(--rule);
+  border-radius: var(--r-md);
+  background: var(--paper-1);
+  font-family: var(--font-sans);
+  font-size: calc(15px * var(--fs));
+  color: var(--ink);
+  cursor: pointer;
+  text-align: center;
+}
+
+.sel-grid__item:focus-visible {
+  box-shadow: var(--ring-focus);
+  outline: none;
+}
+
+.sel-grid__item[aria-checked='true'] {
+  background: var(--accent-tint);
+  border-color: var(--accent);
+  color: var(--accent-strong);
+  font-weight: 600;
+}
+
+.sel-grid__item:disabled {
+  cursor: default;
+  opacity: 0.6;
+}
+
+/* Order toggle switch */
+.sel-grid__toggle {
+  align-self: flex-start;
+  min-height: 44px;
+  padding: var(--s2) var(--s4);
+  border: 2px solid var(--accent);
+  border-radius: var(--r-pill);
+  background: var(--paper-0);
+  font-family: var(--font-sans);
+  font-size: calc(14px * var(--fs));
+  font-weight: 600;
+  color: var(--accent-strong);
+  cursor: pointer;
+}
+
+.sel-grid__toggle[aria-checked='true'] {
+  background: var(--accent);
+  color: var(--paper-0);
+}
+
+.sel-grid__toggle:focus-visible {
+  box-shadow: var(--ring-focus);
+  outline: none;
+}
+
+/* Count badge */
+.sel-grid__count {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: calc(20px * var(--fs));
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--accent-strong);
+}
+
+.sel-grid__count--incomplete {
+  color: var(--graphite-soft);
+}
+
+/* ×k! label (assertive live region, toggle hero) */
+.sel-grid__kfact-label {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: calc(14px * var(--fs));
+  color: var(--graphite);
+  min-height: 1.4em;
+}
+
+/* Hero fan ghost cards (l2-explore order toggle) */
+.sel-grid__fan {
+  position: relative;
+  height: 48px;
+  pointer-events: none;
+}
+
+.sel-grid__ghost {
+  position: absolute;
+  top: 0;
+  left: 0;
+  min-width: 64px;
+  min-height: 44px;
+  padding: var(--s2) var(--s3);
+  border: 2px solid var(--accent);
+  border-radius: var(--r-md);
+  background: var(--accent-tint);
+  font-family: var(--font-sans);
+  font-size: calc(14px * var(--fs));
+  color: var(--accent-strong);
+  opacity: 0;
+  text-align: center;
+}
+
+/* Reduced-motion: skip fan, show static frame */
+@media (prefers-reduced-motion: no-preference) {
+  .sel-grid__ghost {
+    animation: sel-fan var(--dur-tell, 600ms) var(--ease-spring, cubic-bezier(0.34, 1.56, 0.64, 1)) forwards;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sel-grid__ghost {
+    opacity: 1;
+    animation: none;
+  }
+}
+
+@keyframes sel-fan {
+  0% {
+    opacity: 0;
+    transform: translateX(0) rotate(0deg);
+  }
+  40% {
+    opacity: 1;
+  }
+  80% {
+    opacity: 0.8;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+/* Reduced-motion static readout (replaces fan) */
+.sel-grid__rm-readout {
+  margin: 0;
+  font-size: calc(13px * var(--fs));
+  color: var(--graphite);
+  font-family: var(--font-mono);
+}
