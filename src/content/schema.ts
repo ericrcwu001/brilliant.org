@@ -428,14 +428,9 @@ export const ProgressDerivedSchema = z
   .loose()
 
 export const ProgressSchema = z.object({
-  // Two-track selection from the diagnostic pre-check (L1 §3.3), written
-  // client-side to users/{uid}/progress/{courseId}. Not in the rules deny-list,
-  // so the client may write it; absent ⇒ default Track B in the renderer.
+  // Per-concept track (ADR-0006). Written client-side to users/{uid}/progress/{conceptId}.
+  // Not in the rules deny-list; absent ⇒ fall back to userDoc.defaultTrack ?? 'B'.
   track: z.enum(['A', 'B']).optional(),
-  // First-run welcome screen (new accounts). Set when the learner has seen the
-  // welcome — i.e. started the intro or skipped; absent ⇒ not yet welcomed. A
-  // server timestamp, like the unlock/complete stamps below.
-  welcomeSeenAt: z.unknown().optional(),
   currentBeat: z.string().optional(),
   completionStatus: z.enum(['in_progress', 'completed']).optional(),
   masteryStatus: z.enum(['not_mastered', 'mastered']).optional(),

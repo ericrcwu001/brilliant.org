@@ -48,6 +48,9 @@ const CoursePathPage = lazy(() =>
 const ProfilePage = lazy(() =>
   import('./pages/ProfilePage').then(m => ({ default: m.ProfilePage })),
 )
+const OnboardingSurvey = lazy(() =>
+  import('./pages/OnboardingSurvey').then(m => ({ default: m.OnboardingSurvey })),
+)
 const LessonPage = lazy(() =>
   import('./pages/LessonPage').then(m => ({ default: m.LessonPage })),
 )
@@ -83,6 +86,7 @@ function redirectTarget(
   path: string,
   signedIn: boolean,
   onboarded: boolean,
+  onboardingComplete: boolean,
 ): string | null {
   if (!signedIn) {
     return PUBLIC_ROUTES.has(path) ? null : ROUTES.landing
@@ -90,10 +94,15 @@ function redirectTarget(
   if (!onboarded) {
     return path === ROUTES.onboardingName ? null : ROUTES.onboardingName
   }
-  // Signed in and onboarded: pre-auth screens and /path bounce to catalog home.
+  // Has a userDoc but hasn't finished the survey yet.
+  if (!onboardingComplete) {
+    return path === ROUTES.onboarding ? null : ROUTES.onboarding
+  }
+  // Fully onboarded: bounce pre-auth screens, survey, and /path to catalog home.
   if (
     path === ROUTES.auth ||
     path === ROUTES.onboardingName ||
+    path === ROUTES.onboarding ||
     path === ROUTES.coursePath
   ) {
     return ROUTES.landing
@@ -115,10 +124,11 @@ function GuardedRoutes({
 }) {
   const { user, authReady, userDoc, userDocReady } = useAuth()
 
+  const onboardingComplete = userDoc?.onboardingCompletedAt != null
   const booting = !authReady || (!!user && !userDocReady)
   const target = booting
     ? null
-    : redirectTarget(path, !!user, userDoc !== null)
+    : redirectTarget(path, !!user, userDoc !== null, onboardingComplete)
 
   useEffect(() => {
     if (target && target !== path) navigate(target, { replace: true })
@@ -134,6 +144,7 @@ function GuardedRoutes({
   }
   if (path === ROUTES.auth) return <AuthPage navigate={navigate} />
   if (path === ROUTES.onboardingName) return <DisplayNamePage />
+  if (path === ROUTES.onboarding) return <OnboardingSurvey navigate={navigate} />
   if (path === ROUTES.profile) return <ProfilePage navigate={navigate} />
 
   const lessonId = parseLessonId(path)

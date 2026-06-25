@@ -1,8 +1,10 @@
 # Departments & Roles
 
-Every role is a subagent. Roles within a department run **in parallel** wherever there's no data
-dependency. Models follow `SKILL.md` → Model routing. Pass each subagent full context (they don't
-see the conversation): the relevant brief/spec, the ground-truth rules, and the target files.
+Each department is a **persistent department-lead subagent** (Opus, non-readonly) that spawns and
+manages its worker roles. The Manager spawns the four leads; each lead spawns its workers. Workers
+within a department still run **in parallel** wherever there's no data dependency. Models follow
+`SKILL.md` → Model routing. Pass each subagent full context (they don't see the conversation): the
+relevant brief/spec, the ground-truth rules, and the target files.
 
 ---
 
@@ -21,6 +23,11 @@ The brain and the only role that talks to the user. Responsibilities:
 ---
 
 ## Department 1 — Curriculum / Learning Science (5 roles)
+
+**Lead — Opus, persistent, non-readonly:** Spawned once by the Manager; resumed across pipeline
+stages. Spawns and manages the five worker roles listed below, drives the internal flow,
+reads/writes `concepts/<slug>/` artifacts, synthesizes the Lesson Brief for each lesson, and
+escalates unresolved issues to the Manager.
 
 Produces the **Lesson Brief** per lesson (template in `artifacts.md`). Every problem/number cited.
 
@@ -62,6 +69,11 @@ into the Lesson Brief.
 
 ## Department 2 — Interactive Experience / Design (9 roles)
 
+**Lead — Opus, persistent, non-readonly:** Spawned once by the Manager; resumed across pipeline
+stages. Spawns and manages the nine worker roles listed below, drives the internal flow,
+reads/writes `concepts/<slug>/` artifacts, synthesizes the Interaction Spec for each lesson, and
+escalates unresolved issues to the Manager.
+
 Turns each Lesson Brief into an **Interaction Spec** (template in `artifacts.md`). Design only — no
 production code. All nine fan out **in parallel** per lesson/beat; some fire only when relevant.
 Models: **Opus** (design + critique is reasoning); read the codebase catalog + docs as needed.
@@ -95,10 +107,18 @@ joint **Definition-of-Ready** holds for every beat. Self-resolving; unresolved c
 
 ## Department 3 — Coding / Implementation (rich roster)
 
-Implements every lesson. Coders work in **isolated git worktrees** against the Wave-0-frozen
-contract. Order within a lesson: Drafter → Brief Reviewer → Schema/Types → (Coder A ∥ Coder B ∥ Test
-Author) → Verification → Code Reviewer → Integrator/Pusher. Lessons run in parallel across the
-assembly line.
+**Lead — Opus, persistent, non-readonly:** Spawned once by the Manager; resumed across pipeline
+stages. Owns the **Wave-0 contract freeze** (via its Schema/Types worker) before any per-lesson
+build starts. Then, for each lesson, provisions a git worktree and spawns that lesson's full role
+chain directly (Drafter → Brief Reviewer → Coder A ∥ Coder B ∥ Test Author → Verification → Code
+Reviewer → Integrator). Processes lessons in bounded waves (assembly line) to keep concurrent
+workers and worktrees manageable. Coordinates merging each lesson's worktree back into the concept
+branch and escalates to the Manager.
+
+Implements every lesson. Coders work in **isolated git worktrees** (one per lesson, provisioned by the Lead) against the
+Wave-0-frozen contract. Order within a lesson: Drafter → Brief Reviewer → Schema/Types → (Coder A
+∥ Coder B ∥ Test Author) → Verification → Code Reviewer → Integrator/Pusher. Lessons run in
+parallel across the assembly line.
 
 1. **Feature-Brief Drafter** — *Sonnet*. Turns the Interaction Spec into an **Implementation Brief**
    (template in `artifacts.md`): exact files, contracts, and the parallel work split.
@@ -126,6 +146,11 @@ assembly line.
 
 ## Interview Studio — per concept, after the lessons are built
 
+**Lead — Opus, persistent, non-readonly:** Spawned by the Manager after Dept 3 finishes the
+lessons. Spawns and manages the roles listed below — including its own coder, verification, and
+integrator workers (it cannot reach into Dept 3's subtree; it spawns the same worker types
+independently). Synthesizes the Interview Pack and escalates to the Manager.
+
 Produces the concept's **Interview Pack** (full spec in `interview-packs.md`): a large pre-loaded,
 engine-verified bank of HARD interview questions + an interviewer prompt + a generator prompt for
 non-overlapping runtime top-ups. Reuses the concept's freshly-built engines. Runs after Dept 3 finishes
@@ -136,6 +161,7 @@ the lessons.
    (answer, approaches, wrong turns, hint ladder, rubric), and follow-up chains.
 2. **Interview Prompt Engineer** — *Opus*. Writes the per-concept interviewer system-prompt template and
    the generator prompt (engine-verify-before-serve + avoid-list constraints).
-3. **Reuses Department 3** — a Coder builds the templates/parameterizer/fingerprinter (on the concept's
-   engine); the Verification Engineer engine-verifies the entire pre-loaded pool; the Integrator writes
+3. **Coder / Verification / Integrator** — spawned by this lead (same worker types as Dept 3, not
+   shared). A Coder builds the templates/parameterizer/fingerprinter (on the concept's engine); the
+   Verification Engineer engine-verifies the entire pre-loaded pool; the Integrator writes
    `interviews/<courseId>.json` + `.md`.

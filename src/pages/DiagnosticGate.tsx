@@ -1,9 +1,11 @@
-// Pre-L1 diagnostic pre-check (L1 §6 / §3.3). A tiny (~4 question) graded flow
-// that routes the learner to Track A (scaffolded) or Track B (the current
-// experience). Pure UI + client-side scoring; the parent persists the chosen
-// track and proceeds. Type-in answers, one question at a time, mobile-first.
+// Pre-concept Calibrate check (ADR-0006; was: pre-L1 Quick check). A tiny
+// (~4 question) graded flow that routes the learner to Track A (scaffolded)
+// or Track B (the current experience). Optional and skippable — skipping
+// persists the global defaultTrack so the prompt won't re-appear for this
+// concept. Pure UI + client-side scoring; the parent persists the chosen track.
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import { analytics } from '../analytics/events'
 import type { Track } from '../progress/track'
 
 type Question = {
@@ -54,9 +56,21 @@ const QUESTIONS: Question[] = [
 // 3+ of 4 correct ⇒ Track B (confident); otherwise Track A (scaffolded).
 const TRACK_B_THRESHOLD = 3
 
-export function DiagnosticGate({ onDone }: { onDone: (track: Track) => void }) {
+export function DiagnosticGate({
+  conceptId,
+  onDone,
+  onSkip,
+}: {
+  conceptId: string
+  onDone: (track: Track) => void
+  onSkip?: () => void
+}) {
   const [index, setIndex] = useState(0)
   const [answers, setAnswers] = useState<Record<string, string>>({})
+
+  useEffect(() => {
+    void analytics.quickCheckOffered({ conceptId })
+  }, [conceptId])
 
   const q = QUESTIONS[index]
   const isLast = index === QUESTIONS.length - 1
@@ -68,12 +82,19 @@ export function DiagnosticGate({ onDone }: { onDone: (track: Track) => void }) {
       const a = norm(answers[question.id] ?? '')
       return n + (question.accept.map(norm).includes(a) ? 1 : 0)
     }, 0)
-    onDone(correct >= TRACK_B_THRESHOLD ? 'B' : 'A')
+    const track: Track = correct >= TRACK_B_THRESHOLD ? 'B' : 'A'
+    void analytics.quickCheckCompleted({ conceptId, track, skipped: false })
+    onDone(track)
   }
 
   function next() {
     if (isLast) finish()
     else setIndex((i) => i + 1)
+  }
+
+  function handleSkip() {
+    void analytics.quickCheckCompleted({ conceptId, track: 'A', skipped: true })
+    onSkip?.()
   }
 
   return (
@@ -127,6 +148,15 @@ export function DiagnosticGate({ onDone }: { onDone: (track: Track) => void }) {
         >
           {isLast ? 'See my path' : 'Next'}
         </button>
+        {onSkip && (
+          <button
+            type="button"
+            className="btn btn--secondary"
+            onClick={handleSkip}
+          >
+            Skip
+          </button>
+        )}
       </footer>
     </div>
   )

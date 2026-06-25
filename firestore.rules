@@ -48,13 +48,17 @@ service cloud.firestore {
         ])
         && validDisplayName(request.resource.data.displayName);
 
-      // Profile edit: only displayName + lastActiveAt may change; createdAt is
-      // immutable and no new keys may be introduced.
+      // Profile edit (displayName + activity stamp) OR onboarding survey write
+      // (6 answer/derived fields + timestamps). validDisplayName is only required
+      // when displayName is actually changing.
       allow update: if isOwner(uid)
         && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
-          'displayName', 'lastActiveAt'
+          'displayName', 'lastActiveAt',
+          'learningGoal', 'comfortLevel', 'focusArea', 'pace',
+          'defaultTrack', 'recommendedConceptId', 'onboardingCompletedAt'
         ])
-        && validDisplayName(request.resource.data.displayName);
+        && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['displayName'])
+            || validDisplayName(request.resource.data.displayName));
 
       allow delete: if false;
 

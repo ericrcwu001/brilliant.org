@@ -96,13 +96,13 @@ Stored as `generatorPrompt`. It must:
 
 ## Who builds it — the Interview Studio (after a concept's lessons are built)
 
+The **Interview Studio Lead** *(Opus, non-readonly, persistent/resumable — spawned by the Manager)* orchestrates the studio: it spawns and manages the workers below, runs the internal flow, and synthesizes the final pack.
+
 - **Interview Question Author** *(Interview Studio, Opus, non-readonly)* — designs the tiered synthesis questions +
   engine-backed templates (real-quant-style, anchored+sourced), the hidden records, and follow-up chains.
 - **Interview Prompt Engineer** *(Interview Studio, Opus)* — writes the interviewer prompt template + the generator
   prompt with the real-quant-style + engine-verify + avoid-list constraints.
-- **Reuses Department 3** — a Coder builds the templates/parameterizer/fingerprinter (reusing the
-  concept's engine); the Verification Engineer engine-verifies the **entire** pre-loaded pool; the
-  Integrator writes `interviews/<courseId>.json` + `.md`.
+- **Studio Lead spawns its own coder/verification/integrator workers** — a Coder builds the templates/parameterizer/fingerprinter (reusing the concept's engine); the Verification Engineer engine-verifies the **entire** pre-loaded pool; the Integrator writes `interviews/<courseId>.json` + `.md`. The Studio Lead spawns these worker types independently; it cannot reach into Dept 3's subtree.
 
 ## Interview Pack Scorecard (concept-level — signed off with the lesson Scorecards)
 

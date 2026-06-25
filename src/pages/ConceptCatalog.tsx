@@ -145,26 +145,33 @@ function ConceptThumb({
 
 function ResumeHero({
   card,
+  recommendedStart,
+  focusAreaComingSoon,
   onNavigate,
 }: {
   card: ConceptCard
+  recommendedStart?: boolean
+  focusAreaComingSoon?: boolean
   onNavigate: (card: ConceptCard, heroEl: HTMLElement) => void
 }) {
   const heroRef = useRef<HTMLElement>(null)
 
+  const eyebrow = recommendedStart ? 'Recommended for you' : 'Continue learning'
   const ctaLabel =
-    card.progress.state === 'mastered'
-      ? 'Review →'
-      : card.progress.state === 'in_progress'
-        ? 'Continue →'
-        : 'Start →'
+    recommendedStart
+      ? 'Start here →'
+      : card.progress.state === 'mastered'
+        ? 'Review →'
+        : card.progress.state === 'in_progress'
+          ? 'Continue →'
+          : 'Start →'
 
   return (
     <section
       ref={heroRef}
       className="ergo-resume-hero ergo-card"
       data-ch={card.accent}
-      aria-label={`Continue learning: ${card.title}`}
+      aria-label={recommendedStart ? `Recommended: ${card.title}` : `Continue learning: ${card.title}`}
       style={{ background: `var(--${card.accent}-tint, var(--ergo-surface-2))` }}
     >
       {/* Thumbnail — morph source for the concept-open VT */}
@@ -173,8 +180,13 @@ function ResumeHero({
       </div>
 
       <div className="ergo-resume-hero__body">
-        <p className="ergo-resume-hero__eyebrow">Continue learning</p>
+        <p className="ergo-resume-hero__eyebrow">{eyebrow}</p>
         <h2 className="ergo-resume-hero__title">{card.title}</h2>
+        {focusAreaComingSoon && (
+          <p className="ergo-resume-hero__note">
+            Your area is coming soon — start here meanwhile
+          </p>
+        )}
         <p className="ergo-resume-hero__tagline">{card.tagline}</p>
 
         <div className="ergo-resume-hero__footer">
@@ -449,7 +461,12 @@ export function ConceptCatalog({
       <main aria-label="Concepts" className="ergo-catalog__main">
         {/* Resume hero */}
         {model.resume && (
-          <ResumeHero card={model.resume} onNavigate={handleNavigate} />
+          <ResumeHero
+            card={model.resume}
+            recommendedStart={model.recommendedStart}
+            focusAreaComingSoon={model.focusAreaComingSoon}
+            onNavigate={handleNavigate}
+          />
         )}
 
         {/* Domain shelves */}

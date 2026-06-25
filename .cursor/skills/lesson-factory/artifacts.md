@@ -1,7 +1,8 @@
 # Artifact Templates
 
 Copy these. Keep them concise and concrete. Every problem/number carries a citation. Model the
-prose on the existing exemplar `audits/ideation/agent-1-quant-canon.md`.
+prose on the existing exemplar `audits/ideation/agent-1-quant-canon.md`. Each artifact is
+synthesized by its owning department lead from that lead's workers' outputs.
 
 ---
 

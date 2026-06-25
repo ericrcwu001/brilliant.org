@@ -26,11 +26,12 @@ import {
   type User,
 } from 'firebase/auth'
 import { auth } from '../firebase/app'
-import { AuthContext, type AuthContextValue } from './authContext'
+import { AuthContext, type AuthContextValue, type OnboardingProfile } from './authContext'
 import {
   createUserDoc,
   fetchUserDoc,
   updateUserDisplayName,
+  saveOnboardingProfile,
   type UserDoc,
 } from './userDoc'
 
@@ -118,6 +119,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     [refreshUserDoc],
   )
 
+  const completeOnboarding = useCallback(
+    async (profile: OnboardingProfile) => {
+      const current = auth.currentUser
+      if (!current) throw new Error('Not signed in.')
+      await saveOnboardingProfile(current.uid, profile)
+      await refreshUserDoc()
+    },
+    [refreshUserDoc],
+  )
+
   const value = useMemo<AuthContextValue>(
     () => ({
       user,
@@ -138,6 +149,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       },
       createUserProfile,
       updateUserProfile,
+      completeOnboarding,
     }),
     [
       user,
@@ -146,6 +158,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       userDocReady,
       createUserProfile,
       updateUserProfile,
+      completeOnboarding,
     ],
   )
 

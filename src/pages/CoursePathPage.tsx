@@ -4,6 +4,9 @@
 // them to the presentational <StudyDesk>. All rendering lives in StudyDesk; this
 // file is intentionally just the data wiring (so the reskin is decoupled and the
 // /dev/home harness can render StudyDesk with fixture data and no Firebase).
+//
+// ADR-0006: the WelcomeScreen is retired; DiagnosticGate is repositioned as an
+// optional skippable Calibrate offered once per concept.
 
 import { useEffect, useRef, useState } from 'react'
 import { useAuth } from '../auth/authContext'
@@ -12,17 +15,11 @@ import type { Course, Progress } from '../content/schema'
 import { subscribeProgressMap } from '../progress/progress'
 import { subscribeStreak, ZERO_STREAK, type Streak } from '../habit/streaks'
 import { subscribeEarnedMilestones } from '../habit/milestones'
-import {
-  loadCourseEntryState,
-  saveTrack,
-  markWelcomeSeen,
-  type Track,
-} from '../progress/track'
+import { loadTrack, saveTrack, type Track } from '../progress/track'
 import { analytics } from '../analytics/events'
 import { StudyDesk } from './StudyDesk'
 import { DiagnosticGate } from './DiagnosticGate'
-import { WelcomeScreen } from './WelcomeScreen'
-import { lessonPath, INTRO_LESSON_ID, ROUTES, type NavigateFn } from './routes'
+import { ROUTES, type NavigateFn } from './routes'
 
 const seenKey = (uid: string) => `phht:seenSeals:${uid}`
 
@@ -60,31 +57,21 @@ export function CoursePathPage({
   const [streak, setStreak] = useState<Streak>(ZERO_STREAK)
   const [earned, setEarned] = useState<Set<string>>(new Set())
   const [newlyEarned, setNewlyEarned] = useState<Set<string>>(new Set())
-  // Two-track diagnostic at course entry (build-brief §4.8). `undefined` = still
-  // loading; `null` = not yet taken (show the gate); 'A'/'B' = chosen.
+  // Per-concept track. `undefined` = still loading; `null` = Calibrate not yet
+  // taken for this concept (show the gate); 'A'/'B' = chosen.
   const [track, setTrack] = useState<Track | null | undefined>(undefined)
-  // First-run welcome (new accounts). `undefined` = still loading; `false` =
-  // show it; `true` = already shown (started the intro or skipped).
-  const [welcomeSeen, setWelcomeSeen] = useState<boolean | undefined>(undefined)
 
   useEffect(() => {
     if (!user) return
     const uid = user.uid
     let cancelled = false
-    void loadCourseEntryState(uid).then(({ track: t, welcomeSeen: seen }) => {
+    void loadTrack(uid, effectiveConceptId).then((t) => {
       if (!cancelled) {
-        // Don't clobber a track the learner just chose this session (Skip ->
-        // 'A', or the diagnostic) if this initial load resolves afterward.
         setTrack((prev) => (prev === undefined ? t : prev))
-        // Same guard as the track load: never overwrite a local decision made
-        // before this initial read resolves.
-        setWelcomeSeen((prev) => (prev === undefined ? seen : prev))
       }
     })
-    return () => {
-      cancelled = true
-    }
-  }, [user])
+    return () => { cancelled = true }
+  }, [user, effectiveConceptId])
 
   useEffect(() => {
     let cancelled = false
@@ -135,52 +122,32 @@ export function CoursePathPage({
     }
   }, [progressById])
 
-  // First-run welcome (new accounts): greet + offer the optional intro (L0)
-  // before the diagnostic. Shown once; persisted as `welcomeSeenAt` on the
-  // course progress doc. Takes precedence over the diagnostic below.
-  if (user && welcomeSeen === false) {
+  // Calibrate moment: offered once per concept when track is null (not yet
+  // calibrated). Skipping persists the global defaultTrack so it won't re-prompt.
+  if (user && track === null) {
     const uid = user.uid
-    return (
-      <WelcomeScreen
-        displayName={displayName}
-        onStartIntro={() => {
-          void markWelcomeSeen(uid).catch(() => {})
-          setWelcomeSeen(true)
-          navigate(lessonPath(INTRO_LESSON_ID))
-        }}
-        onSkip={() => {
-          void markWelcomeSeen(uid).catch(() => {})
-          setWelcomeSeen(true)
-          void saveTrack(uid, 'A').catch(() => {})
-          setTrack('A')
-        }}
-      />
-    )
-  }
-
-  // Course entry: run the ~60s diagnostic once if the learner has no track yet,
-  // persist the choice, then reveal the path. Gated behind the welcome so a
-  // brand-new account always sees the welcome first. L0 stays offered to everyone.
-  if (user && welcomeSeen === true && track === null) {
-    const uid = user.uid
+    const defaultTrack = userDoc?.defaultTrack ?? 'B'
     return (
       <DiagnosticGate
+        conceptId={effectiveConceptId}
         onDone={(t) => {
-          void saveTrack(uid, t).catch(() => {})
+          void saveTrack(uid, effectiveConceptId, t).catch(() => {})
           setTrack(t)
+        }}
+        onSkip={() => {
+          void saveTrack(uid, effectiveConceptId, defaultTrack).catch(() => {})
+          setTrack(defaultTrack)
         }}
       />
     )
   }
 
-  // Hold the desk skeleton until the first-run gates (welcome → diagnostic) have
-  // resolved, so the real desk never flashes before them for a new account.
-  const firstRunResolving =
-    !!user && (welcomeSeen === undefined || track === undefined)
+  // Hold the desk skeleton until the per-concept track has resolved.
+  const trackResolving = !!user && track === undefined
 
   return (
     <StudyDesk
-      course={firstRunResolving ? null : course}
+      course={trackResolving ? null : course}
       progressById={progressById}
       streak={streak}
       earned={earned}

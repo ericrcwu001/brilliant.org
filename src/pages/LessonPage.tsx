@@ -3,17 +3,19 @@
 // design-system loading skeleton while both resolve, then renders the
 // LessonPlayer with persistence + completion wired in. The dev fixture lesson
 // still lives at /dev/lesson (no auth, no persistence).
+//
+// ADR-0006: calibration now happens at concept entry (CoursePathPage), not here.
+// Track = per-concept track ?? userDoc.defaultTrack ?? 'B'.
 
 import { useEffect, useState } from 'react'
 import { useAuth } from '../auth/authContext'
-import { loadLessonFromFirestore } from '../content/loader'
+import { loadLessonFromFirestore, COURSE_ID } from '../content/loader'
 import { loadSnapshot } from '../lesson/snapshot'
 import { LessonPlayer } from '../lesson/LessonPlayer'
-import { loadTrack, saveTrack, type Track } from '../progress/track'
+import { loadTrack, type Track } from '../progress/track'
 import { loadProgress } from '../progress/progress'
-import { DiagnosticGate } from './DiagnosticGate'
 import type { Lesson, Snapshot } from '../content/schema'
-import { ROUTES, FLAGSHIP_LESSON_ID, type NavigateFn } from './routes'
+import { ROUTES, type NavigateFn } from './routes'
 
 type LoadState =
   | { status: 'loading' }
@@ -23,7 +25,7 @@ type LoadState =
       lessonId: string
       lesson: Lesson
       snapshot: Snapshot | null
-      // null ⇒ the diagnostic hasn't run; the flagship shows DiagnosticGate.
+      // null ⇒ per-concept calibrate not yet taken; fall back to global default.
       track: Track | null
       completed: boolean
     }
@@ -35,7 +37,7 @@ export function LessonPage({
   navigate: NavigateFn
   lessonId: string
 }) {
-  const { user } = useAuth()
+  const { user, userDoc } = useAuth()
   const [state, setState] = useState<LoadState>({ status: 'loading' })
   const [reloadNonce, setReloadNonce] = useState(0)
 
@@ -45,13 +47,13 @@ export function LessonPage({
     let cancelled = false
     void (async () => {
       try {
-        // Lesson content + restore snapshot + the course-level track resolve
-        // together so the player mounts once with its restored initial state and
-        // the right track (no post-mount reset). Missing track → Track B.
+        // TODO: map lesson→concept when multiple concepts go live.
+        // For now all live lessons belong to the flagship concept.
+        const conceptId = COURSE_ID
         const [lesson, snapshot, track, progress] = await Promise.all([
           loadLessonFromFirestore(lessonId),
           loadSnapshot(uid, lessonId),
-          loadTrack(uid),
+          loadTrack(uid, conceptId),
           loadProgress(uid, lessonId),
         ])
         if (!cancelled)
@@ -79,32 +81,18 @@ export function LessonPage({
     }
   }, [user, lessonId, reloadNonce])
 
-  // Gate on the loaded lessonId so stale results from a previous lesson show the
-  // skeleton (not the wrong lesson) until the new fetch resolves — without a
-  // synchronous setState reset in the effect.
   if (state.status === 'ready' && state.lessonId === lessonId && user) {
-    // First time into the flagship with no track yet → run the diagnostic, then
-    // persist the choice and continue into the lesson on that track.
-    if (state.track === null && lessonId === FLAGSHIP_LESSON_ID) {
-      const uid = user.uid
-      return (
-        <DiagnosticGate
-          onDone={(track) => {
-            void saveTrack(uid, track).catch(() => {})
-            setState({ ...state, track })
-          }}
-        />
-      )
-    }
+    // Effective track: per-concept calibrate ?? global default ?? 'B'.
+    const effectiveTrack: Track = state.track ?? userDoc?.defaultTrack ?? 'B'
     return (
       <LessonPlayer
         key={lessonId}
         lesson={state.lesson}
         initialSnapshot={state.snapshot}
         persistence={{ uid: user.uid, lessonId }}
-        track={state.track ?? 'B'}
+        track={effectiveTrack}
         review={state.completed}
-        onExit={() => navigate(ROUTES.coursePath)}
+        onExit={() => navigate(ROUTES.landing)}
       />
     )
   }
@@ -116,8 +104,8 @@ export function LessonPage({
           <button
             type="button"
             className="topbar__back"
-            onClick={() => navigate(ROUTES.coursePath)}
-            aria-label="Back to course path"
+            onClick={() => navigate(ROUTES.landing)}
+            aria-label="Back to catalog"
           >
             ←
           </button>
@@ -143,9 +131,9 @@ export function LessonPage({
           <button
             type="button"
             className="btn btn--primary"
-            onClick={() => navigate(ROUTES.coursePath)}
+            onClick={() => navigate(ROUTES.landing)}
           >
-            Back to course path
+            Back to catalog
           </button>
         </section>
       </div>
@@ -158,8 +146,8 @@ export function LessonPage({
         <button
           type="button"
           className="topbar__back"
-          onClick={() => navigate(ROUTES.coursePath)}
-          aria-label="Back to course path"
+          onClick={() => navigate(ROUTES.landing)}
+          aria-label="Back to catalog"
         >
           ←
         </button>

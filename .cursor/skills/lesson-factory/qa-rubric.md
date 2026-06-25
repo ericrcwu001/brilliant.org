@@ -63,8 +63,8 @@ Lesson Brief problem table is reproduced by the engine at exact rational values.
 
 ## When a gate is red
 
-- Route the failure to the **owning department**, re-run that stage, re-score.
-- The Dept1↔Dept2 loop self-resolves design gates (3–7); Dept 3 fixes 2/8/9.
+- Route the failure to the **owning department lead** (Manager → department lead → the lead's workers); the lead re-runs its department's stage and re-scores.
+- The Dept 1↔Dept 2 loop self-resolves design gates (3–7); Dept 3 Lead fixes 2/8/9.
 - Unresolvable conflict → **Manager** arbitrates; genuine scope/product question → **user**.
 
 ## Concept-level readiness

@@ -50,6 +50,25 @@ export function ConceptCatalogPage({ navigate }: { navigate: NavigateFn }) {
     void analytics.catalogViewed()
   }, [])
 
+  // Built before the early returns so the recommendation effect below stays an
+  // unconditional hook (rules-of-hooks); null until the course list resolves.
+  const model = courses
+    ? buildCatalogModel(
+        courses,
+        progressById,
+        userDoc?.recommendedConceptId,
+        userDoc?.focusArea,
+      )
+    : null
+
+  // Fire recommendation_shown once when a recommended-start hero is displayed.
+  useEffect(() => {
+    if (model?.recommendedStart && model.resume) {
+      void analytics.recommendationShown({ recommendedConceptId: model.resume.conceptId })
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [model?.recommendedStart, model?.resume?.conceptId])
+
   if (loadError) {
     return (
       <main className="ergo-catalog" aria-label="Concepts">
@@ -60,7 +79,7 @@ export function ConceptCatalogPage({ navigate }: { navigate: NavigateFn }) {
     )
   }
 
-  if (courses === null) {
+  if (courses === null || model === null) {
     return <CatalogSkeleton />
   }
 
@@ -71,8 +90,6 @@ export function ConceptCatalogPage({ navigate }: { navigate: NavigateFn }) {
       </main>
     )
   }
-
-  const model = buildCatalogModel(courses, progressById)
 
   return (
     <ConceptCatalog

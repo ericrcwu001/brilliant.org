@@ -13,6 +13,7 @@ export const ROUTES = {
   landing: '/',
   auth: '/auth',
   onboardingName: '/onboarding/name',
+  onboarding: '/onboarding/survey',
   coursePath: '/path',
   profile: '/profile',
   /** Dev-only fixture route preserved from Group A (bypasses auth). */

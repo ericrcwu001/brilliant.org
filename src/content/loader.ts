@@ -18,8 +18,10 @@ export {
   loadCoursesFromFirestore,
 } from './firestoreLoader'
 
-// Canonical course id (mirrors docs/mvp_prd.md Data Contracts).
-export const COURSE_ID = 'course-pattern-hitting-times'
+// Canonical course id — re-exported from the Firebase-free `courseIds` module so
+// existing `from './loader'` importers keep working, while pure models/tests can
+// import it from `./courseIds` without pulling in this loader's Firebase chain.
+export { COURSE_ID } from './courseIds'
 
 export function loadFlagshipLesson(): Lesson {
   return LessonSchema.parse(lessonFixture)

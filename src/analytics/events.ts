@@ -87,4 +87,20 @@ export const analytics = {
     track('review_recommended_shown', p),
   catalogViewed: () => track('catalog_viewed', {}),
   conceptSelected: (p: { conceptId: string }) => track('concept_selected', p),
+  onboardingStarted: () => track('onboarding_started', {}),
+  onboardingStepCompleted: (p: { step: string; value: string }) =>
+    track('onboarding_step_completed', p),
+  onboardingCompleted: (p: {
+    learningGoal: string
+    comfortLevel: string
+    focusArea: string
+    pace: string
+    defaultTrack: string
+    recommendedConceptId: string
+  }) => track('onboarding_completed', p),
+  recommendationShown: (p: { recommendedConceptId: string }) =>
+    track('recommendation_shown', p),
+  quickCheckOffered: (p: { conceptId: string }) => track('quick_check_offered', p),
+  quickCheckCompleted: (p: { conceptId: string; track: 'A' | 'B'; skipped: boolean }) =>
+    track('quick_check_completed', p),
 }

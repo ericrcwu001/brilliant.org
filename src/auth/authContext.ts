@@ -6,6 +6,15 @@ import { createContext, useContext } from 'react'
 import type { User } from 'firebase/auth'
 import type { UserDoc } from './userDoc'
 
+export type OnboardingProfile = {
+  learningGoal: UserDoc['learningGoal']
+  comfortLevel: UserDoc['comfortLevel']
+  focusArea: string
+  pace: UserDoc['pace']
+  defaultTrack: 'A' | 'B'
+  recommendedConceptId: string
+}
+
 export interface AuthContextValue {
   user: User | null
   /** True once the first `onAuthStateChanged` has resolved. */
@@ -22,6 +31,8 @@ export interface AuthContextValue {
   createUserProfile: (displayName: string) => Promise<void>
   /** Profile edit: update the whitelisted display name + auth sync. */
   updateUserProfile: (displayName: string) => Promise<void>
+  /** Onboarding survey completion: writes the 6 profile fields + timestamps. */
+  completeOnboarding: (profile: OnboardingProfile) => Promise<void>
 }
 
 export const AuthContext = createContext<AuthContextValue | null>(null)

@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { buildCatalogModel, type ProgressMap } from './conceptCatalog.model'
+import { COURSE_ID } from '../content/courseIds'
 import type { Course } from '../content/schema'
 
 // Minimal valid Course factory.  Only the fields read by buildCatalogModel need
@@ -42,6 +43,33 @@ describe('buildCatalogModel — domain grouping + ordering', () => {
     expect(sections).toHaveLength(2)
     expect(sections[0].domain).toBe('Statistics')  // domainOrder 1 first
     expect(sections[1].domain).toBe('Probability') // domainOrder 2 second
+  })
+
+  it('focusArea domain floats to the top when provided', () => {
+    const courses: Course[] = [
+      makeCourse('c1', 'C1', [], { domain: 'Probability', domainOrder: 1, order: 1 }),
+      makeCourse('c2', 'C2', [], { domain: 'Combinatorics', domainOrder: 2, order: 1 }),
+    ]
+    const { sections } = buildCatalogModel(courses, {}, undefined, 'Combinatorics')
+    expect(sections[0].domain).toBe('Combinatorics')
+    expect(sections[1].domain).toBe('Probability')
+  })
+
+  it('focusArea already at top: sections unchanged', () => {
+    const courses: Course[] = [
+      makeCourse('c1', 'C1', [], { domain: 'Probability', domainOrder: 1, order: 1 }),
+      makeCourse('c2', 'C2', [], { domain: 'Combinatorics', domainOrder: 2, order: 1 }),
+    ]
+    const { sections } = buildCatalogModel(courses, {}, undefined, 'Probability')
+    expect(sections[0].domain).toBe('Probability')
+  })
+
+  it('unknown focusArea has no effect on ordering', () => {
+    const courses: Course[] = [
+      makeCourse('c1', 'C1', [], { domain: 'Probability', domainOrder: 1, order: 1 }),
+    ]
+    const { sections } = buildCatalogModel(courses, {}, undefined, 'Unknown')
+    expect(sections[0].domain).toBe('Probability')
   })
 
   it('section.order equals the domainOrder value', () => {
@@ -197,6 +225,66 @@ describe('buildCatalogModel — resume pick', () => {
     ]
     const { resume } = buildCatalogModel(courses, {})
     expect(resume?.conceptId).toBe('live')
+  })
+})
+
+// ── Recommended-start hero (ADR-0006) ─────────────────────────────────────────
+
+describe('buildCatalogModel — recommended start hero', () => {
+  it('no-progress learner with recommendedConceptId gets a recommendedStart hero', () => {
+    const courses: Course[] = [
+      makeCourse('c-rec', 'Rec', ['l1'], { status: 'live', order: 1 }),
+      makeCourse('c-other', 'Other', ['l2'], { status: 'live', order: 2 }),
+    ]
+    const { resume, recommendedStart } = buildCatalogModel(courses, {}, 'c-rec')
+    expect(resume?.conceptId).toBe('c-rec')
+    expect(recommendedStart).toBe(true)
+  })
+
+  it('learner with in_progress progress uses regular resume (not recommendedStart)', () => {
+    const courses: Course[] = [
+      makeCourse('c-rec', 'Rec', ['l1'], { status: 'live', order: 1 }),
+      makeCourse('c-inprog', 'InProg', ['l2'], { status: 'live', order: 2 }),
+    ]
+    const progress: ProgressMap = { l2: { completionStatus: 'in_progress' } }
+    const { resume, recommendedStart } = buildCatalogModel(courses, progress, 'c-rec')
+    expect(resume?.conceptId).toBe('c-inprog')
+    expect(recommendedStart).toBe(false)
+  })
+
+  it('recommended concept is coming_soon → falls back to flagship', () => {
+    const courses: Course[] = [
+      makeCourse(COURSE_ID, 'Flagship', ['l1'], { status: 'live', order: 1 }),
+      makeCourse('c-soon', 'Soon', ['l2'], { status: 'coming_soon', order: 2 }),
+    ]
+    const { resume, recommendedStart } = buildCatalogModel(courses, {}, 'c-soon')
+    expect(resume?.conceptId).toBe(COURSE_ID)
+    expect(recommendedStart).toBe(true)
+  })
+
+  it('focusAreaComingSoon is true when all focusArea concepts are coming_soon', () => {
+    const courses: Course[] = [
+      makeCourse(COURSE_ID, 'Flagship', ['l1'], { domain: 'Math', domainOrder: 1, order: 1, status: 'live' }),
+      makeCourse('c-soon', 'Soon', ['l2'], { domain: 'Probability', domainOrder: 2, order: 1, status: 'coming_soon' }),
+    ]
+    const { focusAreaComingSoon } = buildCatalogModel(courses, {}, COURSE_ID, 'Probability')
+    expect(focusAreaComingSoon).toBe(true)
+  })
+
+  it('focusAreaComingSoon is false/absent when at least one live concept in focus area', () => {
+    const courses: Course[] = [
+      makeCourse('c-live', 'Live', ['l1'], { domain: 'Probability', domainOrder: 1, order: 1, status: 'live' }),
+    ]
+    const { focusAreaComingSoon } = buildCatalogModel(courses, {}, 'c-live', 'Probability')
+    expect(focusAreaComingSoon).toBeFalsy()
+  })
+
+  it('no recommendedConceptId → resume picks first live not_started as usual', () => {
+    const courses: Course[] = [
+      makeCourse('c1', 'C1', ['l1'], { order: 1 }),
+    ]
+    const { resume } = buildCatalogModel(courses, {})
+    expect(resume?.conceptId).toBe('c1')
   })
 })
 

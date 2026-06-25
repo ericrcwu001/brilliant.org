@@ -15,14 +15,14 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: var(--s5) 0;
+  padding: var(--s6) 0;
   border-bottom: 1px solid var(--ergo-line);
 }
 
 .ergo-wordmark {
   font-family: var(--font-display);
   font-weight: 600;
-  font-size: 28px;
+  font-size: 40px;
   letter-spacing: -0.02em;
   color: var(--ergo-ink);
   line-height: 1;
@@ -31,15 +31,15 @@
 
 .ergo-avatar {
   /* min 44px hit target achieved via padding compensation below */
-  width: 44px;
-  height: 44px;
+  width: 52px;
+  height: 52px;
   padding: 0;
   border-radius: 50%;
   background: var(--ergo-brand);
   color: #fff;
   font-family: var(--font-sans);
   font-weight: 600;
-  font-size: 16px;
+  font-size: 20px;
   display: flex;
   align-items: center;
   justify-content: center;

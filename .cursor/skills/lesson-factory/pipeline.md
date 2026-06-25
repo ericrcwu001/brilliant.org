@@ -5,6 +5,11 @@ serialization points are the **Wave-0 contract freeze** and the **human approval
 
 ## 0. Preflight (Manager)
 
+- **HARD-REQUIRE nested-spawn probe** (run first, before any other step): spawn a 2-deep nested
+  chain — a subagent that spawns a subagent — confirming that a lead can spawn a worker
+  (`Manager → lead → worker`, 3 layers total). If any layer cannot spawn its child, **hard-stop**
+  and tell the user the skill requires nested subagent spawning to 3 layers (a lead that can spawn
+  workers) and cannot run in this environment. **No flat fallback.**
 - **Run the automated first-run setup** (`deploy.md` → First-run setup): ground-truth check,
   `firebase` auth, auto-generate `.env.dev`, dev-routes flag, seed credentials (ADC), and resolve the
   dev URL. Idempotent; if any **credential login is missing, the Manager Slack-DMs the user the exact
@@ -16,37 +21,54 @@ serialization points are the **Wave-0 contract freeze** and the **human approval
 
 ## 1. Concept planning (Manager + Dept 1)
 
-- **Corpus Cartographer** (non-readonly) surveys the **entire existing corpus** — shipped
-  (`fixtures/lesson-*.json` on `main` + prod Firestore) and in-dev (open `concept/*` branches + dev
-  `brilliant-org-dev` Firestore via the Firebase MCP) — and writes the **Continuity Report**
-  (`concepts/<slug>/continuity-report.md`): every conceptual overlap flagged and marked **dedupe** or a
-  **retrieval / spaced-review / interleaving** opportunity (`inclusive-research-5`). Runs in parallel
-  with the Source Miner.
-- **Source Miner** (non-readonly) anchors the concept in the Green Book and assembles the verified,
-  cited problem set (book problems + sourced look-alikes).
-- **Curriculum Architect** produces the **Concept Brief**: the lesson list (order, prerequisites,
-  one-line objective each) — **using the Continuity Report so it never re-teaches covered ground**, and
-  folding overlaps into deliberate recall. Save to `concepts/<slug>/concept-brief.md` on the branch.
+- The Manager spawns the **persistent Dept 1 Lead** (`claude-opus-4-8-thinking-max-fast`,
+  non-readonly, resumable). The Dept 1 Lead runs its internal flow and synthesizes results to
+  `concepts/<slug>/`:
+  - Spawns **Corpus Cartographer** (non-readonly) and **Source Miner** (non-readonly) in parallel.
+    Corpus Cartographer surveys the **entire existing corpus** — shipped (`fixtures/lesson-*.json`
+    on `main` + prod Firestore) and in-dev (open `concept/*` branches + dev `brilliant-org-dev`
+    Firestore via the Firebase MCP) — and writes the **Continuity Report**
+    (`concepts/<slug>/continuity-report.md`): every conceptual overlap flagged and marked **dedupe**
+    or a **retrieval / spaced-review / interleaving** opportunity (`inclusive-research-5`).
+    Source Miner anchors the concept in the Green Book and assembles the verified, cited problem set
+    (book problems + sourced look-alikes).
+  - Spawns **Curriculum Architect**, who produces the **Concept Brief**
+    (`concepts/<slug>/concept-brief.md`): the lesson list (order, prerequisites, one-line objective
+    each) — using the Continuity Report so it never re-teaches covered ground, folding overlaps into
+    deliberate recall.
+  - Dept 1 Lead synthesizes both artifacts and writes them to the concept branch; escalates to the
+    Manager.
 - Manager reviews the Concept Brief. If `/lesson-factory` was called with no argument, present the
   candidate backlog to the user and let them pick before continuing.
 
 ## 2. Per-lesson design (Dept 1 → Dept 2, looped) — PARALLEL across lessons
 
-For each lesson (fan out — independent lessons proceed concurrently):
+The Manager also spawns the **persistent Dept 2 Lead** (`claude-opus-4-8-thinking-max-fast`,
+non-readonly, resumable). The Manager drives a **Manager-mediated design loop** for each lesson by
+resuming each lead in turn with the other's latest on-disk artifact:
 
-1. **Dept 1** writes the **Lesson Brief** (`concepts/<slug>/<lesson>/brief.md`): hook, core promise,
-   cited problems + answers, beat-by-beat plan, misconceptions, assessment. (Architect skeleton, then
-   Misconception ∥ Assessment, then synthesize.)
-2. **Dept 2** writes the **Interaction Spec** (`concepts/<slug>/<lesson>/interaction-spec.md`): per
-   beat, the mechanic, reuse-vs-new, build decomposition, feedback/hints, a11y, visual/motion, track.
-3. **Loop** until the joint **Definition-of-Ready** holds for every beat (every beat has a
-   verified+sourced problem AND a concrete interactive mechanic + feedback). Self-resolve; escalate
-   unresolved conflicts to the Manager; the Manager escalates to the user only as a last resort.
+1. Manager resumes **Dept 1 Lead** with the lesson context → Dept 1 Lead spawns its workers
+   (Architect skeleton, then Misconception ∥ Assessment, then synthesize) and writes the **Lesson
+   Brief** (`concepts/<slug>/<lesson>/brief.md`): hook, core promise, cited problems + answers,
+   beat-by-beat plan, misconceptions, assessment.
+2. Manager resumes **Dept 2 Lead** with the updated Lesson Brief → Dept 2 Lead spawns its workers
+   and writes the **Interaction Spec** (`concepts/<slug>/<lesson>/interaction-spec.md`): per beat,
+   the mechanic, reuse-vs-new, build decomposition, feedback/hints, a11y, visual/motion, track.
+3. **Loop** (Manager resumes Dept 1 Lead with the Interaction Spec, then Dept 2 Lead with the
+   revised Lesson Brief, alternating) until the joint **Definition-of-Ready** holds for every beat
+   (every beat has a verified+sourced problem AND a concrete interactive mechanic + feedback). Each
+   lead self-resolves within its lane; unresolved conflicts escalate to the Manager; the Manager
+   escalates to the user only as a last resort.
 
-## 3. Wave 0 — freeze shared contracts (Manager + Dept 3 Schema/Types) — SERIAL
+Independent lessons run concurrently — the Manager fans out across lessons and drives each lesson's
+loop in parallel.
 
-Before any coder starts, collect every **new interaction type** the concept needs across all lessons
-and freeze them once:
+## 3. Wave 0 — freeze shared contracts (Dept 3 Lead + Schema/Types worker) — SERIAL
+
+Before any per-lesson build starts, the Manager resumes the **persistent Dept 3 Lead**
+(`claude-opus-4-8-thinking-max-fast`, non-readonly, resumable) for the Wave-0 contract freeze.
+The Dept 3 Lead spawns its **Schema/Types worker** to collect every **new interaction type** the
+concept needs across all lessons and freeze them once:
 
 - Add the Zod variants to `src/content/schema.ts` and the dispatcher slots in
   `src/lesson/beats/index.tsx` (stubs OK).
@@ -58,23 +80,23 @@ Wave 0 to the concept branch.
 
 ## 4. Build — PARALLEL across lessons, in isolated worktrees
 
-For each lesson, create an isolated worktree **on its own branch** (you cannot check out
-`concept/<slug>` in two worktrees at once — use `-b` to fork a per-lesson branch):
+The **Dept 3 Lead** provisions one isolated worktree per lesson **on its own branch** (cannot check
+out `concept/<slug>` in two worktrees at once — uses `-b` to fork a per-lesson branch):
 
 ```bash
 git worktree add -b lesson/<slug>-<lesson> ../lf-<slug>-<lesson> concept/<slug>
 ```
 
-The Integrator later merges `lesson/<slug>-<lesson>` back into `concept/<slug>`. (Or launch a
-`best-of-n-runner` subagent per lesson, which provisions its own worktree + branch.)
+For each lesson the Lead spawns that lesson's role chain workers **directly** inside that worktree:
+Drafter → Brief Reviewer → **Coder A (engine+goldens) ∥ Coder B (renderer+widget+fixture) ∥ Test
+Author** → Verification → Code Reviewer → Integrator. Each lesson adds only **its own** files
+(engine module, renderer, fixture, tests) plus filling its Wave-0 slot — never editing another
+lesson's files.
 
-Inside each worktree, Dept 3 runs: Drafter → Brief Reviewer → **Coder A (engine+goldens) ∥ Coder B
-(renderer+widget+fixture) ∥ Test Author** → Verification → Code Reviewer → Integrator. Each lesson
-adds only **its own** files (engine module, renderer, fixture, tests) plus filling its Wave-0 slot —
-never editing another lesson's files.
-
-The **Integrator** merges each finished worktree back into `concept/<slug>` and removes the worktree
-(`git worktree remove ...`). Resolve the rare shared-file conflict (dispatcher index) deterministically.
+The Lead keeps a bounded number of lessons/worktrees in flight at once (assembly-line batching).
+The **Integrator** (or the Lead) merges each finished worktree back into `concept/<slug>` and
+removes it (`git worktree remove ...`). The Lead orders merges to resolve the rare
+shared-file conflict (dispatcher index) deterministically.
 
 ## 5. QA gate (per lesson) — see `qa-rubric.md`
 
@@ -84,14 +106,17 @@ Engineer runs the mechanized checks; Dept 1/Dept 2 critics confirm the judgment 
 
 ## 5b. Interview Pack — Interview Studio — see `interview-packs.md`
 
-Once the concept's lessons are built (engines available), the **Interview Studio** builds the concept's
-capstone AI-interview pack, reusing those engines:
+Once the concept's lessons are built (engines available), the Manager spawns the **persistent
+Interview Studio Lead** (`claude-opus-4-8-thinking-max-fast`, non-readonly, resumable), which builds
+the concept's capstone AI-interview pack reusing those engines:
 
-- **Interview Question Author** designs the tiered (`hard/harder/brutal`) synthesis questions +
-  engine-backed templates; **Interview Prompt Engineer** writes the interviewer + generator prompts.
-- A **Dept 3 Coder** builds the templates/parameterizer/fingerprinter; the **Verification Engineer**
-  engine-verifies the **entire pre-loaded pool**; the **Integrator** writes `interviews/<courseId>.json`
-  + `interviews/<courseId>.md`.
+- The Interview Studio Lead spawns **Interview Question Author** (designs the tiered
+  `hard/harder/brutal` synthesis questions + engine-backed templates) and **Interview Prompt
+  Engineer** (writes the interviewer + generator prompts).
+- The Interview Studio Lead also spawns its own **Coder**, **Verification Engineer**, and
+  **Integrator** workers — it cannot reach into Dept 3's subtree. The Coder builds the
+  templates/parameterizer/fingerprinter; the Verification Engineer engine-verifies the **entire
+  pre-loaded pool**; the Integrator writes `interviews/<courseId>.json` + `interviews/<courseId>.md`.
 - Gate it with the **Interview Pack Scorecard** (`qa-rubric.md` / `interview-packs.md`). May run in
   parallel with per-lesson QA once the engines are frozen.
 
@@ -114,10 +139,15 @@ URL** + the **Interview Pack `.md`** to review. Production is untouched.
 
 ## Parallelism summary
 
-- **Within a department:** all independent roles concurrently (Dept 1 misconception ∥ assessment;
-  Dept 2's nine roles; Dept 3 Coder A ∥ Coder B ∥ Test Author).
-- **Across lessons:** the concept's lessons flow as an assembly line — design lesson N+1 while lesson
-  N is being coded; independent lessons fully parallel.
+- **Manager layer:** Manager spawns 4 persistent leads (Dept 1, Dept 2, Dept 3, Interview Studio)
+  and drives all inter-department coordination; it is the only agent that talks to the user.
+- **Within a department:** each lead fans out to its workers concurrently (Dept 1: Corpus
+  Cartographer ∥ Source Miner; Dept 2: up to 9 roles; Dept 3 per-lesson: Coder A ∥ Coder B
+  ∥ Test Author).
+- **Dept 3 per-lesson worktrees:** the Dept 3 Lead fans out to one worker role chain per lesson,
+  each in its own worktree, batched as an assembly line.
+- **Across lessons:** the concept's lessons flow as an assembly line — design lesson N+1 while
+  lesson N is being coded; independent lessons fully parallel.
 - **Serialization only at:** Wave-0 freeze, worktree merges, and the human approval gate.
 
 ## Artifacts on the concept branch

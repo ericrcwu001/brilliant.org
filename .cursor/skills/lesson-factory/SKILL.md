@@ -8,8 +8,9 @@ disable-model-invocation: true
 
 An on-demand assembly line that turns Green-Book quant concepts into fully-built, fact-checked,
 interactive **lessons** for the Ergo app — tested on a **dev Firebase project** and shipped to
-production **only after the user approves**. A top-level **Manager (Opus)** runs three departments of
-subagents in parallel. At the end of each concept it also prepares a capstone **Interview Pack** — a
+production **only after the user approves**. A top-level **Manager (Opus)** spawns four persistent
+**department leads**; each lead in turn spawns and manages its own worker subagents — a real nested
+hierarchy, not a flat fan-out. At the end of each concept it also prepares a capstone **Interview Pack** — a
 future-ready "interview an AI quant interviewer" asset (`interview-packs.md`).
 
 > Vocabulary (the product's three layers, authoritative):
@@ -59,16 +60,20 @@ future-ready "interview an AI quant interviewer" asset (`interview-packs.md`).
 ## Org chart
 
 ```
-                         Manager / Director  (Opus)
-              plans the concept · runs Wave-0 · arbitrates escalations
-              · signs off the Scorecard · deploys to dev · Slack-alerts · ships on approval
-        ┌──────────────────────┬──────────────────────┬─────────────────────┐
-   Dept 1: Curriculum     Dept 2: Interactive     Dept 3: Coding
-   (learning science)      Experience (design)     (implementation)
-   5 roles                 9 roles                 rich roster
-        └─────────── self-resolving Dept1↔Dept2 loop ───────────┘
-                 (escalations → Manager; human only if Manager is stuck)
-        + Interview Studio (per concept, after lessons) → the capstone Interview Pack
+                      Manager / Director  (Opus)  [root · only agent the user talks to]
+            plans concept · Wave-0 · arbitrates · Scorecard · deploys dev · Slack · ships
+   ┌───────────────────┬────────────────────┬──────────────────────────┬───────────────────┐
+Dept 1 Lead         Dept 2 Lead          Dept 3 Lead               Interview Studio Lead
+Curriculum          Interactive Exp.     Coding [worktree per lesson]  (per concept)
+[persistent]        [persistent]         [persistent]              [persistent]
+    │                    │                    │                          │
+5 workers           9 workers          role chain per lesson      Question Author
+(Source Miner,      (Mechanic,         (Drafter→Reviewer→CdrA‖B   Prompt Engineer
+ Cartographer,       Planner, …)        →Test→Verify→Review→       + coder/verify/integrate
+ Architect, …)                          Integrate, 1 worktree each)
+    │                    │
+    └─── Manager mediates Dept1↔Dept2 design loop ──┘
+         (resumes each lead; Dept 3 Lead owns Wave-0 freeze before per-lesson builds start)
 ```
 
 Full rosters, responsibilities, and per-role model assignments: **`departments.md`**.
@@ -105,15 +110,22 @@ deploy, seed, prod ship, Slack: **`deploy.md`**. Capstone AI-interview assets (f
 | Work | Model | Notes |
 |---|---|---|
 | Manager / Director, arbitration, Scorecard sign-off | `claude-opus-4-8-thinking-max-fast` | the brain |
-| Dept 1 & Dept 2 (research / planning / design = reasoning) | `claude-opus-4-8-thinking-max-fast` | readonly **except** the Source Miner + Corpus Cartographer |
+| **Department Lead (×4)** — Dept 1, Dept 2, Dept 3, Interview Studio | `claude-opus-4-8-thinking-max-fast` | **non-readonly** (must spawn workers via Task tool); persistent/resumable across stages |
+| Dept 1 & Dept 2 workers (research / planning / design = reasoning) | `claude-opus-4-8-thinking-max-fast` | readonly **except** the Source Miner + Corpus Cartographer |
 | **Source Miner** (web + `references/`) & **Corpus Cartographer** (Firebase MCP + git) | Opus, **non-readonly** | readonly subagents have no internet/MCP |
 | Dept 3 coders, schema/types, test author, brief drafter | `claude-4.6-sonnet-high-thinking` | code writing/editing |
 | Dept 3 brief reviewer, verification, code reviewer | `claude-opus-4-8-thinking-max-fast` | review/reasoning |
 | Interview Studio (Question Author, Prompt Engineer) | `claude-opus-4-8-thinking-max-fast` | reuses Dept 3 for templates/engine-verify |
 | Integrator/push, `validate`/seed/deploy (dev+prod) runs | `composer-2.5-fast` | mechanical IO |
 
-The skill's main agent is a **thin dispatcher**: it spawns subagents and moves artifacts between
-stages. The **Manager** makes the judgment calls.
+The skill's main agent **is** the **Manager** — the root orchestrator and the only agent that talks
+to the user. It spawns four persistent **department leads**, which in turn spawn and manage their own
+ephemeral workers and synthesize one department-level result each. This nested orchestration
+intentionally **overrides** the global flat pattern in `.cursor/rules/model-routing.mdc` / the
+model-routing skill for lesson-factory specifically (those files stay unchanged). The Manager's
+first-run **preflight probe** hard-requires nested spawning to the needed depth — if any level cannot
+spawn its child, the skill **hard-stops** and tells the user it cannot run in this environment (see
+`pipeline.md` / `deploy.md`).
 
 ## Environment / prerequisites
 

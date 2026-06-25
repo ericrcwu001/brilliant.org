@@ -96,7 +96,7 @@ git worktree add -b lesson/<slug>-<lesson> ../lf-<slug>-<lesson> concept/<slug>
 git worktree remove ../lf-<slug>-<lesson>
 ```
 
-Prefer a `best-of-n-runner` subagent per lesson — it provisions its own worktree + branch.
+The Dept 3 Lead provisions one worktree per lesson (using the commands above), spawns that lesson's workers directly inside it, then merges it back into `concept/<slug>` and removes it.
 
 ## Test deploy (on `brilliant-org-dev`)
 
