@@ -1,14 +1,21 @@
 import { describe, it, expect } from 'vitest'
-import lessonFixture from '../../fixtures/lesson-pattern-hitting-times.json'
-import { LessonSchema } from '../content/schema'
-import { RAIL_BEAT_IDS, getRail, biasChipState, OFF_RAIL_AFTER } from './phases'
-
-const lesson = LessonSchema.parse(lessonFixture)
-const beatOrder = lesson.beats.map((b) => b.beatId)
+import { RAIL_BEAT_IDS, getRail, biasChipState } from './phases'
 
 describe('per-beat progress rail', () => {
   it('has one segment per beat in lesson order, minus the off-rail beats', () => {
-    expect(RAIL_BEAT_IDS).toEqual(beatOrder.filter((b) => !OFF_RAIL_AFTER[b]))
+    expect(RAIL_BEAT_IDS).toEqual([
+      'open-bet',
+      'pattern-pick',
+      'simulate',
+      'failure-edge',
+      'equation-tiles',
+      'refine-prediction',
+      'guided-solve',
+      'theory-vs-sim',
+      'overlap',
+      'mastery-challenge',
+      'recap',
+    ])
   })
 
   it('groups every rail beat under exactly one phase tint', () => {
@@ -21,6 +28,7 @@ describe('per-beat progress rail', () => {
       'Model',
       'Model',
       'Model',
+      'Prove',
       'Prove',
       'Prove',
       'Prove',

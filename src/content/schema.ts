@@ -184,6 +184,19 @@ export const InteractionSchema = z.discriminatedUnion('type', [
       }),
     ),
   }),
+  z.object({
+    type: z.literal('masteryChallenge'),
+    scenario: z.string().optional(),
+    fields: z.array(
+      z.object({
+        id: z.string(),
+        label: z.string(),
+        accept: z.array(z.string()),
+        placeholder: z.string().optional(),
+        suffix: z.string().optional(),
+      }),
+    ),
+  }),
   // ── Remaining-lesson widget variants (build-brief §4.4). Each maps 1:1 to a
   // new beat view in beats/index.tsx. Engine inputs that are a single pattern
   // come from the beat-level `pattern` field (below); only inputs that aren't a

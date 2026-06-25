@@ -92,7 +92,12 @@ export async function completeLesson(page: Page) {
   // 10 bias-sandbox (Extension): never blocks completion.
   await clickPrimary(page, 'Continue')
 
-  // 11 recap: reconstruct the cause, then Finish.
+  // 11 mastery-challenge: the end-of-lesson transfer question (E[HHH] = 14).
+  await page.locator('.mastery .answer-entry__input').first().fill('14')
+  await clickPrimary(page, 'Check')
+  await clickPrimary(page, 'Continue')
+
+  // 12 recap: reconstruct the cause, then Finish.
   await page.getByRole('radio', { name: /near-miss resets HH/ }).click()
   await clickPrimary(page, 'Finish')
 
@@ -175,6 +180,11 @@ export async function completeLessonTrackA(page: Page) {
   await clickPrimary(page, 'Continue')
 
   // bias-sandbox (Extension)
+  await clickPrimary(page, 'Continue')
+
+  // mastery-challenge: the end-of-lesson transfer question (E[HHH] = 14).
+  await page.locator('.mastery .answer-entry__input').first().fill('14')
+  await clickPrimary(page, 'Check')
   await clickPrimary(page, 'Continue')
 
   // recap

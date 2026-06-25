@@ -88,7 +88,7 @@ export function AuthPage({ navigate }: { navigate: NavigateFn }) {
         </h1>
         <p className="authcard__sub">
           {isCreate
-            ? 'Start with the flagship pattern-hitting-times lesson.'
+            ? 'Start excelling at quant interviews instantly.'
             : 'Sign in to pick up where you left off.'}
         </p>
 

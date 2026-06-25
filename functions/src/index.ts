@@ -147,16 +147,25 @@ export const completeLesson = onCall(
         // Replay = a review. Finishing it satisfies the review so the Study Desk
         // advances focus to the next lesson (recommendedAction stops returning
         // 'review'). Cleared even if this pass struggled, per product intent.
-        if (progressSnap.get('needsReview') === true) {
-          tx.set(
-            progressRef,
-            {
-              needsReview: false,
-              updatedAt: FieldValue.serverTimestamp(),
-              schemaVersion: PROGRESS_SCHEMA_VERSION,
-            },
-            { merge: true },
-          )
+        //
+        // The badge (derived.mastered → gold tier) may only IMPROVE on a review:
+        // a clean pass upgrades silver→gold, but a struggling pass NEVER demotes
+        // an already-earned gold. We therefore only ever write mastered: true.
+        const wasMastered =
+          (progressSnap.get('derived') as { mastered?: boolean } | undefined)
+            ?.mastered === true
+        const nowMastered = data.derived?.mastered === true
+        const improveMastered = nowMastered && !wasMastered
+        const clearReview = progressSnap.get('needsReview') === true
+        if (improveMastered || clearReview) {
+          const patch: Record<string, unknown> = {
+            updatedAt: FieldValue.serverTimestamp(),
+            schemaVersion: PROGRESS_SCHEMA_VERSION,
+          }
+          if (clearReview) patch.needsReview = false
+          // merge:true deep-merges the derived map, preserving the other fields.
+          if (improveMastered) patch.derived = { mastered: true }
+          tx.set(progressRef, patch, { merge: true })
         }
         return true
       }

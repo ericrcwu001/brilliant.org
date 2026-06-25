@@ -55,6 +55,13 @@ const recapFinish = async (page: Page) => {
   await page.getByRole('button', { name: /^(Finish|Continue)$/ }).click({ force: true })
 }
 
+const masteryChallenge = async (page: Page, values: string[]) => {
+  const inputs = page.locator('.mastery .answer-entry__input')
+  for (let i = 0; i < values.length; i++) await inputs.nth(i).fill(values[i])
+  await primaryClick(page) // Check
+  await primaryClick(page) // Continue
+}
+
 const tapAllThenContinue = async (page: Page, selector: string) => {
   const els = page.locator(selector)
   const n = await els.count()
@@ -134,6 +141,7 @@ async function completeL2(page: Page) {
   await matchGrid(page, ['No +1, just a split', '+1 every flip']) // win-prob-tiles
   await page.locator('.wheel__options .token').first().click()
   await primaryClick(page) // non-transitive-loop continue
+  await masteryChallenge(page, ['HTT', '7/8'])
   await recapFinish(page)
   await done(page)
 }
@@ -149,6 +157,7 @@ async function completeL3(page: Page) {
   await eqRows(page, [['1', '1/2', E(3), '1/2', E(1)]], false) // duration-tiles
   await answerEntry(page, ['1/2', '4']) // guided-solve
   await primaryClick(page) // house-edge (hero)
+  await masteryChallenge(page, ['3/10', '21'])
   await recapFinish(page)
   await done(page)
 }
@@ -164,6 +173,7 @@ async function completeL4(page: Page) {
   await page.locator('.tap-card').nth(1).getByRole('radio', { name: Estate(2) }).click()
   await primaryClick(page) // Check
   await primaryClick(page) // Continue
+  await masteryChallenge(page, ['6', '3/8'])
   await recapFinish(page)
   await done(page)
 }
@@ -193,6 +203,7 @@ async function completeL5(page: Page, split: boolean) {
   await page.getByRole('button', { name: 'Continue', exact: true }).click()
   await tapAllThenContinue(page, '.sumtiles__chips .token') // border-sum
   await matchGrid(page, ['Resets further back', 'Keeps a matched H']) // overlap-compare
+  await masteryChallenge(page, ['20'])
   await recapFinish(page)
   await done(page)
 }
@@ -206,6 +217,7 @@ async function completeL6(page: Page) {
   await tapAllThenContinue(page, '.sumtiles__chips .token') // apply-THH
   await tapAllThenContinue(page, '.sumtiles__chips .token') // apply-HTH
   await tapAllThenContinue(page, '.triplet__card') // triangulation
+  await masteryChallenge(page, ['30'])
   await recapFinish(page)
   await done(page)
 }

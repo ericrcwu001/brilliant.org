@@ -349,6 +349,27 @@
       }
     },
     {
+      "beatId": "mastery-challenge",
+      "required": true,
+      "pattern": "HHH",
+      "prompt": "Mastery challenge: on a fair coin, what is E[HHH] - the average number of flips until three heads in a row first appear? Type a whole number.",
+      "interaction": {
+        "type": "masteryChallenge",
+        "scenario": "You proved E[HH] = 6 by building its little state machine. HHH is the same idea, one state longer - a single tail still throws away all your progress.",
+        "fields": [
+          { "id": "e-hhh", "label": "Average flips until HHH", "accept": ["14"], "placeholder": "?", "suffix": "flips" }
+        ]
+      },
+      "feedback": {
+        "correct": "E[HHH] = 14. Just like HH, every tail resets you to the start - HHH keeps no partial progress - so the waits roughly double each time: 2, 6, 14. The reset structure, not the length, sets the wait.",
+        "hints": [
+          "Same machine as HH, just one state longer. A single tail still sends you all the way back to the start.",
+          "Build the wait equations with states none, H, HH, and HHH (=0): E0 = 1 + 1/2 E1 + 1/2 E0, E1 = 1 + 1/2 E2 + 1/2 E0, E2 = 1 + 1/2 E0.",
+          "E2 = 1 + 1/2 E0; substitute upward to E1 = 3/2 + 3/4 E0, then E0 = 7/4 + 7/8 E0, so 1/8 E0 = 7/4 and E0 = 14."
+        ]
+      }
+    },
+    {
       "beatId": "recap",
       "required": true,
       "prompt": "Reveal each recap card to review your prediction, the theory, the simulation, and the overlap insight.",

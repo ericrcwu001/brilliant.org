@@ -110,6 +110,7 @@ const GRADED_TYPES = new Set([
   'patternPick',
   'stateTap',
   'answerEntry',
+  'masteryChallenge',
 ])
 // The two hardest graded types — never the first graded beat (early-win rule).
 const HARDEST_TYPES = new Set(['equationTiles', 'substitution'])
@@ -222,6 +223,41 @@ for (const lesson of lessons) {
     process.exit(1)
   }
   console.log(`✓ inclusivity gate: ${id}`)
+}
+
+// ── 5. Mastery-challenge gate (end-of-lesson "prove mastery" question). Each
+// core lesson L1-L6 ends with a required masteryChallenge beat immediately
+// before its recap closer; pattern-pinned challenges are engine-cross-checked.
+const MASTERY_LESSONS = new Set([
+  'lesson-pattern-hitting-times',
+  'lesson-penneys-game',
+  'lesson-gamblers-ruin',
+  'lesson-states-streaks',
+  'lesson-longer-patterns',
+  'lesson-overlap-shortcut',
+])
+for (const lesson of lessons) {
+  if (!MASTERY_LESSONS.has(lesson.lessonId)) continue
+  const beats = lesson.beats
+  const last = beats[beats.length - 1]
+  const penult = beats[beats.length - 2]
+  if (!last || last.interaction.type !== 'recap') {
+    fail(`${lesson.lessonId}: last beat must be a recap (got ${last?.interaction.type ?? 'none'})`)
+  }
+  if (!penult) fail(`${lesson.lessonId}: missing the masteryChallenge beat before recap`)
+  const interaction = penult.interaction
+  if (interaction.type !== 'masteryChallenge') {
+    fail(`${lesson.lessonId}: beat before recap must be a masteryChallenge (got ${interaction.type})`)
+  }
+  if (!penult.required) fail(`${lesson.lessonId}: the masteryChallenge beat must be required`)
+  if (penult.pattern) {
+    const e0 = buildAutomaton(penult.pattern, 0.5).expectedTimes.E0
+    const accepts = interaction.fields.flatMap((f) => f.accept)
+    if (!accepts.includes(String(e0))) {
+      fail(`${lesson.lessonId}: masteryChallenge pattern ${penult.pattern} -> E=${e0} not in any accept list`)
+    }
+  }
+  console.log(`✓ mastery-challenge gate: ${lesson.lessonId}`)
 }
 
 console.log('\nAll fixtures valid.')

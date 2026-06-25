@@ -114,14 +114,41 @@
   top: 50%;
 }
 
-/* Hide connector below last lesson row (not roadmap) */
-.ergo-chapter:not(.ergo-chapter--roadmap) .ergo-chapter__body .ergo-row:last-child::before {
+/* End the rail at the final node — but only for the last section. Sections
+   that are followed by another keep a full-height rail so the dotted
+   inter-section bridge can connect into them. */
+.ergo-chapter:last-of-type:not(.ergo-chapter--roadmap) .ergo-chapter__body .ergo-row:last-child::before {
   bottom: 50%;
 }
 
 /* Roadmap rows: no connector above the first */
 .ergo-chapter--roadmap .ergo-chapter__body .ergo-row:first-child::before {
   top: 50%;
+}
+
+/* ── Dotted inter-section bridge ──────────────────────────────── */
+/* Carries the rail across the chapter-label gap so the whole journey reads
+   as one continuous path. Dots pick up the upcoming chapter's hue via
+   currentColor (the label sets `color`). top:-24px meets the previous
+   section's rail end; bottom:0 meets this section's first-row rail. */
+.ergo-chapter:not(:first-of-type) .ergo-chapter__label {
+  position: relative;
+}
+
+.ergo-chapter:not(:first-of-type) .ergo-chapter__label::before {
+  content: '';
+  position: absolute;
+  left: 14px;
+  top: -24px;
+  bottom: 0;
+  width: 4px;
+  background-image: radial-gradient(circle at center, currentColor 1.6px, transparent 2.1px);
+  background-size: 4px 8px;
+  background-repeat: repeat-y;
+  background-position: center top;
+  opacity: 0.6;
+  z-index: 0;
+  pointer-events: none;
 }
 
 /* ── Node wrap and dot ───────────────────────────────────────── */
@@ -374,10 +401,19 @@
   }
 }
 
-/* On mobile, detail col appears after journey col */
+/* Inline detail card (mobile only) — renders directly under the active lesson */
+.ergo-detail-inline {
+  display: none;
+}
+
 @media (max-width: 767px) {
-  .ergo-journey-layout {
-    /* detail card renders second in DOM — stacks below */
+  /* Hide the right-hand column; show the inline card under the tapped lesson */
+  .ergo-detail-col {
+    display: none;
+  }
+  .ergo-detail-inline {
+    display: block;
+    margin: var(--s2, 8px) 0 var(--s4, 16px) 48px;
   }
 }
 

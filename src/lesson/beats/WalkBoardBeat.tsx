@@ -6,7 +6,7 @@
 // with bias. The plain structural number leads; reduced motion + aria-live render
 // the final frame. SVG; the single walk plays back step-by-step (one setState per step, not per-frame).
 
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react'
 import type { BeatProps } from './types'
 import type { Rational } from '../../engine/types'
 import { BeatShell } from '../BeatShell'
@@ -20,7 +20,19 @@ import { useProgressiveRuns } from './useProgressiveRuns'
 const dec = (r: Rational) => Number((r.n / r.d).toFixed(3)).toString()
 const W = 320
 const H = 90
-const STEP_MS = 400 // fixed per-move playback (~0.4s), independent of walk length
+// Single-walk playback pacing: aim the whole walk to play over ~WALK_TARGET_MS,
+// with per-step timing clamped so short walks stay slow enough to follow and
+// long-tail walks stay bounded. The walk plays under reduced motion too (watching
+// it IS the lesson content, cf. useProgressiveRuns); reduced motion only drops the
+// continuous CSS glide (see beats-extended.css), leaving discrete paced steps.
+const WALK_TARGET_MS = 4000
+const WALK_MAX_STEP_MS = 600
+const WALK_MIN_STEP_MS = 110
+
+function stepMsForWalk(steps: number): number {
+  if (steps <= 0) return WALK_MAX_STEP_MS
+  return Math.min(WALK_MAX_STEP_MS, Math.max(WALK_MIN_STEP_MS, WALK_TARGET_MS / steps))
+}
 // Histogram chart viewport constants
 const HIST_VW = 320
 const HIST_VH = 190
@@ -123,21 +135,24 @@ export function WalkBoardBeat(props: BeatProps) {
     },
   })
 
-  // Single-walk playback: advance one lattice step every STEP_MS. The only
-  // setState runs inside the interval callback (not synchronously in the effect
-  // body). stepIdx is reset to 0 by the "Watch one walk" handler; reduced motion
-  // skips the interval and renders the final frame directly (see `idx` below).
+  // Single-walk playback: advance one lattice step at a paced cadence so the whole
+  // walk plays over ~WALK_TARGET_MS (clamped). The only setState runs inside the
+  // interval callback. stepIdx is reset to 0 by the "Watch one walk" handler. Plays
+  // even under reduced motion — the walk is the lesson content; reduced motion only
+  // suppresses the continuous CSS glide, leaving discrete paced steps.
   useEffect(() => {
-    if (!trace || reducedMotion) return
+    if (!trace) return
     const last = trace.positions.length - 1
+    if (last <= 0) return
+    const stepMs = stepMsForWalk(last)
     let k = 0
     const id = setInterval(() => {
       k += 1
       setStepIdx(k)
       if (k >= last) clearInterval(id)
-    }, STEP_MS)
+    }, stepMs)
     return () => clearInterval(id)
-  }, [trace, reducedMotion])
+  }, [trace])
 
   // First-reveal animation effect (runs ONCE; guarded by histStartedRef).
   useEffect(() => {
@@ -235,7 +250,7 @@ export function WalkBoardBeat(props: BeatProps) {
                 cx={xFor(i)}
                 cy={40}
                 r={i === 0 || i === N ? 9 : 7}
-                fill={i === start ? chapterColor(lessonId) : i === 0 ? C.ruinTint : i === N ? C.winTint : C.paper2}
+                fill={i === start && !trace ? chapterColor(lessonId) : i === 0 ? C.ruinTint : i === N ? C.winTint : C.paper2}
                 stroke={i === 0 ? C.ruin : i === N ? C.win : C.rule}
                 strokeWidth={1.5}
               />
@@ -255,11 +270,12 @@ export function WalkBoardBeat(props: BeatProps) {
           </text>
           {trace && (() => {
             const last = trace.positions.length - 1
-            const idx = reducedMotion ? last : Math.min(stepIdx, last)
+            const idx = Math.min(stepIdx, last)
             const done = idx >= last
             return (
               <circle
                 className="walkboard__walker"
+                style={{ '--walk-step': `${stepMsForWalk(last)}ms` } as CSSProperties}
                 cx={xFor(trace.positions[idx])}
                 cy={40}
                 r={6}
@@ -296,7 +312,7 @@ export function WalkBoardBeat(props: BeatProps) {
           avg flips: <strong>{dec(dur)}</strong>
         </p>
 
-        {trace && (reducedMotion || stepIdx >= trace.positions.length - 1) && (
+        {trace && stepIdx >= trace.positions.length - 1 && (
           <p className="walkboard__single" role="status" aria-live="polite">
             That walk ended in <strong>{trace.end}</strong> after{' '}
             {trace.positions.length - 1} flips.

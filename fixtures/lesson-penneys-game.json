@@ -120,7 +120,7 @@
       "interaction": {
         "type": "answerEntry",
         "fields": [
-          { "id": "counter", "label": "Your 3-flip counter to HHH", "accept": ["THH"], "placeholder": "e.g. THH" }
+          { "id": "counter", "label": "Your 3-flip counter to HHH", "accept": ["THH"], "placeholder": "e.g. HTH" }
         ]
       },
       "feedback": {
@@ -203,6 +203,27 @@
           "Pick the counter, then see the cycle.",
           "Each pattern is beaten by another.",
           "It's a loop, like rock-paper-scissors."
+        ]
+      }
+    },
+    {
+      "beatId": "mastery-challenge",
+      "required": true,
+      "prompt": "Mastery challenge: your friend goes first and picks TTT. Going second, pick the 3-flip pattern that beats it most often, and give your exact win probability as a fraction.",
+      "interaction": {
+        "type": "masteryChallenge",
+        "scenario": "You both watch the same fair-coin stream; whoever's pattern appears first wins. (Recall how THH was built to beat HHH.)",
+        "fields": [
+          { "id": "counter", "label": "Your counter to TTT", "accept": ["HTT"], "placeholder": "e.g. HTH" },
+          { "id": "winprob", "label": "P(your pattern appears before TTT)", "accept": ["7/8", "0.875", ".875"], "placeholder": "e.g. 3/4" }
+        ]
+      },
+      "feedback": {
+        "correct": "HTT beats TTT 7 times out of 8. It's the mirror of THH-beats-HHH: take the friend's pattern, flip its second symbol, and slide it in front. TTT wins only when the first three flips are all tails (1/8); otherwise an H lands in front of a TT and completes HTT first.",
+        "hints": [
+          "Don't pick the opposite (HHH) or the reverse. You want a pattern that finishes just before TTT can.",
+          "Use the second-mover rule: flip the friend's 2nd symbol and put it in front, keeping the first two. TTT becomes H + TT. For the odds, ask how TTT could ever win.",
+          "Counter = HTT. TTT wins only if the first three flips are TTT (probability 1/8); every other start lets an H slip in front of a TT, so you win 1 - 1/8 = 7/8."
         ]
       }
     },

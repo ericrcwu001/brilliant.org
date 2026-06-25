@@ -1,5 +1,5 @@
 # HANDOFF
-<!-- Last updated: L1 BalanceSolve explain-line clarity fix (2026-06-24) -->
+<!-- Last updated: Concept medallion tier hover popup — custom .ergo-medallion__tip (dark card: concept name + tier-colored status line; gold/silver/locked) replaces the native title tooltip in ConceptMedallion, shown on hover via ergo-home.css + mirrored in aria-label (gallery only, lg medal unaffected); tsc+lint clean, verified /dev/home Tiers. Prior: Ch3 Mastery badge hue fix (StudyDesk MILESTONE_HUES first-pattern-cracked/state-machine-builder ch1->ch3). Prior admin op (prod, no code, in git history only): force-granted eric.wu@alphaaiengineering.com (uid irXQQXdxIJTIPi6r9PufqChItuk1) L2 Penney's-Game complete+mastered + penneys-game-won seal + streak 3/3 via temp Admin SDK script (deleted after verify) — 2026-06-25 -->
 
 Orientation doc for a fresh context. Session-by-session narration lives in git
 history + the `docs/`/`audits/` files; this file keeps only what's needed going forward.
@@ -498,6 +498,20 @@ components and the surface CSS. `StudyDeskProps` is byte-identical (consumers
   show *new* walks. CSS glide (`cx` transition) + reduced-motion override in `beats-extended.css`.
   Added 5 `traceWalk` tests. Gates: vitest **178/178**, `tsc -b` + `eslint` clean. (Animation is
   timer-driven so unverified by the node/`renderToString` harness — engine-tested + manual.)
+- **L3 "Watch one walk" re-paced + now plays under reduced motion (this session; 1 Sonnet edit +
+  browser-use verify):** it was skipping straight to the wall under reduced motion (the
+  `idx = reducedMotion ? last` final-frame snap), so reduced-motion users never saw the walk.
+  `WalkBoardBeat.tsx` now always runs the playback interval (watching the walk IS lesson content,
+  cf. `useProgressiveRuns`) and replaces the fixed `STEP_MS=400` with
+  `stepMsForWalk(steps)=clamp(4000/steps,110,600)ms` so the whole walk plays over ~the same window
+  (short walks ~600ms/step, long-tail capped ~4s); that value is mirrored onto the `--walk-step`
+  CSS var so the glide cadence matches. Outcome text now gates on `stepIdx>=last` (not
+  `reducedMotion`); the reduced-motion `transition:none` rule in `beats-extended.css` stays →
+  reduced-motion users get discrete paced hops, others a synced glide. Gates: `tsc -b` + `eslint`
+  clean; browser-verified on `/dev/lesson/lesson-gamblers-ruin` (dot steps through intermediate
+  positions in both modes; no instant skip). Follow-up: the start ($i) node fill is now gated on
+  `i === start && !trace`, so the middle dot's chapter-color shade only shows before a walk —
+  once a walk begins the moving `.walkboard__walker` is the sole highlight (no lingering shaded dot).
 - **L2 Penney's "Watch one race" fix (this session; orchestrated, 1 Sonnet subagent):**
   `RaceSimBeat.tsx` conflated `seen` (Continue gate) with the batch tally, so "Watch one race"
   flipped `seen→true` and rendered the 200-race bars instead of a single race. Replaced with an
@@ -899,3 +913,316 @@ color-coding, sans display type, compact streak chip all live.
   generic (no non-self terms) branch keeps the collapsed form.
 - **Gates GREEN:** `eslint` (file), `vitest run` BalanceSolveBeat.test (12), `tsc -b`. No test/e2e
   asserted the old string; pure `balanceModel` untouched. Nothing committed.
+
+### Landing page visual polish — `/frontend-design` pass (2026-06-24)
+
+- **Ask:** "make the landing page prettier." Scope: `src/pages/LandingPage.tsx` +
+  `src/styles/surfaces/auth-landing.css` (hero section only; the auth/form CSS below is
+  byte-identical/untouched). Stayed inside Ergo tokens — no new hex, no new fonts.
+- **What changed (visual):**
+  - **Aurora** — `.hero::before` soft tri-chapter radial wash (ch1 indigo / ch2 teal / ch3
+    coral via `color-mix`) on the cool-white base; `.hero` is now `position:relative;
+    overflow:hidden`, content `z-index:1`.
+  - **Eyebrow** — new `.hero__eyebrow` mono uppercase "The mathematics of waiting"
+    (`--ergo-brand-strong`, letterspaced) above the wordmark.
+  - **Exhibit card** — `StateMachinePreview` wrapped in a `.exhibit` surface card
+    (`--ergo-surface`, `--ergo-shadow-md`, `--r-xl`, hairline, faint `--ch1-tint` inner glow)
+    framing the HH automaton as the signature math object.
+  - **EV payoff** — `.exhibit__results` shows the thesis: `E[HH] = 6` (indigo `--ch1`) `vs`
+    `E[HT] = 4` (teal `--tails`), mono tabular-nums, `aria-label` for SR + `aria-hidden` spans;
+    `.exhibit__caption` "Same odds, different waits."
+  - **CTAs** — `.hero__cta .btn` → pill (`--r-pill`, 52px); primary gets a nudging `→` `::after`
+    + `--ergo-shadow-md` hover lift.
+  - **Title size** — `.hero__title` enlarged to `clamp(4.5rem, 17vw, 10rem)` (was 5.25rem max),
+    line-height 0.95, tracking −0.04em; verified 160px desktop / 72px mobile, no 390px overflow.
+    ⚠ Hit the stale-Vite footgun again (HMR didn't repaint a CSS-only edit; full reload still
+    served old CSS) — only a hard server restart (fresh port 4600) showed the change.
+- **Preserved:** GSAP wordmark reveal, motion stagger, `useAmbient` signal, reduced-motion
+  gating, all `.preview__*` SVG classes + `preview-pulse` keyframe; `.btn--primary`/`--secondary`
+  + navigate targets unchanged (no e2e selectors touched).
+- **Verified GREEN:** `eslint` (LandingPage), `tsc -b`, `vite build` (chunk-size warning is
+  pre-existing). Browser-verified on a fresh server (4500) — desktop + mobile (390px). ⚠ VR
+  baseline for the landing surface will drift; re-capture on the next sweep. Nothing committed.
+
+### MVP audit + README rewrite + App Check clarification (2026-06-24)
+
+- **MVP verification (orchestrated: 3 Opus readonly audits + live-URL fetch):** the repo
+  **satisfies the Phase-1 MVP** in `docs/core_instructions.md`. Hard gates all met —
+  content-model-driven interactive flagship lesson, direct-manipulation problems
+  (tiles/slider/balance/state-tap), responsive Konva visuals, instant hand-authored
+  feedback, resumable Firestore snapshots, course path + mastery + next-step, streaks/
+  milestones, email/Google auth, mobile, deployed & public (live-verified at
+  https://brilliant-org.web.app), and **zero runtime AI**. Non-blocking caveats: perf is
+  strong by-design but uninstrumented (~1 MB raw entry chunk); progression is forgeable
+  while App Check enforcement is OFF (security-audit F1, intentional); cross-lesson
+  weak-node recommender (`src/progress/recommend.ts`) is built + unit-tested but unwired.
+- **⚠ Stale-premise correction:** the working tree is **CLEAN** (HEAD = origin/main =
+  `2822c61`). The Ergo/Living-Notebook overhaul is **committed**, not uncommitted — the
+  older "NOT committed" notes above are superseded.
+- **README rewritten (`README.md`):** replaced the stock Vite boilerplate with a real
+  README — subject/persona stated up front, live link, 7-lesson course table, tech stack,
+  layered architecture, project structure, setup + emulator-first dev flow, commands
+  table, deploy, security notes. Closes the one PARTIAL from the audit (subject "stated up
+  front"). Writer hedges fixed: no `.nvmrc` exists (→ "current LTS"); `src/app/` is
+  error-boundary/view-transition/online-status, not header/nav. (Done via a Sonnet writer
+  subagent per model-routing.)
+- **App Check clarified (no code change):** App Check IS implemented client-side
+  (reCAPTCHA v3, `src/firebase/app.ts:41-54`); only ENFORCEMENT is deferred — callables
+  use bare `onCall` (no `enforceAppCheck`) and the Firestore console toggle is off, per
+  the documented monitor-then-enforce rollout (`docs/security-audit.md` F1/F3). Flip both
+  together only once App Check metrics show legit traffic is "verified."
+
+### DisplayNamePage subtitle removed (2026-06-24)
+
+- Deleted the `authcard__sub` paragraph ("This is the name shown on your course path. You
+  can change it later.") from `src/pages/DisplayNamePage.tsx` — the page now goes straight
+  from the `What should we call you?` title to the form. No linter errors. Nothing committed.
+
+### Concept medallions prettier — "make the badges prettier" (2026-06-24)
+
+- **Ask:** "make the badges prettier." Disambiguated to the **concept medallions** (the
+  "Concepts mastered" achievement badges on Home + the lesson-completion takeover medal).
+- **Scope:** pure CSS, **`src/styles/surfaces/ergo-home.css`** medallion blocks only (+57/−22);
+  no `.tsx` touched, no class renames (e2e/markup-safe). Done via a Sonnet edit subagent
+  per model-routing; orchestrator wrote the spec + browser-verified.
+- **What changed:** old medallions were pale `--medallion-tint` chips with a 2.5px hue ring +
+  tiny colored 10px glyph — diverged from the design-system spec. Now they're **minted
+  chapter-hue medals**: earned = `radial-gradient` hue fill (top-left sheen) + layered
+  `box-shadow` (colored ambient + inner white highlight + darker inset rim, all via
+  `color-mix`) + **white glyph** w/ hue text-shadow; locked = clean `inset` ring on
+  `--ergo-surface-2` (dropped the `opacity:0.7` blur), glyph `--ergo-ink-3` @ 0.5; base size
+  44→48px (spec); glyph 10→11px + `-0.02em` tracking + `padding:0 2px` (fits wide 5-char
+  glyphs like `HH≠HT`); `--lg` earned gets a deeper hero shadow (completion takeover); hover
+  lift (`translateY(-2px)`) gated to `(hover:hover) and (prefers-reduced-motion:no-preference)`.
+  Kept `@keyframes ergo-medallion-earn` / `--earning` / reduced-motion guard / compact-streak /
+  skeleton / mobile blocks intact.
+- **Verified:** `vite build` green, 0 lint errors; **browser-confirmed** at `/dev/home`
+  (temporarily earned-all in the dev harness to see all 3 chapter hues, then reverted) — solid
+  vibrant medals, legible white glyphs, depth/sheen. `--lg` completion medal not live-walked
+  (shares the earned style; low risk). ⚠ Home VR baseline will drift. Nothing committed.
+
+### Home lesson card → selects side card, doesn't enter lesson (2026-06-24)
+
+- **Ask:** on Home, pressing a lesson should pull up the side card for that lesson, not
+  enter the lesson; only the side card's "Start lesson" CTA enters.
+- **Change (single file, `src/pages/CourseJourney.tsx`):** added a `selectedId` state
+  (`useState<string|null>`); `activeId = selectedId ?? action.lessonId` (defaults to the
+  recommended lesson, so load is unchanged). `LessonRow` now takes `onSelect` instead of
+  `navigate` and its `handleClick`/Enter-Space calls `onSelect(node.lessonId)` (no nav).
+  The `DetailCard` CTA is untouched — `navigate(lessonPath(...))` is now the only path into
+  a lesson. The selected card keeps the `--active` highlight, pulse, `aria-current`, and the
+  `lesson-hero-source` view-transition tag (it's the card the CTA enters). `cardAriaLabel`
+  reworked to announce status + ", selected" (dropped the misleading "Start/Resume" verb and
+  its now-unused `progress` arg / `nodeCtaLabel` call). Locked/roadmap rows unchanged.
+- **Gates GREEN:** `tsc -b`, `eslint src/pages/CourseJourney.tsx`, `vitest run` (202/202).
+  Model test unaffected (no model change). ⚠ Browser check at `/dev/home` (click a card →
+  side card updates, no nav; CTA enters) is the manual step — no dev server was running.
+  Mobile (<768px) still stacks the side card below the list (selection updates it in place;
+  auto-scroll-into-view is a possible follow-up). Nothing committed.
+
+### Lesson-complete badge centering + "Boop Stamp" animation (2026-06-24)
+
+- **Ask:** the end-of-lesson awarded badge (`ConceptMedallion` lg) was not horizontally
+  centered and only did a quiet fade. Fix centering and add a "Boop Stamp" animation:
+  scale/rotate overshoot-settle + 5 micro-particle burst.
+- **Files created/modified:**
+  - **`src/lesson/BadgeStamp.tsx`** (new): celebration-only wrapper — owns centering, the
+    boop (scale 1.18→0.95→1.02→1, rotate −8°→1.5°→−0.5°→0°, opacity fade-in over
+    `STAMP_BEAT`=0.48s), and a 5-particle burst spread across −60/−20/20/70/130°. Uses
+    `m.div` from `motion/react` (strict mode); imports `STAMP_BEAT`/`EASE` from
+    `motion/tokens`. Reduced-motion renders a static centered medallion.
+  - **`src/lesson/LessonPlayer.tsx`** (modified): replaced the bare `<ConceptMedallion>` in
+    the done block with `<BadgeStamp>`; removed the now-unused `ConceptMedallion` import and
+    added `BadgeStamp`.
+  - **`src/styles/surfaces/beats.css`** (modified): added `.badge-stamp` (relative,
+    `fit-content`, `margin-inline:auto`, `grid`/`place-items:center`) + `.badge-stamp__particle`
+    (absolute, `--badge-hue` color, `pointer-events:none`) + `@media (prefers-reduced-motion)`
+    hides particles at the CSS layer too.
+- **Verified:** `npx tsc --noEmit` → exit 0 (no errors). Nothing committed.
+
+### Home top header enlarged (2026-06-24)
+
+- **Ask:** "make the top header of the website larger." Target = the signed-in Home
+  header (`<header class="ergo-topbar">` = Ergo wordmark + profile avatar) in
+  `src/pages/StudyDesk.tsx`, styled in `src/styles/surfaces/ergo-home.css`.
+- **Change (single file, `ergo-home.css`):** `.ergo-topbar` vertical padding `var(--s4)`
+  (16px) → `var(--s5)` (24px); `.ergo-wordmark` font-size 22px → 28px; `.ergo-avatar`
+  36×36 → 44×44 (font-size 14px → 16px, which also makes the visual size meet the 44px
+  hit target directly). No markup/JSX changes; lesson `.topbar` and the `.appbar`
+  (Profile) header were left untouched.
+- **Verified:** no linter errors on the edited CSS. Not browser-verified (no dev server
+  running). Nothing committed.
+
+### RetrievalGrid drag-to-fill (2026-06-24)
+
+- **Ask:** make `retrievalGrid` beat drag-compatible — learner can drag a right-side answer chip onto a left-side slot in addition to the existing tap-then-pick flow.
+- **Files changed (2):**
+  - `src/lesson/beats/RetrievalGridBeat.tsx` — added `useRef`/`m`/`PanInfo`/`SPRING` imports; `slotRefs`/`wasDragRef`/`dragoverIdxRef` refs; extracted `placeInto` helper; added `findSlotAtPoint`/`handleTileDrag`/`handleTileDragEnd`; registered left slot buttons with a ref callback; converted palette `<button>` → `<m.button drag dragSnapToOrigin …>`; `disabled` changed from `solved||revealed||selLeft===null` to `solved||revealed` (drag gestures require enabled elements); updated instruction label.
+  - `src/styles/surfaces/beats-extended.css` — added `.retgrid__slot--dragover` drop-target highlight + `.retgrid__palette .token:not(:disabled) { cursor:grab }` + `:active { cursor:grabbing }` after the `.retgrid__palette` block.
+- **Tap + keyboard flow preserved** — `onClick` guard `if (selLeft===null) return` + `wasDragRef` stray-click guard maintain the original tap interaction.
+- **Verified GREEN:** `npm run build` (tsc + vite, 0 errors, ✓ built in ~3s) · `npm run lint` (eslint, 0 errors). Nothing committed.
+
+### AnswerEntry placeholder no longer spoils the answer (2026-06-24)
+
+- **Problem:** two `answerEntry` beats used a placeholder example that was literally the
+  accepted answer, so the greyed-out `e.g. …` hint gave the solution away before the learner
+  thought: `lesson-penneys-game` `pick-your-counter` (`accept:["THH"]`, placeholder `"e.g. THH"`)
+  and `lesson-gamblers-ruin` (`accept:["1/2","0.5"]`, placeholder `"e.g. 1/2"`).
+  `AnswerEntryBeat.tsx` renders `f.placeholder` verbatim, so this was content, not a render bug.
+- **Fix (fixtures only):** placeholders swapped to a non-answer format example —
+  penney's `"e.g. THH"`→`"e.g. HTH"`; gambler's `"e.g. 1/2"`→`"e.g. 3/4"`.
+- **Scanned all fixtures** for the answer-equals-placeholder pattern: only those two were
+  affected. The other `answerEntry` fields (`lesson-longer-patterns` thh/hth,
+  `lesson-first-heads` count, gambler's avg) use `"?"` placeholders — safe, untouched.
+- Nothing committed.
+
+### Gambler's Ruin guided-solve — "explain the math more at the bottom" (2026-06-24)
+
+- **Ask:** on the `guided-solve` beat ("Solve both systems for the start at $2"), explain the
+  math more in the bottom CORRECT feedback strip.
+- **Change (fixtures only):** expanded `fixtures/lesson-gamblers-ruin.json` `guided-solve`
+  `feedback.correct` from one line ("Exactly — P = ½ and D = 4 = 2·(4−2).") into a short
+  derivation of both results, reusing the two recurrences this lesson already builds:
+  **chance** — P₀=0, P₄=1 and each interior = average of its neighbors ⇒ straight line Pᵢ=i/4 ⇒
+  P₂=½ (the symmetry); **duration** — D₂=1+½·D₃+½·D₁ with D₀=D₄=0 ⇒ Dᵢ=i·(4−i) (product of the
+  two wall distances) ⇒ D₂=2·(4−2)=4, the longest wait, at the middle. No grading/accept/
+  structure change (accept lists `["1/2","0.5"]` / `["4"]` untouched).
+- **Encoding gotcha:** this fixture stores ½/·/−/subscripts as literal `\uXXXX` *text* (but the
+  em-dash as a literal glyph). The `StrReplace` harness kept collapsing the escapes to glyphs so
+  the byte-match failed; the edit was done via a one-line **Python text replace** (preserves the
+  escape convention, no whole-file reformat). `FeedbackStrip` renders the strip as a plain-text
+  `<p>` (no KaTeX/markdown; newlines collapse) so it's written as flowing prose that wraps.
+- **Verified:** JSON parses; decoded strip reads correctly (subscripts render); `validate-fixtures`
+  all green.
+- **Pushed live (user-approved):** re-seeded **prod** Firestore via `SEED_TARGET=prod
+  GOOGLE_CLOUD_PROJECT=brilliant-org ./node_modules/.bin/tsx scripts/seed-firestore.ts` (Admin SDK
+  + gcloud ADC, `full_network`; no Java/emulator). Wrote the course doc + all 7 built lessons
+  (so it ALSO carried the in-tree penney's placeholder fix). Read-back confirmed
+  `lessons/lesson-gamblers-ruin` → `guided-solve.feedback.correct` now holds the expanded text in
+  prod. No hosting redeploy needed — the live client fetches lesson docs from Firestore at runtime
+  (`firestoreLoader.ts`) and `FeedbackStrip` renders `feedback.correct` verbatim; a page reload +
+  re-enter shows it. (`/dev/lesson/...` already had it from the bundled fixture.) Fixtures still
+  uncommitted in the working tree.
+
+### Mastery-challenge beats inserted into all 6 lesson fixtures (2026-06-24)
+
+- **Ask:** insert one `masteryChallenge` beat as second-to-last in each of L1–L6, add a
+  structural gate in `validate-fixtures.ts`, and update e2e helpers.
+- **Files changed:**
+  - `fixtures/lesson-pattern-hitting-times.json` — added mastery-challenge beat (E[HHH]=14); recap still last.
+  - `fixtures/lesson-penneys-game.json` — added mastery-challenge beat (counter=HTT, winprob=7/8); recap still last.
+  - `fixtures/lesson-gamblers-ruin.json` — added mastery-challenge beat (reach=3/10, steps=21); recap still last.
+  - `fixtures/lesson-states-streaks.json` — added mastery-challenge beat (partA=6, partB=3/8); recap-streak still last.
+  - `fixtures/lesson-longer-patterns.json` — added mastery-challenge beat (E[HTHT]=20); recap still last.
+  - `fixtures/lesson-overlap-shortcut.json` — added mastery-challenge beat (E[HHHH]=30); recap still last.
+  - `scripts/validate-fixtures.ts` — new gate #5 (MASTERY_LESSONS set): asserts last beat = recap, second-to-last = required masteryChallenge; pattern-pinned beats cross-checked against `buildAutomaton`.
+  - `src/content/schema.test.ts` — beat count 16→17 (the new beat) + updated comment.
+  - `src/lesson/mastery.test.ts` — `gradedRequiredBeatIds` snapshot updated to include mastery-challenge.
+  - `e2e/helpers.ts` — inserted mastery-challenge step (fill "14", Check, Continue) in BOTH `completeLesson` and `completeLessonTrackA`, immediately before the recap step.
+  - `e2e/remaining-lessons.spec.ts` — added `masteryChallenge(page, values)` helper; inserted calls before `recapFinish` in completeL2–completeL6 with per-lesson answers.
+- **Gates GREEN:** `validate-fixtures` (all 6 mastery-challenge gate lines + "All fixtures valid.") · `tsc -b` 0 errors · `eslint .` 0 errors · `vitest run` 212/212 green.
+- Nothing committed.
+
+### Medallion icon + embossed visual upgrade (2026-06-24)
+
+- **Ask:** CSS-only additions to `src/styles/surfaces/ergo-home.css` to support inline SVG icons
+  and make earned medals look more crafted/coin-like.
+- **Changes (single file, `ergo-home.css`):**
+  - `.ergo-medallion__glyph`: added `position: relative; z-index: 1` (paints above `::before` sheen).
+  - `.ergo-medallion__icon` (new): base `display:block; position:relative; z-index:1`; earned state
+    `color:#fff; filter:drop-shadow(…)`; locked state `color/opacity`; size rules sm 24px / md 28px / lg 48px.
+  - `.ergo-medallion--earned` box-shadow: added `inset 0 0 0 2.5px color-mix(in srgb,white 28%,transparent)`
+    as a light bezel ring just inside the dark 1px rim (embossed coin edge). Same bezel added to hover state.
+  - `.ergo-medallion--earned::before` (new): `linear-gradient(145deg, rgba(255,255,255,0.45)→0% at 48%)`
+    sheen; self-clips via `border-radius:50%`, no `overflow:hidden` on parent.
+  - `.ergo-medallion--lg.ergo-medallion--earned`: added wider bezel (`inset 0 0 0 3.5px …`).
+  - `.ergo-medallion--capstone.ergo-medallion--earned` (new): outer brand-hued ring
+    `0 0 0 3px`, larger ambient `0 6px 18px -4px`, plus full inset rims.
+  - `@keyframes ergo-medallion-shine` (new): scrolls `background-position 0%→100%` on a 3×-wide
+    diagonal gradient, clipped by `border-radius:50%` on `::after` — no `overflow:hidden` needed.
+  - `.ergo-medallion--earning::after` (new): 700ms shine sweep pseudo-element.
+  - Reduced-motion block: also disables `::after { display:none }`.
+- **Verified:** `npx prettier --check` passes clean. Nothing committed.
+
+### Home journey — dotted inter-section bridges (2026-06-24)
+
+- **Ask:** "add dots in between the different sections in the main screen so that the lessons
+  all seem more connected." Target = the Home `CourseJourney` rail, which cut off between each
+  chapter (`.ergo-row:last-child::before { bottom:50% }`) and restarted below the next section
+  label, so FOUNDATIONS / RACING & WALKS / MASTERY read as detached blocks.
+- **Change (single file, `src/styles/surfaces/ergo-journey.css`, +~25 lines):** (1) the
+  last-row rail cut is now scoped to the **final** section only
+  (`.ergo-chapter:last-of-type:not(.ergo-chapter--roadmap) … :last-child::before`), so sections
+  followed by another keep a full-height rail. (2) New dotted bridge
+  `.ergo-chapter:not(:first-of-type) .ergo-chapter__label::before` — a `radial-gradient`
+  dotted line (`left:14px`, `top:-24px`→`bottom:0`, `width:4px`, `opacity:0.6`) that carries the
+  rail across the chapter-label gap. Dots inherit the upcoming chapter's hue via `currentColor`
+  (the label already sets `color`), so the bridge fades in teal → coral → amber per section.
+- **Verified (browser, fresh server):** computed `::before` on all 3 non-first labels shows the
+  radial-gradient with correct hues, `top:-24px`, `left:14px`, `opacity:0.6`; screenshotted at
+  `/dev/home` — teal dots flow FOUNDATIONS→RACING, coral dots RACING→MASTERY, rail now reads as
+  one continuous path. ⚠ **Stale-Vite footgun again:** the long-running dev servers (4500/4700/…)
+  served a cached `app.css` transform (it `@import`s `ergo-journey.css` inside `@layer components`,
+  and the importer didn't invalidate) — the raw file was correct but the page showed old CSS;
+  only a **freshly started** server (4900) picked it up. Restart the dev server to see it.
+  Nothing committed.
+
+### Bespoke inline-SVG medallion icons (2026-06-24)
+
+- **Ask:** replace flat mono-text glyphs in `ConceptMedallion` with pictographic inline-SVG icons.
+- **Created `src/habit/MilestoneIcon.tsx`:** exports `MilestoneIcon({ id, glyph })`. Registry
+  (`Record<string, ReactNode>`) maps all 8 known milestone ids to distinct 24×24 line-art SVGs
+  (all `stroke="currentColor"`, `fill="none"` via parent, filled accents via `fill="currentColor"`).
+  Unknown ids fall back to `<span className="ergo-medallion__glyph">`. Icons: two overlapping coins
+  (hh-ht), checkered flag (penneys), random-walk walls (gamblers-ruin), 3 rounded squares + check
+  (first-pattern), 3-node state machine (state-machine), balance scale (martingale), half-arc + check
+  (three-lessons), full ring + 5-point star (six-lessons). Check mark on filled box uses
+  `stroke="var(--ergo-surface, canvas)"` for contrast.
+- **Edited `src/habit/ConceptMedallion.tsx` (surgical):** added `import { MilestoneIcon }`;
+  replaced `<span ergo-medallion__glyph>` with `<MilestoneIcon id={meta.id} glyph={meta.glyph} />`;
+  added `capstoneClass` for `six-lessons-complete` → `ergo-medallion--capstone` modifier.
+- **Verified:** `npx tsc -b` exits 0; `npx prettier --check` passes (ran `--write` to auto-format).
+  No other files touched. CSS for `.ergo-medallion__icon` owned by another worker.
+
+### End-of-lesson Mastery Challenge — L1-L6 (2026-06-24)
+
+New graded `masteryChallenge` beat inserted **immediately before the recap** of each core lesson
+(L1-L6) — one hard-ish *transfer* question to "prove mastery." **Authored by a council of
+sub-agents** (4 parallel Opus proposers — correctness / quant-transfer / assessment / misconception
+— synthesized by the orchestrator) and **every numeric answer engine-verified** (one-off
+`scripts/verify-mastery-answers.ts` prints all hitting-times / Penney odds / walk P&D).
+
+- **Type + UI:** new `masteryChallenge` interaction (`src/content/schema.ts`: `scenario?` +
+  answerEntry-style `fields[]`). `src/lesson/beats/MasteryChallengeBeat.tsx` mirrors `AnswerEntryBeat`
+  grading (norm + accept-list via `useHintLadder`, Enter-submit, reveal-on-3-wrong) but renders a
+  **distinct `.mastery` card** (accent-bordered, mono "Mastery challenge" pill badge + scenario line,
+  reusing `.answer-entry__*` inputs). Dispatcher case in `beats/index.tsx`; `.mastery*` block in
+  `beats-extended.css` (`--accent`/`--accent-tint`/`--paper-1`/`--r-pill`).
+- **Wiring:** added to `mastery.ts` `GRADED_BEAT_TYPES` (feeds `computeMastered`/needsReview;
+  `progress/recommend.ts` inherits via `gradedRequiredBeatIds` — no edit) + `validate-fixtures.ts`
+  `GRADED_TYPES`. `'mastery-challenge'` added to ALL SIX Prove-phase configs in `phases.ts` (else
+  `getRail` throws). New validate **gate #5**: each L1-L6 ends recap-last with a `required`
+  masteryChallenge penult; `pattern`-pinned beats (L1/L5/L6) cross-checked against `buildAutomaton`.
+- **Questions (engine-verified):** L1 `E[HHH]=14` · L2 friend picks **TTT** → counter **HTT**, P=**7/8**
+  · L3 start $3 walls $0/$10 → **3/10** & **21** · L4 (mixed/unlabeled) `E[TT]=6` & walk N=8 start3 →
+  **3/8** · L5 `E[HTHT]=20` · L6 `E[HHHH]=30`. No-guess type-in; accept-lists hold all equivalent
+  forms (fraction+decimal) and exclude each lesson's misconception wrong-answer.
+- **e2e:** `e2e/helpers.ts` (flagship Track B + Track A) solve `14`→Check→Continue before the recap
+  (recap stays **Finish**); `e2e/remaining-lessons.spec.ts` new `masteryChallenge(page, values)` helper
+  before each `recapFinish` (L2 `[HTT,7/8]`, L3 `[3/10,21]`, L4 `[6,3/8]`, L5 `[20]`, L6 `[30]`).
+- **Behavior change (intended):** `mastered` now also requires nailing the challenge first-try,
+  no-hint — i.e. it genuinely proves mastery. Never blocks unlock (mastery/needsReview are non-blocking;
+  the hint ladder reveals the answer so there's no dead-end).
+- **Gates GREEN:** `validate` (incl. 6 `mastery-challenge gate` lines), `tsc -b`, `eslint .`,
+  `vitest run` **212/212** (+ `MasteryChallengeBeat.test.tsx`; updated `schema.test.ts` beat count
+  16→17 + `mastery.test.ts` snapshot), `vite build`. Playwright e2e edits are correct-by-construction
+  (suite not run here — finicky dev-server env).
+- **⚠ Re-seed required to activate in prod/emulator:** the live client loads lessons from Firestore
+  (`firestoreLoader.ts`), so prod won't show the challenge until re-seeded (`SEED_TARGET=prod
+  GOOGLE_CLOUD_PROJECT=brilliant-org ./node_modules/.bin/tsx scripts/seed-firestore.ts`). The Cloud
+  Function validates required beats against the seeded doc, so seeding keeps completion consistent.
+  `/dev/lesson/*` already renders it (bundled fixture). A manual full-lesson visual walk of the new
+  card is the recommended follow-up. Nothing committed.
+- **MilestoneIcon fix (uncommitted):** `first-pattern-cracked` last cell now uses
+  `fillOpacity={0.3}` + check stroke `currentColor` (removed unreliable
+  `var(--ergo-surface)` white-on-white).

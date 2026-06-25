@@ -28,7 +28,7 @@ const FLAGSHIP: PhaseConfig = {
       id: 'Model',
       beatIds: ['failure-edge', 'equation-tiles', 'refine-prediction', 'guided-solve'],
     },
-    { id: 'Prove', beatIds: ['theory-vs-sim', 'overlap', 'recap'] },
+    { id: 'Prove', beatIds: ['theory-vs-sim', 'overlap', 'mastery-challenge', 'recap'] },
   ],
   offRailAfter: {
     'bias-sandbox': 'overlap',
@@ -61,7 +61,7 @@ const PENNEYS: PhaseConfig = {
     { id: 'Bet', beatIds: ['recall-6-4', 'open-bet'] },
     { id: 'Explore', beatIds: ['race-the-tie', 'first-step-split'] },
     { id: 'Model', beatIds: ['pick-your-counter', 'race-the-counter', 'win-prob-tiles'] },
-    { id: 'Prove', beatIds: ['non-transitive-loop', 'recap'] },
+    { id: 'Prove', beatIds: ['non-transitive-loop', 'mastery-challenge', 'recap'] },
   ],
   offRailAfter: {
     'whos-first-primer': 'recall-6-4',
@@ -76,7 +76,7 @@ const GAMBLERS_RUIN: PhaseConfig = {
     { id: 'Bet', beatIds: ['recall-overlap', 'open-bet'] },
     { id: 'Explore', beatIds: ['walk-once', 'boundary-edge'] },
     { id: 'Model', beatIds: ['prob-tiles', 'duration-tiles', 'guided-solve'] },
-    { id: 'Prove', beatIds: ['house-edge', 'recap'] },
+    { id: 'Prove', beatIds: ['house-edge', 'mastery-challenge', 'recap'] },
   ],
   offRailAfter: {
     'gamblers-fallacy': 'open-bet',
@@ -90,7 +90,7 @@ const STATES_STREAKS: PhaseConfig = {
     { id: 'Bet', beatIds: ['retrieval-grid'] },
     { id: 'Explore', beatIds: ['which-waits-longest', 'race-or-wait'] },
     { id: 'Model', beatIds: ['plus-one-or-not', 'weak-node'] },
-    { id: 'Prove', beatIds: ['recap-streak'] },
+    { id: 'Prove', beatIds: ['mastery-challenge', 'recap-streak'] },
   ],
   offRailAfter: {
     'mixed-primer': 'retrieval-grid',
@@ -104,7 +104,7 @@ const LONGER_PATTERNS: PhaseConfig = {
     { id: 'Bet', beatIds: ['open-bet', 'pattern-pick'] },
     { id: 'Explore', beatIds: ['simulate', 'overlap-ruler'] },
     { id: 'Model', beatIds: ['failure-edge', 'equation-tiles', 'guided-solve'] },
-    { id: 'Prove', beatIds: ['theory-vs-sim', 'border-sum', 'overlap-compare', 'recap'] },
+    { id: 'Prove', beatIds: ['theory-vs-sim', 'border-sum', 'overlap-compare', 'mastery-challenge', 'recap'] },
   ],
   offRailAfter: {
     'transfer-primer': 'pattern-pick',
@@ -119,7 +119,7 @@ const OVERLAP_SHORTCUT: PhaseConfig = {
     { id: 'Bet', beatIds: ['recall-numbers'] },
     { id: 'Explore', beatIds: ['self-overlap', 'sum-it'] },
     { id: 'Model', beatIds: ['martingale', 'apply-THH', 'apply-HTH'] },
-    { id: 'Prove', beatIds: ['triangulation', 'recap'] },
+    { id: 'Prove', beatIds: ['triangulation', 'mastery-challenge', 'recap'] },
   ],
   offRailAfter: {
     'exponent-primer': 'self-overlap',

@@ -10,6 +10,7 @@ import { loadLessonFromFirestore } from '../content/loader'
 import { loadSnapshot } from '../lesson/snapshot'
 import { LessonPlayer } from '../lesson/LessonPlayer'
 import { loadTrack, saveTrack, type Track } from '../progress/track'
+import { loadProgress } from '../progress/progress'
 import { DiagnosticGate } from './DiagnosticGate'
 import type { Lesson, Snapshot } from '../content/schema'
 import { ROUTES, FLAGSHIP_LESSON_ID, type NavigateFn } from './routes'
@@ -24,6 +25,7 @@ type LoadState =
       snapshot: Snapshot | null
       // null ⇒ the diagnostic hasn't run; the flagship shows DiagnosticGate.
       track: Track | null
+      completed: boolean
     }
 
 export function LessonPage({
@@ -46,13 +48,21 @@ export function LessonPage({
         // Lesson content + restore snapshot + the course-level track resolve
         // together so the player mounts once with its restored initial state and
         // the right track (no post-mount reset). Missing track → Track B.
-        const [lesson, snapshot, track] = await Promise.all([
+        const [lesson, snapshot, track, progress] = await Promise.all([
           loadLessonFromFirestore(lessonId),
           loadSnapshot(uid, lessonId),
           loadTrack(uid),
+          loadProgress(uid, lessonId),
         ])
         if (!cancelled)
-          setState({ status: 'ready', lessonId, lesson, snapshot, track })
+          setState({
+            status: 'ready',
+            lessonId,
+            lesson,
+            snapshot,
+            track,
+            completed: progress?.completionStatus === 'completed',
+          })
       } catch (err) {
         if (!cancelled) {
           setState({
@@ -93,6 +103,7 @@ export function LessonPage({
         initialSnapshot={state.snapshot}
         persistence={{ uid: user.uid, lessonId }}
         track={state.track ?? 'B'}
+        review={state.completed}
         onExit={() => navigate(ROUTES.coursePath)}
       />
     )

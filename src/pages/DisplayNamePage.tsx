@@ -38,9 +38,6 @@ export function DisplayNamePage() {
       <div className="authcard">
         <p className="authcard__eyebrow">One last thing</p>
         <h1 className="authcard__title">What should we call you?</h1>
-        <p className="authcard__sub">
-          This is the name shown on your course path. You can change it later.
-        </p>
 
         <form className="authform" onSubmit={handleSubmit} noValidate>
           <label className="field">

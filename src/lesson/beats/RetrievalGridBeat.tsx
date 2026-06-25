@@ -4,16 +4,21 @@
 // right palette; Check grades every pair through the hint ladder, so it drives
 // needsReview + the mastery signal like other graded beats. Tap-only, aria-live.
 
-import { useState } from 'react'
+import { useRef, useState } from 'react'
+import { m, type PanInfo } from 'motion/react'
 import type { BeatProps } from './types'
 import { BeatShell } from '../BeatShell'
 import { resolveFeedback, useHintLadder } from '../feedback'
+import { SPRING } from '../../motion/tokens'
 
 export function RetrievalGridBeat(props: BeatProps) {
   const { beat, pattern, isLast, onAdvance } = props
   const [assign, setAssign] = useState<Record<number, string | null>>({})
   const [selLeft, setSelLeft] = useState<number | null>(null)
   const [solved, setSolved] = useState(false)
+  const slotRefs = useRef<Map<number, HTMLButtonElement>>(new Map())
+  const wasDragRef = useRef(false)
+  const dragoverIdxRef = useRef<number | null>(null)
 
   const ladder = useHintLadder({
     feedback: resolveFeedback(beat.feedback, pattern),
@@ -43,6 +48,53 @@ export function RetrievalGridBeat(props: BeatProps) {
     }
   }
 
+  function placeInto(leftIdx: number, r: string) {
+    setAssign((prev) => {
+      const next: Record<number, string | null> = {}
+      for (const [k, v] of Object.entries(prev)) next[Number(k)] = v === r ? null : v
+      next[leftIdx] = r
+      return next
+    })
+    setSelLeft(null)
+    ladder.clear()
+  }
+
+  function findSlotAtPoint(x: number, y: number): number | null {
+    const vx = x - window.scrollX
+    const vy = y - window.scrollY
+    for (const [idx, el] of slotRefs.current) {
+      const rect = el.getBoundingClientRect()
+      if (vx >= rect.left && vx <= rect.right && vy >= rect.top && vy <= rect.bottom) return idx
+    }
+    return null
+  }
+
+  function handleTileDrag(_event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) {
+    const found = findSlotAtPoint(info.point.x, info.point.y)
+    if (found === dragoverIdxRef.current) return
+    if (dragoverIdxRef.current != null) {
+      slotRefs.current.get(dragoverIdxRef.current)?.classList.remove('retgrid__slot--dragover')
+    }
+    if (found != null) {
+      slotRefs.current.get(found)?.classList.add('retgrid__slot--dragover')
+    }
+    dragoverIdxRef.current = found
+  }
+
+  function handleTileDragEnd(r: string, _event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) {
+    if (dragoverIdxRef.current != null) {
+      slotRefs.current.get(dragoverIdxRef.current)?.classList.remove('retgrid__slot--dragover')
+      dragoverIdxRef.current = null
+    }
+    const realDrag = Math.abs(info.offset.x) > 3 || Math.abs(info.offset.y) > 3
+    if (!realDrag) return
+    wasDragRef.current = true
+    if (solved || revealed) return
+    const idx = findSlotAtPoint(info.point.x, info.point.y)
+    if (idx == null) return
+    placeInto(idx, r)
+  }
+
   const primary = solved
     ? { label: isLast ? 'Finish' : 'Continue', enabled: true, onClick: onAdvance }
     : { label: 'Check', enabled: allAssigned, onClick: check }
@@ -62,7 +114,7 @@ export function RetrievalGridBeat(props: BeatProps) {
       }
     >
       <div className="retgrid">
-        <p className="retgrid__label">Tap a result on the left, then its match on the right.</p>
+        <p className="retgrid__label">Tap a result on the left, then its match — or drag a match onto a slot.</p>
         <ul className="retgrid__rows">
           {pairs.map((p, i) => {
             const shown = revealed ? p.right : (assign[i] ?? null)
@@ -88,6 +140,7 @@ export function RetrievalGridBeat(props: BeatProps) {
                   disabled={solved || revealed}
                   aria-label={`${p.left}: ${shown ?? 'unmatched'}`}
                   onClick={() => setSelLeft((cur) => (cur === i ? null : i))}
+                  ref={(el) => { if (el) slotRefs.current.set(i, el); else slotRefs.current.delete(i) }}
                 >
                   {shown ?? 'tap, then pick a match'}
                 </button>
@@ -99,28 +152,28 @@ export function RetrievalGridBeat(props: BeatProps) {
           {rights.map((r) => {
             const used = Object.values(assign).includes(r)
             return (
-              <button
+              <m.button
                 key={r}
                 type="button"
                 className={'token token--const' + (used ? ' token--placed' : '')}
-                disabled={solved || revealed || selLeft === null}
+                disabled={solved || revealed}
                 onClick={() => {
+                  if (wasDragRef.current) { wasDragRef.current = false; return }
                   if (selLeft === null) return
-                  setAssign((prev) => {
-                    // A right value maps to exactly one left; clear any prior owner.
-                    const next: Record<number, string | null> = {}
-                    for (const [k, v] of Object.entries(prev)) {
-                      next[Number(k)] = v === r ? null : v
-                    }
-                    next[selLeft] = r
-                    return next
-                  })
-                  setSelLeft(null)
-                  ladder.clear()
+                  placeInto(selLeft, r)
                 }}
+                drag
+                dragSnapToOrigin
+                whileHover={{ y: -3, scale: 1.04 }}
+                whileTap={{ scale: 0.95 }}
+                whileDrag={{ scale: 1.04, rotate: 3, boxShadow: 'var(--ergo-shadow-md)' }}
+                transition={SPRING}
+                onDrag={handleTileDrag}
+                onDragEnd={(e, info) => handleTileDragEnd(r, e, info)}
+                style={{ position: 'relative' }}
               >
                 {r}
-              </button>
+              </m.button>
             )
           })}
         </div>

@@ -126,6 +126,27 @@
       }
     },
     {
+      "beatId": "mastery-challenge",
+      "required": true,
+      "prompt": "Mastery challenge: each part uses a different tool - a pattern wait or a walk between two walls. Decide which, then compute.",
+      "interaction": {
+        "type": "masteryChallenge",
+        "scenario": "Part A: a fair coin is flipped until TT (two tails in a row) first appears. Part B (separate game): a chip starts at $3 with walls at $0 and $8; each flip moves it +$1 on heads, -$1 on tails until it hits a wall.",
+        "fields": [
+          { "id": "partA", "label": "Part A - average flips until TT", "accept": ["6"], "placeholder": "?", "suffix": "flips" },
+          { "id": "partB", "label": "Part B - chance the chip reaches $8 before $0", "accept": ["3/8", "0.375", ".375"], "placeholder": "e.g. 2/5" }
+        ]
+      },
+      "feedback": {
+        "correct": "Part A = 6, Part B = 3/8. Part A is a wait: TT resets on a single head, exactly like HH, so E[TT] = 6 (not 4 - it doesn't keep progress the way HT does). Part B is a walk: the reach chance is pure position, i/N = 3/8. Same coin, two different machines - naming the tool is the real skill.",
+        "hints": [
+          "Part A waits for one pattern (count the flips). Part B is a single chip drifting between two walls (a probability). Different tools.",
+          "Part A: does TT keep any progress after a near-miss like HT, or reset like HH? Part B: use the straight-line law P = i/N.",
+          "TT resets on a head, just like HH, so E[TT] = 6. The walk: P = i/N = 3/8."
+        ]
+      }
+    },
+    {
       "beatId": "recap-streak",
       "required": true,
       "prompt": "Reveal the recap cards to see how wait, race, and walk all connect.",

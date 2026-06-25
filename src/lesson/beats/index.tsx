@@ -18,6 +18,7 @@ import { SubstitutionBeat } from './SubstitutionBeat'
 import { EquationTilesBeat } from './EquationTilesBeat'
 import { PrimerBeat } from './PrimerBeat'
 import { AnswerEntryBeat } from './AnswerEntryBeat'
+import { MasteryChallengeBeat } from './MasteryChallengeBeat'
 import { RetrievalGridBeat } from './RetrievalGridBeat'
 import { SumTilesBeat } from './SumTilesBeat'
 import { AutocorrelationRulerBeat } from './AutocorrelationRulerBeat'
@@ -71,6 +72,8 @@ export function BeatView(props: BeatProps) {
       return <PrimerBeat {...props} />
     case 'answerEntry':
       return <AnswerEntryBeat {...props} />
+    case 'masteryChallenge':
+      return <MasteryChallengeBeat {...props} />
     case 'slider':
       return props.beat.beatId === 'bias-sandbox' ? (
         <BiasSandboxBeat {...props} />

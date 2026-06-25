@@ -398,6 +398,19 @@
   flex-wrap: wrap;
   gap: var(--s2);
 }
+.retgrid__slot--dragover {
+  border-style: solid;
+  border-color: var(--accent);
+  background: var(--accent-tint);
+  box-shadow: 0 0 0 2px var(--accent);
+  color: var(--ink);
+}
+.retgrid__palette .token:not(:disabled) {
+  cursor: grab;
+}
+.retgrid__palette .token:active {
+  cursor: grabbing;
+}
 
 /* sumTiles + ruler shared total + note */
 .sumtiles,
@@ -1153,6 +1166,38 @@
   margin: 0;
   font-size: calc(13px * var(--fs));
   color: var(--graphite-soft);
+}
+
+/* ── Mastery challenge card (MasteryChallengeBeat) ──────────────────────── */
+.mastery {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s3);
+  padding: var(--s4);
+  border: 1.5px solid var(--accent);
+  border-radius: var(--r-lg);
+  background: var(--paper-1);
+  box-shadow: var(--ergo-shadow-sm);
+}
+.mastery__badge {
+  align-self: flex-start;
+  margin: 0;
+  padding: var(--s1) var(--s3);
+  border: 1.5px solid var(--accent);
+  border-radius: var(--r-pill);
+  background: var(--accent-tint);
+  font-family: var(--font-mono);
+  font-size: calc(11px * var(--fs));
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+.mastery__scenario {
+  margin: 0;
+  font-size: calc(15px * var(--fs));
+  line-height: 1.55;
+  color: var(--ergo-ink-2);
 }
 
 /* ── SliderBeat visible instruction ─────────────────────────────────────── */

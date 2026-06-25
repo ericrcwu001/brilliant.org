@@ -11,8 +11,8 @@ const lesson = LessonSchema.parse(lessonFixture)
 const beats = lesson.beats as Beat[]
 
 describe('gradedRequiredBeatIds', () => {
-  it('selects only the required graded beats (L1: failure-edge + equation-tiles)', () => {
-    expect(gradedRequiredBeatIds(beats)).toEqual(['failure-edge', 'equation-tiles'])
+  it('selects only the required graded beats (L1: failure-edge + equation-tiles + mastery-challenge)', () => {
+    expect(gradedRequiredBeatIds(beats)).toEqual(['failure-edge', 'equation-tiles', 'mastery-challenge'])
   })
 })
 

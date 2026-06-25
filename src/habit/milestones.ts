@@ -5,6 +5,7 @@
 
 import { collection, getDocs } from 'firebase/firestore'
 import { db } from '../firebase/app'
+import type { Progress } from '../content/schema'
 
 export interface MilestoneMeta {
   id: string
@@ -48,4 +49,51 @@ export async function loadEarnedMilestones(uid: string): Promise<Set<string>> {
   } catch {
     return new Set()
   }
+}
+
+// Milestone → the lesson whose mastery it reflects (client-side inverse of the
+// server's LESSON_MILESTONES in functions/src/milestones.ts).
+export const MILESTONE_LESSONS: Record<string, string> = {
+  'hh-ht-mastered': 'lesson-pattern-hitting-times',
+  'penneys-game-won': 'lesson-penneys-game',
+  'gamblers-ruin-solved': 'lesson-gamblers-ruin',
+  'first-pattern-cracked': 'lesson-states-streaks',
+  'state-machine-builder': 'lesson-longer-patterns',
+  'martingale-mastered': 'lesson-overlap-shortcut',
+}
+
+// Aggregate milestones reflect a set of lessons (mirrors MID_COURSE_PATH /
+// FULL_COURSE_PATH server-side). Gold only when every constituent lesson is aced.
+const MILESTONE_AGGREGATE_LESSONS: Record<string, string[]> = {
+  'three-lessons-complete': [
+    'lesson-pattern-hitting-times',
+    'lesson-penneys-game',
+    'lesson-gamblers-ruin',
+  ],
+  'six-lessons-complete': [
+    'lesson-pattern-hitting-times',
+    'lesson-penneys-game',
+    'lesson-gamblers-ruin',
+    'lesson-states-streaks',
+    'lesson-longer-patterns',
+    'lesson-overlap-shortcut',
+  ],
+}
+
+function lessonAced(p: Progress | undefined): boolean {
+  return p?.derived?.mastered === true
+}
+
+// True iff the concept behind this milestone was aced (gold tier). Aggregate
+// milestones require every constituent lesson to be aced. Unknown ids and
+// lessons with no/!aced progress return false (→ silver if earned, else locked).
+export function isMilestoneMastered(
+  milestoneId: string,
+  progressById: Record<string, Progress>,
+): boolean {
+  const single = MILESTONE_LESSONS[milestoneId]
+  if (single) return lessonAced(progressById[single])
+  const agg = MILESTONE_AGGREGATE_LESSONS[milestoneId]
+  if (agg) return agg.every((id) => lessonAced(progressById[id]))
+  return false
 }

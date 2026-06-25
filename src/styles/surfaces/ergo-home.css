@@ -15,14 +15,14 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: var(--s4) 0;
+  padding: var(--s5) 0;
   border-bottom: 1px solid var(--ergo-line);
 }
 
 .ergo-wordmark {
   font-family: var(--font-display);
   font-weight: 600;
-  font-size: 22px;
+  font-size: 28px;
   letter-spacing: -0.02em;
   color: var(--ergo-ink);
   line-height: 1;
@@ -31,22 +31,23 @@
 
 .ergo-avatar {
   /* min 44px hit target achieved via padding compensation below */
-  width: 36px;
-  height: 36px;
+  width: 44px;
+  height: 44px;
   padding: 0;
   border-radius: 50%;
   background: var(--ergo-brand);
   color: #fff;
   font-family: var(--font-sans);
   font-weight: 600;
-  font-size: 14px;
+  font-size: 16px;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
   border: none;
   cursor: pointer;
-  transition: background var(--dur-base, 200ms) var(--ease-out, cubic-bezier(.2,.7,.2,1));
+  transition: background var(--dur-base, 200ms)
+    var(--ease-out, cubic-bezier(0.2, 0.7, 0.2, 1));
   /* Extend hit target without changing visual size */
   position: relative;
 }
@@ -182,43 +183,210 @@
   /* Chapter hue injected inline via CSS custom properties. */
   --medallion-hue: var(--ergo-brand);
   --medallion-tint: var(--ergo-brand-tint);
+  --medallion-gold: #d4af37;
+  --medallion-silver: #aeb4bf;
 
-  width: 44px;
-  height: 44px;
+  width: 48px;
+  height: 48px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   position: relative;
   flex-shrink: 0;
+  transition:
+    transform var(--dur-base, 200ms)
+      var(--ease-out, cubic-bezier(0.2, 0.7, 0.2, 1)),
+    box-shadow var(--dur-base, 200ms)
+      var(--ease-out, cubic-bezier(0.2, 0.7, 0.2, 1));
 }
 
+/* Earned = a minted chapter-hue medal: soft hue gradient with a top-left
+   sheen, a glassy inner highlight, a darker rim for definition, a colored
+   ambient shadow, and a crisp white glyph. */
 .ergo-medallion--earned {
-  border: 2.5px solid var(--medallion-hue);
-  background: var(--medallion-tint);
+  background: radial-gradient(
+    120% 120% at 32% 24%,
+    color-mix(in srgb, var(--medallion-hue) 78%, white),
+    var(--medallion-hue) 58%,
+    color-mix(in srgb, var(--medallion-hue) 82%, black) 100%
+  );
+  box-shadow:
+    0 2px 7px -1px color-mix(in srgb, var(--medallion-hue) 42%, transparent),
+    inset 0 1px 0 rgba(255, 255, 255, 0.4),
+    inset 0 0 0 1px color-mix(in srgb, var(--medallion-hue) 55%, black),
+    inset 0 0 0 2.5px color-mix(in srgb, white 28%, transparent);
+}
+
+/* Top-left glossy sheen; self-clips via border-radius so no overflow:hidden
+   needed on the parent (the lock overlay lives outside the circle). */
+.ergo-medallion--earned::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  pointer-events: none;
+  background: linear-gradient(
+    145deg,
+    rgba(255, 255, 255, 0.45),
+    rgba(255, 255, 255, 0) 48%
+  );
 }
 
 .ergo-medallion--locked {
-  border: 2.5px solid var(--ergo-line-2);
   background: var(--ergo-surface-2);
-  opacity: 0.7;
+  box-shadow: inset 0 0 0 1.5px var(--ergo-line-2);
+}
+
+/* Tier rings (gallery): gold = aced concept, silver = earned-not-aced. Drawn as
+   an outline so they layer over the earned medal's box-shadow without replacing
+   it. Locked medallions get no ring. */
+.ergo-medallion--gold {
+  outline: 2px solid var(--medallion-gold);
+  outline-offset: 2px;
+}
+.ergo-medallion--silver {
+  outline: 2px solid var(--medallion-silver);
+  outline-offset: 2px;
+}
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  .ergo-medallion--gold:hover {
+    outline-color: color-mix(in srgb, var(--medallion-gold) 80%, white);
+  }
+}
+
+/* ── Tier hover popup ──────────────────────────────────────────
+   Custom tooltip naming the concept + its tier. Decorative (the medallion's
+   aria-label carries the same text), so it is aria-hidden and hover-only.
+   Self-positioned above the medallion; parents don't clip on desktop. */
+.ergo-medallion__tip {
+  position: absolute;
+  bottom: calc(100% + 9px);
+  left: 50%;
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 7px 11px;
+  border-radius: var(--r-sm, 8px);
+  background: var(--ergo-ink, #161a27);
+  box-shadow:
+    0 8px 22px -6px rgba(22, 26, 39, 0.5),
+    0 2px 6px rgba(22, 26, 39, 0.25);
+  white-space: nowrap;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateX(-50%) translateY(4px) scale(0.97);
+  transform-origin: bottom center;
+  pointer-events: none;
+  transition:
+    opacity var(--dur-base, 200ms) var(--ease-out, cubic-bezier(0.2, 0.7, 0.2, 1)),
+    transform var(--dur-base, 200ms) var(--ease-out, cubic-bezier(0.2, 0.7, 0.2, 1)),
+    visibility var(--dur-base, 200ms);
+}
+
+/* Down-pointing arrow */
+.ergo-medallion__tip::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 5px solid transparent;
+  border-top-color: var(--ergo-ink, #161a27);
+}
+
+.ergo-medallion__tip-name {
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.2;
+  color: #fff;
+}
+
+.ergo-medallion__tip-tier {
+  font-family: var(--font-sans);
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: 0.01em;
+  color: #cdd2dc;
+}
+
+.ergo-medallion__tip[data-tier='gold'] .ergo-medallion__tip-tier {
+  color: #f1c863;
+}
+.ergo-medallion__tip[data-tier='silver'] .ergo-medallion__tip-tier {
+  color: #d4d9e2;
+}
+.ergo-medallion__tip[data-tier='locked'] .ergo-medallion__tip-tier {
+  color: #9aa0b2;
+}
+
+/* Lift the hovered medallion above its neighbours so the popup is never clipped
+   by a later sibling, then reveal the popup. */
+.ergo-medallion:hover {
+  z-index: 20;
+}
+.ergo-medallion:hover .ergo-medallion__tip,
+.ergo-medallion:focus-within .ergo-medallion__tip {
+  opacity: 1;
+  visibility: visible;
+  transform: translateX(-50%) translateY(0) scale(1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ergo-medallion__tip {
+    transition:
+      opacity var(--dur-base, 200ms) linear,
+      visibility var(--dur-base, 200ms);
+    transform: translateX(-50%);
+  }
+  .ergo-medallion:hover .ergo-medallion__tip,
+  .ergo-medallion:focus-within .ergo-medallion__tip {
+    transform: translateX(-50%);
+  }
 }
 
 .ergo-medallion__glyph {
   font-family: var(--font-mono);
   font-weight: 700;
-  font-size: 10px;
+  font-size: 11px;
+  letter-spacing: -0.02em;
   line-height: 1;
   text-align: center;
+  padding: 0 2px;
+  position: relative;
+  z-index: 1;
 }
 
 .ergo-medallion--earned .ergo-medallion__glyph {
-  color: var(--medallion-hue);
+  color: #fff;
+  text-shadow: 0 1px 1.5px color-mix(in srgb, var(--medallion-hue) 55%, black);
 }
 
 .ergo-medallion--locked .ergo-medallion__glyph {
   color: var(--ergo-ink-3);
-  opacity: 0.35;
+  opacity: 0.5;
+}
+
+.ergo-medallion__icon {
+  display: block;
+  position: relative;
+  z-index: 1;
+}
+
+.ergo-medallion--earned .ergo-medallion__icon {
+  color: #fff;
+  filter: drop-shadow(
+    0 1px 1.5px color-mix(in srgb, var(--medallion-hue) 55%, black)
+  );
+}
+
+.ergo-medallion--locked .ergo-medallion__icon {
+  color: var(--ergo-ink-3);
+  opacity: 0.5;
 }
 
 .ergo-medallion__lock {
@@ -227,16 +395,74 @@
   right: -2px;
 }
 
-/* Size variants. --sm is the gallery default (byte-identical before this diff). */
-.ergo-medallion--sm { width: 44px; height: 44px; }
-.ergo-medallion--md { width: 56px; height: 56px; }
+/* Hover delight — earned medals lift slightly. Decorative only (the medallions
+   are not interactive), so gate it to fine-pointer + no-reduced-motion. */
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  .ergo-medallion--earned:hover {
+    transform: translateY(-2px);
+    box-shadow:
+      0 5px 12px -2px color-mix(in srgb, var(--medallion-hue) 48%, transparent),
+      inset 0 1px 0 rgba(255, 255, 255, 0.45),
+      inset 0 0 0 1px color-mix(in srgb, var(--medallion-hue) 55%, black),
+      inset 0 0 0 2.5px color-mix(in srgb, white 28%, transparent);
+  }
+}
+
+/* Size variants. */
+.ergo-medallion--sm {
+  width: 48px;
+  height: 48px;
+}
+.ergo-medallion--md {
+  width: 56px;
+  height: 56px;
+}
 .ergo-medallion--lg {
   width: 96px;
   height: 96px;
-  box-shadow: var(--ergo-shadow-md);
 }
-.ergo-medallion--md .ergo-medallion__glyph { font-size: 13px; }
-.ergo-medallion--lg .ergo-medallion__glyph { font-size: 20px; }
+.ergo-medallion--sm .ergo-medallion__glyph {
+  font-size: 11px;
+}
+.ergo-medallion--md .ergo-medallion__glyph {
+  font-size: 13px;
+}
+.ergo-medallion--lg .ergo-medallion__glyph {
+  font-size: 22px;
+}
+.ergo-medallion--sm .ergo-medallion__icon {
+  width: 24px;
+  height: 24px;
+}
+.ergo-medallion--md .ergo-medallion__icon {
+  width: 28px;
+  height: 28px;
+}
+.ergo-medallion--lg .ergo-medallion__icon {
+  width: 48px;
+  height: 48px;
+}
+
+/* The big completion-takeover medal gets a deeper hero shadow. Must come
+   after the base .ergo-medallion--earned rule so it wins on specificity tie. */
+.ergo-medallion--lg.ergo-medallion--earned {
+  box-shadow:
+    0 10px 26px -6px color-mix(in srgb, var(--medallion-hue) 50%, transparent),
+    inset 0 2px 0 rgba(255, 255, 255, 0.4),
+    inset 0 0 0 1.5px color-mix(in srgb, var(--medallion-hue) 55%, black),
+    inset 0 0 0 3.5px color-mix(in srgb, white 28%, transparent);
+}
+
+/* Course-completion capstone: outer brand ring + larger ambient glow. */
+.ergo-medallion--capstone.ergo-medallion--earned {
+  box-shadow:
+    0 0 0 3px color-mix(in srgb, var(--medallion-hue) 16%, transparent),
+    0 6px 18px -4px color-mix(in srgb, var(--medallion-hue) 55%, transparent),
+    0 2px 7px -1px color-mix(in srgb, var(--medallion-hue) 42%, transparent),
+    inset 0 1px 0 rgba(255, 255, 255, 0.4),
+    inset 0 0 0 1px color-mix(in srgb, var(--medallion-hue) 55%, black),
+    inset 0 0 0 2.5px color-mix(in srgb, white 28%, transparent);
+}
 
 /* Compact streak chip — used in the lesson top bar (WeeklyStreak compact). */
 .ergo-streak--compact {
@@ -277,13 +503,46 @@
   }
 }
 
+/* Diagonal shine sweep, runs once on earn. background-position scrolls a
+   3× wide gradient across; border-radius:50% on ::after self-clips it so
+   no overflow:hidden is needed on the parent. */
+@keyframes ergo-medallion-shine {
+  from {
+    background-position: 0% 50%;
+  }
+  to {
+    background-position: 100% 50%;
+  }
+}
+
 .ergo-medallion--earning {
-  animation: ergo-medallion-earn var(--dur-slow, 360ms) var(--ease-out, cubic-bezier(.2,.7,.2,1)) both;
+  animation: ergo-medallion-earn var(--dur-slow, 360ms)
+    var(--ease-out, cubic-bezier(0.2, 0.7, 0.2, 1)) both;
+}
+
+.ergo-medallion--earning::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  pointer-events: none;
+  background: linear-gradient(
+    115deg,
+    transparent 35%,
+    rgba(255, 255, 255, 0.55) 50%,
+    transparent 65%
+  );
+  background-size: 300% 100%;
+  animation: ergo-medallion-shine 700ms
+    var(--ease-out, cubic-bezier(0.2, 0.7, 0.2, 1)) both;
 }
 
 @media (prefers-reduced-motion: reduce) {
   .ergo-medallion--earning {
     animation: none;
+  }
+  .ergo-medallion--earning::after {
+    display: none;
   }
 }
 
@@ -293,8 +552,13 @@
 }
 
 @keyframes ergo-skeleton-pulse {
-  0%, 100% { opacity: 0.55; }
-  50%       { opacity: 0.9;  }
+  0%,
+  100% {
+    opacity: 0.55;
+  }
+  50% {
+    opacity: 0.9;
+  }
 }
 
 .ergo-skeleton__band {
@@ -320,9 +584,15 @@
   animation: ergo-skeleton-pulse 1.8s ease-in-out infinite;
 }
 
-.ergo-skeleton__row:nth-child(2) { animation-delay: 0.12s; }
-.ergo-skeleton__row:nth-child(3) { animation-delay: 0.24s; }
-.ergo-skeleton__row:nth-child(4) { animation-delay: 0.36s; }
+.ergo-skeleton__row:nth-child(2) {
+  animation-delay: 0.12s;
+}
+.ergo-skeleton__row:nth-child(3) {
+  animation-delay: 0.24s;
+}
+.ergo-skeleton__row:nth-child(4) {
+  animation-delay: 0.36s;
+}
 
 @media (prefers-reduced-motion: reduce) {
   .ergo-skeleton__band,
@@ -354,16 +624,16 @@
     padding-left: 0;
   }
 
-  /* Horizontal scroll on mobile if medallions overflow */
+  /* Wrap medallions into clean even rows on mobile (8 badges = 2 rows of 4) */
   .ergo-medallions__row {
-    flex-wrap: nowrap;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: none;
-    padding-bottom: var(--s1);
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    justify-items: center;
+    gap: var(--s3) var(--s2);
   }
 
-  .ergo-medallions__row::-webkit-scrollbar {
-    display: none;
+  .ergo-medallions__row .ergo-medallion {
+    width: 44px;
+    height: 44px;
   }
 }

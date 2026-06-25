@@ -1,40 +1,75 @@
 /* --- Landing hero --- */
 
 .hero {
+  position: relative;
   min-height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: var(--s7) var(--s4);
+  overflow: hidden;
+}
+/* Soft tri-chapter aurora (indigo / teal / coral) — premium colorful depth on
+   the cool-white base. Static gradient, compositor-safe, behind the content. */
+.hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(
+      52% 44% at 50% 14%,
+      color-mix(in srgb, var(--ch1) 16%, transparent),
+      transparent 72%
+    ),
+    radial-gradient(
+      46% 42% at 84% 86%,
+      color-mix(in srgb, var(--ch2) 13%, transparent),
+      transparent 70%
+    ),
+    radial-gradient(
+      42% 40% at 14% 84%,
+      color-mix(in srgb, var(--ch3) 9%, transparent),
+      transparent 70%
+    );
 }
 .hero__inner {
+  position: relative;
+  z-index: 1;
   width: 100%;
-  max-width: 560px;
+  max-width: 540px;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: var(--s4);
   text-align: center;
 }
+.hero__eyebrow {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: calc(12px * var(--fs));
+  font-weight: 500;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ergo-brand-strong);
+}
 .hero__title {
   margin: 0;
   font-family: var(--font-display);
-  font-size: clamp(2.5rem, 6vw, 5rem);
-  line-height: 1.1;
+  font-size: clamp(4.5rem, 17vw, 10rem);
+  line-height: 0.95;
   font-weight: 700;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.04em;
   color: var(--ergo-ink);
-  text-wrap: balance;
-}
-.hero__title code {
-  font-family: var(--font-mono);
 }
 .hero__subtitle {
   margin: 0;
-  font-family: var(--font-display);
-  font-size: clamp(1.75rem, 4vw, 2.75rem);
-  font-weight: 600;
-  letter-spacing: -0.01em;
+  max-width: 24ch;
+  font-family: var(--font-sans);
+  font-size: clamp(1.0625rem, 2.2vw, 1.375rem);
+  line-height: 1.4;
+  font-weight: 500;
   color: var(--ergo-ink-2);
   text-wrap: balance;
 }
@@ -45,52 +80,145 @@
   color: var(--ergo-ink-3);
   line-height: 1.5;
 }
-.hero__cta {
+
+/* The signature math object, framed as a museum exhibit: a clean white surface
+   with a faint indigo aura holding the HH automaton, and the payoff
+   (E[HH] = 6 vs E[HT] = 4) that makes the page's thesis legible at a glance. */
+.exhibit {
+  position: relative;
+  isolation: isolate;
+  width: 100%;
+  max-width: 460px;
+  margin-top: var(--s2);
+  padding: var(--s5) var(--s5) var(--s4);
   display: flex;
   flex-direction: column;
+  align-items: center;
   gap: var(--s3);
-  width: 100%;
-  max-width: 320px;
-  margin-top: var(--s3);
+  background: var(--ergo-surface);
+  border: 1px solid var(--ergo-line);
+  border-radius: var(--r-xl);
+  box-shadow: var(--ergo-shadow-md);
 }
-.hero__cta .btn {
-  flex: 0 0 auto;
+.exhibit::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  background: radial-gradient(
+    72% 58% at 50% 32%,
+    var(--ch1-tint),
+    transparent 72%
+  );
+  opacity: 0.8;
+  pointer-events: none;
+}
+.exhibit__results {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: var(--s4);
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+.stat {
+  display: inline-flex;
+  align-items: baseline;
+  gap: var(--s2);
+}
+.stat__label {
+  font-size: calc(14px * var(--fs));
+  font-weight: 500;
+  color: var(--ergo-ink-2);
+}
+.stat__val {
+  font-size: calc(28px * var(--fs));
+  font-weight: 700;
+  line-height: 1;
+}
+.stat__val--slow {
+  color: var(--ch1);
+}
+.stat__val--fast {
+  color: var(--tails);
+}
+.stat__vs {
+  font-family: var(--font-sans);
+  font-size: calc(11px * var(--fs));
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ergo-ink-3);
+}
+.exhibit__caption {
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: calc(13px * var(--fs));
+  font-weight: 500;
+  color: var(--ergo-ink-3);
 }
 
-@media (min-width: 768px) {
-  .hero__cta {
-    flex-direction: row;
-    max-width: none;
-  }
-  .hero__cta .btn {
-    flex: 1 1 0;
-  }
-}
-
-/* Looping ∅ → H → HH state-machine motif (decorative). Re-skinned to Ch1 indigo. */
+/* HH automaton motif (decorative): advance on heads (gold), self-loop on ∅ and
+   reset H → ∅ on tails (teal), HH absorbing (double ring), Ch1-indigo signal on
+   the win path. The signature math object, rendered as the hero graphic. */
 .preview {
   width: 100%;
-  max-width: 360px;
-  margin: var(--s3) 0;
+  max-width: 340px;
+  margin: var(--s1) auto 0;
 }
 .preview__svg {
   display: block;
   width: 100%;
   height: auto;
+  overflow: visible;
 }
 .preview__edge {
-  stroke: var(--ergo-line);
-  stroke-width: 2;
+  fill: none;
+  stroke-width: 2.5;
+  stroke-linecap: round;
+}
+.preview__edge--h {
+  stroke: var(--heads);
+}
+.preview__edge--t {
+  stroke: var(--tails);
+}
+.preview__arrow--h {
+  fill: var(--heads);
+}
+.preview__arrow--t {
+  fill: var(--tails);
+}
+.preview__elabel {
+  font-family: var(--font-mono);
+  font-size: calc(13px * var(--fs));
+  font-weight: 600;
+  text-anchor: middle;
+}
+.preview__elabel--h {
+  fill: var(--heads);
+}
+.preview__elabel--t {
+  fill: var(--tails);
 }
 .preview__ring {
-  fill: var(--ergo-bg);
+  fill: var(--ergo-surface);
   stroke: var(--ergo-ink-2);
+  stroke-width: 2.5;
+}
+/* Absorbing inner ring stays a static Ch1 ring (excluded from the node pulse via
+   the higher-specificity selector). */
+.preview__node .preview__ring--absorb {
+  fill: none;
+  stroke: var(--ch1);
   stroke-width: 2;
+  animation: none;
 }
 .preview__label {
   fill: var(--ergo-ink);
   font-family: var(--font-mono);
-  font-size: calc(16px * var(--fs));
+  font-size: calc(17px * var(--fs));
   font-weight: 600;
   text-anchor: middle;
 }
@@ -116,6 +244,47 @@
     stroke: var(--ch1);
     stroke-width: 3;
     fill: var(--ch1-tint);
+  }
+}
+
+/* --- Landing CTAs (pill, hero-weight) --- */
+.hero__cta {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s3);
+  width: 100%;
+  max-width: 340px;
+  margin-top: var(--s3);
+}
+.hero__cta .btn {
+  flex: 0 0 auto;
+  height: 52px;
+  padding: 0 var(--s5);
+  border-radius: var(--r-pill);
+}
+.hero__cta .btn--primary {
+  box-shadow: var(--ergo-shadow-sm);
+}
+.hero__cta .btn--primary:hover:not(:disabled) {
+  box-shadow: var(--ergo-shadow-md);
+}
+.hero__cta .btn--primary::after {
+  content: '\2192';
+  margin-left: var(--s2);
+  display: inline-block;
+  transition: transform var(--dur-base) var(--ease-out);
+}
+.hero__cta .btn--primary:hover:not(:disabled)::after {
+  transform: translateX(3px);
+}
+
+@media (min-width: 768px) {
+  .hero__cta {
+    flex-direction: row;
+    max-width: none;
+  }
+  .hero__cta .btn {
+    flex: 1 1 0;
   }
 }
 

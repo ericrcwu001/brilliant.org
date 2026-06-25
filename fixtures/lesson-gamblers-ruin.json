@@ -273,12 +273,12 @@
       "interaction": {
         "type": "answerEntry",
         "fields": [
-          { "id": "chance", "label": "Chance of reaching $4 from $2", "accept": ["1/2", "0.5"], "placeholder": "e.g. 1/2" },
+          { "id": "chance", "label": "Chance of reaching $4 from $2", "accept": ["1/2", "0.5"], "placeholder": "e.g. 3/4" },
           { "id": "avg", "label": "Average flips from $2 until a wall", "accept": ["4"], "placeholder": "?", "suffix": "flips" }
         ]
       },
       "feedback": {
-        "correct": "Exactly — P = \u00bd and D = 4 = 2\u00b7(4\u22122).",
+        "correct": "Exactly — P\u2082 = \u00bd and D\u2082 = 4. Chance: with P\u2080 = 0 and P\u2084 = 1, the rule P\u2082 = \u00bd\u00b7P\u2083 + \u00bd\u00b7P\u2081 makes each dollar the average of its neighbors, so the chances climb in a straight line, P\u1d62 = i/4 — at $2 that's 2/4 = \u00bd, the symmetry you spotted up top. Duration: D\u2082 = 1 + \u00bd\u00b7D\u2083 + \u00bd\u00b7D\u2081 with D\u2080 = D\u2084 = 0 solves to D\u1d62 = i\u00b7(4\u2212i), the two distances to the walls multiplied — at $2 that's 2\u00b7(4\u22122) = 4 flips, the longest wait since $2 sits farthest from both walls.",
         "hints": [
           "By symmetry the chance is \u00bd.",
           "The duration is i\u00b7(N\u2212i) = 2\u00b72.",
@@ -311,6 +311,27 @@
           "Lower the bias and watch the reach curve sag.",
           "60/40 turns a 50/50 into ~31% to win.",
           "The landscape warps into a cliff."
+        ]
+      }
+    },
+    {
+      "beatId": "mastery-challenge",
+      "required": true,
+      "prompt": "Mastery challenge: starting at $3, what is your chance of reaching $10 before going broke (as a fraction), and how many flips will the game last on average (a whole number)?",
+      "interaction": {
+        "type": "masteryChallenge",
+        "scenario": "Each fair flip pays +$1 on heads, -$1 on tails. You stop at $10 (goal) or $0 (broke).",
+        "fields": [
+          { "id": "reach", "label": "Chance of reaching $10 from $3", "accept": ["3/10", "0.3", ".3"], "placeholder": "e.g. 2/5" },
+          { "id": "steps", "label": "Average flips until the game ends", "accept": ["21"], "placeholder": "?", "suffix": "flips" }
+        ]
+      },
+      "feedback": {
+        "correct": "P(reach $10) = 3/10 and the game lasts 21 flips on average. The win chance is your share of the distance, i/N = 3/10 - a fair coin is no safety net. The duration i*(N-i) = 3*7 = 21 peaks in the middle, farthest from both walls.",
+        "hints": [
+          "$3 out of $10 isn't the middle, so it isn't 50/50 - and being low doesn't make you 'due.' Both lesson formulas take any start i and any N.",
+          "Win chance rises in a straight line, P = i/N. The average length is the product of the two wall-distances, D = i*(N-i).",
+          "P = 3/10. D = 3*(10-3) = 3*7 = 21."
         ]
       }
     },

@@ -793,6 +793,36 @@
   margin: var(--s4) 0 var(--s2);
 }
 
+/* Lesson-complete "Boop Stamp" badge (BadgeStamp.tsx): centers the awarded
+   medallion and hosts the micro-particle burst. */
+.badge-stamp {
+  position: relative;
+  width: fit-content;
+  margin-inline: auto;
+  margin-top: var(--s4);
+  display: grid;
+  place-items: center;
+}
+
+.badge-stamp__particle {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 6px;
+  height: 6px;
+  margin: -3px 0 0 -3px;
+  border-radius: 50%;
+  background: var(--badge-hue, var(--ergo-brand));
+  pointer-events: none;
+  will-change: transform, opacity;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .badge-stamp__particle {
+    display: none;
+  }
+}
+
 /* Lesson-complete celebration (LessonCelebration.tsx): spring-in card. */
 .celebration {
   position: relative;

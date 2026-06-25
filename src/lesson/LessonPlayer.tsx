@@ -23,7 +23,7 @@ import {
 } from '../progress/functions'
 import { loadStreak, ZERO_STREAK, type Streak } from '../habit/streaks'
 import { milestoneMeta } from '../habit/milestones'
-import { ConceptMedallion } from '../habit/ConceptMedallion'
+import { BadgeStamp } from './BadgeStamp'
 import { WeeklyStreak } from '../habit/WeeklyStreak'
 import { analytics } from '../analytics/events'
 import { CELEBRATE_BEAT } from '../motion/tokens'
@@ -43,6 +43,7 @@ export function LessonPlayer({
   persistence,
   onExit,
   track = 'B',
+  review = false,
 }: {
   lesson?: Lesson
   initialSnapshot?: Snapshot | null
@@ -51,6 +52,10 @@ export function LessonPlayer({
   // Two-track selection (L1 §3.3). Default 'B' = today's experience. Track 'A'
   // reveals the additive scaffolds (primers, split density, name-the-overlap).
   track?: 'A' | 'B'
+  // When true, this is a replay of an already-completed lesson: start from the
+  // first beat with a fresh pass so mastery is re-evaluated (badge can only
+  // improve, never demote — enforced server-side). Completion is never lost.
+  review?: boolean
 } = {}) {
   const [lesson] = useState<Lesson>(() => lessonProp ?? loadFlagshipLesson())
   const persist = !!persistence?.uid
@@ -70,26 +75,28 @@ export function LessonPlayer({
   )
 
   const [index, setIndex] = useState<number>(() => {
-    if (!initialSnapshot) return 0
+    if (review || !initialSnapshot) return 0
     const i = visibleBeats.findIndex((b) => b.beatId === initialSnapshot.beatId)
     return i >= 0 ? i : 0
   })
   const [showRestoringNote, setShowRestoringNote] = useState(() => {
-    if (!initialSnapshot) return false
+    if (review || !initialSnapshot) return false
     const i = visibleBeats.findIndex((b) => b.beatId === initialSnapshot.beatId)
     return i > 0
   })
   const [done, setDone] = useState(false)
   const [needsReview, setNeedsReview] = useState(false)
-  const [completedBeats, setCompletedBeats] = useState<string[]>(
-    () => initialSnapshot?.completedBeats ?? [],
+  const [completedBeats, setCompletedBeats] = useState<string[]>(() =>
+    review
+      ? visibleBeats.map((b) => b.beatId)
+      : (initialSnapshot?.completedBeats ?? []),
   )
   const [hintLevelByBeat, setHintLevelByBeat] = useState<Record<string, number>>(
-    () => (initialSnapshot ? hintLevelsOf(initialSnapshot) : {}),
+    () => (initialSnapshot && !review ? hintLevelsOf(initialSnapshot) : {}),
   )
   const [maxHintLevelByBeat, setMaxHintLevelByBeat] = useState<
     Record<string, number>
-  >(() => (initialSnapshot ? maxHintLevelsOf(initialSnapshot) : {}))
+  >(() => (initialSnapshot && !review ? maxHintLevelsOf(initialSnapshot) : {}))
   // Adaptive override (build-brief §4.10c): per-beat cap lift + re-prefill nonce.
   // When a learner reaches a capped beat's hint cap while still wrong, the cap is
   // lifted (the level-3 reveal becomes reachable — no dead-end) and, on an
@@ -99,7 +106,7 @@ export function LessonPlayer({
     Record<string, number>
   >({})
   const [lessonState, setLessonStateRaw] = useState<LessonState>(() =>
-    initialSnapshot ? snapshotToLessonState(initialSnapshot) : {},
+    initialSnapshot && !review ? snapshotToLessonState(initialSnapshot) : {},
   )
   const [completion, setCompletion] = useState<CompleteLessonResult | null>(null)
   const [completionError, setCompletionError] = useState(false)
@@ -226,13 +233,13 @@ export function LessonPlayer({
   // mirror inside the writer); flush immediately whenever the beat changes.
   const lastFlushedBeat = useRef<string | null>(null)
   useEffect(() => {
-    if (!persist) return
+    if (!persist || review) return
     writer.save(snapshotInput)
     if (lastFlushedBeat.current !== beat.beatId) {
       lastFlushedBeat.current = beat.beatId
       writer.flush()
     }
-  }, [persist, writer, snapshotInput, beat.beatId])
+  }, [persist, review, writer, snapshotInput, beat.beatId])
 
   // --- Habit loop + analytics (Phase 17 / 19) ---------------------------------
   // Load the streak tally for the top bar once signed in (best-effort).
@@ -426,12 +433,10 @@ export function LessonPlayer({
               </p>
             )}
             <p className="done-note__mastered">Concept mastered</p>
-            <ConceptMedallion
+            <BadgeStamp
               meta={milestone}
-              earned
-              earning={!reducedMotion}
               hueVar={chapterHueVar(lessonId)}
-              size="lg"
+              reducedMotion={reducedMotion}
             />
           </div>
         </LessonCelebration>

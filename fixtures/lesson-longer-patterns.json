@@ -297,6 +297,27 @@
       }
     },
     {
+      "beatId": "mastery-challenge",
+      "required": true,
+      "pattern": "HTHT",
+      "prompt": "Mastery challenge: use the overlap shortcut to find E[HTHT] - the average flips until HTHT first appears. Type a whole number.",
+      "interaction": {
+        "type": "masteryChallenge",
+        "scenario": "Length 4 doesn't automatically mean 16 - slide HTHT over itself and watch for a near-miss that keeps progress.",
+        "fields": [
+          { "id": "e-htht", "label": "Average flips until HTHT", "accept": ["20"], "placeholder": "?", "suffix": "flips" }
+        ]
+      },
+      "feedback": {
+        "correct": "E[HTHT] = 20. Its overlaps sit at length 2 (the leading 'HT' reappears at the end) and length 4 (itself), so 2^2 + 2^4 = 4 + 16 = 20. Miss that hidden length-2 overlap and you'd guess 16 - same length as HHTT, but a longer wait.",
+        "hints": [
+          "Longer doesn't automatically mean a longer wait. Slide HTHT over itself - where does its start line up with its end?",
+          "Each self-overlap of length L adds 2^L (the full length always counts). Check every shift.",
+          "Overlaps at length 2 ('HT' = 'HT') and length 4: 2^2 + 2^4 = 4 + 16 = 20."
+        ]
+      }
+    },
+    {
       "beatId": "recap",
       "required": true,
       "prompt": "Reveal the recap to see what you transferred to brand-new patterns: THH = 8, HTH = 10.",

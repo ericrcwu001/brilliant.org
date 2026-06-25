@@ -14,7 +14,7 @@ import type { NavigateFn } from './routes'
 const course: Course = CourseSchema.parse(courseFixture)
 const L1 = 'lesson-pattern-hitting-times'
 
-type ScenarioId = 'first' | 'resume' | 'review' | 'loading'
+type ScenarioId = 'first' | 'resume' | 'review' | 'tiers' | 'loading'
 
 interface Scenario {
   label: string
@@ -50,6 +50,25 @@ const SCENARIOS: Record<ScenarioId, Scenario> = {
     earned: new Set(['hh-ht-mastered']),
     newlyEarned: new Set(['hh-ht-mastered']),
   },
+  tiers: {
+    label: 'Tiers (gold/silver)',
+    course,
+    progressById: {
+      'lesson-pattern-hitting-times': {
+        completionStatus: 'completed',
+        derived: { mastered: true },
+      },
+      'lesson-penneys-game': { completionStatus: 'completed', needsReview: true },
+      'lesson-gamblers-ruin': { completionStatus: 'completed' },
+    },
+    streak: { count: 4, longest: 7, lastActiveDate: null },
+    earned: new Set([
+      'hh-ht-mastered',
+      'penneys-game-won',
+      'gamblers-ruin-solved',
+    ]),
+    newlyEarned: new Set(),
+  },
   loading: {
     label: 'Loading',
     course: null,
@@ -60,7 +79,7 @@ const SCENARIOS: Record<ScenarioId, Scenario> = {
   },
 }
 
-const SCENARIO_ORDER: ScenarioId[] = ['first', 'resume', 'review', 'loading']
+const SCENARIO_ORDER: ScenarioId[] = ['first', 'resume', 'review', 'tiers', 'loading']
 
 // In the harness, "entering a lesson" jumps to the local /dev/lesson fixture;
 // profile/other navigation is a no-op (no auth here).

@@ -8,7 +8,7 @@ import type { Beat } from '../content/schema'
 
 // Beat types that grade an answer through the hint ladder. `retrievalGrid` (the
 // matching-grid recall variant, build-brief §4.4) is graded like the other check beats.
-const GRADED_BEAT_TYPES = new Set(['stateTap', 'equationTiles', 'answerEntry', 'retrievalGrid'])
+const GRADED_BEAT_TYPES = new Set(['stateTap', 'equationTiles', 'answerEntry', 'masteryChallenge', 'retrievalGrid'])
 
 export function gradedRequiredBeatIds(beats: Beat[]): string[] {
   return beats

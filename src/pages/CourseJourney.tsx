@@ -8,7 +8,7 @@
 //
 // The exported signature is fixed — do not change it.
 
-import { useRef } from 'react'
+import { Fragment, useRef, useState } from 'react'
 import type { Course, Progress } from '../content/schema'
 import type { NavigateFn } from './routes'
 import { lessonPath } from './routes'
@@ -35,7 +35,12 @@ export function CourseJourney(props: {
 
   const nodes = resolveNodes(course, progressById)
   const action = recommendedAction(nodes, progressById)
-  const activeId = action.lessonId
+  // The side card follows the learner's selection; it defaults to the
+  // recommended lesson so the Home loads exactly as before. Clicking a card
+  // re-points the side card (it no longer enters the lesson — only the side
+  // card's CTA does).
+  const [selectedId, setSelectedId] = useState<string | null>(null)
+  const activeId = selectedId ?? action.lessonId
 
   const activeNode = nodes.find((n) => n.lessonId === activeId) ?? null
   const activeChapter = activeNode ? (chapterForLesson(activeNode.lessonId) ?? null) : null
@@ -101,21 +106,33 @@ export function CourseJourney(props: {
                   const navIdx = navigableIds.indexOf(node.lessonId)
 
                   return (
-                    <LessonRow
-                      key={node.lessonId}
-                      node={node}
-                      chapter={chapter}
-                      isActive={isActive}
-                      progress={progress}
-                      navigate={navigate}
-                      focusableRef={
-                        navIdx >= 0
-                          ? (el) => {
-                              focusableRefs.current[navIdx] = el
-                            }
-                          : undefined
-                      }
-                    />
+                    <Fragment key={node.lessonId}>
+                      <LessonRow
+                        node={node}
+                        chapter={chapter}
+                        isActive={isActive}
+                        progress={progress}
+                        onSelect={setSelectedId}
+                        focusableRef={
+                          navIdx >= 0
+                            ? (el) => {
+                                focusableRefs.current[navIdx] = el
+                              }
+                            : undefined
+                        }
+                      />
+                      {isActive && activeNode && (
+                        <div className="ergo-detail-inline">
+                          <DetailCard
+                            node={activeNode}
+                            chapter={activeChapter}
+                            chapterIndex={activeChapterIndex}
+                            progress={progressById[activeNode.lessonId]}
+                            navigate={navigate}
+                          />
+                        </div>
+                      )}
+                    </Fragment>
                   )
                 })}
               </div>
@@ -161,21 +178,21 @@ function LessonRow({
   chapter,
   isActive,
   progress,
-  navigate,
+  onSelect,
   focusableRef,
 }: {
   node: DeskNode
   chapter: Chapter
   isActive: boolean
   progress: Progress | undefined
-  navigate: NavigateFn
+  onSelect: (lessonId: string) => void
   focusableRef: ((el: HTMLButtonElement | null) => void) | undefined
 }) {
   const navigable = node.state !== 'locked'
 
   function handleClick() {
     if (!navigable) return
-    navigate(lessonPath(node.lessonId))
+    onSelect(node.lessonId)
   }
 
   function handleKeyPress(e: React.KeyboardEvent) {
@@ -233,7 +250,7 @@ function LessonRow({
                 }
               : undefined
           }
-          aria-label={cardAriaLabel(node, isActive, progress)}
+          aria-label={cardAriaLabel(node, isActive)}
           aria-current={isActive ? 'true' : undefined}
           onClick={handleClick}
           onKeyDown={handleKeyPress}
@@ -247,7 +264,7 @@ function LessonRow({
       ) : (
         <div
           className={cardClass}
-          aria-label={cardAriaLabel(node, isActive, progress)}
+          aria-label={cardAriaLabel(node, isActive)}
           aria-disabled="true"
         >
           <CardContent
@@ -681,15 +698,15 @@ function LockDotIcon() {
 
 // ── Aria label helpers ───────────────────────────────────────────────────────
 
-function cardAriaLabel(
-  node: DeskNode,
-  isActive: boolean,
-  progress: Progress | undefined,
-): string {
-  const cta = nodeCtaLabel(node, progress)
+function cardAriaLabel(node: DeskNode, isActive: boolean): string {
   if (node.state === 'locked') return `${node.title}, locked`
-  if (isActive) return `${cta ?? 'Open'} ${node.title}`
-  if (node.state === 'needsReview') return `${node.title}, completed — review recommended`
-  if (node.state === 'completed') return `${node.title}, completed`
-  return `${node.title}, available`
+  const status =
+    node.state === 'needsReview'
+      ? 'completed — review recommended'
+      : node.state === 'completed'
+        ? 'completed'
+        : 'available'
+  // The card now selects (revealing the side card); the "Start/Resume" verb
+  // lives on the side card's CTA, so the row only announces status + selection.
+  return isActive ? `${node.title}, ${status}, selected` : `${node.title}, ${status}`
 }
