@@ -250,6 +250,37 @@ export const InteractionSchema = z.discriminatedUnion('type', [
     lenses: z.array(z.object({ label: z.string(), body: z.string() })),
     display: z.enum(['cards', 'axis']).optional(),
   }),
+  // Bayesian belief update (concept-bayes-rule, Wave 0). One new type, three
+  // presentation displays (the codebase convention where `raceSim` folds
+  // lanes/oddsDial/heatmap and `walkBoard` folds single/swarm/...):
+  //   'bars'     — drag the prior split, pick the evidence, watch the 2-hypothesis posterior bar swing.
+  //   'tree'     — natural-frequency icon array / confusion split the learner partitions; posterior = highlighted ÷ total.
+  //   'sequence' — apply the evidence repeatedly; the posterior climbs, snapping to the exact rational each step.
+  // All inputs are exact rationals (RationalSchema). The renderer computes every
+  // displayed value via src/engine/bayes.ts; `posterior` is the engine-reproducible
+  // headline (validation anchor) cross-checked by scripts/validate-fixtures.ts.
+  z.object({
+    type: z.literal('bayesUpdate'),
+    display: z.enum(['bars', 'tree', 'sequence']),
+    // Hypothesis labels. bars/sequence: focal = hypotheses[0]. tree: [positive-class, negative-class].
+    hypotheses: z.array(z.string()).min(2),
+    // Prior over the hypotheses (aligned to `hypotheses`). bars [1/2,1/2]; tree [prevalence, 1-prevalence];
+    // sequence [rare, 1-rare]. Optional in Zod; required-where-needed is enforced in validate-fixtures.
+    priors: z.array(RationalSchema).optional(),
+    // P(evidence | each hypothesis), aligned to `hypotheses`. bars [1, 1/2];
+    // tree [sensitivity, 1-specificity]; sequence the per-observation [pH, pNotH].
+    likelihoods: z.array(RationalSchema).optional(),
+    // Label of the single observed evidence, e.g. "heads", "a positive test".
+    evidence: z.string().optional(),
+    // tree only: icon-array size (3 for the equal-likelihood head tap; 10000 for the confusion grid).
+    population: z.number().int().positive().optional(),
+    // sequence only: how many identical observations to fold (the k the posterior climbs to).
+    steps: z.number().int().positive().optional(),
+    // The learner manipulates inputs (drag/partition) vs. a passive watch.
+    interactive: z.boolean().optional(),
+    // Engine-reproducible headline posterior as a reduced "n/d" (or integer) string — the validation anchor.
+    posterior: z.string().optional(),
+  }),
 ])
 
 const HintTripleSchema = z.tuple([z.string(), z.string(), z.string()])
