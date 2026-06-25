@@ -28,6 +28,7 @@ import { DominanceWheelBeat } from './DominanceWheelBeat'
 import { WalkBoardBeat } from './WalkBoardBeat'
 import { GamblerLedgerBeat } from './GamblerLedgerBeat'
 import { BalanceSolveBeat } from './BalanceSolveBeat'
+import { BayesUpdateBeat } from './BayesUpdateBeat'
 
 function ContinueStub({ beat, isLast, onAdvance }: BeatProps) {
   return (
@@ -98,6 +99,8 @@ export function BeatView(props: BeatProps) {
       return <WalkBoardBeat {...props} />
     case 'gamblerLedger':
       return <GamblerLedgerBeat {...props} />
+    case 'bayesUpdate':
+      return <BayesUpdateBeat {...props} />
     default:
       return <ContinueStub {...props} />
   }

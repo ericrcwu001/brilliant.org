@@ -8,10 +8,52 @@
   "domain": "Probability",
   "domainOrder": 0,
   "order": 3,
-  "status": "coming_soon",
+  "status": "live",
   "tagline": "Update your beliefs when new evidence arrives.",
   "accent": "ch2",
   "vizKey": "twoNode",
-  "lessons": [],
+  "chapters": [
+    {
+      "id": "ch-bayes-rule-1",
+      "label": "The Update Rule",
+      "accent": "ch1",
+      "lessonIds": ["lesson-bayes-rule-1"]
+    },
+    {
+      "id": "ch-bayes-rule-2",
+      "label": "Evidence in the Real World",
+      "accent": "ch2",
+      "lessonIds": ["lesson-bayes-rule-2", "lesson-bayes-rule-3"]
+    }
+  ],
+  "lessons": [
+    {
+      "lessonId": "lesson-bayes-rule-1",
+      "title": "The Update Rule",
+      "summary": "Two coins, one flip: a head pushes 1/2 → 2/3. Evidence rescales each hypothesis by how well it predicted the evidence.",
+      "milestoneId": "bayes-rule-update",
+      "built": true,
+      "glyphKey": "2/3",
+      "vizKey": "twoNode"
+    },
+    {
+      "lessonId": "lesson-bayes-rule-2",
+      "title": "The Base-Rate Trap",
+      "summary": "A 99% test on a 1-in-100 disease still leaves you at 50% — the prior is a heavy anchor strong evidence must overcome.",
+      "milestoneId": "bayes-rule-base-rate",
+      "built": true,
+      "glyphKey": "1%",
+      "vizKey": "coin"
+    },
+    {
+      "lessonId": "lesson-bayes-rule-3",
+      "title": "Stacking Evidence",
+      "summary": "Independent evidence multiplies: today's posterior is tomorrow's prior, so repeated clues compound to near-certainty.",
+      "milestoneId": "bayes-rule-stacking",
+      "built": true,
+      "glyphKey": "2ᵏ",
+      "vizKey": "sum"
+    }
+  ],
   "roadmap": []
 }
