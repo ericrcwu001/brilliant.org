@@ -6,14 +6,7 @@
 // then these helpers are the single place that shapes the write, so progression
 // fields can never be smuggled in from the client.
 
-import {
-  doc,
-  getDoc,
-  setDoc,
-  updateDoc,
-  serverTimestamp,
-  type Timestamp,
-} from 'firebase/firestore'
+import type { Timestamp } from 'firebase/firestore'
 import { getDb } from '../firebase/app'
 
 export const USERS_COLLECTION = 'users'
@@ -30,6 +23,7 @@ export interface UserDoc {
 // completed onboarding (drives the first-sign-in → display-name routing).
 export async function fetchUserDoc(uid: string): Promise<UserDoc | null> {
   const db = await getDb()
+  const { doc, getDoc } = await import('firebase/firestore')
   const snap = await getDoc(doc(db, USERS_COLLECTION, uid))
   return snap.exists() ? (snap.data() as UserDoc) : null
 }
@@ -41,6 +35,7 @@ export async function createUserDoc(
   displayName: string,
 ): Promise<void> {
   const db = await getDb()
+  const { doc, getDoc, setDoc, serverTimestamp } = await import('firebase/firestore')
   const ref = doc(db, USERS_COLLECTION, uid)
   const existing = await getDoc(ref)
   if (existing.exists()) return
@@ -57,6 +52,7 @@ export async function updateUserDisplayName(
   displayName: string,
 ): Promise<void> {
   const db = await getDb()
+  const { doc, updateDoc, serverTimestamp } = await import('firebase/firestore')
   await updateDoc(doc(db, USERS_COLLECTION, uid), {
     displayName: displayName.trim(),
     lastActiveAt: serverTimestamp(),

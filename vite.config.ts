@@ -18,17 +18,46 @@ import babel from '@rolldown/plugin-babel'
 export default defineConfig({
   plugins: [react(), babel({ presets: [reactCompilerPreset()] })],
   build: {
-    rollupOptions: {
+    // Use rolldownOptions (not the deprecated rollupOptions alias) so that
+    // codeSplitting is passed directly to rolldown without going through the
+    // manualChunks→advancedChunks compatibility shim.  That shim defaults to
+    // includeDependenciesRecursively: true, which causes rolldown to pull
+    // @firebase/app, @firebase/util, etc. recursively into the fb-analytics
+    // chunk — making analytics eager on the first-paint critical path even
+    // after the source-level dynamic-import fixes in events.ts.
+    rolldownOptions: {
       output: {
-        manualChunks(id: string) {
-          if (!id.includes('node_modules')) return
-          if (id.includes('@firebase/firestore') || id.includes('firebase/firestore')) return 'fb-firestore'
-          if (id.includes('@firebase/functions') || id.includes('firebase/functions')) return 'fb-functions'
-          if (id.includes('@firebase/analytics') || id.includes('firebase/analytics')) return 'fb-analytics'
-          if (id.includes('@firebase') || id.includes('firebase/')) return 'fb-core'
-          if (id.includes('/react-dom/') || id.includes('/react/') || id.includes('/scheduler/')) return 'react-vendor'
-          if (id.includes('/motion/') || id.includes('/framer-motion/') || id.includes('/motion-dom/') || id.includes('/motion-utils/')) return 'motion-vendor'
-          if (id.includes('/zod/')) return 'zod'
+        codeSplitting: {
+          // Only name the chunks that must be EAGER (loaded at first paint).
+          // Lazy service chunks (firestore/functions/analytics) intentionally
+          // have NO group: rolldown's auto-chunking puts them in lazy chunks
+          // that are only loaded when the dynamic import fires, keeping them
+          // off the HTML modulepreload list.
+          //
+          // fb-core uses the default includeDependenciesRecursively: true so
+          // that ALL shared firebase internals (util, component, logger,
+          // installations) are captured into fb-core together.  The service
+          // packages depend on firebase app/auth (in fb-core) — not the other
+          // way round — so they can't get pulled into the eager graph.
+          groups: [
+            // Shared firebase core (app init, auth, app-check, shared
+            // internals).  The regex matches @firebase/app-check too because
+            // "@firebase/app-check" contains "@firebase/app" as a substring.
+            {
+              name: 'fb-core',
+              test: /@firebase\/(app|auth|util|component|logger|installations)|firebase\/(app|auth)/,
+            },
+            // UI framework and animation libs — stable, cache-friendly splits.
+            {
+              name: 'react-vendor',
+              test: /\/react(-dom)?\/|\/scheduler\//,
+            },
+            {
+              name: 'motion-vendor',
+              test: /\/(framer-motion|motion|motion-dom|motion-utils)\//,
+            },
+            { name: 'zod', test: /\/zod\// },
+          ],
         },
       },
     },

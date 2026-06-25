@@ -9,12 +9,7 @@
 // logEvent is fire-and-forget (a failure never affects the lesson UI). This
 // keeps /dev/lesson and the node test suite free of analytics/network calls.
 
-import {
-  isSupported,
-  getAnalytics,
-  logEvent,
-  type Analytics,
-} from 'firebase/analytics'
+import type { Analytics } from 'firebase/analytics'
 import { app, auth, usingEmulators } from '../firebase/app'
 
 const measurementId = import.meta.env.VITE_FIREBASE_MEASUREMENT_ID as
@@ -27,9 +22,11 @@ function getAnalyticsInstance(): Promise<Analytics | null> {
   // Skip in emulator/dev and when there is no measurement id to send to.
   if (usingEmulators || !measurementId) return Promise.resolve(null)
   if (!analyticsPromise) {
-    analyticsPromise = isSupported()
-      .then((ok) => (ok ? getAnalytics(app) : null))
-      .catch(() => null)
+    analyticsPromise = (async () => {
+      const { isSupported, getAnalytics } = await import('firebase/analytics')
+      const ok = await isSupported().catch(() => false)
+      return ok ? getAnalytics(app) : null
+    })().catch(() => null)
   }
   return analyticsPromise
 }
@@ -57,6 +54,7 @@ async function track(
   try {
     const analyticsInstance = await getAnalyticsInstance()
     if (!analyticsInstance) return
+    const { logEvent } = await import('firebase/analytics')
     logEvent(analyticsInstance, name, {
       uid: auth.currentUser?.uid ?? anonClientId(),
       client_ts: Date.now(),

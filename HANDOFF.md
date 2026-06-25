@@ -1,5 +1,5 @@
 # HANDOFF
-<!-- Last updated: Lazy Firestore+Functions bundle split — rewrote src/firebase/app.ts so firebase/firestore + firebase/functions are dynamic imports (getDb()/getFns() memoized async accessors with globalThis singletons for HMR safety); added persistent local cache (persistentMultipleTabManager); updated all 9 consumers (firestoreLoader, userDoc, snapshot, track, progress, streaks, milestones, functions, recommend) to await getDb()/getFns() inside their async bodies; converted 3 sync onSnapshot subscribers (subscribeProgressMap, subscribeStreak, subscribeEarnedMilestones) to deferred pattern returning () => void; added loadCourseEntryState() to track.ts (single getDoc round trip for track+welcomeSeen); merged two separate CoursePathPage effects into one; fixed milestones.test.ts mock. NOT committed. Prior: Swapped README.md "Who It's For" personas per user request — PRIMARY is now the curious/no-experience learner (learn-by-doing, no prereqs, Track A/B diagnostic); quant-interview candidate demoted to SECONDARY (Track B). Course-outcome bullets kept under the now-primary persona; User Stories section deliberately left unchanged (surgical). NOT committed. Prior: Fixed inaccurate model dispatch slugs (Task `model` params) across global skills + the coupled workspace rule — `claude-opus-4-8-thinking-max`→`claude-opus-4-8-thinking-max-fast` and `claude-4.6-sonnet-medium-thinking`→`claude-4.6-sonnet-high-thinking` in ~/.cursor/skills/model-routing/SKILL.md (+ availability-note prose de-contradiction), ~/.cursor/skills/security-audit/SKILL.md, and .cursor/rules/model-routing.mdc; `composer-2.5-fast`/`gemini-3-flash` already valid. Excluded prompt-master + .codex/.system openai-docs/imagegen (those are model NAMES/API strings, not Task dispatch slugs). Verified no invalid slugs remain. NOT committed. Prior: Rewrote README.md to foreground the user persona + user stories from docs/mvp_prd.md — new lead sections "Who It's For" (primary persona = quant-interview candidate w/ Green Book + Core Learning Promise bullets; secondary "curious learner" w/ two-track A/B, no prereqs) and "User Stories" (15 canonical As-a/I-want/so-that under Persona & Onboarding / Course Path / Flagship Lesson / Persistence & Habit / For Developers); all technical reference (What It Is, Course, Tech, Architecture, Structure, Getting Started, Commands, Deploy, Security, Status) preserved below it, no facts changed. NOT committed. Prior: Converted home-screen reads to realtime onSnapshot listeners — loadProgressMap→subscribeProgressMap (progress.ts), loadEarnedMilestones→subscribeEarnedMilestones (milestones.ts), added subscribeStreak alongside loadStreak (streaks.ts); CoursePathPage effect now wires all three subscribe fns with [user] dep (removes earnComputed ref + course dep). tsc + eslint both clean. NOT committed. Prior: Stopped tracking vendored Firebase agent skills — `git rm -r --cached .agents/skills/` (79 files) + `.agents/skills/` added to .gitignore; `skills-lock.json` kept as the restore manifest; skill files stay on disk. Committed e760903 (NOT pushed yet → still on origin/main until pushed). (Bugbot whole-repo review, first-commit→HEAD, had earlier found 11 issues — all inside those now-untracked firebase skill docs.) Prior admin op (prod, no code, in git history only): force-granted eric.wu@alphaaiengineering.com (uid irXQQXdxIJTIPi6r9PufqChItuk1) L2 Penney's-Game complete+mastered + penneys-game-won seal + streak 3/3 via temp Admin SDK script (deleted after verify) — 2026-06-25 -->
+<!-- Last updated: Page-load latency reduction (plan "Reduce page-load latency") — deferred Firestore+Functions off first-paint critical path (src/firebase/app.ts eager app+auth+App Check only; memoized async getDb()/getFns() w/ dynamic firebase/firestore|functions imports + persistentLocalCache); all Firestore consumers await getDb/getFns; 3 onSnapshot wrappers deferred-unsubscribe; userDoc.ts + analytics/events.ts dynamic SDK imports; vite.config.ts native rolldownOptions.output.codeSplitting (eager fb-core/react-vendor/motion-vendor/zod only — firestore/functions/analytics ungrouped lazy auto-chunks; manualChunks shim avoided — recursive includeDependenciesRecursively leaked @firebase/app into analytics); lazy DevRoutes.tsx (dev fixtures off prod entry); src/app/prefetch.ts idle + pointer-enter prefetch; index.html inline CSP-safe loading shell; firebase.json Cache-Control (assets/** immutable 1yr, index.html no-cache); loadCourseEntryState() merged duplicate course-progress reads. Eager first-paint ~152 KB gzip (was 306 KB single entry); Firestore 522 KB/154 KB gz lazy on first data read. Green: build, eslint, 212/212 vitest. e2e NOT run. NOT committed. Prior: Lazy Firestore+Functions bundle split + milestones.test.ts mock fix. NOT committed. Prior: README persona swap + model-routing slug corrections + README user-stories rewrite + onSnapshot home-screen listeners + vendored firebase skills untracked (e760903) + prod admin streak grant — 2026-06-25 -->
 
 Orientation doc for a fresh context. Session-by-session narration lives in git
 history + the `docs/`/`audits/` files; this file keeps only what's needed going forward.
@@ -28,6 +28,26 @@ times** for coin flips (why `E[HH]=6` but `E[HT]=4`). Sequenced by `docs/mvp_prd
   backend (Phases 13–19: auth/onboarding, Firestore loader, snapshots, Cloud Functions,
   streaks/milestones, rules, App Check seam, analytics) complete. Study Desk graph-node
   Home built + browser-verified on `/dev/home`.
+- **Page-load latency reduction — DONE this session** (plan "Reduce page-load latency"):
+  deferred Firestore + Functions off first-paint (`src/firebase/app.ts` eager exports only
+  app+auth+App Check; memoized async `getDb()`/`getFns()` dynamically import
+  `firebase/firestore`|`firebase/functions` + `initializeFirestore` persistent local cache);
+  all Firestore consumers await `getDb()`/`getFns()`; sync onSnapshot wrappers
+  (`subscribeProgressMap`/`subscribeStreak`/`subscribeEarnedMilestones`) use deferred-unsubscribe
+  (still return `() => void`); `userDoc.ts` + `analytics/events.ts` dynamically import their SDKs
+  (off eager graph); `vite.config.ts` native `rolldownOptions.output.codeSplitting` — only eager
+  vendor groups (`fb-core`, `react-vendor`, `motion-vendor`, `zod`); firestore/functions/analytics
+  intentionally ungrouped for lazy auto-chunks (avoided `manualChunks` shim —
+  `includeDependenciesRecursively:true` leaked `@firebase/app` into analytics); lazy
+  `src/pages/DevRoutes.tsx` (~73 KB dev fixtures off prod entry); `src/app/prefetch.ts`
+  (`prefetchLesson`/`prefetchAuth`) + idle prefetch in `App.tsx` + pointer-enter warm on
+  `StudyDesk`; inline CSP-safe loading shell in `index.html`; `firebase.json` Cache-Control
+  (`assets/**` `public,max-age=31536000,immutable`; `/index.html` `no-cache`); `loadCourseEntryState()`
+  merged duplicate `loadTrack`+`loadWelcomeSeen` reads in `CoursePathPage`. **Results:** eager
+  first-paint JS ~152 KB gzip across entry + split vendors (was 1.02 MB / 306 KB gzip single entry);
+  522 KB / 154 KB-gzip Firestore chunk lazy on first data read; `modulepreload` only
+  rolldown-runtime + fb-core + react-vendor + motion-vendor. Green: `vite build`, `eslint`,
+  **212/212** vitest. e2e NOT run.
 - **Remaining lessons L0 + L2–L6 — DONE this session** (build-brief waves 0–3): Wave-0
   shared contracts frozen (schema variants `raceSim`/`walkBoard`/`dominanceWheel`/`gamblerLedger`/
   `sumTiles`/`autocorrelationRuler`/`retrievalGrid`/`tripletReveal` + `pattern`/`hero`/ordering/
@@ -141,10 +161,9 @@ times** for coin flips (why `E[HH]=6` but `E[HT]=4`). Sequenced by `docs/mvp_prd
   **Verified green:** `tsc -b`, `eslint .`, `vitest run` **171/171**, `validate`, `vite build`.
   **NOT run (deferred to manual e2e):** Playwright functional suite (42/3 projects) + VR sweep —
   ⚠ VR baselines **stale** (last re-baselined Wave-1 look; re-baseline when running VR). Entry
-  chunk ~**312 KB gz** (was ~477 KB via code-splitting); `gsap`/`katex` lazy; >500 KB raw warning
-  remains (Firebase eager in entry + Konva). **Deferred:** Firebase lazy-load (auth-boot refactor),
-  Fraunces glyph subsetting, `@property` registration (no animated custom props yet), e2e cold-chunk
-  warm-up in harness.
+  chunk ~**152 KB gz** eager first-paint (post page-load latency pass; was ~312 KB gz); `gsap`/`katex`
+  lazy; Firestore now lazy too (522 KB / 154 KB gz on first data read). **Deferred:** Fraunces glyph
+  subsetting, `@property` registration (no animated custom props yet), e2e cold-chunk warm-up in harness.
 - **KaTeX flash fix — DONE in working tree:** `src/lesson/Katex.tsx` no longer paints raw tex while
   the lazy lib loads. katex + CSS now preload once at module load via a shared `katexReady` promise +
   module-singleton `katexLib` (lazy `useState` initializer → synchronous typeset on re-renders); the
@@ -357,8 +376,7 @@ Notebook Wave 2 — confetti **replaced** by wax-seal ink-stamp on `--stamp-beat
 M2 `EquationTilesBeat.tsx` (+ drag layer in Wave 2), M3 `LessonCelebration.tsx` (now
 ink-stamp, not confetti), M4 `StudyDesk.tsx`, M5 `LandingPage.tsx`. **Gotchas:** Konva
 `'use no memo'`; global reduced-motion coexists with MotionConfig; keep our own
-`useReducedMotion`. **Remaining perf levers (deferred):** Firebase lazy-load off boot path
-(auth-boot refactor — needs emulator testing); Fraunces true glyph subsetting; `@property`
+`useReducedMotion`. **Remaining perf levers (deferred):** Fraunces true glyph subsetting; `@property`
 when a custom prop is animated; e2e cold-chunk warm-up in harness.
 
 A 5-agent research council (June 2026) evaluated premium + market-ready options.
@@ -1248,3 +1266,17 @@ Three independent perf/caching edits. **No build run** (concurrent source edits 
 - **`vite.config.ts`**: Added `build.rollupOptions.output.manualChunks` function. Used `manualChunks` (not rolldown-native `advancedChunks`) — confirmed supported: `node_modules/rolldown/dist/shared/define-config-DP-RZqh9.d.mts` exports it for Rollup compatibility. Chunks: `fb-firestore`, `fb-functions`, `fb-analytics` (each separate, intentionally NOT merged into `fb-core` so dynamic imports don't pull them onto the first-paint path), `fb-core`, `react-vendor`, `motion-vendor`, `zod`.
 - **`index.html`**: Added inline `<style>` in `<head>` + loading shell inside `#root`. Colors from real token palette: light bg `#f7f8fb`, ink `#161a27`, brand `#4f46e5`; dark-mode media query inverts to `#161a27` bg. Shimmer animation with `prefers-reduced-motion` guard. Pure HTML+CSS (no inline `<script>` — respects CSP `script-src` without `unsafe-inline`).
 - **`firebase.json`**: Added two `headers` entries after the existing `**` security rule: `/assets/**` → `public, max-age=31536000, immutable`; `/index.html` → `no-cache`. All existing security headers untouched.
+
+### Firestore/Analytics deferred off first-paint critical path (2026-06-24)
+
+Three files edited. Build verified (exit 0). Tests: **212/212** passing. Analytics fallback not needed.
+
+**Root cause discovered:** Rolldown 1.1's `manualChunks` compatibility shim converts each chunk name to an `advancedChunks` group with `includeDependenciesRecursively: true`. This caused `@firebase/analytics` to recursively capture `@firebase/app`, `@firebase/util`, `@firebase/component`, etc. into `fb-analytics`, making analytics eager. Even with `@firebase/app` explicitly assigned to `fb-core` by the function, rolldown's recursive capture overrode it.
+
+- **`src/auth/userDoc.ts`**: Removed static `import { doc, getDoc, setDoc, updateDoc, serverTimestamp } from 'firebase/firestore'`; kept `import type { Timestamp }`. Each async function (`fetchUserDoc`, `createUserDoc`, `updateUserDisplayName`) now does `const { ... } = await import('firebase/firestore')` alongside the existing `await getDb()`, importing only what it needs.
+- **`src/analytics/events.ts`**: Removed static `import { isSupported, getAnalytics, logEvent } from 'firebase/analytics'`; kept `import type { Analytics }`. `getAnalyticsInstance()` uses `const { isSupported, getAnalytics } = await import('firebase/analytics')` inside an IIFE. `track()` does `const { logEvent } = await import('firebase/analytics')` after getting a non-null analytics instance.
+- **`vite.config.ts`**: Replaced deprecated `build.rollupOptions.output.manualChunks` with `build.rolldownOptions.output.codeSplitting`. Only defines groups for chunks that MUST be eager: `fb-core` (app, auth, util, component, logger, installations + recursive deps), `react-vendor`, `motion-vendor`, `zod`. Firestore/functions/analytics have NO group — rolldown's auto-chunking puts them in lazy auto-chunks loaded only when dynamic imports fire.
+
+**Final HTML modulepreload list:** `rolldown-runtime`, `fb-core`, `react-vendor`, `motion-vendor`. Firestore/functions/analytics are deferred (only in `__vite__mapDeps` for dynamic imports).
+
+**Chunk sizes:** entry `index--pLds3r8.js` 11.05 kB / 4.04 kB gz; `fb-core-DJdo5uAc.js` 140.56 kB / 42.10 kB gz; `react-vendor` 211.85 kB / 67.90 kB gz; `motion-vendor` 130.98 kB / 42.90 kB gz. Firestore auto-chunk: 522.59 kB / 153.86 kB gz (includes webchannel-wrapper).
