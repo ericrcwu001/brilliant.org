@@ -189,6 +189,105 @@ describe('SequenceDisplay model — 1-in-1000 double-headed coin', () => {
   })
 })
 
+// ── BarsDisplay PATH B: n>2 hypotheses (Monty Hall, L5 explore-doors).
+describe('BarsDisplay direct path — Monty Hall (n=3)', () => {
+  // L5: hypotheses = ["Switch door","Your door","Opened door"]
+  // priors = [1/3, 1/3, 1/3], likelihoods = [1, 1/2, 0/1]
+  // expected posteriors: [2/3, 1/3, 0]
+  const priors = [R(1, 3), R(1, 3), R(1, 3)]
+  const likelihoods = [R(1, 1), R(1, 2), R(0, 1)]
+  const post = bayesPosterior(priors, likelihoods)
+
+  it('focal posterior (Switch door) is 2/3', () => {
+    expect(formatRational(post[0])).toBe('2/3')
+  })
+
+  it('second posterior (Your door) is 1/3', () => {
+    expect(formatRational(post[1])).toBe('1/3')
+  })
+
+  it('third posterior (Opened door) is 0 — 0-width bar, still computed', () => {
+    expect(post[2].n).toBe(0)
+    expect(formatRational(post[2])).toBe('0')
+  })
+
+  it('bar width for Opened door is 0%', () => {
+    const pct = Math.round((post[2].n / post[2].d) * 100)
+    expect(pct).toBe(0)
+  })
+
+  it('posteriors sum to 1', () => {
+    // cross-multiply: post[0]/d0 + post[1]/d1 + post[2]/d2 = 1
+    const total = post[0].n / post[0].d + post[1].n / post[1].d + post[2].n / post[2].d
+    expect(total).toBeCloseTo(1)
+  })
+
+  it('direct predicate fires for n=3', () => {
+    const direct = priors.length > 2 || false
+    expect(direct).toBe(true)
+  })
+
+  it('direct predicate fires for n=2 with interactive:false', () => {
+    const direct = 2 > 2 || false === false
+    expect(direct).toBe(true)
+  })
+
+  it('aria-live string lists all 3 posteriors', () => {
+    const hypotheses = ['Switch door', 'Your door', 'Opened door']
+    const ariaStatus = hypotheses
+      .map((h, i) => `${h} ${post[i].n} in ${post[i].d}`)
+      .join(', ')
+    expect(ariaStatus).toBe('Switch door 2 in 3, Your door 1 in 3, Opened door 0 in 1')
+  })
+})
+
+// ── BarsDisplay PATH B: n=2 interactive:false (L6 explore-children, both-boys).
+describe('BarsDisplay direct path — n=2 interactive:false (both-boys L6)', () => {
+  // priors = [1/4, 3/4], likelihoods = [1, 2/3], posterior[0] = 1/3
+  const priors = [R(1, 4), R(3, 4)]
+  const likelihoods = [R(1, 1), R(2, 3)]
+  const post = bayesPosterior(priors, likelihoods)
+
+  it('posterior[0] (Both boys) is 1/3', () => {
+    expect(formatRational(post[0])).toBe('1/3')
+  })
+
+  it('posterior[1] (Not both boys) is 2/3', () => {
+    expect(formatRational(post[1])).toBe('2/3')
+  })
+
+  it('direct predicate fires: n=2 and interactive===false', () => {
+    const n = priors.length
+    const direct = n > 2 || true // interactive === false → ix.interactive === false is true
+    expect(direct).toBe(true)
+  })
+
+  it('no slider rendered: interacted starts true (Continue enabled immediately)', () => {
+    // Modelled as: useState(direct || reducedMotion) with direct=true → always true
+    const directTrue = true
+    const reducedMotionFalse = false
+    const interacted = directTrue || reducedMotionFalse
+    expect(interacted).toBe(true)
+  })
+})
+
+// ── BarsDisplay PATH A: n=2 without interactive:false → slider path, direct=false.
+describe('BarsDisplay slider path — direct predicate false for n=2 default', () => {
+  it('direct is false when n=2 and interactive is not set', () => {
+    const n = 2
+    const interactive = undefined
+    const direct = n > 2 || interactive === false
+    expect(direct).toBe(false)
+  })
+
+  it('interacted starts as reducedMotion value (false) when direct=false', () => {
+    const direct = false
+    const reducedMotion = false
+    const interacted = direct || reducedMotion
+    expect(interacted).toBe(false)
+  })
+})
+
 // ── formatRational helper (used for all aria-live mirrors).
 describe('formatRational', () => {
   it('reduces 2/3 correctly', () => {

@@ -21,7 +21,9 @@ const ONE: Rational = { n: 1, d: 1 }
 // Narrowed interaction type alias for readability in the sub-components.
 type BayesIx = Extract<BeatProps['beat']['interaction'], { type: 'bayesUpdate' }>
 
-// ── Bars display: drag prior, posterior bars swing live. Always hero (ungraded).
+// ── Bars display: two paths keyed on a `direct` predicate.
+//   direct = false (n===2 && interactive!==false): 2-hypothesis drag-slider — existing path, unchanged.
+//   direct = true  (n>2 || interactive===false):   static N-bar render via bayesPosterior, no slider.
 function BarsDisplay({
   ix,
   beat,
@@ -37,25 +39,115 @@ function BarsDisplay({
 }) {
   const priors = ix.priors ?? [{ n: 1, d: 2 }, { n: 1, d: 2 }]
   const likelihoods = ix.likelihoods ?? [{ n: 1, d: 1 }, { n: 1, d: 2 }]
+  const n = ix.hypotheses.length
+  const direct = n > 2 || ix.interactive === false
+
+  // Hooks must be declared unconditionally. initPct / priorPct are only used on
+  // Path A (slider); interacted starts true on Path B so Continue is immediate.
   const initPct = Math.round((priors[0].n / priors[0].d) * 100)
   const [priorPct, setPriorPct] = useState(initPct)
-  const [interacted, setInteracted] = useState(reducedMotion)
+  const [interacted, setInteracted] = useState(direct || reducedMotion)
 
-  const livePrior: Rational[] = [
-    { n: priorPct, d: 100 },
-    { n: 100 - priorPct, d: 100 },
-  ]
-  const post = bayesPosterior(livePrior, likelihoods)
-  const postPct0 = Math.round((post[0].n / post[0].d) * 100)
-  const postPct1 = 100 - postPct0
-  const postStr = formatRational(post[0])
-  const livePostStr = `Posterior: ${post[0].n} in ${post[0].d}`
+  if (!direct) {
+    // ── PATH A: 2-hypothesis drag-slider — EXISTING body, BYTE-FOR-BYTE UNCHANGED ──
+    const livePrior: Rational[] = [
+      { n: priorPct, d: 100 },
+      { n: 100 - priorPct, d: 100 },
+    ]
+    const post = bayesPosterior(livePrior, likelihoods)
+    const postPct0 = Math.round((post[0].n / post[0].d) * 100)
+    const postPct1 = 100 - postPct0
+    const postStr = formatRational(post[0])
+    const livePostStr = `Posterior: ${post[0].n} in ${post[0].d}`
+
+    return (
+      <BeatShell
+        primary={{
+          label: isLast ? 'Finish' : 'Continue',
+          enabled: interacted,
+          onClick: onAdvance,
+        }}
+      >
+        <div className="bayes-bars">
+          {beat.hero && (
+            <p className="sr-only">{beat.hero.structuralReadout}</p>
+          )}
+          <div className="bayes-bars__hypotheses">
+            <span className="bayes-bars__label">{ix.hypotheses[0]}</span>
+            <span className="bayes-bars__label">{ix.hypotheses[1]}</span>
+          </div>
+          <div className="bayes-bars__row">
+            <span className="bayes-bars__rowlabel">Prior</span>
+            <div className="bayes-bars__track">
+              <div
+                className="bayes-bars__fill bayes-bars__fill--h0"
+                style={{ width: `${priorPct}%`, transition: reducedMotion ? 'none' : undefined }}
+              />
+              <div
+                className="bayes-bars__fill bayes-bars__fill--h1"
+                style={{ width: `${100 - priorPct}%`, transition: reducedMotion ? 'none' : undefined }}
+              />
+            </div>
+          </div>
+          <label className="bayes-bars__dragrow">
+            <span className="bayes-bars__draglabel">
+              Drag prior: {ix.hypotheses[0]} = {priorPct}%
+            </span>
+            <input
+              type="range"
+              className="bayes-bars__range"
+              min={0}
+              max={100}
+              value={priorPct}
+              disabled={ix.interactive === false}
+              onChange={(e) => {
+                setPriorPct(Number(e.target.value))
+                setInteracted(true)
+              }}
+              aria-label={`Prior probability of ${ix.hypotheses[0]}: ${priorPct}%`}
+              style={{ minHeight: '44px' }}
+            />
+          </label>
+          {ix.evidence && (
+            <p className="bayes-bars__evidence">
+              Evidence observed: <strong>{ix.evidence}</strong>
+            </p>
+          )}
+          <div className="bayes-bars__row">
+            <span className="bayes-bars__rowlabel">Posterior</span>
+            <div className="bayes-bars__track">
+              <div
+                className="bayes-bars__fill bayes-bars__fill--h0"
+                style={{ width: `${postPct0}%`, transition: reducedMotion ? 'none' : 'width 0.3s ease' }}
+              />
+              <div
+                className="bayes-bars__fill bayes-bars__fill--h1"
+                style={{ width: `${postPct1}%`, transition: reducedMotion ? 'none' : 'width 0.3s ease' }}
+              />
+            </div>
+            <span className="bayes-bars__value">{postStr}</span>
+          </div>
+          <p role="status" aria-live="polite" className="sr-only">
+            {livePostStr}
+          </p>
+        </div>
+      </BeatShell>
+    )
+  }
+
+  // ── PATH B: DIRECT render (n>2 and/or interactive:false) ──
+  // bayesPosterior is already n-way; 0/1 likelihoods (Monty Hall) fall out naturally.
+  const post = bayesPosterior(priors, likelihoods)
+  const focalStr = formatRational(post[0])
+  const ariaStatus = ix.hypotheses
+    .map((h, i) => `${h} ${post[i].n} in ${post[i].d}`)
+    .join(', ')
 
   return (
     <BeatShell
       primary={{
         label: isLast ? 'Finish' : 'Continue',
-        enabled: interacted,
+        enabled: true,
         onClick: onAdvance,
       }}
     >
@@ -63,63 +155,51 @@ function BarsDisplay({
         {beat.hero && (
           <p className="sr-only">{beat.hero.structuralReadout}</p>
         )}
-        <div className="bayes-bars__hypotheses">
-          <span className="bayes-bars__label">{ix.hypotheses[0]}</span>
-          <span className="bayes-bars__label">{ix.hypotheses[1]}</span>
-        </div>
-        <div className="bayes-bars__row">
-          <span className="bayes-bars__rowlabel">Prior</span>
-          <div className="bayes-bars__track">
-            <div
-              className="bayes-bars__fill bayes-bars__fill--h0"
-              style={{ width: `${priorPct}%`, transition: reducedMotion ? 'none' : undefined }}
-            />
-            <div
-              className="bayes-bars__fill bayes-bars__fill--h1"
-              style={{ width: `${100 - priorPct}%`, transition: reducedMotion ? 'none' : undefined }}
-            />
+        <span className="bayes-bars__rowlabel">Prior</span>
+        {ix.hypotheses.map((hyp, i) => (
+          <div key={i} className="bayes-bars__row">
+            <span className="bayes-bars__label">{hyp}</span>
+            <div className="bayes-bars__track">
+              <div
+                className={`bayes-bars__fill bayes-bars__fill--h${Math.min(i, 2)}`}
+                style={{
+                  width: `${Math.round((priors[i].n / priors[i].d) * 100)}%`,
+                  transition: reducedMotion ? 'none' : undefined,
+                }}
+                aria-label={`${hyp} prior`}
+              />
+            </div>
           </div>
-        </div>
-        <label className="bayes-bars__dragrow">
-          <span className="bayes-bars__draglabel">
-            Drag prior: {ix.hypotheses[0]} = {priorPct}%
-          </span>
-          <input
-            type="range"
-            className="bayes-bars__range"
-            min={0}
-            max={100}
-            value={priorPct}
-            disabled={ix.interactive === false}
-            onChange={(e) => {
-              setPriorPct(Number(e.target.value))
-              setInteracted(true)
-            }}
-            aria-label={`Prior probability of ${ix.hypotheses[0]}: ${priorPct}%`}
-            style={{ minHeight: '44px' }}
-          />
-        </label>
+        ))}
         {ix.evidence && (
           <p className="bayes-bars__evidence">
             Evidence observed: <strong>{ix.evidence}</strong>
           </p>
         )}
-        <div className="bayes-bars__row">
-          <span className="bayes-bars__rowlabel">Posterior</span>
-          <div className="bayes-bars__track">
-            <div
-              className="bayes-bars__fill bayes-bars__fill--h0"
-              style={{ width: `${postPct0}%`, transition: reducedMotion ? 'none' : 'width 0.3s ease' }}
-            />
-            <div
-              className="bayes-bars__fill bayes-bars__fill--h1"
-              style={{ width: `${postPct1}%`, transition: reducedMotion ? 'none' : 'width 0.3s ease' }}
-            />
-          </div>
-          <span className="bayes-bars__value">{postStr}</span>
-        </div>
+        <span className="bayes-bars__rowlabel">Posterior</span>
+        {ix.hypotheses.map((hyp, i) => {
+          const pct = Math.round((post[i].n / post[i].d) * 100)
+          return (
+            <div key={i} className="bayes-bars__row">
+              <span className="bayes-bars__label">
+                {hyp}: {formatRational(post[i])}
+              </span>
+              <div className="bayes-bars__track">
+                <div
+                  className={`bayes-bars__fill bayes-bars__fill--h${Math.min(i, 2)}`}
+                  style={{
+                    width: `${pct}%`,
+                    transition: reducedMotion ? 'none' : 'width 0.3s ease',
+                  }}
+                  aria-label={`${hyp}: ${formatRational(post[i])}`}
+                />
+              </div>
+            </div>
+          )
+        })}
+        <span className="bayes-bars__value">{focalStr}</span>
         <p role="status" aria-live="polite" className="sr-only">
-          {livePostStr}
+          {`Posterior: ${ariaStatus}`}
         </p>
       </div>
     </BeatShell>

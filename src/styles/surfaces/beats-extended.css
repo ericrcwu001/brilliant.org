@@ -1255,6 +1255,9 @@
 .bayes-bars__fill--h1 {
   background: var(--mark);
 }
+.bayes-bars__fill--h2 {
+  background: var(--ch5);
+}
 .bayes-bars__value {
   flex: 0 0 auto;
   font-family: var(--font-mono);
