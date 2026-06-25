@@ -62,3 +62,8 @@ firebase-export-*
 # Vendored agent skills (firebase/agent-skills). Restored locally from
 # skills-lock.json; the skill content itself is not committed to the repo.
 .agents/skills/
+
+# Ground-truth reference texts for the lesson factory (copyrighted source
+# material — kept local, never committed). Agents read these as the only
+# valid source of lesson problems.
+references/
