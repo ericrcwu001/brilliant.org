@@ -69,8 +69,21 @@ explore beats carry `hero` ⇒ ungraded "watch it resolve" (primary = Continue).
 | L1 `count-the-heads` | tree | ["Two-headed coin","Fair coin"] | [1/2, 1/2] | [1/1, 1/2] | 3 | — | "heads" | no (graded) | "2/3" |
 | L2 `explore-frequencies` | tree | ["Has the disease","Healthy"] | [1/100, 99/100] | [99/100, 1/100] | 10000 | — | "a positive test" | yes | "1/2" |
 | L3 `explore-sequence` | sequence | ["Double-headed coin","Fair coin"] | [1/1000, 999/1000] | [1/1, 1/2] | — | 10 | "heads" | yes | "1024/2023" |
+| L4 `explore-sources` | bars | ["Machine 1","Machine 2","Machine 3"] | [1/2, 3/10, 2/10] | [1/100, 2/100, 3/100] | — | — | "a defective part" | yes | "5/17" |
+| L5 `explore-doors` | bars | ["Switch door","Your door","Opened door"] | [1/3, 1/3, 1/3] | [1/1, 1/2, 0/1] | — | — | "the host opens Door 3" | yes | "2/3" |
+| L6 `explore-children` | bars | ["Both boys","Not both boys"] | [1/4, 3/4] | [1/1, 2/3] | — | — | "at least one is a boy" | yes | "1/3" |
+| L7 `explore-pool` | bars | ["Is the source","Is not the source"] | [1/10001, 10000/10001] | [1/1, 1/1000000] | — | — | "the DNA matches" | yes | "100/101" |
+| L8 `explore-cabs` | tree | ["Blue","Green"] | [15/100, 85/100] | [80/100, 20/100] | 100 | — | "the witness says blue" | yes | "12/29" |
 
-(Rationals shown as `n/d` are `{ n, d }` objects, e.g. `1/2` = `{ "n": 1, "d": 2 }`.)
+(Rationals shown as `n/d` are `{ n, d }` objects, e.g. `1/2` = `{ "n": 1, "d": 2 }`; `0/1` = `{ "n": 0, "d": 1 }`.)
+
+> **L4–L8 `bars` are non-slider (`interactive:false`)** — L4/L5 because they are **n > 2** (the prior is
+> fixed), L6/L7 because their prior is **structurally fixed / too small** for the integer-percent slider.
+> All five route through the §9 *direct* render (posteriors straight from `bayesPosterior`). **L8 `tree`**
+> is interactive (draggable prevalence), reusing L2's confusion grid unchanged. Focal = `hypotheses[0]`
+> for every row (the validator anchor `bayesPosterior(...)[0]`). Full shapes + per-beat copy: each
+> lesson's `lesson-bayes-rule-{4..8}/interaction-spec.md`. **Remap:** L6 `explore-children` was Dept-1
+> `tree`+`population:4`; Dept-2 remapped it to `bars` (n = 2, `interactive:false`) — see §9 and the L6 spec.
 
 ---
 
@@ -362,14 +375,18 @@ import type { Rational } from '../src/engine/types'
 const GATED = new Set([
   'lesson-penneys-game', 'lesson-gamblers-ruin', 'lesson-states-streaks',
   'lesson-longer-patterns', 'lesson-overlap-shortcut',
-  'lesson-bayes-rule-1', 'lesson-bayes-rule-2', 'lesson-bayes-rule-3', // ← add
+  'lesson-bayes-rule-1', 'lesson-bayes-rule-2', 'lesson-bayes-rule-3', // ← add (L1–L3)
+  'lesson-bayes-rule-4', 'lesson-bayes-rule-5', 'lesson-bayes-rule-6',
+  'lesson-bayes-rule-7', 'lesson-bayes-rule-8',                         // ← add (L4–L8, this wave)
 ])
 ```
 ```ts
 const MASTERY_LESSONS = new Set([
   'lesson-pattern-hitting-times', 'lesson-penneys-game', 'lesson-gamblers-ruin',
   'lesson-states-streaks', 'lesson-longer-patterns', 'lesson-overlap-shortcut',
-  'lesson-bayes-rule-1', 'lesson-bayes-rule-2', 'lesson-bayes-rule-3', // ← add
+  'lesson-bayes-rule-1', 'lesson-bayes-rule-2', 'lesson-bayes-rule-3', // ← add (L1–L3)
+  'lesson-bayes-rule-4', 'lesson-bayes-rule-5', 'lesson-bayes-rule-6',
+  'lesson-bayes-rule-7', 'lesson-bayes-rule-8',                         // ← add (L4–L8, this wave)
 ])
 ```
 
@@ -571,3 +588,163 @@ instead of the `★` fallback — `src/habit/milestones.ts` `MILESTONE_SEQUENCE`
 `BayesUpdateBeat.tsx`, the new `bayes.ts` (+ `bayes.test.ts`), the three lesson fixtures, the course enrichment
 (only `status` flips; chapters/lessons are added), and the validate-fixtures cross-check + golden + coverage
 blocks. No existing renderer, engine, or fixture is modified.
+
+---
+
+## 9. L4–L8 expansion — the n-hypothesis `bars` delta (the ONLY new build work)
+
+> Author: Department 2, Wave-0 contract. L4–L8 are **pure reuse** of the already-frozen `bayesUpdate`
+> type, `bayes.ts` engine, and the §1–§8 widgets, with **exactly one renderer generalization**: letting
+> `bayesUpdate` `display:'bars'` draw **n > 2** hypotheses (and a 2-hypothesis `interactive:false` static
+> frame, which shares that same code). **No new interaction type, no new engine function.** All 15 L4–L8
+> headline/mastery answers reproduce exactly via the existing `bayesPosterior` (verified). The per-beat
+> shapes are the L4–L8 rows in the §1 matrix; per-beat copy is in `lesson-bayes-rule-{4..8}/interaction-spec.md`.
+
+### 9.1 What changes and what does NOT
+
+| area | change for L4–L8? |
+|------|-------------------|
+| `src/content/schema.ts` (`bayesUpdate`) | **none** — `hypotheses.min(2)` + array `priors`/`likelihoods` already impose no upper bound; `0/1` is a valid `RationalSchema`. |
+| `src/engine/bayes.ts` | **none** — `bayesPosterior(priors, likelihoods)` is already general n-way and normalizes over zero-likelihood hypotheses. |
+| `src/lesson/beats/index.tsx` dispatcher | **none** — one `case 'bayesUpdate'` already serves all displays. |
+| `src/lesson/beats/BayesUpdateBeat.tsx` — `BarsDisplay` | **THE delta** — generalize the hardcoded 2-bar body to map over `hypotheses.length` (§9.2). |
+| `src/styles/.../beats-extended.css` | **+1 fill color** — add `.bayes-bars__fill--h2` (third hypothesis, for n = 3 in L4/L5); the renderer assigns `--h{i}` by index. Trivial, additive. |
+| `TreeLargeDisplay` / `TreeSmallDisplay` (`tree`) | **none** — see §9.4. |
+| `SequenceDisplay` (`sequence`) | **none** — L4–L8 use no `sequence`. |
+| `scripts/validate-fixtures.ts` | **+10 lessonIds** to two sets (§9.5); the bayes cross-check + chapters-coverage are already generic. |
+
+### 9.2 `BarsDisplay` — frozen n-hypothesis contract
+
+The current `BarsDisplay` hardcodes two hypotheses: `livePrior = [pct, 100-pct]`, two `--h0/--h1` fills, one
+binary drag-slider, focal posterior from the slider. Generalize it with a single branch on a **direct vs.
+slider** predicate — the slider path stays **byte-for-byte unchanged**:
+
+```ts
+const n = ix.hypotheses.length
+const priors      = ix.priors      ?? [{n:1,d:2}, {n:1,d:2}]   // 2-hyp defaults unchanged
+const likelihoods = ix.likelihoods ?? [{n:1,d:1}, {n:1,d:2}]
+
+// DIRECT render iff there are >2 hypotheses, OR the prior is declared fixed.
+const direct = n > 2 || ix.interactive === false
+
+if (!direct) {
+  // ── PATH A: 2-hypothesis drag-slider — the EXISTING body, BYTE-FOR-BYTE UNCHANGED ──
+  //   priorPct state, livePrior = [priorPct/100, (100-priorPct)/100],
+  //   post = bayesPosterior(livePrior, likelihoods), two stacked --h0/--h1 fills,
+  //   focal value = formatRational(post[0]).  (L1 explore-update is the only caller today.)
+} else {
+  // ── PATH B: DIRECT render (n>2 and/or interactive:false) ──
+  const post = bayesPosterior(priors, likelihoods)   // length n, EXACT, may contain 0/1 entries
+  // Render two grouped rows, each mapping over i = 0 … n-1:
+  //   • a "Prior" group:     n labeled bars, width%[i] = round(100 * priors[i].n / priors[i].d)
+  //   • a "Posterior" group: n labeled bars, width%[i] = round(100 * post[i].n  / post[i].d)   // 0 ⇒ 0-width
+  //   each bar: label = ix.hypotheses[i]; fill class = `bayes-bars__fill--h${Math.min(i, 2)}`
+  //   focal readout (the headline shown by the bar group) = formatRational(post[0])
+  //   NO slider is rendered (the binary drag applies only on Path A); `interacted` starts TRUE
+  //   so the BeatShell primary (Continue/Finish) is enabled immediately.
+}
+```
+
+**Key frozen facts (must hold):**
+- **Data source.** On Path B every width comes from `bayesPosterior(priors, likelihoods)` (and `priors[i]`
+  for the prior group) — never from the slider. This is *why* Path B is also taken for `interactive:false`
+  at n = 2: L7's prior (1/10001) and L6's structurally-fixed 1/4 cannot round-trip through the
+  integer-percent slider (1/10001 → 0% → a wrong `0` posterior), but `bayesPosterior` reproduces the exact
+  100/101 and 1/3.
+- **Focal = `hypotheses[0]`.** The headline readout and the validator anchor are both
+  `formatRational(bayesPosterior(priors, likelihoods)[0])`. Authors place the focal hypothesis first
+  (L4 = Machine 1 → 5/17; L5 = Switch door → 2/3; L6 = Both boys → 1/3; L7 = Is the source → 100/101).
+- **Monty's 0-bar (L5).** `likelihoods = [1, 1/2, 0]` ⇒ `bayesPosterior(...) = [2/3, 1/3, 0]`. The
+  opened-door bar is **0-width but still labeled** ("Opened door") in the hypotheses/label text and in the
+  aria-live summary. No special-casing — `0/1` falls straight out of the map.
+- **2-hypothesis path is untouched.** Path A fires only when `n === 2 && interactive !== false` — i.e.
+  exactly L1 `explore-update` today. Its code, DOM, and behavior are unchanged; **L1–L3 render
+  identically.** No existing fixture takes Path B (no shipped n = 2 bars beat sets `interactive:false`),
+  so Path B is purely additive.
+- **"Render identically" for L6–L8.** L6/L7 are 2-hypothesis renderings (two bars) via Path B; L8 is a
+  2-hypothesis `tree` (§9.4). None of them invoke any >2 layout, and none change L1–L3.
+
+### 9.3 a11y for n bars (frozen)
+
+- **Each bar labeled.** Every hypothesis bar carries its `hypotheses[i]` label as adjacent text (and the
+  posterior value as text). 0-width bars keep their label (L5 opened door reads "Opened door — 0").
+- **aria-live summary lists all n posteriors.** The visually-hidden `<p role="status" aria-live="polite">`
+  mirrors the full vector in words, e.g.
+  - L4: "Posterior: Machine 1 5 in 17, Machine 2 6 in 17, Machine 3 6 in 17."
+  - L5: "Posterior: Switch door 2 in 3, Your door 1 in 3, Opened door 0 in 1."
+  - L6/L7 (n = 2): "Posterior: Is the source 100 in 101, Is not the source 1 in 101."
+- **44px.** Path B renders no slider; the only focusable control is the BeatShell primary (≥44px). Bars are
+  non-interactive `<div>`s (no tap target needed). (Path A keeps its ≥44px range input.)
+- **reduced-motion.** When `reducedMotion`, render the **final frame** (bars at settled widths, no width
+  transition), honoring `hero.reducedMotionFinalFrame: true`. Same rule already in `.bayes-bars__fill`.
+
+### 9.4 `tree` / icon-array — no n>2 handling needed (confirmed)
+
+State explicitly: **the `tree` display and its tap-partition stay 2-class; no n>2 work.**
+- L4 and L5 (the only n > 2 beats) use **`bars`**, not `tree`.
+- **L6 `explore-children` was remapped off `tree`** (Dept-1 had `tree`+`population:4`) onto `bars` (n = 2,
+  `interactive:false`). Reason: `TreeLargeDisplay`'s only affordance is a *prior-prevalence* drag, but the
+  two-children prior is structurally fixed at 1/4, and at `population:4` the integer-percent slider yields
+  non-integer family counts off the 25% multiples. `bars` Path B renders the exact 1/3 with **zero**
+  renderer change; the 4-family enumeration moves to the graded `count-the-families` + the 400-family
+  `triangulate-13` lens. (Details in the L6 spec.)
+- **L8 `explore-cabs` reuses L2's `tree` verbatim** at `population:100` (draggable blue-cab base rate,
+  PPV = 12/29). It is **n = 2** and behaves exactly like L2's `explore-frequencies`; the canonical 15% mix
+  fills exact integer counts (12 / 3 / 17 / 68).
+- `TreeSmallDisplay` (the L1 `count-the-heads` tap-partition) is **focal-vs-rest = 2-class** and is **not
+  used by L4–L8** — unchanged.
+
+### 9.5 `scripts/validate-fixtures.ts` additions for L4–L8 (exact)
+
+1. **Gate sets — add the 5 lessonIds to both sets** (already shown in §6(b)): append
+   `'lesson-bayes-rule-4' … 'lesson-bayes-rule-8'` to `GATED` and to `MASTERY_LESSONS`.
+2. **Bayes cross-check — NO change.** The §3b block (`validate-fixtures.ts` ~133–157) already computes
+   `bayesPosterior(priors, likelihoods)[0]` for non-`sequence` displays and asserts it equals the declared
+   `posterior`. It is **already n-way** (`bayesPosterior` over the full arrays; focal = `hypotheses[0]`),
+   so it covers L4/L5's **n = 3** rows (incl. the `0/1` likelihood) and L6/L7/L8's n = 2 rows with **zero
+   edits**. The existing `priors.length === likelihoods.length && ≥ 2` guard already passes for length-3.
+3. **Chapters-coverage — NO change to the block.** The §6(e) assertion (`validate-fixtures.ts` ~339–360)
+   is generic over every course's `chapters[]`/`lessons[]`. It just needs the **course doc enriched to all
+   8 lessons / 4 chapters** (§9.6); the assertion then verifies each of L1–L8 sits in exactly one chapter.
+4. **Goldens (§2b) — OPTIONAL, recommended.** The fixture cross-check (#2) already guards every declared
+   posterior once the fixtures exist. For fixture-*independent* CI coverage, append the L4–L8 headlines to
+   the inline golden array (all verified):
+   `bayesPosterior([1/2,3/10,2/10],[1/100,2/100,3/100])[0] = 5/17`;
+   `bayesPosterior([25/100,20/100,55/100],[5/100,3/100,1/100])[0] = 25/48`;
+   `bayesPosterior([1/3,1/3,1/3],[1,1/2,0])[0] = 2/3`;
+   `bayesPosterior([1/3,1/3,1/3],[1/2,1/2,0])[0] = 1/2`;
+   `bayesUpdate(1/8,1,6/7) = 1/7`; `bayesUpdate(1/10001,1,1/1000000) = 100/101`;
+   `bayesUpdate(1/1000001,1,1/1000000) = 1/2`; `bayesUpdate(15/100,80/100,20/100) = 12/29`;
+   `bayesUpdate(20/100,99/100,2/100) = 99/107`; `bayesUpdate(1/1000,95/100,1/100) = 95/1094`.
+
+**No new gate-invariant code is needed.** The 5 lessons satisfy the **existing** GATED + MASTERY invariants
+(per each spec's Gate notes), namely: ≥1 `primer`; every `prediction` uses `byOption`; **one `interviewNote`
+per lesson** (L4 `count-the-defects`, L5 `compute-23`, L6 `bertrand`, L7 `cold-vs-cause`, L8 `spam-costume`);
+the **first graded beat is the `retrievalGrid` opener** (`recall-*`); the last beat is `recap`, preceded by a
+**required `masteryChallenge` with no `pattern`**. No `introducesSymbol` tags ⇒ the notation-ladder check is
+vacuously satisfied (§6f). `HERO_TYPES`/`GRADED_TYPES` are **not** extended for `bayesUpdate` (R-6): the
+hero/graded split rides the beat-level `hero` block (all five explore beats carry it ⇒ ungraded).
+
+### 9.6 Course-doc enrichment for the 8-lesson concept (fixture, Wave 1)
+
+`fixtures/course-bayes-rule.json` extends the §5b stub to all 8 lessons (the §6(e) assertion enforces it):
+- **`chapters[]`** gains the two appended chapters from `concept-brief.md`:
+  `{ id:"ch-bayes-rule-3", label:"More Than Two Hypotheses", accent:"ch3", lessonIds:["lesson-bayes-rule-4","lesson-bayes-rule-5"] }`
+  and `{ id:"ch-bayes-rule-4", label:"Reading the Evidence Right", accent:"ch4", lessonIds:["lesson-bayes-rule-6","lesson-bayes-rule-7","lesson-bayes-rule-8"] }`.
+  (ch-1/ch-2 unchanged; every L1–L8 lessonId appears in exactly one chapter.)
+- **`lessons[]`** gains L4–L8 nodes (`built:true`, with `milestoneId`/`glyphKey`/`vizKey` per the table below).
+- **`unlocks` chain.** Each L4–L8 lesson fixture sets `unlocks` to its successor (L4→L5→L6→L7→**L8→null**),
+  and **L3's fixture `unlocks` flips `null → "lesson-bayes-rule-4"`** so the path is continuous L1…L8. (This
+  is the one edit to an L1–L3 *fixture* value; the L3 *design* doc is not otherwise touched.)
+
+| lesson | milestoneId | unlocks | glyphKey | vizKey |
+|--------|-------------|---------|----------|--------|
+| L4 lesson-bayes-rule-4 | `bayes-rule-nway` | lesson-bayes-rule-5 | `1/N` | `fourNode` |
+| L5 lesson-bayes-rule-5 | `bayes-rule-monty` | lesson-bayes-rule-6 | `door` | `dice` |
+| L6 lesson-bayes-rule-6 | `bayes-rule-condition` | lesson-bayes-rule-7 | `1/3` | `twoNode` |
+| L7 lesson-bayes-rule-7 | `bayes-rule-direction` | lesson-bayes-rule-8 | `H\|E` | `twoNode` |
+| L8 lesson-bayes-rule-8 | `bayes-rule-wild` | `null` | `12/29` | `coin` |
+
+(Optional, seeded build only — mirrors §7: register the 5 new `LESSON_MILESTONES` + the client
+`MILESTONE_SEQUENCE` seals, and extend `CONCEPT_COMPLETIONS`' `bayes-rule-complete` path to all 8. Not
+required for completion/unlock on the dev build.)

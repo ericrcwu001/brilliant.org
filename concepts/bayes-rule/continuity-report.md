@@ -63,3 +63,50 @@ with built lessons, so this report treats those 7 as the dedupe surface.
     L3 (2ᵏ/(2ᵏ+999), crosses ½ at k = 10) — echoing PHT's 7/8 and i/N, each a few lessons apart.
   - **Base rate / prior odds** introduced L2, re-surfaced L3 as the thing likelihood ratios must
     overcome (prior odds × likelihood ratio) — the concept's one through-line, spaced across two lessons.
+
+## Addendum — how L4–L8 recall/interleave L1–L3 (8-lesson expansion)
+
+The expansion adds **no new external corpus to dedupe against** (the in-dev survey above is unchanged —
+PHT is still the only other live concept). The job is purely *internal*: each new lesson opens with a
+**graded retrieval of a prior Bayes lesson** (every opener recalls at least one of L1–L3) and **never
+re-teaches** the rule — it stresses it where intuition breaks. No L4–L8 beat re-derives prior × likelihood
+or the base-rate trap; those are recalled and re-applied.
+
+**Retrieval warm-ups (graded openers — the guaranteed early win):**
+- **L1 headline** (rescale by likelihood, renormalize) → **L4 opener** (`recall-update-rule`),
+  generalized to N hypotheses.
+- **L4 + L1** (N-way update; likelihood = how well each hypothesis predicts the evidence) → **L5 opener**
+  (`recall-n-update`).
+- **L5 + L1** (the host's *choice* was the evidence; the L1 `framing-flip` 1/3 vs 1/2) → **L6 opener**
+  (`recall-monty`).
+- **L2 headline** (P(+|sick) = 99% but P(sick|+) = 50% — the directional swap) → **L7 opener**
+  (`recall-base-rate`).
+- **L7 + L2** (P(E|H) ≠ P(H|E); a rare prior swamps strong evidence) → **L8 opener** (`recall-direction`).
+
+**Interleaving (confusable pairs / mixed, mid-lesson):**
+- **L4 `share-vs-rate`** re-applies **L2's** base-rate idea (big prior/output-share vs higher
+  likelihood/defect-rate) — the base-rate trap in a factory costume.
+- **L6 `clue-match`** folds **L5's Monty** ("the host's protocol was the clue") into the same "what did you
+  condition on?" frame as two-children and Bertrand — one principle, four costumes.
+- **L7 `name-the-fallacy`** interleaves the **L2 medical** case, the DNA case, and everyday "P(A|B) vs
+  P(B|A)" — one direction-error in many disguises.
+- **L8 `spot-the-base-rate`** is the **concept's interleaved capstone** (modeled on `lesson-states-streaks`):
+  unlabeled, mixed scenarios — **disease (L2)**, cab, spam, coin — the learner must pick the move without a
+  label, exactly the states-streaks design the report flagged for reuse.
+
+**Spaced re-surfacing:**
+- **L1's `framing-flip`** (boys-girls 1/3 vs 1/2) re-surfaces **two chapters later** as the whole point of
+  **L6**.
+- **L2's natural-frequency tree** is reused as the **L8 `explore-cabs`** widget (same confusion array, new
+  costume); **L2's 1/2 disease anchor** is recalled in **L8** as an interleave (spaced review).
+- **L3's odds form** (prior odds × likelihood ratio) re-surfaces in **L7's** triangulation (1:10,000 ×
+  1,000,000 = 100:1 → 100/101).
+- **Exact-fraction posteriors** continue at every gap — L4 (3/8, 5/17, 25/48), L5 (2/3, 99/100, 1/2),
+  L6 (1/3, 1/2, 2/3, 1/7), L7 (100/101, 1/2), L8 (12/29, 99/107, 95/1094) — **closing** the fraction-fluency
+  thread that began with PHT's 7/8 and i/N.
+
+**Bridges that seed the next lesson:** L5's random-host ("Monty Fall") mastery → **1/2** plants "the
+protocol behind the clue matters," which **L6** develops; L4's N-way `bayesPosterior` machinery is the
+launch pad for **L5** (Monty as a 3-hypothesis update). New mechanic flagged for Wave-0: the `bayesUpdate`
+`bars`/`tree` renderer must draw **n > 2 hypotheses** (L4 sources, L5 doors) — schema/engine/validator
+already support it; renderer-only change.
