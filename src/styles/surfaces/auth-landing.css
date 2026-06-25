@@ -19,12 +19,11 @@
 .hero__title {
   margin: 0;
   font-family: var(--font-display);
-  font-optical-sizing: auto;
   font-size: clamp(2.5rem, 6vw, 5rem);
   line-height: 1.1;
-  font-weight: 500;
+  font-weight: 700;
   letter-spacing: -0.02em;
-  color: var(--ink);
+  color: var(--ergo-ink);
   text-wrap: balance;
 }
 .hero__title code {
@@ -33,18 +32,17 @@
 .hero__subtitle {
   margin: 0;
   font-family: var(--font-display);
-  font-optical-sizing: auto;
   font-size: clamp(1.75rem, 4vw, 2.75rem);
-  font-weight: 500;
+  font-weight: 600;
   letter-spacing: -0.01em;
-  color: var(--ink);
+  color: var(--ergo-ink-2);
   text-wrap: balance;
 }
 .hero__reassure {
   margin: var(--s2) 0 0;
   max-width: 46ch;
   font-size: calc(13px * var(--fs));
-  color: var(--graphite-soft);
+  color: var(--ergo-ink-3);
   line-height: 1.5;
 }
 .hero__cta {
@@ -69,7 +67,7 @@
   }
 }
 
-/* Looping ∅ → H → HH state-machine motif (decorative). */
+/* Looping ∅ → H → HH state-machine motif (decorative). Re-skinned to Ch1 indigo. */
 .preview {
   width: 100%;
   max-width: 360px;
@@ -81,26 +79,26 @@
   height: auto;
 }
 .preview__edge {
-  stroke: var(--rule);
+  stroke: var(--ergo-line);
   stroke-width: 2;
 }
 .preview__ring {
-  fill: var(--paper-0);
-  stroke: var(--graphite);
+  fill: var(--ergo-bg);
+  stroke: var(--ergo-ink-2);
   stroke-width: 2;
 }
 .preview__label {
-  fill: var(--ink);
+  fill: var(--ergo-ink);
   font-family: var(--font-mono);
   font-size: calc(16px * var(--fs));
   font-weight: 600;
   text-anchor: middle;
 }
-/* Quill "signal" that travels the chain (LandingPage.tsx); the glow makes the
-   moving match read as energy advancing through the state machine. */
+/* Ch1 indigo signal traveling the chain (LandingPage.tsx); glow reads as energy
+   advancing through the state machine. */
 .preview__signal {
-  fill: var(--quill);
-  filter: drop-shadow(0 0 5px var(--quill));
+  fill: var(--ch1);
+  filter: drop-shadow(0 0 5px var(--ch1));
 }
 @media (prefers-reduced-motion: no-preference) {
   .preview__ring {
@@ -111,13 +109,13 @@
 @keyframes preview-pulse {
   0%,
   100% {
-    stroke: var(--graphite);
-    fill: var(--paper-0);
+    stroke: var(--ergo-ink-2);
+    fill: var(--ergo-bg);
   }
   12% {
-    stroke: var(--quill);
+    stroke: var(--ch1);
     stroke-width: 3;
-    fill: var(--quill-tint);
+    fill: var(--ch1-tint);
   }
 }
 
@@ -136,28 +134,32 @@
   display: flex;
   flex-direction: column;
   gap: var(--s4);
-  background: var(--paper-1);
-  box-shadow: var(--paper-shadow-2);
-  border-radius: var(--r-md);
-  border: 1px solid var(--rule);
+  background: var(--ergo-surface);
+  box-shadow: var(--ergo-shadow-md);
+  border-radius: var(--r-xl);
+  border: 1px solid var(--ergo-line);
   padding: var(--s6) var(--s5);
-}
-@media (resolution >= 2dppx) {
-  .authcard {
-    border-width: 0.5px;
-  }
 }
 .authcard__back {
   align-self: flex-start;
   padding: var(--s1) 0;
   border: none;
   background: transparent;
-  color: var(--graphite);
+  color: var(--ergo-ink-2);
   font-size: calc(14px * var(--fs));
   cursor: pointer;
 }
 .authcard__back:hover {
-  color: var(--ink);
+  color: var(--ergo-ink);
+}
+.authcard__wordmark {
+  margin: 0 0 var(--s2);
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: calc(24px * var(--fs));
+  letter-spacing: -0.02em;
+  line-height: 1;
+  color: var(--ergo-brand);
 }
 .authcard__eyebrow {
   margin: 0;
@@ -165,19 +167,19 @@
   font-size: calc(12px * var(--fs));
   letter-spacing: 0.04em;
   text-transform: uppercase;
-  color: var(--quill-strong);
+  color: var(--ergo-brand-strong);
 }
 .authcard__title {
   margin: 0;
   font-size: calc(28px * var(--fs));
   line-height: 34px;
   font-weight: 600;
-  color: var(--ink);
+  color: var(--ergo-ink);
 }
 .authcard__sub {
   margin: 0;
   font-size: calc(15px * var(--fs));
-  color: var(--graphite);
+  color: var(--ergo-ink-2);
 }
 
 .authform {
@@ -186,7 +188,8 @@
   gap: var(--s4);
 }
 
-/* Notebook-line input: label above, bottom rule only, quill on focus. */
+/* Ergo bordered input: label above, full border, brand focus ring. Replaces
+   the notebook bottom-rule pattern. */
 .field {
   display: flex;
   flex-direction: column;
@@ -198,58 +201,60 @@
   font-weight: 500;
   letter-spacing: 0.04em;
   text-transform: uppercase;
-  color: var(--graphite);
+  color: var(--ergo-ink-2);
 }
 .field__input {
-  height: 44px;
-  padding: 0 var(--s1);
-  border: none;
-  border-bottom: 1.5px solid var(--rule);
-  background: transparent;
+  height: 48px;
+  padding: 0 var(--s3);
+  border: 1px solid var(--ergo-line-2);
+  border-radius: var(--r-md);
+  background: var(--ergo-surface);
   font-family: var(--font-sans);
   font-size: calc(16px * var(--fs));
-  color: var(--ink);
+  color: var(--ergo-ink);
 }
 .field__input:focus {
   outline: none;
-  border-bottom-width: 2px;
-  border-bottom-color: var(--quill);
+  border-width: 2px;
+  border-color: var(--ergo-brand);
+  box-shadow: var(--ring-focus);
 }
 .field__input:disabled {
-  color: var(--graphite-soft);
+  color: var(--ergo-ink-3);
   cursor: default;
 }
 
 /* Helper text (hint / error copy) below the input. Hidden by default;
-   shown when the .field--error modifier or [data-error] attribute is present.
-   React-Aria wiring is Wave 3 — only the CSS state lives here. */
+   shown when .field--error modifier or [data-error] attribute is present. */
 .field__hint {
   font-size: calc(12px * var(--fs));
   line-height: 16px;
-  color: var(--graphite-soft);
+  color: var(--ergo-ink-3);
 }
 .field--error .field__input,
 .field[data-error] .field__input {
-  border-bottom-color: var(--wrong);
+  border-color: var(--bad);
+  background: var(--bad-tint);
 }
 .field--error .field__input:focus,
 .field[data-error] .field__input:focus {
-  border-bottom-color: var(--wrong);
+  border-color: var(--bad);
+  box-shadow: 0 0 0 3px rgba(229, 72, 77, 0.2);
 }
 .field--error .field__hint,
 .field[data-error] .field__hint {
-  color: var(--wrong-text);
+  color: var(--bad);
 }
 
 .authform__error {
   margin: 0;
   font-size: calc(13px * var(--fs));
-  color: var(--wrong-text);
+  color: var(--bad);
 }
 .authform__status {
   margin: 0;
   font-size: calc(13px * var(--fs));
-  color: var(--correct-text);
+  color: var(--ok);
 }
 
 .authactions {
@@ -268,20 +273,14 @@
   align-items: center;
   gap: var(--s3);
   font-size: calc(12px * var(--fs));
-  color: var(--graphite-soft);
+  color: var(--ergo-ink-3);
 }
 .authdivider::before,
 .authdivider::after {
   content: '';
   flex: 1 1 auto;
   height: 1px;
-  background: var(--rule);
-}
-@media (resolution >= 2dppx) {
-  .authdivider::before,
-  .authdivider::after {
-    height: 0.5px;
-  }
+  background: var(--ergo-line);
 }
 
 .googlebtn {
@@ -298,7 +297,7 @@
   margin: 0;
   text-align: center;
   font-size: calc(14px * var(--fs));
-  color: var(--graphite);
+  color: var(--ergo-ink-2);
 }
 .authswitch__btn {
   padding: 0;
@@ -307,10 +306,9 @@
   font-family: var(--font-sans);
   font-size: calc(14px * var(--fs));
   font-weight: 600;
-  color: var(--quill-strong);
+  color: var(--ergo-brand-strong);
   cursor: pointer;
 }
 .authswitch__btn:hover {
   text-decoration: underline;
 }
-

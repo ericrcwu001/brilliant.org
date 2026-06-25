@@ -28,6 +28,11 @@ export const FLIP_BEAT_MS = TOKENS.flipBeat           // 520 ms
 export const STAMP_BEAT    = TOKENS.stampBeat / 1000  // 0.48 s
 export const STAMP_BEAT_MS = TOKENS.stampBeat          // 480 ms
 
+// Alias for the celebration beat clock — used by the lesson-complete light-streak.
+// Same 480ms duration; avoids touching the token pipeline just for a rename.
+export const CELEBRATE_BEAT    = STAMP_BEAT
+export const CELEBRATE_BEAT_MS = STAMP_BEAT_MS
+
 // Per-run cadence for progressive Monte Carlo beats (races, walks, ledger,
 // theory chart). Runs are spread this many ms apart so learners watch values
 // converge live; total batch duration therefore scales with the run count.

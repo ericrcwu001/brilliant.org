@@ -2,16 +2,21 @@
 
 // Instrumentation-style theory-vs-simulation chart (docs/ui_design_system.md
 // "Simulation Chart"). The linear x-axis grows to the cumulative simulation
-// count, so the running empirical mean (drawn trial by trial as a quill curve
-// with a soft gradient area) always fills the width and re-compresses as runs
-// accumulate, sweeping toward the solid ink theory line on a logarithmic y-axis.
-// A faint band marks the convergence target, the learner's locked prediction is
-// a dashed highlighter mark, and the live "head" at the right edge carries a
-// glowing bead plus a value chip. Mounts a Konva <Stage>, so it opts out of the
-// React Compiler.
+// count, so the running empirical mean (drawn trial by trial as a chapter-
+// accent curve with a soft gradient area) always fills the width and re-
+// compresses as runs accumulate, sweeping toward the solid ink theory line on
+// a logarithmic y-axis. A faint band marks the convergence target, the
+// learner's locked prediction is a dashed highlighter mark, and the live "head"
+// at the right edge carries a glowing bead plus a value chip.
+//
+// An optional `accent` prop (resolved hex from chapterColor(lessonId)) re-keys
+// the empirical series — curve, area gradient, bead, chip — to the lesson's
+// chapter hue. Defaults to C.quill (indigo ch1) so existing callers are stable.
+//
+// Mounts a Konva <Stage>, so it opts out of the React Compiler.
 
 import { Circle, Layer, Line, Rect, Stage, Text } from 'react-konva'
-import { C, FONT_MONO } from './theme'
+import { C, FONT_MONO, accentFor, hexToRgba } from './theme'
 
 export function SimChart({
   width,
@@ -21,6 +26,7 @@ export function SimChart({
   points,
   running = false,
   scale = 'log',
+  accent,
 }: {
   width: number
   height: number
@@ -32,7 +38,16 @@ export function SimChart({
   // a [0,1] win-rate / ruin-rate axis for L2/L3 (build-brief §4.7); a log axis
   // can't show values below 1, so this is a real second scale, not a yLo tweak.
   scale?: 'log' | 'linear'
+  // Resolved chapter hex from chapterColor(lessonId). Re-keys the empirical
+  // curve, area gradient, bead glow, and live chip to the lesson's chapter
+  // accent. Defaults to C.quill (indigo) so existing callers compile unchanged.
+  accent?: string
 }) {
+  const { base: acBase, glow: acGlow } = accentFor(accent ?? C.quill)
+  // Translucent fill for the gradient area under the empirical curve.
+  const acFill = hexToRgba(acBase, 0.16)
+  const acFillFade = hexToRgba(acBase, 0)
+
   const padL = 40
   const padR = 64
   const padT = 16
@@ -101,8 +116,10 @@ export function SimChart({
   const chipX = Math.max(plotL, Math.min(plotR - chipW, xHead - chipW / 2))
   const chipY = Math.max(plotT, Math.min(plotB - chipH - 12, yHead - chipH - 10))
 
+  const dpr = typeof window !== 'undefined' ? (window.devicePixelRatio ?? 1) : 1
+
   return (
-    <Stage width={width} height={height}>
+    <Stage width={width} height={height} pixelRatio={dpr}>
       <Layer listening={false}>
         {/* convergence target band around theory */}
         <Rect
@@ -169,7 +186,7 @@ export function SimChart({
           align="right"
           fontFamily={FONT_MONO}
           fontSize={11}
-          fill={n > 0 ? C.quill : C.graphiteSoft}
+          fill={n > 0 ? acBase : C.graphiteSoft}
         />
         <Text
           text="simulations"
@@ -182,7 +199,7 @@ export function SimChart({
           fill={C.graphiteSoft}
         />
 
-        {/* theory line (solid ink) */}
+        {/* theory line (solid ink — neutral reference, never accented) */}
         <Line
           points={[plotL, yFor(theory), plotR, yFor(theory)]}
           stroke={C.ink}
@@ -197,7 +214,7 @@ export function SimChart({
           fill={C.ink}
         />
 
-        {/* prediction marker (dashed highlighter) */}
+        {/* prediction marker (dashed --mark amber — the discovery cue) */}
         {prediction !== undefined && (
           <>
             <Line
@@ -217,20 +234,20 @@ export function SimChart({
           </>
         )}
 
-        {/* empirical running average: gradient area + quill curve */}
+        {/* empirical running average: chapter-accent gradient area + curve */}
         {areaPts.length > 0 && (
           <Line
             points={areaPts}
             closed
             fillLinearGradientStartPoint={{ x: 0, y: plotT }}
             fillLinearGradientEndPoint={{ x: 0, y: plotB }}
-            fillLinearGradientColorStops={[0, C.quillFill, 1, C.quillFillFade]}
+            fillLinearGradientColorStops={[0, acFill, 1, acFillFade]}
           />
         )}
         {n >= 2 && (
           <Line
             points={linePts}
-            stroke={C.quill}
+            stroke={acBase}
             strokeWidth={2.5}
             lineJoin="round"
             lineCap="round"
@@ -242,17 +259,17 @@ export function SimChart({
           <>
             <Line
               points={[xHead, plotB, xHead, yHead]}
-              stroke={C.quill}
+              stroke={acBase}
               strokeWidth={1}
               dash={[2, 4]}
               opacity={0.45}
             />
-            <Circle x={xHead} y={yHead} radius={running ? 10 : 8} fill={C.quillGlow} />
+            <Circle x={xHead} y={yHead} radius={running ? 10 : 8} fill={acGlow} />
             <Circle
               x={xHead}
               y={yHead}
               radius={4.5}
-              fill={C.quill}
+              fill={acBase}
               stroke={C.paper0}
               strokeWidth={1.5}
             />
@@ -262,7 +279,7 @@ export function SimChart({
               width={chipW}
               height={chipH}
               cornerRadius={5}
-              fill={C.quill}
+              fill={acBase}
               shadowColor={C.ink}
               shadowBlur={6}
               shadowOpacity={0.18}

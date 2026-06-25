@@ -9,7 +9,7 @@ import { useEffect, useRef } from 'react'
 import { m } from 'motion/react'
 import type { NavigateFn } from './routes'
 import { ROUTES } from './routes'
-import { DUR, EASE, SPRING } from '../motion/tokens'
+import { DUR, EASE, SPRING, FLIP_BEAT } from '../motion/tokens'
 import { useReducedMotion } from '../lesson/useReducedMotion'
 import { revealHeadline } from '../motion/gsapText'
 import { useAmbient } from '../motion/useAmbient'
@@ -26,7 +26,7 @@ const item = {
 export function LandingPage({ navigate }: { navigate: NavigateFn }) {
   const reduced = useReducedMotion()
   const titleRef = useRef<HTMLHeadingElement>(null)
-  // GSAP SplitText reveal owns the Fraunces hero (design doc §Display-type
+  // GSAP SplitText reveal owns the Space Grotesk hero (design doc §Display-type
   // reveals). It starts hidden (opacity 0) so there's no flash before gsap loads;
   // revealHeadline reveals it per-line, or instantly under reduced motion.
   useEffect(() => {
@@ -77,8 +77,8 @@ export function LandingPage({ navigate }: { navigate: NavigateFn }) {
 }
 
 // Decorative ∅ → H → HH chain. The node rings pulse via CSS (gated by
-// prefers-reduced-motion); on top, a quill "signal" travels the chain and pauses
-// at each node, reinforcing "advance a step on each match". aria-hidden.
+// prefers-reduced-motion); on top, a Ch1 indigo "signal" travels the chain and
+// pauses at each node, reinforcing "advance a step on each match". aria-hidden.
 function StateMachinePreview() {
   const previewRef = useRef<HTMLDivElement>(null)
   // Ambient breathing pauses when offscreen, tab-hidden, idle, or reduced-motion
@@ -118,8 +118,9 @@ function StateMachinePreview() {
               opacity: [0, 1, 1, 1, 1, 0],
             }}
             transition={{
-              duration: 3.2,
-              times: [0, 0.28, 0.42, 0.7, 0.82, 1],
+              // Each edge traversal = 1 FLIP_BEAT; full cycle ≈ 3.5 beats.
+              duration: FLIP_BEAT * 3.5,
+              times: [0, 0.29, 0.43, 0.71, 0.86, 1],
               ease: EASE.inout,
               repeat: Infinity,
               repeatDelay: 0.5,

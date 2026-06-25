@@ -4,6 +4,7 @@ import { loadFlagshipLesson } from '../content/loader'
 import type { Lesson, Snapshot } from '../content/schema'
 import { PhaseRail } from './PhaseRail'
 import { biasChipState } from './phases'
+import { chapterOf, chapterHueVar } from './chapters'
 import { computeMastered, bumpMaxHintLevel } from './mastery'
 import { useReducedMotion } from './useReducedMotion'
 import { BeatView } from './beats'
@@ -22,9 +23,10 @@ import {
 } from '../progress/functions'
 import { loadStreak, ZERO_STREAK, type Streak } from '../habit/streaks'
 import { milestoneMeta } from '../habit/milestones'
-import { MilestoneSeal } from '../habit/MilestoneSeal'
-import { StreakTally } from '../habit/StreakTally'
+import { ConceptMedallion } from '../habit/ConceptMedallion'
+import { WeeklyStreak } from '../habit/WeeklyStreak'
 import { analytics } from '../analytics/events'
+import { CELEBRATE_BEAT } from '../motion/tokens'
 import { LessonCelebration } from './LessonCelebration'
 import { withViewTransition } from '../app/viewTransition'
 import { useOnlineStatus } from '../app/useOnlineStatus'
@@ -106,6 +108,8 @@ export function LessonPlayer({
   const reducedMotion = useReducedMotion()
   // Ref for the post-completion CTA so focus moves to it when done.
   const ctaRef = useRef<HTMLButtonElement>(null)
+  // Ref for the chapter-color light-streak element (GSAP, compositor-only).
+  const streakRef = useRef<HTMLDivElement>(null)
 
   // The shared hitting-time automaton for the lesson's primary pattern (the
   // flagship is HH-centric; HT is the side-by-side contrast). Active-pattern
@@ -270,6 +274,24 @@ export function LessonPlayer({
     ctaRef.current?.focus()
   }, [done, reducedMotion])
 
+  // Chapter-color light-streak: one compositor-only sweep across the
+  // celebration on mount. Lazy-loaded GSAP; omitted under reduced-motion.
+  useEffect(() => {
+    if (!done || reducedMotion) return
+    const el = streakRef.current
+    if (!el) return
+    void import('gsap').then(({ default: gsap }) => {
+      gsap
+        .timeline()
+        .fromTo(
+          el,
+          { xPercent: -100, opacity: 0 },
+          { xPercent: 20, opacity: 0.65, duration: CELEBRATE_BEAT * 0.55, ease: 'power2.out' },
+        )
+        .to(el, { xPercent: 120, opacity: 0, duration: CELEBRATE_BEAT * 0.45, ease: 'power2.in' })
+    })
+  }, [done, reducedMotion])
+
   // --- Completion (Phase 16) --------------------------------------------------
   const completedOnce = useRef(false)
 
@@ -358,7 +380,7 @@ export function LessonPlayer({
   // return CTA are right in front of the learner (not buried above the fold).
   if (done) {
     return (
-      <div className="lesson">
+      <div className="lesson" data-ch={chapterOf(lessonId)}>
         <header className="topbar">
           <button
             type="button"
@@ -372,10 +394,11 @@ export function LessonPlayer({
           <div className="topbar__center">
             <span className="topbar__title">{lesson.title}</span>
           </div>
-          <StreakTally count={streak.count} compact />
+          <WeeklyStreak count={streak.count} lastActiveDate={streak.lastActiveDate} compact />
         </header>
 
         <LessonCelebration>
+          <div ref={streakRef} className="celebration__streak" aria-hidden="true" />
           <div className="done-note">
             <p>
               Lesson complete ✓
@@ -402,7 +425,14 @@ export function LessonPlayer({
                 </button>
               </p>
             )}
-            <MilestoneSeal meta={milestone} earned stamped />
+            <p className="done-note__mastered">Concept mastered</p>
+            <ConceptMedallion
+              meta={milestone}
+              earned
+              earning={!reducedMotion}
+              hueVar={chapterHueVar(lessonId)}
+              size="lg"
+            />
           </div>
         </LessonCelebration>
 
@@ -423,7 +453,7 @@ export function LessonPlayer({
   }
 
   return (
-    <div className="lesson">
+    <div className="lesson" data-ch={chapterOf(lessonId)}>
       <header className="topbar">
         <button
           type="button"
@@ -452,7 +482,7 @@ export function LessonPlayer({
             )}
           </div>
         </div>
-        <StreakTally count={streak.count} compact />
+        <WeeklyStreak count={streak.count} lastActiveDate={streak.lastActiveDate} compact />
       </header>
 
       {persist && !online && (

@@ -14,7 +14,6 @@ import { buildAutomaton } from '../../engine/automaton'
 import { BeatShell } from '../BeatShell'
 import { resolveFeedback } from '../feedback'
 import type { FeedbackView } from '../FeedbackStrip'
-import { MilestoneSeal } from '../../habit/MilestoneSeal'
 import { FLAGSHIP_LESSON_ID } from '../../pages/routes'
 import { analytics } from '../../analytics/events'
 import { Katex } from '../Katex'
@@ -125,12 +124,6 @@ export function RecapBeat(props: BeatProps) {
         }
       >
         <div className="recap">
-          {props.lessonComplete && props.milestone && (
-            <div className={`recap__stamp${reducedMotion ? '' : ' recap__stamp--press'}`}>
-              <p className="recap__stamp-kicker">Milestone earned</p>
-              <MilestoneSeal meta={props.milestone} earned />
-            </div>
-          )}
           {revealedG && (
             <div className={`recap__reveal${reducedMotion ? '' : ' recap__reveal--enter'}`}>
               <p className="recap__principle">{fb.correct}</p>
@@ -232,14 +225,6 @@ export function RecapBeat(props: BeatProps) {
   return (
     <BeatShell feedback={view} primary={primary} secondary={secondary}>
       <div className="recap">
-        {props.lessonComplete && props.milestone && (
-          <div
-            className={`recap__stamp${reducedMotion ? '' : ' recap__stamp--press'}`}
-          >
-            <p className="recap__stamp-kicker">Milestone earned</p>
-            <MilestoneSeal meta={props.milestone} earned />
-          </div>
-        )}
         <div className="recap__retrieve">
           <p className="recap__q">
             Before you finish — why does HH wait longer than HT?

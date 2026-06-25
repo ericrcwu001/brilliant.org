@@ -14,6 +14,7 @@ import { buildWalk, traceWalk, simulateWalk, walkDurationHistogram } from '../..
 import type { WalkTrace } from '../../engine/walk'
 import { mulberry32 } from '../../engine/simulate'
 import { C } from '../konva/theme'
+import { chapterColor } from '../chapters'
 import { useProgressiveRuns } from './useProgressiveRuns'
 
 const dec = (r: Rational) => Number((r.n / r.d).toFixed(3)).toString()
@@ -31,7 +32,7 @@ const HIST_CW = HIST_VW - HIST_PL - HIST_PR  // chart width = 288
 const HIST_CH = HIST_VH - HIST_PT - HIST_PB  // chart height = 154
 
 export function WalkBoardBeat(props: BeatProps) {
-  const { beat, isLast, onAdvance, reducedMotion } = props
+  const { beat, isLast, onAdvance, reducedMotion, lessonId } = props
   const init = beat.interaction
   const [pPct, setPPct] = useState(
     init.type === 'walkBoard' ? Math.round((init.p ?? 0.5) * 100) : 50,
@@ -234,7 +235,7 @@ export function WalkBoardBeat(props: BeatProps) {
                 cx={xFor(i)}
                 cy={40}
                 r={i === 0 || i === N ? 9 : 7}
-                fill={i === start ? C.quill : i === 0 ? C.ruinTint : i === N ? C.winTint : C.paper2}
+                fill={i === start ? chapterColor(lessonId) : i === 0 ? C.ruinTint : i === N ? C.winTint : C.paper2}
                 stroke={i === 0 ? C.ruin : i === N ? C.win : C.rule}
                 strokeWidth={1.5}
               />
@@ -262,7 +263,7 @@ export function WalkBoardBeat(props: BeatProps) {
                 cx={xFor(trace.positions[idx])}
                 cy={40}
                 r={6}
-                fill={done ? (trace.end === 'ruin' ? C.ruin : C.win) : C.quill}
+                fill={done ? (trace.end === 'ruin' ? C.ruin : C.win) : chapterColor(lessonId)}
               />
             )
           })()}
@@ -319,7 +320,7 @@ export function WalkBoardBeat(props: BeatProps) {
             aria-label="Reach-probability curve across starting money">
             <polyline
               fill="none"
-              stroke={C.quill}
+              stroke={chapterColor(lessonId)}
               strokeWidth={2}
               points={model.reachProb
                 .map((r, i) => `${xFor(i)},${78 - (r.n / r.d) * 56}`)
@@ -374,7 +375,7 @@ export function WalkBoardBeat(props: BeatProps) {
                     y={by}
                     width={Math.max(slotW - 2, 0)}
                     height={barH}
-                    fill={C.quill}
+                    fill={chapterColor(lessonId)}
                     opacity={0.72}
                   />
                 )

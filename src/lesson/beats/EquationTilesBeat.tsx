@@ -847,7 +847,7 @@ export function EquationTilesBeat(props: BeatProps) {
                       dragSnapToOrigin
                       whileHover={{ y: -3, scale: 1.04 }}
                       whileTap={{ scale: 0.95 }}
-                      whileDrag={{ scale: 1.04, rotate: 3, boxShadow: 'var(--paper-shadow-2)' }}
+                      whileDrag={{ scale: 1.04, rotate: 3, boxShadow: 'var(--ergo-shadow-md)' }}
                       transition={SPRING}
                       onDrag={handleTileDrag}
                       onDragEnd={(e, info) => handleTileDragEnd(token, e, info)}

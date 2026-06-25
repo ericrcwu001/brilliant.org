@@ -22,14 +22,14 @@
   color: var(--ink);
 }
 .primer__disclosure:focus-visible {
-  outline: 2px solid var(--quill);
-  outline-offset: 2px;
+  box-shadow: var(--ring-focus);
+  outline: none;
 }
 .primer__chevron {
   margin-left: auto;
   font-family: var(--font-mono);
   font-size: calc(20px * var(--fs));
-  color: var(--quill-strong);
+  color: var(--accent-strong);
 }
 .primer__card,
 .eqtiles__primer .primer__card {
@@ -40,7 +40,7 @@
   display: flex;
   flex-direction: column;
   gap: var(--s3);
-  box-shadow: var(--paper-shadow-1);
+  box-shadow: var(--ergo-shadow-sm);
 }
 .primer__kicker {
   margin: 0;
@@ -48,7 +48,7 @@
   font-size: calc(12px * var(--fs));
   letter-spacing: 0.04em;
   text-transform: uppercase;
-  color: var(--quill-strong);
+  color: var(--accent-strong);
 }
 .primer__title {
   margin: 0;
@@ -84,13 +84,13 @@
   cursor: pointer;
 }
 .primer__cell--on {
-  border-color: var(--quill);
-  background: var(--quill-tint);
-  color: var(--quill-strong);
+  border-color: var(--accent);
+  background: var(--accent-tint);
+  color: var(--accent-strong);
 }
 .primer__cell:focus-visible {
-  outline: 2px solid var(--quill);
-  outline-offset: 2px;
+  box-shadow: var(--ring-focus);
+  outline: none;
 }
 .primer__readout {
   margin: 0;
@@ -133,9 +133,9 @@
   color: var(--ink);
 }
 .answer-entry__input:focus-visible {
-  outline: 2px solid var(--quill);
-  outline-offset: 2px;
-  border-color: var(--quill);
+  box-shadow: var(--ring-focus);
+  outline: none;
+  border-color: var(--accent);
 }
 .answer-entry__input--correct {
   border-color: var(--correct);
@@ -173,7 +173,7 @@
   position: absolute;
   left: 0;
   right: 0;
-  border-top: 2px dashed var(--quill);
+  border-top: 2px dashed var(--accent);
   pointer-events: none;
 }
 .fst__theory-label {
@@ -182,7 +182,7 @@
   top: -10px;
   font-family: var(--font-mono);
   font-size: calc(11px * var(--fs));
-  color: var(--quill-strong);
+  color: var(--accent-strong);
   background: var(--paper-0);
   padding: 0 4px;
 }
@@ -196,7 +196,7 @@
 .fst__bar {
   flex: 1 1 0;
   min-width: 3px;
-  background: var(--heads);
+  background: var(--accent);
   border-radius: 2px 2px 0 0;
 }
 .fst__empty {
@@ -330,8 +330,8 @@
 .recap__belief {
   margin: 0;
   padding: var(--s2) var(--s3);
-  border-left: 3px solid var(--quill);
-  background: var(--quill-tint);
+  border-left: 3px solid var(--accent);
+  background: var(--accent-tint);
   border-radius: var(--r-xs);
   font-size: calc(14px * var(--fs));
   color: var(--ink);
@@ -377,8 +377,8 @@
 }
 .retgrid__slot--sel {
   border-style: solid;
-  border-color: var(--quill);
-  outline: 2px solid var(--quill);
+  border-color: var(--accent);
+  outline: 2px solid var(--accent);
   outline-offset: 1px;
 }
 .retgrid__slot--filled {
@@ -521,7 +521,7 @@
   flex: 1;
 }
 .triplet__card--open {
-  border-color: var(--quill);
+  border-color: var(--accent);
 }
 .triplet__label {
   font-weight: 600;
@@ -534,7 +534,7 @@
 .triplet__value {
   font-family: var(--font-mono);
   font-size: calc(20px * var(--fs));
-  color: var(--quill);
+  color: var(--accent);
 }
 .triplet__tap {
   font-size: calc(12px * var(--fs));
@@ -565,7 +565,7 @@
   border: 1px solid var(--rule-faint);
   border-radius: var(--r-lg);
   background: var(--paper-1);
-  box-shadow: var(--paper-shadow-1);
+  box-shadow: var(--ergo-shadow-sm);
 }
 /* transform-box:view-box ensures transformOrigin uses SVG viewport coords */
 .balance__beam-g {
@@ -588,7 +588,7 @@
   border: 1px solid var(--rule);
   border-radius: var(--r-md);
   background: var(--paper-0);
-  box-shadow: var(--paper-shadow-1);
+  box-shadow: var(--ergo-shadow-sm);
   min-width: 0;
 }
 .balance__pan--left {
@@ -615,7 +615,7 @@
   font-size: calc(28px * var(--fs));
   font-weight: 600;
   line-height: 1;
-  color: var(--quill);
+  color: var(--accent);
 }
 .balance__pan-center {
   flex: 0 0 auto;
@@ -646,13 +646,12 @@
   width: 100%;
   min-height: 44px;
   cursor: pointer;
-  accent-color: var(--quill);
-  box-shadow: var(--press-deboss);
+  accent-color: var(--accent);
   border-radius: var(--r-sm);
 }
 .balance__range:focus-visible {
-  outline: 2px solid var(--quill);
-  outline-offset: 2px;
+  box-shadow: var(--ring-focus);
+  outline: none;
   border-radius: var(--r-sm);
 }
 .balance__range:disabled {
@@ -703,8 +702,8 @@
   border-color: var(--graphite-soft);
 }
 .balance__hint-btn:focus-visible {
-  outline: 2px solid var(--quill);
-  outline-offset: 2px;
+  box-shadow: var(--ring-focus);
+  outline: none;
 }
 
 /* ── Lesson hero widgets (L2 race, L3 walk, L6 ledger) ─────────────────────── */
@@ -759,10 +758,10 @@
   height: 100%;
 }
 .racehero__fill--a {
-  background: var(--quill, #2e4fb0);
+  background: var(--accent);
 }
 .racehero__fill--b {
-  background: #b26a2b;
+  background: var(--mark);
 }
 .racehero__pct {
   flex: 0 0 2.5em;
@@ -800,10 +799,10 @@
   color: var(--paper-0);
 }
 .racehero__flip--a {
-  background: var(--quill);
+  background: var(--accent);
 }
 .racehero__flip--b {
-  background: #b26a2b;
+  background: var(--mark);
 }
 .heatmap {
   border-collapse: collapse;
@@ -872,6 +871,7 @@
   border: 1px solid var(--rule);
   border-radius: var(--r-md);
   background: var(--paper-1);
+  box-shadow: var(--ergo-shadow-sm);
 }
 .ledger__coltitle {
   margin: 0 0 var(--s2);
@@ -891,7 +891,7 @@
   font-family: var(--font-mono);
   font-size: calc(22px * var(--fs));
   font-variant-numeric: tabular-nums;
-  color: var(--quill);
+  color: var(--accent);
 }
 .ledger__sub {
   margin: 0;
@@ -1026,16 +1026,16 @@
   .sumtiles__chips .token:not(:disabled):not(.token--placed):hover,
   .retgrid__palette .token:not(:disabled):not(.token--placed):hover,
   .wheel__options .token:not(:disabled):not(.token--placed):hover {
-    border-color: var(--quill);
-    background: var(--quill-tint);
-    box-shadow: var(--e1);
+    border-color: var(--accent);
+    background: var(--accent-tint);
+    box-shadow: var(--ergo-shadow-sm);
   }
 }
 .sumtiles__chips .token:not(:disabled):not(.token--placed):focus-visible,
 .retgrid__palette .token:not(:disabled):not(.token--placed):focus-visible,
 .wheel__options .token:not(:disabled):not(.token--placed):focus-visible {
-  outline: 2px solid var(--quill);
-  outline-offset: 2px;
+  box-shadow: var(--ring-focus);
+  outline: none;
 }
 
 /* Placed/added state for SumTiles chips: filled look so "added" is clear.
@@ -1043,15 +1043,15 @@
    Tap again to remove (toggle), so cursor stays pointer. */
 .sumtiles__chips .token--placed {
   cursor: pointer;
-  background: var(--quill-tint);
-  border-color: var(--quill);
-  color: var(--quill-strong);
+  background: var(--accent-tint);
+  border-color: var(--accent);
+  color: var(--accent-strong);
 }
 @media (hover: hover) {
   .sumtiles__chips .token--placed:hover {
-    background: var(--quill-tint);
-    border-color: var(--quill);
-    box-shadow: var(--e1);
+    background: var(--accent-tint);
+    border-color: var(--accent);
+    box-shadow: var(--ergo-shadow-sm);
   }
 }
 
@@ -1098,16 +1098,16 @@
 }
 .sumtiles__slot--filled {
   border-style: solid;
-  border-color: var(--quill);
-  background: var(--quill-tint);
-  color: var(--quill-strong);
+  border-color: var(--accent);
+  background: var(--accent-tint);
+  color: var(--accent-strong);
   font-weight: 600;
 }
 .sumtiles__eq-plus {
   color: var(--graphite-soft);
 }
 .sumtiles__eq-result {
-  color: var(--quill-strong);
+  color: var(--accent-strong);
   font-weight: 600;
 }
 .sumtiles__borders {
@@ -1145,7 +1145,7 @@
   color: var(--ink);
 }
 .sumtiles__border-value {
-  color: var(--quill-strong);
+  color: var(--accent-strong);
 }
 
 /* ── RetrievalGrid workflow label ────────────────────────────────────────── */

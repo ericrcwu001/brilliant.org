@@ -113,13 +113,29 @@ export function BalanceSolveBeat({
   // Substituted, collapsed RHS label — symbol and numeric value visibly agree.
   const substRhsLabel = `${otherTerm} + ${selfCoeffStr}·E[${pattern}]`
 
-  // Explanation shows which values were substituted to produce otherTerm.
+  // Pre-collapse RHS: the recurrence with the substituted numbers still visible
+  // (e.g. "1 + ½·4 + ½·E[HH]") so the learner can see those knowns fold into the
+  // collapsed constant rather than the constant appearing from nowhere.
+  const expandedRhs = rec
+    ? [
+        String(rec.constant),
+        ...rec.terms.map((t) =>
+          t.var === solveState
+            ? `${fmtCoeffNice(t.coeff)}·E[${pattern}]`
+            : `${fmtCoeffNice(t.coeff)}·${automaton.expectedTimes[t.var]}`,
+        ),
+      ].join(' + ')
+    : substRhsLabel
+
+  // Explanation: substitute the known values, show the arithmetic that folds them
+  // into the constant, then point at the scale mechanic. The unknown stays on both
+  // sides, which is *why* we slide for the balancing value instead of reading it off.
   const substitutedParts = nonSelfTerms
     .map((t) => `${fmtState(t.var)} = ${automaton.expectedTimes[t.var]}`)
     .join(', ')
   const explainLine = substitutedParts
-    ? `Substituting ${substitutedParts}: E[${pattern}] = ${otherTerm} + ${selfCoeffStr}·E[${pattern}]. Slide until both sides match.`
-    : `E[${pattern}] = ${otherTerm} + ${selfCoeffStr}·E[${pattern}]. Slide until both sides match.`
+    ? `Substituting ${substitutedParts}: E[${pattern}] = ${expandedRhs} = ${substRhsLabel}. E[${pattern}] still appears on both sides, so slide your guess until the scale balances.`
+    : `E[${pattern}] = ${substRhsLabel}. E[${pattern}] appears on both sides, so slide your guess until the scale balances.`
 
   // SVG beam geometry (viewBox 0 0 200 100):
   //   pivot at (100, 58), beam half-span 78px, stand+base below pivot.
@@ -193,14 +209,14 @@ export function BalanceSolveBeat({
               cx={cx - hs}
               cy={cy}
               r="8"
-              fill={isBalanced ? 'var(--correct)' : 'var(--quill)'}
+              fill={isBalanced ? 'var(--correct)' : 'var(--accent)'}
             />
             {/* Right pan disc */}
             <circle
               cx={cx + hs}
               cy={cy}
               r="8"
-              fill={isBalanced ? 'var(--correct)' : 'var(--quill)'}
+              fill={isBalanced ? 'var(--correct)' : 'var(--accent)'}
             />
           </g>
           {/* Pivot cap rendered above beam to mark the fulcrum */}

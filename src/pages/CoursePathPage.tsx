@@ -66,10 +66,12 @@ export function CoursePathPage({ navigate }: { navigate: NavigateFn }) {
     let cancelled = false
     void loadTrack(uid)
       .then((t) => {
-        if (!cancelled) setTrack(t)
+        // Don't clobber a track the learner just chose this session (Skip ->
+        // 'A', or the diagnostic) if this initial load resolves afterward.
+        if (!cancelled) setTrack((prev) => (prev === undefined ? t : prev))
       })
       .catch(() => {
-        if (!cancelled) setTrack('B')
+        if (!cancelled) setTrack((prev) => (prev === undefined ? 'B' : prev))
       })
     return () => {
       cancelled = true
@@ -82,10 +84,13 @@ export function CoursePathPage({ navigate }: { navigate: NavigateFn }) {
     let cancelled = false
     void loadWelcomeSeen(uid)
       .then((seen) => {
-        if (!cancelled) setWelcomeSeen(seen)
+        // Same guard as the track load: never overwrite a local decision made
+        // before this initial read resolves.
+        if (!cancelled)
+          setWelcomeSeen((prev) => (prev === undefined ? seen : prev))
       })
       .catch(() => {
-        if (!cancelled) setWelcomeSeen(true)
+        if (!cancelled) setWelcomeSeen((prev) => (prev === undefined ? true : prev))
       })
     return () => {
       cancelled = true

@@ -3,9 +3,14 @@
 // Bias-sensitivity chart: expected wait E[pattern] vs coin bias p(H). Two curves
 // (HH, HT) on a log y-axis; a vertical guide and per-line dots track the live
 // slider value. Mounts a Konva <Stage>, so it opts out of the React Compiler.
+//
+// Series colors are caller-supplied via BiasSeries[].color, so the chapter
+// accent is already applied by the caller (BiasSandboxBeat). The optional
+// `accent` prop here tints the p-value guide label so the readout matches the
+// lesson's chapter hue. Defaults to C.quill (indigo) for stable existing callers.
 
 import { Circle, Group, Layer, Line, Rect, Stage, Text } from 'react-konva'
-import { C, FONT_MONO } from './theme'
+import { C, FONT_MONO, accentFor } from './theme'
 
 export type BiasSeries = {
   pattern: string
@@ -53,6 +58,7 @@ export function BiasChart({
   pMax,
   p,
   series,
+  accent,
 }: {
   width: number
   height: number
@@ -60,7 +66,13 @@ export function BiasChart({
   pMax: number
   p: number
   series: BiasSeries[]
+  // Resolved chapter hex from chapterColor(lessonId). Applied to the p-guide
+  // readout label so it matches the lesson's chapter accent. Series curve colors
+  // are caller-supplied via BiasSeries[].color. Defaults to C.quill (indigo).
+  accent?: string
 }) {
+  const acBase = accentFor(accent ?? C.quill).base
+
   const padL = 40
   const padR = 56
   const padT = 16
@@ -99,8 +111,10 @@ export function BiasChart({
     return -22
   })
 
+  const dpr = typeof window !== 'undefined' ? (window.devicePixelRatio ?? 1) : 1
+
   return (
-    <Stage width={width} height={height}>
+    <Stage width={width} height={height} pixelRatio={dpr}>
       <Layer listening={false}>
         {/* horizontal gridlines at log y ticks */}
         {yTicks.map((v) => (
@@ -211,6 +225,7 @@ export function BiasChart({
           dash={[4, 4]}
           opacity={0.6}
         />
+        {/* p readout tinted to chapter accent so it ties to the slider value */}
         <Text
           text={`p = ${p.toFixed(2)}`}
           x={Math.max(plotL, Math.min(plotR - 60, xGuide - 30))}
@@ -219,7 +234,7 @@ export function BiasChart({
           align="center"
           fontFamily={FONT_MONO}
           fontSize={10}
-          fill={C.graphite}
+          fill={acBase}
         />
 
         {/* per-line marker dots + value chips */}

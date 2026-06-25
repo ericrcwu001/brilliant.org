@@ -227,6 +227,44 @@
   right: -2px;
 }
 
+/* Size variants. --sm is the gallery default (byte-identical before this diff). */
+.ergo-medallion--sm { width: 44px; height: 44px; }
+.ergo-medallion--md { width: 56px; height: 56px; }
+.ergo-medallion--lg {
+  width: 96px;
+  height: 96px;
+  box-shadow: var(--ergo-shadow-md);
+}
+.ergo-medallion--md .ergo-medallion__glyph { font-size: 13px; }
+.ergo-medallion--lg .ergo-medallion__glyph { font-size: 20px; }
+
+/* Compact streak chip — used in the lesson top bar (WeeklyStreak compact). */
+.ergo-streak--compact {
+  flex-direction: row;
+  align-items: center;
+  gap: var(--s2);
+  padding: var(--s1) var(--s3);
+  border: 1px solid var(--ergo-line);
+  border-radius: var(--r-pill);
+}
+.ergo-streak--compact .ergo-streak__number {
+  font-size: 16px;
+}
+.ergo-streak--compact .ergo-streak__label,
+.ergo-streak--compact .ergo-streak__day-labels {
+  display: none;
+}
+.ergo-streak--compact .ergo-streak__dots {
+  margin-top: 0;
+}
+.ergo-streak--compact .ergo-streak__day-dots {
+  gap: 4px;
+}
+.ergo-streak--compact .ergo-streak__dot {
+  width: 10px;
+  height: 10px;
+}
+
 /* One-time quiet earn animation — scale + fade from locked style. */
 @keyframes ergo-medallion-earn {
   from {

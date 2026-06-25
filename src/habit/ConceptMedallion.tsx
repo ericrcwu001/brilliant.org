@@ -11,11 +11,13 @@ export function ConceptMedallion({
   earned,
   earning = false,
   hueVar,
+  size = 'sm',
 }: {
   meta: MilestoneMeta
   earned: boolean
   earning?: boolean
   hueVar?: string
+  size?: 'sm' | 'md' | 'lg'
 }) {
   const hue = hueVar ?? 'ergo-brand'
   const style = {
@@ -29,7 +31,7 @@ export function ConceptMedallion({
 
   return (
     <div
-      className={`ergo-medallion ${stateClass}`}
+      className={`ergo-medallion ergo-medallion--${size} ${stateClass}`}
       style={style}
       role="listitem"
       aria-label={`${meta.title}${earned ? ', earned' : ', locked'}`}

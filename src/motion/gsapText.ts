@@ -1,4 +1,4 @@
-// Lazy GSAP SplitText reveal helper for Fraunces display headlines.
+// Lazy GSAP SplitText reveal helper for Space Grotesk display headlines.
 // gsap + SplitText are dynamically imported to keep them out of the entry bundle;
 // they load only when this function is first called (Wave 2+).
 //

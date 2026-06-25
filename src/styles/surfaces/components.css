@@ -3,19 +3,18 @@
    (new sections only; tokens from tokens.css, no literal theme hex)
    =================================================================== */
 
-/* --- Secondary button variant (design system: paper fill, ink border) --- */
+/* --- Secondary button variant (Ergo: surface fill, subtle border) --- */
 
 .btn--secondary {
-  background: var(--paper-0);
-  color: var(--ink);
-  border: 1.5px solid var(--ink);
+  background: var(--ergo-surface);
+  color: var(--ergo-ink);
+  border: 1.5px solid var(--ergo-line-2);
 }
 .btn--secondary:hover:not(:disabled) {
-  background: var(--paper-1);
-  box-shadow: var(--paper-shadow-1);
+  background: var(--ergo-surface-2);
+  box-shadow: var(--ergo-shadow-sm);
 }
 .btn--secondary:not(:disabled):active {
-  box-shadow: var(--press-deboss);
   transform: scale(0.98);
 }
 
@@ -24,8 +23,8 @@
 .skeleton {
   position: relative;
   overflow: hidden;
-  border-radius: var(--r-sm);
-  background: var(--paper-2);
+  border-radius: var(--r-md);
+  background: var(--ergo-surface-2);
 }
 @media (prefers-reduced-motion: no-preference) {
   .skeleton::after {
@@ -36,7 +35,7 @@
     background: linear-gradient(
       90deg,
       transparent,
-      var(--paper-1),
+      var(--ergo-surface),
       transparent
     );
     animation: skeleton-shimmer 1.4s var(--ease-inout) infinite;
@@ -51,7 +50,7 @@
 /* --- Boot screen (auth state resolving) --- */
 
 .bootscreen {
-  min-height: 100vh;
+  min-height: 100dvh;
   max-width: 360px;
   margin: 0 auto;
   display: flex;
@@ -62,15 +61,15 @@
 }
 .bootscreen__brand {
   margin: 0 0 var(--s2);
-  font-family: var(--font-mono);
-  font-size: calc(12px * var(--fs));
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--quill-strong);
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: var(--ergo-ink);
 }
 .bootscreen__caption {
   margin: var(--s2) 0 0;
-  color: var(--graphite);
+  color: var(--ergo-ink-2);
 }
 .bootscreen__line {
   height: 14px;

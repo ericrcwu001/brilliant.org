@@ -1,5 +1,22 @@
 /* --- Lesson shell --- */
 
+/* Chapter accent — keyed off the lesson root. Mirrors ergo-journey [data-ch].
+   Chrome that should be chapter-coded (primary CTA, rail, kicker, chip) uses
+   var(--accent) / var(--accent-tint) / var(--accent-glow). */
+/* Accent defaults live at :root so primary/ghost buttons render correctly on
+   non-lesson surfaces (auth, landing, profile, welcome). Inside a lesson the
+   chapter overrides below (.lesson[data-ch]) re-key the accent. */
+:root {
+  --accent: var(--ergo-brand);
+  --accent-tint: var(--ergo-brand-tint);
+  --accent-glow: rgba(79, 70, 229, 0.18);
+  --accent-strong: var(--ergo-brand-strong);
+}
+.lesson[data-ch='ch1'] { --accent: var(--ch1); --accent-tint: var(--ch1-tint); --accent-glow: rgba(79,70,229,.18); }
+.lesson[data-ch='ch2'] { --accent: var(--ch2); --accent-tint: var(--ch2-tint); --accent-glow: rgba(13,148,136,.18); }
+.lesson[data-ch='ch3'] { --accent: var(--ch3); --accent-tint: var(--ch3-tint); --accent-glow: rgba(240,88,74,.18); }
+.lesson[data-ch='ch4'] { --accent: var(--ch4); --accent-tint: var(--ch4-tint); --accent-glow: rgba(224,152,46,.14); }
+
 .lesson {
   display: flex;
   flex-direction: column;
@@ -30,17 +47,11 @@
   padding: var(--s3) var(--s4);
   /* Clear the notch / status bar when edge-to-edge (viewport-fit=cover). */
   padding-top: calc(var(--s3) + env(safe-area-inset-top));
-  border-bottom: 1px solid var(--rule);
-  background: var(--paper-0);
+  border-bottom: 1px solid var(--ergo-line);
+  background: var(--ergo-bg);
   position: sticky;
   top: 0;
   z-index: 5;
-}
-
-@media (resolution >= 2dppx) {
-  .topbar {
-    border-bottom-width: 0.5px;
-  }
 }
 
 .topbar__back {
@@ -48,22 +59,22 @@
   height: 44px;
   border: none;
   background: transparent;
-  color: var(--graphite);
+  color: var(--ergo-ink-2);
   font-size: calc(20px * var(--fs));
   border-radius: var(--r-md);
   cursor: pointer;
 }
 .topbar__back:hover:not(:disabled) {
-  background: var(--paper-1);
-  color: var(--ink);
+  background: var(--ergo-surface-2);
+  color: var(--ergo-ink);
 }
 .topbar__back:disabled {
-  color: var(--graphite-soft);
+  color: var(--ergo-ink-3);
   cursor: default;
 }
 .topbar__back:focus-visible {
-  outline: 2px solid var(--quill);
-  outline-offset: 2px;
+  outline: 2px solid transparent;
+  box-shadow: var(--ring-focus);
 }
 
 .topbar__center {
@@ -75,12 +86,12 @@
 }
 
 .topbar__title {
-  font-size: calc(12px * var(--fs));
+  font-size: calc(13px * var(--fs));
   line-height: 16px;
-  font-weight: 500;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  color: var(--graphite);
+  font-family: var(--font-sans);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--ergo-ink-2);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -91,11 +102,13 @@
   align-items: center;
   gap: var(--s1);
   padding: var(--s1) var(--s2);
-  border: 1px solid var(--rule);
+  border: 1px solid var(--ergo-line);
   border-radius: var(--r-pill);
+  background: var(--ergo-surface);
   font-family: var(--font-mono);
   font-size: calc(12px * var(--fs));
-  color: var(--graphite-soft);
+  font-variant-numeric: tabular-nums;
+  color: var(--ergo-ink-2);
 }
 
 /* --- Per-beat progress rail --- */
@@ -137,36 +150,23 @@
   display: block;
   height: 4px;
   border-radius: var(--r-pill);
-  background: var(--seg-tint);
+  background: var(--ergo-line-2);
   transition:
     height var(--dur-micro) var(--ease-out),
-    opacity var(--dur-micro) var(--ease-out);
+    background-color var(--dur-micro) var(--ease-out);
 }
 
-/* Phase tints group adjacent beats by color; no phase label text. */
-.rail__seg--bet {
-  --seg-tint: var(--quill);
-}
-.rail__seg--explore {
-  --seg-tint: var(--heads);
-}
-.rail__seg--model {
-  --seg-tint: var(--tails);
-}
-.rail__seg--prove {
-  --seg-tint: var(--correct);
-}
+/* State-colored: completed + current fill with the chapter hue. */
+.rail__seg--complete .rail__bar,
+.rail__seg--current .rail__bar { background: var(--accent); }
+.rail__seg--upcoming .rail__bar { background: var(--ergo-line-2); }
 
-.rail__seg--upcoming .rail__bar {
-  opacity: 0.3;
-}
+/* Current: slightly taller + soft chapter glow (no hard shadow). */
 .rail__seg--current .rail__bar {
   height: 6px;
-  box-shadow: var(--e1);
+  box-shadow: 0 0 0 3px var(--accent-glow);
 }
-.rail__seg:hover .rail__bar {
-  opacity: 1;
-}
+.rail__seg:hover .rail__bar { filter: brightness(0.95); }
 
 @media (min-width: 768px) {
   /* Laptop: the column is wide enough for every beat, so let segments spread to
@@ -185,19 +185,20 @@
   display: inline-flex;
   align-items: center;
   padding: var(--s1) var(--s3);
-  border: 1px dashed var(--rule);
+  border: 1px dashed var(--ergo-line-2);
   border-radius: var(--r-pill);
-  font-family: var(--font-mono);
+  font-family: var(--font-sans);
   font-size: calc(12px * var(--fs));
-  color: var(--graphite-soft);
+  font-weight: 500;
+  color: var(--ergo-ink-3);
   background: transparent;
   white-space: nowrap;
 }
 .biaschip--active {
   border-style: solid;
   border-color: var(--mark);
-  color: var(--ink);
-  background: var(--mark-wash);
+  color: var(--ergo-ink);
+  background: var(--mark-tint);
 }
 
 /* --- Prompt strip --- */
@@ -206,28 +207,32 @@
   padding: var(--s5) var(--s4) var(--s4);
 }
 .prompt__kicker {
-  font-family: var(--font-mono);
+  font-family: var(--font-sans);
   font-size: calc(12px * var(--fs));
-  letter-spacing: 0.04em;
+  font-weight: 600;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: var(--quill-strong);
+  color: var(--accent);
   margin: 0 0 var(--s2);
 }
 .prompt__text {
   font-family: var(--font-display);
-  font-size: clamp(1.375rem, 4vw, 2rem);
+  font-size: clamp(1.5rem, 4vw, 2.25rem);
   line-height: 1.2;
-  font-weight: 500;
+  font-weight: 600;
   font-optical-sizing: auto;
   letter-spacing: -0.02em;
   text-wrap: balance;
+  font-variant-numeric: tabular-nums;
+  color: var(--ergo-ink);
   margin: 0;
 }
 .prompt__text code {
   font-family: var(--font-mono);
-  background: var(--paper-2);
+  background: var(--ergo-surface-2);
   border-radius: var(--r-xs);
   padding: 0 var(--s1);
+  color: var(--ergo-ink);
 }
 
 /* --- Interaction region --- */
@@ -321,7 +326,7 @@
 }
 .compare__card--on {
   border-color: var(--quill-strong);
-  box-shadow: var(--press-deboss), 0 0 0 3px var(--quill-tint);
+  box-shadow: 0 0 0 3px var(--quill-tint);
 }
 .compare__preview {
   margin-top: var(--s3);
@@ -350,7 +355,6 @@
   font-family: var(--font-mono);
   font-weight: 500;
   font-size: calc(18px * var(--fs));
-  box-shadow: var(--press-deboss);
 }
 .token--state {
   color: var(--quill);
@@ -365,14 +369,9 @@
 /* --- Konva canvas regions (state graph, chart) --- */
 
 .canvas-frame {
-  border: 1px solid var(--rule);
+  border: 1px solid var(--ergo-line);
   border-radius: var(--r-lg);
-  background:
-    /* edge-confined faint grid (docs/ui_design_system.md "Background Texture") */
-    linear-gradient(var(--rule-faint) 1px, transparent 1px) 0 0 / 24px 24px,
-    linear-gradient(90deg, var(--rule-faint) 1px, transparent 1px) 0 0 / 24px 24px,
-    var(--paper-0);
-  background-blend-mode: normal;
+  background: var(--ergo-surface);
   overflow: hidden;
   line-height: 0;
 }

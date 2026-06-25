@@ -9,7 +9,7 @@ import { db } from '../firebase/app'
 export interface MilestoneMeta {
   id: string
   title: string
-  glyph: string // IBM Plex Mono seal glyph (docs/ui_design_system.md Milestones)
+  glyph: string // JetBrains Mono medallion glyph (Ergo medallions)
 }
 
 // Course milestone sequence + their stamped-seal glyphs. This is the display

@@ -24,6 +24,7 @@ export function WelcomeScreen({
   return (
     <main className="authpage">
       <div className="authcard welcome">
+        <p className="authcard__wordmark">Ergo</p>
         <p className="authcard__eyebrow">Welcome</p>
         <h1 className="authcard__title">Welcome, {displayName}!</h1>
         <p className="authcard__sub">

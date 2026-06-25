@@ -26,6 +26,7 @@ export function FeedbackStrip({
         : view.revealed
           ? 'Answer'
           : `Hint ${view.level}`
+  const icon = view.kind === 'correct' ? '✓' : view.kind === 'note' ? '•' : '!'
 
   return (
     <div
@@ -33,7 +34,10 @@ export function FeedbackStrip({
       role="status"
       aria-live="polite"
     >
-      <p className="feedback__label">{label}</p>
+      <p className="feedback__label">
+        <span aria-hidden="true">{icon} </span>
+        {label}
+      </p>
       <p className="feedback__text">{view.text}</p>
       {view.kind === 'hint' && view.revealed && onTryAgain && (
         <button type="button" className="feedback__retry" onClick={onTryAgain}>

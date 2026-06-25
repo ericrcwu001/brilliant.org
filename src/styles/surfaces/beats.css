@@ -1,3 +1,16 @@
+/* ── Chapter accent triad (consumed by all beat selectors via var(--accent)) ─ */
+/* Default: ch1 indigo (so L0/L1 are pixel-identical before + after this restyle). */
+.lesson {
+  --accent: var(--ch1);
+  --accent-tint: var(--ch1-tint);
+  --accent-strong: var(--ergo-brand-strong);
+  --accent-glow: rgba(79, 70, 229, 0.18);
+}
+/* The chapter accent triad (--accent / --accent-tint / --accent-glow) + the :root
+   default + ch4 are defined on .lesson[data-ch] in shell.css (single source).
+   Only --accent-strong (derived) lives here. */
+.lesson[data-ch] { --accent-strong: color-mix(in oklch, var(--accent), black 12%); }
+
 /* --- Coin stream --- */
 
 .coinsim {
@@ -36,7 +49,7 @@
 /* The newest coin's entrance is now spring-driven by Motion (CoinStream.tsx);
    this keeps a faint elevation so the freshest flip reads as "on top". */
 .coin--latest {
-  box-shadow: var(--e1);
+  box-shadow: var(--ergo-shadow-sm);
 }
 .coinstream__chip {
   display: inline-flex;
@@ -46,13 +59,13 @@
   height: 36px;
   padding: 0 var(--s3);
   margin-left: var(--s2);
-  border: 1.5px solid var(--quill);
+  border: 1.5px solid var(--accent);
   border-radius: var(--r-md);
-  background: var(--quill-tint);
+  background: var(--accent-tint);
   font-family: var(--font-mono);
   font-weight: 600;
   font-size: calc(16px * var(--fs));
-  color: var(--quill-strong);
+  color: var(--accent-strong);
 }
 
 .hint-note {
@@ -63,7 +76,7 @@
 .hint-note--mark {
   padding: var(--s2) var(--s3);
   border-left: 3px solid var(--mark);
-  background: var(--mark-wash);
+  background: var(--mark-tint);
   color: var(--ink);
   border-radius: var(--r-xs);
 }
@@ -111,11 +124,11 @@
 
 .tap-card {
   margin: 0;
-  border: 1px solid var(--rule);
+  border: 1px solid var(--ergo-line);
   border-radius: var(--r-lg);
-  background: var(--paper-1);
+  background: var(--ergo-surface);
   padding: var(--s3) var(--s4) var(--s4);
-  box-shadow: var(--paper-shadow-2);
+  box-shadow: var(--ergo-shadow-sm);
 }
 .tap-card__q {
   padding: 0 var(--s2);
@@ -154,11 +167,11 @@
     background var(--dur-micro) var(--ease-out);
 }
 .statechip:hover:not(:disabled) {
-  border-color: var(--quill);
+  border-color: var(--accent);
 }
 .statechip:focus-visible {
-  outline: 2px solid var(--quill);
-  outline-offset: 2px;
+  box-shadow: var(--ring-focus);
+  outline: none;
 }
 .statechip__label {
   font-size: calc(18px * var(--fs));
@@ -170,8 +183,8 @@
   color: var(--graphite-soft);
 }
 .statechip--on {
-  border-color: var(--quill);
-  background: var(--quill-tint);
+  border-color: var(--accent);
+  background: var(--accent-tint);
 }
 .statechip--correct {
   border-color: var(--correct);
@@ -225,7 +238,7 @@
   color: var(--graphite-soft);
 }
 .sim-stat--quill b {
-  color: var(--quill);
+  color: var(--accent);
 }
 .sim-stat--ink b {
   color: var(--ink);
@@ -240,7 +253,7 @@
 .sim-progress__bar {
   height: 100%;
   border-radius: var(--r-pill);
-  background: linear-gradient(90deg, var(--quill), var(--quill-strong));
+  background: linear-gradient(90deg, var(--accent), var(--accent-strong));
   transition: width var(--dur-micro) linear;
 }
 
@@ -271,7 +284,7 @@
 .overlap__cap {
   font-size: calc(18px * var(--fs));
   font-weight: 600;
-  color: var(--quill-strong);
+  color: var(--accent-strong);
   margin: 0 0 var(--s2);
 }
 .overlap__note {
@@ -321,9 +334,9 @@
   width: 22px;
   height: 22px;
   border-radius: var(--r-pill);
-  background: var(--quill);
-  border: 2px solid var(--paper-0);
-  box-shadow: var(--e1);
+  background: var(--accent);
+  border: 2px solid var(--ergo-surface);
+  box-shadow: var(--ergo-shadow-sm);
   pointer-events: none;
   transition: transform var(--dur-micro) var(--ease-out);
 }
@@ -337,8 +350,8 @@
   cursor: pointer;
 }
 .bias__thumb:has(.bias__range:focus-visible)::after {
-  outline: 2px solid var(--quill);
-  outline-offset: 2px;
+  box-shadow: var(--ring-focus);
+  outline: none;
 }
 @media (prefers-reduced-motion: no-preference) {
   .bias__thumb:has(.bias__range:active)::after {
@@ -367,7 +380,7 @@
 .bias__pattern {
   font-size: calc(18px * var(--fs));
   font-weight: 600;
-  color: var(--quill-strong);
+  color: var(--accent-strong);
   margin: 0;
 }
 .bias__exp {
@@ -449,8 +462,8 @@
   }
 }
 
-/* Hero: the verdict is the visual weight; a restrained ink seal marks the
-   milestone (design system: stamped seal, not a colored badge). */
+/* Hero: the verdict is the visual weight; a chapter-tinted mono pill marks the
+   concept (design system: chapter-hued accent, not a notebook ink seal). */
 .recap__hero {
   display: flex;
   flex-direction: column;
@@ -462,12 +475,14 @@
   display: inline-flex;
   align-items: center;
   padding: var(--s1) var(--s3);
-  border: 1.5px solid var(--ink);
+  border: 1.5px solid var(--accent, var(--ergo-brand));
   border-radius: var(--r-pill);
   font-size: calc(12px * var(--fs));
   font-weight: 600;
   letter-spacing: 0.08em;
-  color: var(--ink);
+  color: var(--accent, var(--ergo-brand));
+  background: var(--accent-tint, var(--ergo-brand-tint));
+  font-family: var(--font-mono);
 }
 .recap__verdict {
   margin: 0;
@@ -502,7 +517,7 @@
   border: 1px solid var(--rule);
   border-radius: var(--r-md);
   background: var(--paper-1);
-  box-shadow: var(--paper-shadow-1);
+  box-shadow: var(--ergo-shadow-sm);
 }
 .recap__mechrow {
   display: flex;
@@ -522,7 +537,7 @@
 .recap__mark {
   padding: 0 var(--s1);
   border-radius: var(--r-xs);
-  background: var(--mark-wash);
+  background: var(--mark-tint);
   color: var(--ink);
 }
 .recap__mechtag {
@@ -613,7 +628,7 @@
   border-radius: var(--r-md);
   border-left: 3px solid var(--rule);
   background: var(--paper-1);
-  box-shadow: var(--paper-shadow-2);
+  box-shadow: var(--ergo-shadow-sm);
 }
 .feedback--correct {
   border-left-color: var(--correct);
@@ -683,17 +698,17 @@
     background var(--dur-micro) var(--ease-out);
 }
 .chip--select:hover:not(:disabled) {
-  border-color: var(--quill);
+  border-color: var(--accent);
 }
 .chip--on {
-  border: 1.5px solid var(--quill);
-  background: var(--quill-tint);
-  color: var(--quill-strong);
+  border: 1.5px solid var(--accent);
+  background: var(--accent-tint);
+  color: var(--accent-strong);
   font-weight: 500;
 }
 .chip--select:focus-visible {
-  outline: 2px solid var(--quill);
-  outline-offset: 2px;
+  box-shadow: var(--ring-focus);
+  outline: none;
 }
 
 /* --- Sticky action bar --- */
@@ -731,47 +746,73 @@
     box-shadow var(--dur-micro) var(--ease-out);
 }
 .btn--primary {
-  background: var(--quill);
-  color: var(--paper-0);
+  background: var(--accent);
+  color: var(--ergo-surface);
 }
 .btn--primary:hover:not(:disabled) {
-  background: var(--quill-strong);
-  box-shadow: var(--e1);
+  background: var(--accent-strong);
+  box-shadow: var(--ergo-shadow-sm);
 }
 .btn--ghost {
   flex: 0 0 auto;
   background: transparent;
-  color: var(--quill-strong);
+  color: var(--accent-strong);
   padding: 0 var(--s4);
 }
 .btn--ghost:hover:not(:disabled) {
   background: var(--paper-1);
-  box-shadow: var(--paper-shadow-1);
+  box-shadow: var(--ergo-shadow-sm);
 }
 .btn:disabled {
-  background: var(--paper-2);
-  color: var(--graphite-soft);
+  background: var(--ergo-surface-2);
+  color: var(--ergo-ink-3);
   cursor: default;
 }
 .btn:focus-visible {
-  outline: 2px solid var(--quill);
-  outline-offset: 2px;
+  box-shadow: var(--ring-focus);
+  outline: none;
 }
 .btn:not(:disabled):active {
-  box-shadow: var(--press-deboss);
   transform: scale(0.98);
 }
 
 .done-note {
   text-align: center;
-  color: var(--correct-text);
+  color: var(--ergo-ink);
   font-weight: 500;
   margin: 0 0 var(--s3);
+}
+
+.done-note__mastered {
+  font-family: var(--font-sans);
+  font-size: calc(11px * var(--fs));
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ergo-ink-3);
+  margin: var(--s4) 0 var(--s2);
 }
 
 /* Lesson-complete celebration (LessonCelebration.tsx): spring-in card. */
 .celebration {
   position: relative;
+}
+
+/* Chapter-color light-streak — absolutely positioned, swept by GSAP.
+   Opacity starts at 0; GSAP drives it to ~0.65 then back to 0.
+   aria-hidden; compositor-only transform/opacity; omitted under reduced-motion. */
+.celebration__streak {
+  position: absolute;
+  top: 38%;
+  left: 0;
+  width: 45%;
+  height: 3px;
+  border-radius: 99px;
+  background: linear-gradient(90deg, transparent, var(--accent, var(--ergo-brand)), transparent);
+  pointer-events: none;
+  will-change: transform, opacity;
+  opacity: 0;
+  z-index: 0;
 }
 
 /* Visually-hidden, screen-reader-only live region. */
@@ -809,7 +850,7 @@
 }
 .eqprogress--invalid {
   border-left-color: var(--mark);
-  background: var(--mark-wash);
+  background: var(--mark-tint);
   color: var(--ink);
 }
 
@@ -831,7 +872,7 @@
   font-weight: 600;
   letter-spacing: 0.04em;
   text-transform: uppercase;
-  color: var(--quill);
+  color: var(--accent);
 }
 .eqtiles__legend-lead {
   margin: 0 0 var(--s2);
@@ -849,7 +890,7 @@
 .eqtiles__legend-id {
   font-family: var(--font-mono);
   font-weight: 500;
-  color: var(--quill);
+  color: var(--accent);
 }
 /* Collapsed legend disclosure (Track A chrome reduction, proposed §2.8). */
 .eqtiles__legend-disclosure {
@@ -867,8 +908,8 @@
   cursor: pointer;
 }
 .eqtiles__legend-disclosure:focus-visible {
-  outline: 2px solid var(--quill);
-  outline-offset: 2px;
+  box-shadow: var(--ring-focus);
+  outline: none;
 }
 
 .eqtiles sub {
@@ -922,9 +963,9 @@
   align-items: stretch;
   gap: var(--s2);
   padding: var(--s3) var(--s4);
-  border: 1px solid var(--quill-tint);
+  border: 1px solid var(--accent-tint);
   border-radius: var(--r-md);
-  background: var(--quill-tint);
+  background: var(--accent-tint);
 }
 .eqline--prefilled .eqline__body {
   display: flex;
@@ -981,20 +1022,20 @@
 }
 @media (hover: hover) {
   .slot--empty:hover:not(:disabled) {
-    border-color: var(--quill);
-    background: var(--quill-tint);
+    border-color: var(--accent);
+    background: var(--accent-tint);
     color: var(--ink);
   }
 }
 .slot--filled {
   border: 1.5px solid var(--rule);
   background: var(--paper-0);
-  box-shadow: var(--press-deboss);
+  box-shadow: var(--ergo-shadow-sm);
 }
 @media (hover: hover) {
   .slot--filled:hover:not(:disabled):not(.slot--correct):not(.slot--wrong) {
-    border-color: var(--quill);
-    background: var(--quill-tint);
+    border-color: var(--accent);
+    background: var(--accent-tint);
   }
 }
 .slot--const.slot--filled {
@@ -1004,15 +1045,15 @@
   color: var(--heads);
 }
 .slot--var.slot--filled {
-  color: var(--quill);
+  color: var(--accent);
 }
 .slot--selected {
-  border-color: var(--quill);
-  background: var(--quill-tint);
+  border-color: var(--accent);
+  background: var(--accent-tint);
 }
 .slot:focus-visible {
-  outline: 2px solid var(--quill);
-  outline-offset: 2px;
+  box-shadow: var(--ring-focus);
+  outline: none;
 }
 .slot:disabled {
   cursor: default;
@@ -1023,24 +1064,24 @@
 }
 @media (hover: hover) {
   .token--placed:hover {
-    border-color: var(--quill);
-    background: var(--quill-tint);
-    box-shadow: var(--e1);
+    border-color: var(--accent);
+    background: var(--accent-tint);
+    box-shadow: var(--ergo-shadow-sm);
   }
 }
 .token--placed:focus-visible {
-  outline: 2px solid var(--quill);
-  outline-offset: 2px;
+  box-shadow: var(--ring-focus);
+  outline: none;
 }
 .slot--glow {
-  background: var(--mark-wash);
+  background: var(--mark-tint);
   border-color: var(--mark);
 }
 /* Drop-target highlight while a palette tile is dragged over an empty slot. */
 .slot--dragover {
-  border-color: var(--quill);
-  background: var(--quill-tint);
-  box-shadow: 0 0 0 2px var(--quill);
+  border-color: var(--accent);
+  background: var(--accent-tint);
+  box-shadow: 0 0 0 2px var(--accent);
   color: var(--ink);
 }
 .slot--correct {
@@ -1086,20 +1127,25 @@
 /* Drag-over highlight: applied imperatively (classList) so there is no React
    setState per pointer-move frame. Cleared imperatively on drag-end. */
 .slot--dragover {
-  border-color: var(--quill);
-  background: var(--quill-tint);
+  border-color: var(--accent);
+  background: var(--accent-tint);
 }
 
-/* Deboss flash on successful drag-drop: tile settles into the paper. */
+/* Chapter-accent border flash on successful drag-drop: tile snaps in with a
+   brief accent pulse that settles to the resting soft shadow. */
 .slot--drop-flash {
   animation: slot-drop-settle var(--dur-slow) var(--ease-spring);
 }
-@keyframes slot-drop-settle {
-  0% {
-    box-shadow: var(--paper-shadow-2);
-  }
-  100% {
-    box-shadow: var(--press-deboss);
+@media (prefers-reduced-motion: no-preference) {
+  @keyframes slot-drop-settle {
+    0% {
+      box-shadow: 0 0 0 0 var(--accent-tint);
+      border-color: var(--accent);
+    }
+    100% {
+      box-shadow: var(--ergo-shadow-sm);
+      border-color: var(--ergo-line-2);
+    }
   }
 }
 
@@ -1130,14 +1176,14 @@
   }
 }
 .palette .token:focus-visible {
-  outline: 2px solid var(--quill);
-  outline-offset: 2px;
+  box-shadow: var(--ring-focus);
+  outline: none;
 }
 
 .token--selected {
-  border: 1.5px solid var(--quill);
-  background: var(--quill-tint);
-  box-shadow: var(--e1);
+  border: 1.5px solid var(--accent);
+  background: var(--accent-tint);
+  box-shadow: var(--ergo-shadow-sm);
 }
 
 /* --- Guided substitution stepper (SubstitutionBeat) --- */
@@ -1177,7 +1223,7 @@
 
 .substep__result {
   font-weight: 500;
-  color: var(--quill-strong);
+  color: var(--accent-strong);
 }
 
 .substep--enter {
@@ -1212,10 +1258,10 @@
   font-weight: 500;
   line-height: 1;
   font-variant-numeric: tabular-nums;
-  color: var(--quill);
+  color: var(--accent);
 }
 .numline--locked .numline__value {
-  color: var(--quill-strong);
+  color: var(--accent-strong);
 }
 
 .numline__track {
@@ -1278,7 +1324,7 @@
   gap: 2px;
   padding: 0 var(--s1);
   border-radius: var(--r-xs);
-  background: var(--mark-wash);
+  background: var(--mark-tint);
   font-family: var(--font-mono);
   font-size: calc(12px * var(--fs));
   font-weight: 500;
@@ -1305,9 +1351,9 @@
   width: var(--thumb-size);
   height: var(--thumb-size);
   border-radius: var(--r-pill);
-  background: var(--quill);
-  border: 2px solid var(--paper-0);
-  box-shadow: var(--e1);
+  background: var(--accent);
+  border: 2px solid var(--ergo-surface);
+  box-shadow: var(--ergo-shadow-sm);
   pointer-events: none;
   transition: transform var(--dur-micro) var(--ease-out);
 }
@@ -1328,8 +1374,8 @@
   cursor: default;
 }
 .numline__thumb:has(.numline__range:focus-visible)::after {
-  outline: 2px solid var(--quill);
-  outline-offset: 2px;
+  box-shadow: var(--ring-focus);
+  outline: none;
 }
 @media (prefers-reduced-motion: no-preference) {
   .numline__thumb:has(.numline__range:active)::after {
@@ -1346,4 +1392,3 @@
     transition-duration: 0.01ms !important;
   }
 }
-

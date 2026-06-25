@@ -26,7 +26,7 @@ export interface DeskNode {
 }
 
 // Per-lesson spine glyphs (docs/ui_design_system.md "Per-lesson glyphs").
-// Rendered in IBM Plex Mono inside the node dot.
+// Rendered in JetBrains Mono inside the node dot.
 export const LESSON_GLYPHS: Record<string, string> = {
   'lesson-first-heads': 'H?',
   'lesson-pattern-hitting-times': 'HH',

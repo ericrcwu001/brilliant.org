@@ -1,5 +1,5 @@
 # HANDOFF
-<!-- Last updated: Agent 3 — Course Journey (Ergo UI reimagining) -->
+<!-- Last updated: L1 BalanceSolve explain-line clarity fix (2026-06-24) -->
 
 Orientation doc for a fresh context. Session-by-session narration lives in git
 history + the `docs/`/`audits/` files; this file keeps only what's needed going forward.
@@ -368,7 +368,26 @@ keyboard-a11y, SEO.
 
 ## Session State (latest)
 
-**Ergo integration fix (this session):** Three parallel agents (token/font swap, Home shell, Course journey) merged their Ergo work. Integration fixer validated all four gates and made two surgical fixes to the newly-created files:
+**Wave B1: Beats + Beat CSS (this session, DONE in working tree):**
+Implemented per `docs/ergo-lesson-restyle-brief/02-beats-and-visualizations.md`. Parallel sibling waves (shell B0, Konva B2) ran independently.
+
+**Files changed:**
+- `src/styles/surfaces/beats.css` — full Ergo token migration; chapter accent triad block (`.lesson[data-ch='ch1..ch4']` + `--accent`/`--accent-tint`/`--accent-strong`/`--accent-glow` CSS vars); `--quill*` → `--accent*` across all beat selectors; `--mark-wash` → `--mark-tint` (hint-note--mark, eqprogress--invalid, recap__mark, numline__marklabel, slot--glow); `--press-deboss` removed (btn:active = transform only, slot--filled = `--ergo-shadow-sm`); `--paper-shadow-2` → `--ergo-shadow-sm` (feedback, tap-card); `--e1` → `--ergo-shadow-sm` (coin--latest, thumb, token--selected); focus rings → `box-shadow: var(--ring-focus); outline: none`; `slot-drop-settle` keyframe rewritten to chapter-accent border pulse settling to `--ergo-shadow-sm`; `--ergo-surface-2`/`--ergo-ink-3` on disabled btn. Wave C reserved rules (`.done-note`, `.celebration`, `.recap__seal`, `.recap__stamp`) left untouched.
+- `src/styles/surfaces/beats-extended.css` — same `--quill*` → `--accent*` sweep across `.primer*`, `.answer-entry__input:focus-visible`, `.recap__belief`, `.retgrid__slot--sel`, `.sumtiles__slot--filled`/`sumtiles__chips .token--placed`/`sumtiles__eq-result`/`sumtiles__border-value`, `.triplet__card--open`/`.triplet__value`, `.ledger__sum`/`.ledger__mean`, `.balance__pan-val`, `.fst__theory`/`.fst__theory-label`/`.fst__bar`; `#b26a2b` → `var(--mark)` on `.racehero__fill--b`/`.racehero__flip--b`; `.racehero__fill--a`/`.racehero__flip--a` `--quill` → `--accent`; `--press-deboss` removed from `.balance__range`; `--paper-shadow-1` → `--ergo-shadow-sm` on `.primer__card`, `.balance__svg`, `.balance__pan`, `.ledger__col`; focus rings → `--ring-focus`.
+- `src/lesson/beats/EquationTilesBeat.tsx` — `whileDrag boxShadow: 'var(--paper-shadow-2)'` → `'var(--ergo-shadow-md)'`.
+- `src/lesson/beats/BalanceSolveBeat.tsx` — SVG pan disc fill `var(--quill)` → `var(--accent)`.
+- `src/lesson/beats/WalkBoardBeat.tsx` — added `import { chapterColor } from '../chapters'`; destructured `lessonId`; replaced `C.quill` with `chapterColor(lessonId)` at all 4 SVG sites (start node fill, walker fill, landscape polyline stroke, histogram bar fill).
+- `src/lesson/beats/BiasSandboxBeat.tsx` — added `import { chapterColor } from '../chapters'`; moved `SERIES_COLORS` inside component (now `seriesColors`), re-keyed `HH` from `C.quill` to `chapterColor(lessonId)`; fallback also uses `chapterColor(lessonId)`.
+
+**Accent migration approach:** A single `--accent`/`--accent-tint`/`--accent-strong`/`--accent-glow` CSS var triad is defined on `.lesson` (default ch1/indigo) and overridden per `[data-ch='chN']` rule. All beat CSS reads `var(--accent)`, so chapter color flows automatically via the cascade. L0/L1 are pixel-identical (ch1 = indigo = former `--quill`). L2/L3 read teal; L4–L6 read coral. For Konva (no CSS-var access), `chapterColor(lessonId)` from `src/lesson/chapters.ts` resolves to the hex literal.
+
+**e2e selectors confirmed preserved (no class renames):** `.token-row`, `.eqline--build .slot`, `.slot--filled`, `aria-pressed`, `.numline__range`, `.numline__thumb`, `.bias__range`, `.balance__range`, `.tap-card`, `.statechip`, `.overlap__tap`, `.compare__card`, `.retgrid__slot`, `.retgrid__palette`, `.answer-entry__input`, `.hint-note--mark`, `.feedback`, `.sim-stat--quill` (class name kept; value changed to `--accent`).
+
+**Verified:** `eslint` on all 4 changed TSX files → 0 errors. Full `tsc`/`vitest`/`vite build` run by the orchestrator after all parallel waves merge.
+
+⚠ VR baselines for the 4 lesson snapshots will need re-capture post-merge (ch2/ch3 lessons change substantially from indigo→teal/coral; ch1 flagship changes only from depth updates).
+
+**Ergo integration fix (prior session):** Three parallel agents (token/font swap, Home shell, Course journey) merged their Ergo work. Integration fixer validated all four gates and made two surgical fixes to the newly-created files:
 
 - **`src/lesson/mathviz/MathViz.tsx`**: Changed `JSX.Element` → `React.JSX.Element` (the project convention; bare `JSX` namespace not available under `"jsx": "react-jsx"` without an explicit import).
 - **`src/pages/CourseJourney.tsx`**: Same `JSX.Element` → `React.JSX.Element` fix; also narrowed `chapterForLesson(...)` result from `Chapter | null | undefined` to `Chapter | null` via `?? null` so the `DetailCard` prop type (`Chapter | null`) is satisfied.
@@ -498,6 +517,10 @@ components and the surface CSS. `StudyDeskProps` is byte-identical (consumers
   for now" lands on the desk (Track A), bypassing the DiagnosticGate; `grid-column: 2` on
   `.topbar__center` (`shell.css`) un-clips the gate's "QUICK CHECK" (single-child was auto-placing
   into the 44px col-1 → "QUI…"; no-op for 3-child lesson topbars).
+  (1+2 follow-up, this session) the skip still reached the Quick check via a race: a late
+  initial `loadTrack` could overwrite the locally-set `track='A'` back to `null`. The
+  `loadTrack`/`loadWelcomeSeen` effects in `CoursePathPage.tsx` now use `prev === undefined`
+  functional updates, so a late read can't clobber a choice the learner just made.
   (3) `CoinSimBeat.tsx` state graph was invisible on Track A (shared one-shot `useElementWidth`
   measured 0 because `.canvas-frame` mounts only after "Show the machine") → swapped to a local
   **callback ref + ResizeObserver**; shared hook untouched (`LessonPreview` reads `.current`).
@@ -553,6 +576,27 @@ components and the surface CSS. `StudyDeskProps` is byte-identical (consumers
   `eslint .` clean, `vitest run` **202/202** green. ⚠ `tsc` has ONE **pre-existing, unrelated** error
   (`src/pages/StudyDesk.tsx` → missing `./CourseJourney`, from the uncommitted Ergo Home WIP — absent
   at HEAD). Not browser-verified yet (timer-driven; mirrors the proven TheorySimChart pattern).
+
+## Ergo Lesson Restyle — Wave A: Shell & Chrome (this session, DONE in working tree)
+
+**Wave A** (lesson shell + chrome) implemented per `docs/ergo-lesson-restyle-brief/01-shell-and-chrome.md`.
+Parallel sibling waves (beats / Konva) ran independently; this wave owns only its files.
+
+**Files changed:**
+- `src/styles/surfaces/shell.css` — chapter-accent block (`.lesson[data-ch='ch1..ch4']` → `--lesson-accent`/`--lesson-accent-tint`/`--lesson-accent-glow`); topbar → `--ergo-bg`/`--ergo-line`/`--ring-focus`; topbar__back/title/streak → Ergo tokens; rail → state-colored (chapter hue for complete+current; `--ergo-line-2` for upcoming; removed per-phase hues); biaschip → Ergo neutrals idle + `--mark-tint` active; prompt__text → weight 600 + clamp(1.5rem,4vw,2.25rem) + tabular-nums + `--ergo-ink`; prompt__kicker → `--lesson-accent` + Inter; canvas-frame → clean `--ergo-surface` (removed grid gradients); removed `--press-deboss` from `.token` and `.compare__card--on`.
+- `src/styles/surfaces/beats.css` — actionbar → `--ergo-surface`/`--ergo-line` (removed 2dppx rule); btn → `--lesson-accent` primary + `--ergo-brand` ghost + `--ergo-surface-2` disabled + `--ring-focus` focus + transform-only active (no deboss); feedback → `--ok`/`--bad` tints + `--ergo-shadow-sm` + feedback__retry ring-focus; coin border → `--ergo-line`; coin--latest → `--ergo-shadow-sm`; coinstream__chip → `--lesson-accent` trio; done-note → `--ergo-ink` + font-display 600.
+- `src/styles/surfaces/components.css` — btn--secondary → `--ergo-surface`/`--ergo-line-2` (removed deboss); skeleton → `--ergo-surface-2`/`--ergo-surface` shimmer/`--r-md`; bootscreen → `100dvh` + font-display wordmark + `--ergo-ink-2` caption.
+- `src/styles/surfaces/ui.css` — StatusNote tones → `--ergo-ink-2` base, `--ergo-brand` info, `--ergo-ink-3` offline, `--bad` error.
+- `src/lesson/LessonPlayer.tsx` — imported `chapterOf` from `./chapters`; added `data-ch={chapterOf(lessonId)}` to the **active** `.lesson` root only (done block untouched — Wave C).
+- `src/lesson/FeedbackStrip.tsx` — prepended `aria-hidden` tone icon (✓/!/•) to `.feedback__label` for color-never-alone.
+
+**data-ch / --accent mechanism:** `.lesson[data-ch='ch1..ch4']` overrides `--lesson-accent`/`--lesson-accent-tint`/`--lesson-accent-glow` on the root; all chapter-coded chrome (primary CTA, rail, prompt kicker, coinstream chip) reads `var(--lesson-accent)` via the CSS cascade. L0/L1 → indigo, L2/L3 → teal, L4–L6 → coral (ch3). Done block stays untouched (Wave C).
+
+**e2e selectors confirmed preserved:** `.actionbar`, `.btn`, `.btn--primary`, `.btn--secondary`, `.btn--ghost`, `section.prompt`, `.prompt__text`, `.done-note`, `.topbar`, `.biaschip`, `.rail`, `data-testid="status-note"`, `data-tone` — restyle-in-place only, no renames.
+
+**Verified:** `eslint` on all changed TSX files → 0 errors. `--press-deboss` fully removed from owned files. Full `tsc`/`vitest`/`vite build` run by the orchestrator after all parallel waves merge.
+
+⚠ VR baselines for the 4 lesson snapshots (`dev-lesson-flagship`×2, `dev-lesson-penneys`×2) will need re-capture once all waves merge. `dev-home.png` should be unchanged (no Home file touched).
 
 ## Next Steps (priority order)
 
@@ -614,6 +658,29 @@ components and the surface CSS. `StudyDeskProps` is byte-identical (consumers
   (gitignored)
 - **e2e:** `e2e/*` + `playwright.config.ts` · **VR:** `e2e/vr/` +
   `playwright.vr.config.ts` · **Audits:** `audits/*`
+## Ergo Lesson Restyle — Wave B2: Konva Visualizations + Theme (this session, DONE in working tree)
+
+**Wave B2** (Konva canvases) implemented per `docs/ergo-lesson-restyle-brief/02-beats-and-visualizations.md` §3.
+
+**Files changed (4):**
+- `src/lesson/konva/theme.ts` — added ch1/ch2/ch3 tints to `C` palette; added `hexToRgba(hex, alpha)` helper; exported `CHAPTER_ACCENT` (keyed by ch1/ch2/ch3 with base/tint/glow); exported `accentFor(hex)` → `{base, tint, glow}` (looks up by lowercase hex, falls back to ch1 indigo).
+- `src/lesson/konva/StateGraph.tsx` — added optional `accent?: string` prop (resolved hex, defaults to `C.quill`); nodes now chapter-tinted fill @ 0.10 opacity + accent stroke 1.8 (mirrors MathViz `StateMachineViz` vocabulary); active node: accent tint fill, sw=3, soft `shadowColor`/`shadowBlur` glow (8px steady, 0→14→8 bloom in existing pulse tween); absorbing ring: dashed `[3,2]` accent stroke @ opacity 0.6 (matches `MathViz.tsx:123-132`); label fills updated (inactive=`C.ink`, active=`acBase`); dual-id sub-label (inactive=`C.graphiteSoft`, active=`acBase`); `xOf` snaps to `Math.round()+0.5` for crisp HiDPI hairlines; `Stage pixelRatio={dpr}` set.
+- `src/lesson/konva/SimChart.tsx` — added optional `accent?: string` prop; empirical curve, area gradient, head glow/bead, live chip, and run-count x-label all re-keyed to `accentFor(accent)` (theory line stays `C.ink`, prediction stays `C.mark`); `Stage pixelRatio={dpr}` set.
+- `src/lesson/konva/BiasChart.tsx` — added optional `accent?: string` prop; p-guide readout label re-keyed to `acBase` (series colors remain caller-supplied via `BiasSeries[].color`); `Stage pixelRatio={dpr}` set.
+
+**`accent` prop contract:**
+- Name: `accent`; Type: `string` (resolved hex, e.g. `'#4F46E5'`); Optional: yes; Default: `C.quill` (#4F46E5 indigo); Affects: StateGraph active node ring/glow, SimChart empirical series, BiasChart p-guide label.
+- The beat agent passes `accent={chapterColor(lessonId)}` to thread chapter hues through.
+- `C.laneB` remains exported (beat agent references it).
+
+**StateGraph ↔ MathViz consistency changes:**
+- Node fill: was `C.paper0` (gray); now `hexToRgba(acBase, 0.10)` (chapter tint at 10% — matches `MathViz.tsx:77-78` `fillOpacity="0.12"`).
+- Node stroke: was `C.graphite`; now `acBase` at sw=1.8 (matches `MathViz.tsx:79-80` `strokeWidth="1.8"`).
+- Absorbing ring: was solid green `C.correct`; now dashed accent `[3,2]` @ 0.6 opacity (matches `MathViz.tsx:123-132` `strokeDasharray="3 2" opacity="0.6"`).
+- Pixel snapping: `xOf` rounds to `+0.5` for crisp 1px strokes; `Stage` sets `pixelRatio=devicePixelRatio`.
+
+**Verified:** ESLint 0 errors, `tsc --noEmit` 0 errors on all 4 files. `'use no memo'` directive preserved on all three Konva components.
+
 ## Last Session
 
 **Lesson guidance clarity pass (this session; orchestrated: 2 Sonnet edit subagents + composer verify):** Reworked the overlap-chips beat + swept affordances/prompts (user report: the L5 `border-sum` "add HTH overlap tiles" beat read as non-interactive/unexplained). **Components/CSS:** `SumTilesBeat.tsx` (shared by L5 `border-sum` + L6 `sum-it`/`apply-THH`/`apply-HTH`) gained a tap kicker, a "Where these come from" overlap-grounding panel (per length L: prefix==suffix -> 2^L, derived from `autocorrelation`), and a visible `E[wait]=box+box=sum` equation builder that fills as chips are tapped; chips stay `.sumtiles__chips .token` so completion still gates on `placed.size===overlaps.length` (e2e selector intact); new `SumTilesBeat.test.tsx` (10 pure-model tests). `beats-extended.css` gave enabled chips in `.sumtiles__chips`/`.retgrid__palette`/`.wheel__options` `cursor:pointer`+hover+`:focus-visible` (the "don't know where to click" bug — base `.token` was styleless until clicked). `RetrievalGridBeat` got a visible "Tap a result on the left, then its match on the right" label; `SliderBeat` surfaced a visible "drag then lock it in" instruction (was sr-only). **Verified green:** `validate`, `vitest run` **195** (+10 SumTiles), `eslint .`, `tsc -b`+`vite build`. WARNING: **e2e + VR could NOT be cleanly completed** — the concurrent **Ergo refactor** (other agents editing `App.tsx`/`CoinSimBeat`/`RecapBeat`; `app.css` imports a not-yet-created `./surfaces/ergo-journey.css`) breaks the dev server / desyncs the committed e2e scripts. Every e2e failure is in a beat I never touched (Flip/recap/ruler/Track-A) -> not from this work. I added an **empty commented placeholder `src/styles/surfaces/ergo-journey.css`** so the CSS cascade loads; VR re-baselined the 3 lesson surfaces (`dev-lesson-flagship` x2, `dev-lesson-penneys`) but `dev-home` stayed blocked by the in-flight `CourseJourney`. Re-run e2e/VR once Ergo settles. **Prompts:** Applied an action-oriented prompt standard across all 7 lesson fixtures. Every `prompt` now states the concrete action verb (Press / Tap / Drag / Type / Reveal), matches the actual widget, briefly glosses symbols (E[...], recurrence, 2^L) on first use, and replaces vague teasers with read/continue cues. Smoke substring "which one makes you wait longer" preserved in `lesson-pattern-hitting-times.json` `open-bet`. Specific changes:
@@ -702,3 +769,133 @@ glossary updated in `CONTEXT.md`. Approved mock: `mock/ergo-home.html` (+ `-shot
   (values-only sweep). Chapter hues: L0/L1 indigo, L2/L3 teal, L4/L5/L6 coral.
 - **Not committed** (working tree only). `mock/` (ergo-home.html, shot pngs, shot.mjs) is a
   design artifact, not wired to the app.
+
+### Ergo lesson interior restyle — Waves A/B/C DONE (2026-06-24)
+
+Executed the lesson-restyle brief (`docs/ergo-lesson-restyle-brief.md`) Waves A–C (lesson
+interior). **Gate green:** `tsc -b`, `eslint .`, `vitest run` (202), `vite build`. Visually
+verified at `/dev/lesson` (indigo) + `/dev/lesson/lesson-penneys-game` (teal) — chapter
+color-coding, sans display type, compact streak chip all live.
+
+- **Foundation:** new `src/lesson/chapters.ts` (`chapterOf`/`chapterHueVar`/`chapterColor`) —
+  single source for the lesson→chapter hue (L0/L1 ch1 indigo, L2/L3 ch2 teal, L4–L6 ch3 coral).
+- **Wave A (shell/chrome):** `shell.css` + `LessonPlayer` active chrome + `BeatShell`/`PhaseRail`/
+  `FeedbackStrip` + `components.css`/`ui.css`. Chapter accent cascade via `.lesson[data-ch]` →
+  `--accent`/`--accent-tint`/`--accent-glow` (canonical block in `shell.css`); deboss/paper retired
+  for soft-shadow depth; Space Grotesk prompt + tabular-nums; `--ring-focus`.
+- **Wave B (beats + Konva):** `beats.css`/`beats-extended.css` + all `beats/*` swept `--quill*`→
+  `--accent*`, `--mark-wash`→`--mark-tint`, deboss removed; `#b26a2b`→`var(--mark)`. Konva
+  `theme.ts`/`StateGraph`/`SimChart`/`BiasChart` got an optional `accent?: string` prop (default
+  brand) + StateGraph now matches the Home `MathViz` glyph language (chapter-tinted nodes, dashed
+  absorbing ring, active glow, device-pixel hairlines). Konva beats pass `chapterColor(lessonId)`.
+- **Wave C (celebration/streak):** `ConceptMedallion` gained `size` (sm/md/lg; Home default sm
+  unchanged); completion takeover swaps `MilestoneSeal stamped`→`ConceptMedallion size=lg` +
+  lazy-GSAP chapter light-streak (reduced-motion off) + `data-ch` on the done root; both top-bar
+  `StreakTally compact`→`WeeklyStreak compact` chip; dead `recap__stamp` branch removed; `.recap__seal`
+  → chapter-tint mono pill; `CELEBRATE_BEAT` alias in `motion/tokens.ts`.
+- **Reconciled:** the shell + beats waves had introduced divergent accent vars
+  (`--lesson-accent` vs `--accent`) — unified to `--accent` (shell.css is the single source; beats.css
+  keeps only `--accent-strong`).
+- **MilestoneSeal.tsx + StreakTally.tsx now have ZERO imports in `src/`** — Wave D (cleanup) can
+  delete them. e2e nodes preserved verbatim (`.done-note`/"Lesson complete", `.actionbar .btn--primary`,
+  beat selectors). The completion takeover (medallion lg + light-streak) needs a manual full-lesson
+  walk to view; VR baselines need re-capture (user, Playwright).
+- **Wave D (cleanup) DONE:** orphan files deleted (`CourseSpine.tsx`, `LessonPreview.tsx`, `MilestoneSeal.tsx`, `StreakTally.tsx`); `home.css` stripped of all dead selectors (SAFE-NOW + AFTER-C rows + CONFIRM API features + surgical 2dppx purge); 4 unused font deps dropped from `package.json` + `npm install`; 3 stale code comments fixed (`gsapText.ts`, `studyDesk.model.ts`, `milestones.ts`). Gates: `tsc -b` 0 errors · `eslint .` 0 errors · `vitest run` 202/202 green.
+- **Wave E (Landing/Auth → Ergo) DONE:** see section below. Wave F (user VR re-baseline + a11y/perf) pending.
+
+## Ergo Lesson Restyle — Wave C: Celebration, Completion, Recap Marker, Compact Streak (this session, DONE in working tree)
+
+**Wave C** implemented per `docs/ergo-lesson-restyle-brief/03-celebration-migration-and-risks.md` §1–§1.8.
+
+**Files changed (8):**
+- `src/motion/tokens.ts` — added `CELEBRATE_BEAT = STAMP_BEAT` + `CELEBRATE_BEAT_MS = STAMP_BEAT_MS` aliases (named clock for the light-streak; no token-pipeline change).
+- `src/habit/ConceptMedallion.tsx` — added `size?: 'sm'|'md'|'lg'` prop (default `'sm'` keeps Home byte-identical); applies `ergo-medallion--${size}` class.
+- `src/lesson/LessonPlayer.tsx` — (a) done block: `data-ch={chapterOf(lessonId)}` on root; `<StreakTally>` → `<WeeklyStreak compact>`; `<MilestoneSeal earned stamped>` → `<ConceptMedallion size="lg" earning={!reducedMotion} hueVar={chapterHueVar(...)}>` + "Concept mastered" kicker; lazily-imported GSAP chapter-color light-streak (compositor-only transform/opacity, omitted under reduced-motion). (b) Active top bar: `<StreakTally>` → `<WeeklyStreak compact>`. Removed `MilestoneSeal`/`StreakTally` imports; added `ConceptMedallion`/`WeeklyStreak`/`CELEBRATE_BEAT`/`chapterHueVar` imports. Preserved `.done-note` + "Lesson complete" + `.actionbar .btn--primary` + `aria-label="Back to course path"` verbatim.
+- `src/lesson/LessonCelebration.tsx` — updated stale header comment (was "ink-stamp seal is the sole cinematic beat"; now describes the medallion earn + light-streak arc).
+- `src/lesson/beats/RecapBeat.tsx` — removed `MilestoneSeal` import; removed the unreachable `recap__stamp` + `<MilestoneSeal>` block from both the generic branch (generic recap) and the flagship branch (HH/HT recap). The `recap__reveal` blocks are untouched.
+- `src/styles/surfaces/ergo-home.css` — added `.ergo-medallion--sm/--md/--lg` size variants (`sm=44px` keeps Home identical, `md=56px`, `lg=96px+ergo-shadow-md`) with glyph font-size bumps; added `.ergo-streak--compact` chip styling (row layout, pill border, 16px number, labels hidden, mini dots).
+- `src/styles/surfaces/beats.css` — re-pointed `.done-note` color `--correct-text` → `--ergo-ink`; added `.done-note__mastered` kicker rule; added `.celebration__streak` (absolutely-positioned streak container, GSAP-driven); restyled `.recap__seal` from notebook `var(--ink)` to chapter-tinted mono pill (`var(--accent)` + `var(--accent-tint)` + `font-family: var(--font-mono)`). `.celebration` `position:relative` rule was already present.
+
+**MilestoneSeal / StreakTally retirement:** no `import.*MilestoneSeal|import.*StreakTally` anywhere in `src/` → Wave D can delete both files.
+
+**e2e-load-bearing nodes confirmed present:** `.done-note` + "Lesson complete", `.actionbar .btn--primary`, `aria-label="Back to course path"`.
+
+**Verified:** `tsc -b` 0 errors · `eslint .` 0 errors · `vitest run` 202/202 green.
+
+## Ergo Lesson Restyle — Wave E: Landing + Auth Public Surfaces (this session, DONE in working tree)
+
+**Wave E** implemented per `docs/ergo-lesson-restyle-brief/03-celebration-migration-and-risks.md` §2.
+
+**Files changed (2):**
+- `src/pages/LandingPage.tsx` — fixed stale comment ("Fraunces" → "Space Grotesk"); added `FLIP_BEAT` to motion-tokens import; updated `StateMachinePreview` signal animation duration to `FLIP_BEAT * 3.5` (each edge traversal = 1 flip-beat) with proportional times `[0, 0.29, 0.43, 0.71, 0.86, 1]`; updated signal comment from "quill" → "Ch1 indigo".
+- `src/styles/surfaces/auth-landing.css` — full token migration + structural Ergo upgrades:
+  - **Landing hero:** dropped `font-optical-sizing` (serif-ism); weight 500→700 on `.hero__title`, 500→600 on `.hero__subtitle`; `--ink`→`--ergo-ink`, `--graphite-soft`→`--ergo-ink-3`.
+  - **State-machine preview (Ch1 re-skin):** `--rule`→`--ergo-line` (edges), `--paper-0`→`--ergo-bg` + `--graphite`→`--ergo-ink-2` (rings), `--quill`→`--ch1` (signal fill + glow filter); `@keyframes preview-pulse` 0%/100% → `--ergo-ink-2`/`--ergo-bg`; 12% → `--ch1`/`--ch1-tint`. Node pulse reads as Ch1 indigo energy.
+  - **Auth card:** `--paper-1`→`--ergo-surface`, `--paper-shadow-2`→`--ergo-shadow-md`, `--r-md`→`--r-xl`, `--rule`→`--ergo-line`; removed Retina 0.5px sub-pixel border hack (RGBA ergo-line is already visually lightweight).
+  - **Inputs (full Ergo bordered):** removed notebook bottom-rule (`border: none; border-bottom: 1.5px`); replaced with `border: 1px solid var(--ergo-line-2); border-radius: var(--r-md); background: var(--ergo-surface); height: 48px; padding: 0 var(--s3)`. Focus → `border-width:2px; border-color: --ergo-brand; box-shadow: --ring-focus`. Disabled → `--ergo-ink-3`.
+  - **Error state:** `--wrong`→`--bad` border + `--bad-tint` background + `--bad` helper text (was bottom-rule + `--wrong-text`). Error focus ring = 3px rgba(229,72,77,.2) (bad hue).
+  - **Status/error copy:** `--wrong-text`→`--bad`, `--correct-text`→`--ok`.
+  - **Typography:** `--graphite`→`--ergo-ink-2`, `--graphite-soft`→`--ergo-ink-3`, `--ink`→`--ergo-ink`, `--quill-strong`→`--ergo-brand-strong` throughout.
+  - **Divider/switch:** `--rule`→`--ergo-line` (divider lines), `--graphite-soft`→`--ergo-ink-3` (divider text), removed Retina 0.5px authdivider hack.
+
+**Token migration table (auth-landing.css):**
+
+| Old | New |
+|-----|-----|
+| `--ink` | `--ergo-ink` |
+| `--graphite` | `--ergo-ink-2` |
+| `--graphite-soft` | `--ergo-ink-3` |
+| `--rule` | `--ergo-line` |
+| `--paper-0` | `--ergo-bg` |
+| `--paper-1` | `--ergo-surface` |
+| `--paper-shadow-2` | `--ergo-shadow-md` |
+| `--quill` | `--ch1` (preview) / `--ergo-brand` (focus) |
+| `--quill-tint` | `--ch1-tint` (preview) / `--ergo-brand-tint` |
+| `--quill-strong` | `--ergo-brand-strong` |
+| `--wrong` | `--bad` |
+| `--wrong-text` | `--bad` |
+| `--correct-text` | `--ok` |
+| `--press-deboss` | removed (n/a — not present in auth-landing.css) |
+
+**ProfilePage risk (shared `.field` / `.authform` classes):** LOW. ProfilePage's display-name and email fields will render as bordered Ergo inputs (height 48px, `--ergo-line-2` border, `--r-md` radius) instead of bottom-rule notebook inputs. Colors are equivalent (`--ergo-ink-2`/`--ergo-ink-3` map to same hex as old `--graphite`/`--graphite-soft`). Error/status colors change slightly (bright `--bad` vs darker `--wrong-text`; both red). No e2e assertions target ProfilePage. No VR baseline for ProfilePage. Functionally identical (same class names, input names, aria, form structure).
+
+**e2e selectors preserved:** No class renames. `input[name="email"]`, `input[name="password"]`, `.btn`, `.btn--primary`, `.btn--secondary`, `.field`, `.field__input`, `.authform`, `.authcard` — all unchanged. `data-error` attribute pattern unchanged.
+
+**Verified:** `eslint src/pages/LandingPage.tsx src/pages/AuthPage.tsx` → 0 errors.
+
+### Ergo restyle — post-D/E regression fix + final certification (2026-06-24)
+
+- **Regression caught via screenshot QA + fixed:** Wave A had scoped the `--accent` default to
+  `.lesson {…}`, so `.btn--primary` / `.btn--ghost` on NON-lesson surfaces (auth, landing, profile,
+  welcome, display-name, diagnostic gate) resolved `background: var(--accent)` to nothing → a
+  transparent white-on-white **invisible primary button**. Fixed in `src/styles/surfaces/shell.css`
+  by promoting the accent triad default (`--accent`/`--accent-tint`/`--accent-glow` + the previously
+  missing `--accent-strong`) to a `:root` block; `.lesson[data-ch]` still overrides per chapter.
+  Confirmed: auth "Create account" now computes solid `rgb(79,70,229)` indigo.
+- **Final consolidated gate GREEN** (whole tree, all waves A–E + fix): `tsc -b`, `eslint .`,
+  `vitest run` (202), `vite build`.
+- **Screenshot-verified surfaces:** `/dev/lesson` (ch1 indigo) + `/dev/lesson/lesson-penneys-game`
+  (ch2 teal) accents + compact `WeeklyStreak` chip; `/` landing (Space Grotesk hero + Ch1 state
+  machine) + `/auth` (Ergo card, bordered inputs, solid indigo CTA). Lesson dev routes are
+  Firebase-less; `/` + `/auth` boot resolves signed-out against real Firebase (no emulator needed).
+- **Vite footgun (again):** stale dev servers served old CSS twice during QA — had to start fresh
+  ports (4400/4402) to see edits. Verify on a freshly-started server.
+- **Still PENDING (user):** full-lesson walk to view the completion takeover (medallion + GSAP
+  light-streak); Playwright e2e + VR re-baseline (the 6 snapshots will have drifted from the restyle
+  + font swap); a11y/perf pass. Optional later (own PR): retire the legacy token aliases
+  (`--paper-*`/`--quill`/…) once `rg` shows no surface references. Nothing committed.
+
+### L1 BalanceSolve explain-line clarity fix (2026-06-24)
+
+- **Problem:** the `guided-solve` beat's explanation read `Substituting E₁ = 4: E[HH] = 3 + ½·E[HH].
+  Slide until both sides match.` — the substituted `4` never appeared and the `3` materialized from
+  nowhere (the `1 + ½·4` arithmetic was collapsed), and "both sides match" was ambiguous against an
+  equation that literally has `E[HH]` on both sides.
+- **Fix (`src/lesson/beats/BalanceSolveBeat.tsx`, explainLine only):** added `expandedRhs` built from
+  the recurrence `constant` + `terms` (self term → `½·E[HH]`, non-self → numeric substituted value),
+  so the line now shows `E[HH] = 1 + ½·4 + ½·E[HH] = 3 + ½·E[HH]` (the `3` is now derived on screen).
+  Replaced the instruction with `E[HH] still appears on both sides, so slide your guess until the
+  scale balances.` — names the scale mechanic and explains *why* you slide. Both branches updated;
+  generic (no non-self terms) branch keeps the collapsed form.
+- **Gates GREEN:** `eslint` (file), `vitest run` BalanceSolveBeat.test (12), `tsc -b`. No test/e2e
+  asserted the old string; pure `balanceModel` untouched. Nothing committed.

@@ -3,9 +3,15 @@
 // Konva state graph — the visual hero (docs/ui_design_system.md "State Graph").
 // Nodes are matched-prefix circles (∅, H, HH); H edges are heads-gold, T edges
 // tails-teal; self-loops arc above, reset edges curve below. The active node
-// pulses (~80ms after flip) and a one-shot "energy packet" travels the active
-// edge (~120ms→FLIP_BEAT). Reused by the coin-sim, overlap, and bias-sandbox
-// beats.
+// pulses (~80ms after flip) with a chapter-tinted glow, and a one-shot "energy
+// packet" travels the active edge (~120ms→FLIP_BEAT). Reused by the coin-sim,
+// overlap, and bias-sandbox beats.
+//
+// Visual vocabulary mirrors src/lesson/mathviz/MathViz.tsx (StateMachineViz):
+// chapter-tinted node fill @ 0.10 opacity, 1.8px accent stroke, dashed absorbing
+// ring. An optional `accent` prop (resolved hex from chapterColor(lessonId))
+// keys node tints and glow to the lesson's chapter. Defaults to C.quill so
+// existing callers compile unchanged.
 //
 // This file mounts a Konva <Stage>, so it opts out of the React Compiler via
 // the directive above (see vite.config.ts).
@@ -14,7 +20,7 @@ import { useEffect, useLayoutEffect, useRef } from 'react'
 import Konva from 'konva'
 import { Arrow, Circle, Layer, Stage, Text } from 'react-konva'
 import type { Automaton, StateId, Transition } from '../../engine/types'
-import { C, edgeColor, FONT_MONO } from './theme'
+import { C, edgeColor, FONT_MONO, accentFor, hexToRgba } from './theme'
 import { FLIP_BEAT_MS, DUR } from '../../motion/tokens'
 
 export type EdgeRef = { from: StateId; on: 'H' | 'T' }
@@ -55,6 +61,7 @@ export function StateGraph({
   reducedMotion,
   pulseKey = 0,
   labelMode = 'prefix',
+  accent,
 }: {
   automaton: Automaton
   width: number
@@ -68,7 +75,13 @@ export function StateGraph({
   // notation ladder is visible at a glance (L1 §5.2 dual-label). Default
   // 'prefix' keeps the single-label rendering used by every existing beat.
   labelMode?: 'prefix' | 'dual'
+  // Resolved chapter hex from chapterColor(lessonId). Tints active node ring,
+  // absorbing ring, and glow. Defaults to C.quill (indigo ch1) so existing
+  // callers compile without change.
+  accent?: string
 }) {
+  const { base: acBase, tint: acTint, glow: acGlow } = accentFor(accent ?? C.quill)
+
   const { states, transitions } = automaton
   const n = states.length
   // Many-node automata (length-4+ patterns, n>=5) need smaller nodes + tighter
@@ -78,7 +91,9 @@ export function StateGraph({
   const nodeY = height * 0.5
   const padX = radius + (n > 4 ? 16 : 30)
   const innerW = Math.max(1, width - padX * 2)
-  const xOf = (i: number) => (n <= 1 ? width / 2 : padX + (innerW * i) / (n - 1))
+  // Snap to nearest integer + 0.5 for crisp hairline strokes on both 1× and HiDPI.
+  const xOf = (i: number) =>
+    Math.round(n <= 1 ? width / 2 : padX + (innerW * i) / (n - 1)) + 0.5
   const indexOf = (id: StateId) => states.findIndex((s) => s.id === id)
 
   const nodeRefs = useRef<Record<string, Konva.Circle>>({})
@@ -129,21 +144,25 @@ export function StateGraph({
     // skip pulse + packet entirely.
     if (reducedMotion) return
 
-    // ── t≈80ms: node pulse ────────────────────────────────────────────────────
+    // ── t≈80ms: node pulse + glow bloom ──────────────────────────────────────
     pulseTmrRef.current = setTimeout(() => {
       const { activeState: aS } = geomRef.current
       if (!aS) return
       const node = nodeRefs.current[aS]
       if (!node) return
+      // Reset shadowBlur to 0 so the glow blooms upward with the scale pulse.
+      node.shadowBlur(0)
       node.to({
         scaleX: 1.16,
         scaleY: 1.16,
+        shadowBlur: 14,
         duration: DUR.micro,
         easing: Konva.Easings.EaseOut,
         onFinish: () =>
           node.to({
             scaleX: 1,
             scaleY: 1,
+            shadowBlur: 8,
             duration: DUR.base,
             easing: Konva.Easings.EaseInOut,
           }),
@@ -334,10 +353,14 @@ export function StateGraph({
     )
   }
 
+  const dpr = typeof window !== 'undefined' ? (window.devicePixelRatio ?? 1) : 1
+
   return (
-    <Stage width={width} height={height}>
+    <Stage width={width} height={height} pixelRatio={dpr}>
       <Layer ref={(node) => { layerRef.current = node }} listening={false}>
         {transitions.map((t, i) => edgeShape(t, `e${i}`))}
+        {/* Main node circles — chapter-tinted fill @ 0.10 opacity, accent stroke.
+            Mirrors MathViz StateMachineViz vocabulary (fillOpacity 0.12, 1.8px). */}
         {states.map((s, i) => {
           const active = s.id === activeState
           return (
@@ -349,12 +372,15 @@ export function StateGraph({
               x={xOf(i)}
               y={nodeY}
               radius={radius}
-              fill={active ? C.quillTint : C.paper0}
-              stroke={active ? C.quill : s.absorbing ? C.correct : C.graphite}
-              strokeWidth={active ? 3 : s.absorbing ? 2.5 : 1.5}
+              fill={active ? acTint : hexToRgba(acBase, 0.10)}
+              stroke={acBase}
+              strokeWidth={active ? 3 : 1.8}
+              shadowColor={active ? acGlow : undefined}
+              shadowBlur={active ? 8 : 0}
             />
           )
         })}
+        {/* Absorbing-state double ring — dashed accent, mirrors MathViz :123-132. */}
         {states.map((s, i) =>
           s.absorbing ? (
             <Circle
@@ -362,8 +388,10 @@ export function StateGraph({
               x={xOf(i)}
               y={nodeY}
               radius={radius + 5}
-              stroke={C.correct}
+              stroke={acBase}
               strokeWidth={1.5}
+              dash={[3, 2]}
+              opacity={0.6}
               listening={false}
             />
           ) : null,
@@ -379,7 +407,7 @@ export function StateGraph({
             fontFamily={FONT_MONO}
             fontStyle="600"
             fontSize={labelMode === 'dual' ? 16 : s.label.length > 1 ? 16 : 20}
-            fill={s.id === activeState ? C.quillStrong : C.ink}
+            fill={s.id === activeState ? acBase : C.ink}
             listening={false}
           />
         ))}
@@ -395,7 +423,7 @@ export function StateGraph({
               fontFamily={FONT_MONO}
               fontStyle="600"
               fontSize={12}
-              fill={s.id === activeState ? C.quill : C.graphite}
+              fill={s.id === activeState ? acBase : C.graphiteSoft}
               listening={false}
             />
           ))}

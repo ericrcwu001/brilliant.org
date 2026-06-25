@@ -9,13 +9,9 @@ import { buildAutomaton } from '../../engine/automaton'
 import { BeatShell } from '../BeatShell'
 import { BiasChart, type BiasSeries } from '../konva/BiasChart'
 import { C } from '../konva/theme'
+import { chapterColor } from '../chapters'
 import { useElementWidth } from '../konva/useElementWidth'
 import { useSliderControl } from '../../ui/useSliderControl'
-
-const SERIES_COLORS: Record<string, string> = {
-  HH: C.quill,
-  HT: C.tails,
-}
 
 const SAMPLE_COUNT = 120
 
@@ -26,9 +22,14 @@ function symbolicRecurrence(a: Automaton, from: StateId): string {
 }
 
 export function BiasSandboxBeat(props: BeatProps) {
-  const { beat, patternOptions, isLast, onAdvance } = props
+  const { beat, patternOptions, isLast, onAdvance, lessonId } = props
   const [p, setP] = useState(0.5)
   const [boxRef, width] = useElementWidth<HTMLDivElement>()
+
+  const seriesColors: Record<string, string> = {
+    HH: chapterColor(lessonId),
+    HT: C.tails,
+  }
 
   // Bias range comes from the slider interaction; fall back to a sane window so
   // the hooks below run unconditionally (all hooks must precede any early out).
@@ -78,7 +79,7 @@ export function BiasSandboxBeat(props: BeatProps) {
     const a = automata.find((au) => au.pattern === c.pattern)!
     return {
       pattern: c.pattern,
-      color: SERIES_COLORS[c.pattern] ?? C.quill,
+      color: seriesColors[c.pattern] ?? chapterColor(lessonId),
       samples: c.samples,
       current: a.expectedTimes[a.states[0].id],
     }
