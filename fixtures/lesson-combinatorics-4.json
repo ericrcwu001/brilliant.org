@@ -1,0 +1,258 @@
+{
+  "lessonId": "lesson-combinatorics-4",
+  "courseId": "course-combinatorics",
+  "title": "Inclusion–Exclusion",
+  "patternOptions": ["H"],
+  "milestoneId": "inclusion-exclusion-mastered",
+  "unlocks": "lesson-combinatorics-5",
+  "schemaVersion": 1,
+  "beats": [
+    {
+      "beatId": "l4-primer",
+      "required": false,
+      "prompt": "Before we count unions, refresh two tools: the complement rule and exact fractions.",
+      "interaction": {
+        "type": "primer",
+        "variant": "custom",
+        "title": "Complement & Exact Fraction",
+        "body": "**P(E) + P(Eᶜ) = 1** means P(E) = 1 − P(Eᶜ). When the target event is messy, count its opposite and subtract from 1. An **exact fraction** = count ÷ total, reduced by GCD — never approximate with decimals.",
+        "collapsible": true
+      },
+      "feedback": {
+        "correct": "P(Eᶜ) = 1 − P(E); exact fraction = count ÷ total.",
+        "hints": [
+          "P(E) = 1 − P(not E): count the easier opposite.",
+          "Probability = count ÷ total, reduced to lowest terms.",
+          "Continue to the counting beats."
+        ]
+      }
+    },
+    {
+      "beatId": "l4-recall",
+      "required": true,
+      "prompt": "Match each counting concept to its rule — these are the tools Inclusion–Exclusion extends.",
+      "interaction": {
+        "type": "retrievalGrid",
+        "pairs": [
+          { "left": "independent choices", "right": "multiply" },
+          { "left": "mutually exclusive outcomes", "right": "add" },
+          { "left": "C(52,5)", "right": "2,598,960" }
+        ]
+      },
+      "feedback": {
+        "correct": "All three — the toolkit we're extending now.",
+        "hints": [
+          "Tap a concept, then its counting rule.",
+          "Independent → multiply; mutually exclusive → add.",
+          "C(52,5) = 2,598,960."
+        ]
+      }
+    },
+    {
+      "beatId": "l4-bet",
+      "required": false,
+      "prompt": "How many people do you need in a room before it's more likely than not that two share a birthday?",
+      "interaction": {
+        "type": "prediction",
+        "options": ["About 183 (half of 365)", "About 50", "Just 23"]
+      },
+      "feedback": {
+        "byOption": {
+          "About 183 (half of 365)": {
+            "note": "The 'half of 365' instinct — but you compare every pair, and pairs pile up fast. It tips at 23."
+          },
+          "About 50": {
+            "note": "Still high — 23 people already make 253 pairs, enough to pass even odds."
+          },
+          "Just 23": {
+            "note": "Surprising but true — 23 people form 253 pairs, plenty for a likely match.",
+            "correct": true
+          }
+        }
+      }
+    },
+    {
+      "beatId": "l4-win",
+      "required": true,
+      "prompt": "Five personalised letters are stuffed at random into five envelopes. Letter #1 lands in the correct envelope. In how many arrangements do the other four letters land freely?",
+      "interaction": {
+        "type": "answerEntry",
+        "fields": [
+          {
+            "id": "arrangements",
+            "label": "Number of arrangements",
+            "accept": ["24"],
+            "placeholder": "?"
+          }
+        ]
+      },
+      "feedback": {
+        "correct": "Right — 4! = 24; pin letter #1 and the other four shuffle freely.",
+        "hints": [
+          "How many letters remain free once letter #1 is fixed in its envelope?",
+          "Four free letters → 4! arrangements.",
+          "4 × 3 × 2 × 1 = 24."
+        ]
+      }
+    },
+    {
+      "beatId": "l4-explore",
+      "required": false,
+      "prompt": "Adjust the set sizes and their overlap. Watch the union update live.",
+      "interaction": {
+        "type": "vennCounter",
+        "sets": 2,
+        "maxSize": 20,
+        "initial": { "a": 8, "b": 6, "ab": 3 }
+      },
+      "introducesSymbol": "|A∪B|",
+      "groundedBy": ["l4-primer", "l4-recall"],
+      "hero": {
+        "slowFirst": true,
+        "structuralReadout": "|A∪B| = |A| + |B| − |A∩B|",
+        "reducedMotionFinalFrame": true
+      },
+      "feedback": {
+        "correct": "The overlap region is counted twice — the formula subtracts it back: |A∪B| = |A| + |B| − |A∩B|.",
+        "hints": [
+          "Push |A∩B| to its max — what happens to the union?",
+          "Larger overlap → smaller union. Shared elements are double-counted without the correction.",
+          "Set |A∩B| = |A|: then A ⊆ B and |A∪B| = |B|."
+        ]
+      }
+    },
+    {
+      "beatId": "l4-model",
+      "required": false,
+      "prompt": "Three lenses on Inclusion–Exclusion: the general formula, derangements, and probability.",
+      "interaction": {
+        "type": "tripletReveal",
+        "value": "11/30",
+        "lenses": [
+          {
+            "label": "General alternating formula",
+            "body": "|A∪B∪C| = |A|+|B|+|C| − |A∩B| − |A∩C| − |B∩C| + |A∩B∩C|. Signs alternate: + singles − pairs + triples."
+          },
+          {
+            "label": "D₅ derangement calc",
+            "body": "5·4! − C(5,2)·3! + C(5,3)·2! − C(5,4)·1! + 1 = 76 land right somewhere; 5! − 76 = 44 all-wrong."
+          },
+          {
+            "label": "P(all wrong)",
+            "body": "P = 44/120 = 11/30."
+          }
+        ]
+      },
+      "comparison": true,
+      "introducesSymbol": "|A∪B∪C|",
+      "groundedBy": ["l4-explore"],
+      "interviewNote": "Derangements via inclusion-exclusion: D₅ = 44; P(all wrong) = 44/120 = 11/30 (GB p.36 §4.2). Exact recurrence: Dₙ = (n−1)(Dₙ₋₁+Dₙ₋₂), D₀=1, D₁=0.",
+      "feedback": {
+        "correct": "Signs alternate — the over-count from each overlap tier cancels exactly.",
+        "hints": [
+          "Each pair of sets over-counts their intersection — subtract it.",
+          "5·4! − C(5,2)·3! + C(5,3)·2! − C(5,4)·1! + 1 = 76 land right somewhere; 120 − 76 = 44 all-wrong.",
+          "44 / 120 = 11/30."
+        ]
+      }
+    },
+    {
+      "beatId": "l4-birthday-scaffold",
+      "required": false,
+      "track": "A",
+      "prompt": "Drag the slider to change the class size. When does P(two people share a birthday) cross 50%?",
+      "interaction": {
+        "type": "slider",
+        "min": 2,
+        "max": 50,
+        "step": 1
+      },
+      "feedback": {
+        "correct": "Watch P(shared birthday) cross the 50% line.",
+        "hints": [
+          "Count how many pairs form among n people: C(n,2) = n(n−1)/2.",
+          "With 23 people there are 253 pairs — enough to exceed 50%.",
+          "The curve crosses ½ at exactly n = 23."
+        ]
+      }
+    },
+    {
+      "beatId": "l4-birthday",
+      "required": true,
+      "prompt": "Express the probability that at least two people in a group of 23 share a birthday.",
+      "interaction": {
+        "type": "answerEntry",
+        "fields": [
+          {
+            "id": "complement",
+            "label": "P(at least one shared birthday)",
+            "accept": [
+              "1 − 365·364·⋯·343/365²³",
+              "1-365*364*...*343/365^23",
+              "1-(365*364*343/365^23)",
+              "complement"
+            ],
+            "placeholder": "?"
+          }
+        ]
+      },
+      "feedback": {
+        "correct": "Right — count the easy opposite (all distinct) and subtract from 1: 1 − 365·364·⋯·343/365²³.",
+        "hints": [
+          "Count the complement — P(no shared birthday) first.",
+          "P(all distinct) = 365·364·⋯·343 / 365²³.",
+          "P(at least one shared) = 1 − that fraction."
+        ]
+      }
+    },
+    {
+      "beatId": "l4-prove",
+      "required": true,
+      "prompt": "A 5-card hand is dealt from a standard 52-card deck. How many hands are four of a kind? Then find the exact probability.",
+      "interaction": {
+        "type": "masteryChallenge",
+        "scenario": "Each rank (A, 2, …, K) has exactly 4 cards in the deck. A four-of-a-kind hand uses all 4 cards of one rank plus any 1 other card.",
+        "fields": [
+          {
+            "id": "four-count",
+            "label": "Four-of-a-kind hands",
+            "accept": ["624"],
+            "placeholder": "?",
+            "suffix": "hands"
+          },
+          {
+            "id": "four-prob",
+            "label": "P(four of a kind)",
+            "accept": ["1/4165"],
+            "placeholder": "?"
+          }
+        ]
+      },
+      "interviewNote": "P(four-of-a-kind) = 624/C(52,5) = 1/4165 (GB p.34 §4.2). Count = 13 ranks × 48 kickers = 624; C(52,5) = 2,598,960; reduce(624, 2598960) = 1/4165.",
+      "feedback": {
+        "correct": "Exactly — 13 ranks × 48 kickers = 624, over C(52,5) = 2,598,960 → 1/4165.",
+        "hints": [
+          "13 ranks; for each rank, the 5th card is any of 52 − 4 = 48 remaining cards.",
+          "13 × 48 = 624 four-of-a-kind hands.",
+          "624 / 2,598,960 = 1/4165."
+        ]
+      }
+    },
+    {
+      "beatId": "l4-recap",
+      "required": false,
+      "prompt": "Three counting moves — multiply, choose, subtract overlaps — enough to count anything.",
+      "interaction": {
+        "type": "recap"
+      },
+      "feedback": {
+        "correct": "Three moves — multiply, choose, subtract overlaps — enough to count anything.",
+        "hints": [
+          "Count independent choices first (multiply).",
+          "When order doesn't matter, divide out by the arrangements (nCk).",
+          "When sets overlap, subtract what you double-counted."
+        ]
+      }
+    }
+  ]
+}

@@ -1,0 +1,120 @@
+/* === VennCounterBeat (lesson-combinatorics-4) ================================
+   Inclusion–exclusion Venn explorer. Stepper tap targets ≥44px; tokens only;
+   no raw hex. Reduced-motion: hero animation is skipped in the component
+   (React state, not CSS animation), so no CSS override is needed. */
+
+.venn-counter {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s3);
+}
+
+/* Screen-reader-only live region: announces |A|,|B|,|A∩B|,|A∪B| on change */
+.venn-counter__live {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* SVG Venn diagram */
+.venn-counter__svg {
+  width: 100%;
+  max-width: 300px;
+  align-self: center;
+}
+
+.venn-counter__circle {
+  fill: var(--ch1-tint, var(--accent-tint));
+  stroke: var(--ch1, var(--accent));
+  stroke-width: 2;
+}
+
+.venn-counter__overlap {
+  fill: var(--mark-tint);
+  stroke: none;
+}
+
+.venn-counter__set-label {
+  font-family: var(--font-sans);
+  font-size: 14px;
+  font-weight: 700;
+  fill: var(--ch1, var(--accent-strong));
+  pointer-events: none;
+  user-select: none;
+}
+
+/* Live formula readout: |A∪B| = a + b − ab = N */
+.venn-counter__formula {
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: calc(18px * var(--fs));
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--ch1, var(--accent-strong));
+  text-align: center;
+}
+
+/* Stepper controls group */
+.venn-counter__controls {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s2);
+}
+
+.venn-counter__stepper {
+  display: flex;
+  align-items: center;
+  gap: var(--s2);
+}
+
+.venn-counter__stepper-label {
+  min-width: 100px;
+  font-family: var(--font-mono);
+  font-size: calc(15px * var(--fs));
+  font-variant-numeric: tabular-nums;
+  color: var(--ink);
+}
+
+/* Stepper buttons: ≥44px tap targets (primary a11y path per spec) */
+.venn-counter__step-btn {
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0 var(--s2);
+  border: 2px solid var(--ch1, var(--accent));
+  border-radius: var(--r-md);
+  background: var(--paper-0);
+  font-family: var(--font-sans);
+  font-size: calc(20px * var(--fs));
+  font-weight: 700;
+  color: var(--ch1, var(--accent-strong));
+  cursor: pointer;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.venn-counter__step-btn:focus-visible {
+  box-shadow: var(--ring-focus);
+  outline: none;
+}
+
+.venn-counter__step-btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+/* Reduced-motion: component skips the ab:0→initial setTimeout loop when
+   useReducedMotion() returns true. No CSS keyframe to override. */
+@media (prefers-reduced-motion: reduce) {
+  .venn-counter__circle,
+  .venn-counter__overlap {
+    transition: none;
+  }
+}

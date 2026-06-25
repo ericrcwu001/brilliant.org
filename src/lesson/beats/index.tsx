@@ -31,6 +31,7 @@ import { BalanceSolveBeat } from './BalanceSolveBeat'
 import { CountingTreeBeat } from './CountingTreeBeat'
 import { SelectionGridBeat } from './SelectionGridBeat'
 import { PascalTriangleBeat } from './PascalTriangleBeat'
+import { VennCounterBeat } from './VennCounterBeat'
 
 function ContinueStub({ beat, isLast, onAdvance }: BeatProps) {
   return (
@@ -108,8 +109,9 @@ export function BeatView(props: BeatProps) {
       return <SelectionGridBeat {...props} />
     case 'pascalTriangle':
       return <PascalTriangleBeat {...props} />
-    // Wave-0 stub slots; real renderers land per-lesson in later build waves.
     case 'vennCounter':
+      return <VennCounterBeat {...props} />
+    // Wave-0 stub slots; real renderers land per-lesson in later build waves.
     case 'pigeonholeBoard':
     case 'probabilityCounter':
     case 'handRanker':
