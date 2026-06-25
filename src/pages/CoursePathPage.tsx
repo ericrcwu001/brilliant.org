@@ -70,6 +70,20 @@ export function CoursePathPage({
   useEffect(() => {
     if (!user) return
     const uid = user.uid
+    // The welcome + diagnostic ("Quick check") are flagship-only: they live on the
+    // single flagship progress doc and the diagnostic questions are PHT-specific.
+    // For any other concept, skip both gates (default to the lean Track B) so the
+    // concept's own journey opens directly instead of the flagship's diagnostic.
+    // (Per-concept "Calibrate" is the planned onboarding redesign.)
+    if (effectiveConceptId !== COURSE_ID) {
+      // Defer to a microtask so this isn't a synchronous setState in the effect
+      // body (mirrors the async loadCourseEntryState().then() pattern below).
+      void Promise.resolve().then(() => {
+        setTrack((prev) => (prev === undefined ? 'B' : prev))
+        setWelcomeSeen((prev) => (prev === undefined ? true : prev))
+      })
+      return
+    }
     let cancelled = false
     void loadCourseEntryState(uid).then(({ track: t, welcomeSeen: seen }) => {
       if (!cancelled) {
@@ -84,7 +98,7 @@ export function CoursePathPage({
     return () => {
       cancelled = true
     }
-  }, [user])
+  }, [user, effectiveConceptId])
 
   useEffect(() => {
     let cancelled = false
