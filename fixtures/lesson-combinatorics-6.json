@@ -1,0 +1,261 @@
+{
+  "lessonId": "lesson-combinatorics-6",
+  "courseId": "course-combinatorics",
+  "title": "Counting Probabilities",
+  "patternOptions": ["H"],
+  "milestoneId": "combinatorics-mastered",
+  "unlocks": null,
+  "schemaVersion": 1,
+  "beats": [
+    {
+      "beatId": "l6-primer",
+      "required": false,
+      "prompt": "Quick primer — what probability means and how to reduce a fraction before counting hands.",
+      "interaction": {
+        "type": "primer",
+        "variant": "custom",
+        "title": "P = favorable ÷ total",
+        "body": "For equally-likely outcomes (e.g. all 5-card hands from a shuffled deck), P(event) = count of favorable outcomes ÷ count of all outcomes. Reduce to lowest terms by dividing both by their GCD. Example: 624 / 2,598,960 → GCD = 624 → 1/4165.",
+        "collapsible": true
+      },
+      "feedback": {
+        "correct": "P(event) = favorable count ÷ total count, reduced to lowest terms.",
+        "hints": [
+          "Count the outcomes you want; count all possible outcomes.",
+          "To reduce: divide numerator and denominator by their GCD. Example: 624 / 2,598,960 → GCD=624 → 1/4165.",
+          "Continue to the counting beats."
+        ]
+      }
+    },
+    {
+      "beatId": "l6-recall",
+      "required": false,
+      "prompt": "Retrieve the probabilities you've already calculated — each is a favorable ÷ total.",
+      "interaction": {
+        "type": "retrievalGrid",
+        "pairs": [
+          { "left": "four-of-a-kind (5-card hand)",        "right": "1/4165" },
+          { "left": "3 dice in strictly-increasing order", "right": "5/54" },
+          { "left": "P(event) for equally-likely outcomes","right": "favorable ÷ total" }
+        ]
+      },
+      "feedback": {
+        "correct": "Both probabilities and the formula — each a favorable ÷ total.",
+        "hints": [
+          "Tap a label, then its match.",
+          "Four-of-a-kind: 624 / 2,598,960 = 1/4165 (L4).",
+          "Dice strictly-increasing (L2): 20 / 216 = 5/54. P(event) = favorable ÷ total."
+        ]
+      }
+    },
+    {
+      "beatId": "l6-bet",
+      "required": false,
+      "prompt": "Gut check only — rank these three poker hands from rarest to most common: four-of-a-kind, full house, two pairs.",
+      "interaction": {
+        "type": "prediction",
+        "options": [
+          "Four-of-a-kind → full house → two pairs",
+          "Two pairs → full house → four-of-a-kind",
+          "Full house → four-of-a-kind → two pairs"
+        ]
+      },
+      "feedback": {
+        "byOption": {
+          "Four-of-a-kind → full house → two pairs": {
+            "note": "Good gut — but a hunch isn't proof. Let's count each hand and watch the ranking hold up.",
+            "correct": true
+          },
+          "Two pairs → full house → four-of-a-kind": {
+            "note": "Let's test it — counting may flip your gut. We'll divide each count by the total and compare."
+          },
+          "Full house → four-of-a-kind → two pairs": {
+            "note": "Let's test it — feel isn't enough; the counts pin down the true order."
+          }
+        }
+      }
+    },
+    {
+      "beatId": "l6-win",
+      "required": true,
+      "prompt": "In L4 you counted 624 four-of-a-kind hands. C(52,5) = 2,598,960 total 5-card hands exist. What is P(four of a kind)?",
+      "interaction": {
+        "type": "answerEntry",
+        "fields": [
+          {
+            "id": "foak-prob",
+            "label": "P(four of a kind)",
+            "accept": ["1/4165", "624/2598960", "624/2,598,960"],
+            "placeholder": "?"
+          }
+        ]
+      },
+      "feedback": {
+        "correct": "Exactly — 624 / 2,598,960 reduces to 1/4165. The count became a probability with one division.",
+        "hints": [
+          "624 is the *count*, not the odds. A probability is favorable ÷ total — divide 624 by 2,598,960.",
+          "624 / 2,598,960 — reduce by dividing both by their GCD (624): 1/4165.",
+          "1/4165. One division turns the count into the probability."
+        ]
+      }
+    },
+    {
+      "beatId": "l6-explore",
+      "required": false,
+      "prompt": "Tap each factor chip to include it in the full house count. Watch the count build and the fraction live-reduce.",
+      "interaction": {
+        "type": "probabilityCounter",
+        "factors": [
+          { "label": "Triple rank (13 choices)", "value": 13 },
+          { "label": "Triple suits C(4,3)",      "value": 4  },
+          { "label": "Pair rank (12 choices)",   "value": 12 },
+          { "label": "Pair suits C(4,2)",        "value": 6  }
+        ],
+        "total": 2598960
+      },
+      "groundedBy": ["l6-win", "l6-recall"],
+      "hero": {
+        "slowFirst": true,
+        "structuralReadout": "3744 / 2,598,960 → 6 / 4165",
+        "reducedMotionFinalFrame": true
+      },
+      "feedback": {
+        "correct": "13 · C(4,3) · 12 · C(4,2) = 13·4·12·6 = 3744. P = 3744 / 2,598,960 = 6/4165.",
+        "hints": [
+          "Tap each chip to multiply it into the favorable count.",
+          "13 · 4 · 12 · 6 = 3744 full house hands.",
+          "3744 / 2,598,960 = 6/4165."
+        ]
+      }
+    },
+    {
+      "beatId": "l6-model",
+      "required": false,
+      "comparison": true,
+      "introducesSymbol": "P=favorable/total",
+      "groundedBy": ["l6-win", "l6-explore"],
+      "interviewNote": "The shared denominator 4165 is exact: gcd(2,598,960, 624)=624 → 1/4165; gcd(2,598,960, 3744)=624 → 6/4165; gcd(2,598,960, 123,552)=624 → 198/4165. Over denominator 4165, ranking reduces to numerator order: 1 < 6 < 198 → four-of-a-kind < full house < two pairs. GB p.34 §4.2.",
+      "prompt": "Tap each lens to see the same formula applied three ways.",
+      "interaction": {
+        "type": "tripletReveal",
+        "value": "P = favorable / total",
+        "display": "cards",
+        "lenses": [
+          {
+            "label": "The Formula",
+            "body": "For equally-likely outcomes: P(event) = favorable count ÷ total count. Reduce to lowest terms with the GCD."
+          },
+          {
+            "label": "Four of a Kind",
+            "body": "Favorable: 624. Total: 2,598,960. P = 624 / 2,598,960 = 1/4165."
+          },
+          {
+            "label": "Full House",
+            "body": "Favorable: 3744. Total: 2,598,960. P = 3744 / 2,598,960 = 6/4165. Both fractions share denominator 4165."
+          }
+        ]
+      },
+      "feedback": {
+        "correct": "Same formula, same denominator — count, then divide, then compare.",
+        "hints": [
+          "Each example applies P = favorable ÷ total.",
+          "Four of a kind: 624/2,598,960 = 1/4165; full house: 3744/2,598,960 = 6/4165.",
+          "Shared denominator 4165: ranking is purely by numerator."
+        ]
+      }
+    },
+    {
+      "beatId": "l6-rank",
+      "required": true,
+      "prompt": "Rank these two hands from rarest to most common. Tap a hand to place it in order, or use Up/Down arrow keys to reorder.",
+      "interaction": {
+        "type": "handRanker",
+        "hands": [
+          { "label": "Four of a kind", "favorable": 624  },
+          { "label": "Full house",     "favorable": 3744 }
+        ],
+        "total": 2598960,
+        "order": "rarestFirst"
+      },
+      "feedback": {
+        "correct": "Right — same denominator (4165), so the bigger top wins: 6/4165 beats 1/4165. Full house is more common.",
+        "hints": [
+          "Bigger numerator means *more* common, not rarer. Over 4165, 6 outranks 1 — full house beats four-of-a-kind.",
+          "Four of a kind: 1/4165. Full house: 6/4165. Same denominator — compare the tops.",
+          "Rarest first: four of a kind (1/4165), then full house (6/4165)."
+        ]
+      }
+    },
+    {
+      "beatId": "l6-pairs-scaffold",
+      "required": false,
+      "track": "A",
+      "prompt": "Before the mastery challenge: build the two-pairs count. C(13,2)=78 chooses the two pair-ranks; C(4,2)=6 picks each rank's suits; 44 is the kicker count.",
+      "interaction": {
+        "type": "probabilityCounter",
+        "factors": [
+          { "label": "Choose 2 ranks C(13,2)",  "value": 78 },
+          { "label": "Rank-1 suits C(4,2)",     "value": 6  },
+          { "label": "Rank-2 suits C(4,2)",     "value": 6  },
+          { "label": "Kicker (44 cards)",       "value": 44 }
+        ],
+        "total": 2598960
+      },
+      "feedback": {
+        "correct": "78 · 6 · 6 · 44 = 123,552 two-pairs hands. P = 123,552 / 2,598,960 = 198/4165.",
+        "hints": [
+          "Two pair-ranks chosen unordered: C(13,2) = 78.",
+          "Each rank's suit choice: C(4,2) = 6; both together = 36.",
+          "Kicker: any card not of the two chosen ranks = 44. 78 · 36 · 44 = 123,552."
+        ]
+      }
+    },
+    {
+      "beatId": "l6-prove",
+      "required": true,
+      "prompt": "From scratch: how many two-pairs hands are in a 5-card deck? Then find P(two pairs). Finally, confirm the full ranking: four-of-a-kind, full house, two pairs.",
+      "interaction": {
+        "type": "masteryChallenge",
+        "scenario": "Two pairs: choose 2 ranks unordered (C(13,2)), choose the suits for each rank (C(4,2) each), then pick a kicker card from the 44 cards not of those ranks.",
+        "fields": [
+          {
+            "id": "two-pair-count",
+            "label": "Two-pairs hands",
+            "accept": ["123552", "123,552"],
+            "placeholder": "?",
+            "suffix": "hands"
+          },
+          {
+            "id": "two-pair-prob",
+            "label": "P(two pairs)",
+            "accept": ["198/4165"],
+            "placeholder": "?"
+          }
+        ]
+      },
+      "interviewNote": "P(two pairs) = 123,552/2,598,960 = 198/4165 (GB p.34 §4.2). Count: C(13,2)·C(4,2)²·44 = 78·6·6·44 = 123,552; the '44 = 52 − 8' kicker bars both chosen ranks' 8 cards. GB OCR garbles printed integer to '123,582'; formula 78×6×6×44 = 123,552 unambiguous (engine: probabilityFromCounts(123552, 2598960) = 198/4165).",
+      "feedback": {
+        "correct": "Exactly — 78·6·6·44 = 123,552, so 198/4165. Re-rank: 1 < 6 < 198 — two pairs is most common.",
+        "hints": [
+          "Don't use 13×12 for the two ranks — 'kings & sevens' = 'sevens & kings.' Pick them unordered: C(13,2) = 78.",
+          "C(13,2)·C(4,2)²·44 = 78·6·6·44 = 123,552 two-pairs hands.",
+          "P = 123,552 / 2,598,960 = 198/4165."
+        ]
+      }
+    },
+    {
+      "beatId": "l6-recap",
+      "required": true,
+      "prompt": "Tap through the recap cards — count → divide → rank closes the Combinatorics concept.",
+      "interaction": { "type": "recap" },
+      "feedback": {
+        "correct": "Count, divide, rank — the probability engine closes the Combinatorics arc.",
+        "hints": [
+          "Count favorable outcomes with multiplication and combinations.",
+          "Divide by C(52,5) = 2,598,960 to convert a count into a probability.",
+          "Shared denominator 4165: rank by numerator — 1 < 6 < 198."
+        ]
+      }
+    }
+  ]
+}

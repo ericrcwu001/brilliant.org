@@ -1,0 +1,344 @@
+/* === ProbabilityCounterBeat (lesson-combinatorics-6) ========================
+   Chip-grid explore widget. Toggle chips (≥44px) to build the favorable count;
+   live fraction reduces on every toggle and snaps on final chip. Compositor-only
+   motion (transform + opacity only — no layout shifts). Tokens only; no raw hex.
+   Reduced-motion: component skips animation and renders final frame. */
+
+/* ── Container ────────────────────────────────────────────────────────────── */
+
+.prob-counter {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s3);
+}
+
+/* Screen-reader-only live region */
+.prob-counter__live {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ── Chip grid ────────────────────────────────────────────────────────────── */
+
+.prob-counter__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s2);
+}
+
+/* Individual chip: toggle button ≥44px tap target */
+.prob-counter__chip {
+  min-width: 44px;
+  min-height: 44px;
+  padding: var(--s1) var(--s3);
+  border: 2px solid var(--ch3, var(--accent));
+  border-radius: var(--r-md);
+  background: var(--paper-0);
+  font-family: var(--font-sans);
+  font-size: calc(15px * var(--fs));
+  color: var(--ink);
+  cursor: pointer;
+  text-align: left;
+  transition: background var(--dur-base, 200ms) var(--ease-out, ease-out),
+    color var(--dur-base, 200ms) var(--ease-out, ease-out),
+    transform var(--dur-base, 200ms) var(--ease-out, ease-out);
+}
+
+.prob-counter__chip:focus-visible {
+  box-shadow: var(--ring-focus);
+  outline: none;
+}
+
+/* Toggled-on: ch3-tint fill */
+.prob-counter__chip[aria-pressed='true'] {
+  background: var(--ch3-tint, var(--accent-tint));
+  border-color: var(--ch3, var(--accent));
+  color: var(--ch3, var(--accent-strong));
+  font-weight: 600;
+  transform: scale(1.02);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .prob-counter__chip {
+    transition: none;
+  }
+  .prob-counter__chip[aria-pressed='true'] {
+    transform: none;
+  }
+}
+
+/* ── Display area: running product + live fraction ────────────────────────── */
+
+.prob-counter__display {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--s2);
+  padding: var(--s3);
+  background: var(--paper-1);
+  border-radius: var(--r-lg);
+  border: 1px solid var(--rule);
+}
+
+/* Running product (JetBrains Mono, tabular-nums) */
+.prob-counter__product {
+  font-family: var(--font-mono);
+  font-size: calc(22px * var(--fs));
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  color: var(--ch3, var(--accent-strong));
+  margin: 0;
+}
+
+/* Fraction wrapper: raw + reduced overlap area */
+.prob-counter__fraction-area {
+  position: relative;
+  min-height: 2.4em;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+}
+
+.prob-counter__fraction {
+  font-family: var(--font-mono);
+  font-size: calc(18px * var(--fs));
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-dim);
+  margin: 0;
+  transition: opacity var(--dur-tell, 600ms) var(--ease-out, ease-out),
+    transform var(--dur-tell, 600ms) var(--ease-out, ease-out);
+}
+
+/* Raw fraction fades/scales out during snap */
+.prob-counter__fraction--raw.prob-counter__fraction--snapping {
+  opacity: 0;
+  transform: scale(0.85);
+}
+
+/* Reduced fraction: invisible until snap completes */
+.prob-counter__fraction--reduced {
+  font-size: calc(22px * var(--fs));
+  font-weight: 700;
+  color: var(--ch3, var(--accent-strong));
+  opacity: 0;
+  transform: scale(0.9);
+}
+
+.prob-counter__fraction--reduced.prob-counter__fraction--visible {
+  opacity: 1;
+  transform: scale(1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .prob-counter__fraction {
+    transition: none;
+  }
+  .prob-counter__fraction--reduced {
+    transition: none;
+    transform: none;
+  }
+}
+
+/* === HandRankerBeat (lesson-combinatorics-6) ================================
+   Tap-to-place ranking widget. Cards (≥44px) from a source pile slide into
+   numbered ranked slots; Up/Down keyboard reorders; drag is additive only.
+   Correct: --ok-tint flash. Tokens only; no raw hex. */
+
+/* ── Container ────────────────────────────────────────────────────────────── */
+
+.hand-ranker {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s3);
+}
+
+/* Live region (sr-only) */
+.hand-ranker__live {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ── Ranked slots ─────────────────────────────────────────────────────────── */
+
+.hand-ranker__slots-label {
+  font-family: var(--font-sans);
+  font-size: calc(13px * var(--fs));
+  font-weight: 600;
+  color: var(--ink-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin: 0 0 var(--s1);
+}
+
+.hand-ranker__slots {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s2);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.hand-ranker__slot {
+  display: flex;
+  align-items: center;
+  gap: var(--s2);
+  min-height: 56px;
+  padding: var(--s2) var(--s3);
+  border: 2px dashed var(--rule);
+  border-radius: var(--r-md);
+  background: var(--paper-1);
+  transition: background var(--dur-base, 200ms) ease-out,
+    border-color var(--dur-base, 200ms) ease-out;
+}
+
+.hand-ranker__slot--filled {
+  border-style: solid;
+  border-color: var(--ch3, var(--accent));
+  background: var(--ch3-tint, var(--accent-tint));
+}
+
+.hand-ranker__slot--correct {
+  border-color: var(--ok, green);
+  animation: ranker-correct var(--dur-slow, 400ms) var(--ease-out, ease-out) forwards;
+}
+
+@keyframes ranker-correct {
+  0%, 60% { background: var(--ok-tint, #e6faf0); }
+  100% { background: var(--ch3-tint, var(--accent-tint)); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hand-ranker__slot {
+    transition: none;
+  }
+  .hand-ranker__slot--correct {
+    animation: none;
+  }
+}
+
+.hand-ranker__slot-rank {
+  font-family: var(--font-sans);
+  font-size: calc(12px * var(--fs));
+  color: var(--ink-dim);
+  min-width: 80px;
+  flex-shrink: 0;
+}
+
+.hand-ranker__slot-content {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+}
+
+/* ── Source pile ──────────────────────────────────────────────────────────── */
+
+.hand-ranker__pile-label {
+  font-family: var(--font-sans);
+  font-size: calc(13px * var(--fs));
+  font-weight: 600;
+  color: var(--ink-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin: 0 0 var(--s1);
+}
+
+.hand-ranker__pile {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s2);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+/* ── Hand cards ───────────────────────────────────────────────────────────── */
+
+.hand-ranker__card {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-height: 56px;
+  padding: var(--s2) var(--s3);
+  border: 2px solid var(--rule);
+  border-radius: var(--r-md);
+  background: var(--paper-0);
+  cursor: pointer;
+  text-align: left;
+  width: 100%;
+  transition: background var(--dur-base, 200ms) ease-out,
+    border-color var(--dur-base, 200ms) ease-out;
+}
+
+.hand-ranker__card:not(:disabled):hover,
+.hand-ranker__card:not(:disabled):focus-visible {
+  border-color: var(--ch3, var(--accent));
+  background: var(--ch3-tint, var(--accent-tint));
+}
+
+.hand-ranker__card:focus-visible {
+  box-shadow: var(--ring-focus);
+  outline: none;
+}
+
+.hand-ranker__card:disabled {
+  opacity: 0.38;
+  cursor: default;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hand-ranker__card {
+    transition: none;
+  }
+}
+
+/* Card label and fraction */
+.hand-ranker__card-label {
+  font-family: var(--font-sans);
+  font-size: calc(15px * var(--fs));
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.hand-ranker__card-fraction {
+  font-family: var(--font-mono);
+  font-size: calc(14px * var(--fs));
+  font-variant-numeric: tabular-nums;
+  color: var(--ch3, var(--accent));
+}
+
+/* ── Reset button ─────────────────────────────────────────────────────────── */
+
+.hand-ranker__reset {
+  align-self: flex-start;
+  min-height: 44px;
+  padding: 0 var(--s3);
+  border: 1px solid var(--rule);
+  border-radius: var(--r-md);
+  background: var(--paper-0);
+  font-family: var(--font-sans);
+  font-size: calc(14px * var(--fs));
+  color: var(--ink-dim);
+  cursor: pointer;
+}
+
+.hand-ranker__reset:focus-visible {
+  box-shadow: var(--ring-focus);
+  outline: none;
+}
