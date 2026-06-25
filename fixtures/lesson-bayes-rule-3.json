@@ -4,7 +4,7 @@
   "title": "Stacking Evidence",
   "patternOptions": ["H"],
   "milestoneId": "bayes-rule-stacking",
-  "unlocks": null,
+  "unlocks": "lesson-bayes-rule-4",
   "schemaVersion": 1,
   "beats": [
     {

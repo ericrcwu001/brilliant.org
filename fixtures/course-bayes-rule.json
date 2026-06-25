@@ -24,6 +24,18 @@
       "label": "Evidence in the Real World",
       "accent": "ch2",
       "lessonIds": ["lesson-bayes-rule-2", "lesson-bayes-rule-3"]
+    },
+    {
+      "id": "ch-bayes-rule-3",
+      "label": "More Than Two Hypotheses",
+      "accent": "ch3",
+      "lessonIds": ["lesson-bayes-rule-4", "lesson-bayes-rule-5"]
+    },
+    {
+      "id": "ch-bayes-rule-4",
+      "label": "Reading the Evidence Right",
+      "accent": "ch4",
+      "lessonIds": ["lesson-bayes-rule-6", "lesson-bayes-rule-7", "lesson-bayes-rule-8"]
     }
   ],
   "lessons": [
@@ -53,6 +65,51 @@
       "built": true,
       "glyphKey": "2ᵏ",
       "vizKey": "sum"
+    },
+    {
+      "lessonId": "lesson-bayes-rule-4",
+      "title": "Which Hypothesis?",
+      "summary": "With three machines and one defective part, share alone doesn't decide — share × rate does. The two-hypothesis rule is the same rule for N.",
+      "milestoneId": "bayes-rule-nway",
+      "built": true,
+      "glyphKey": "1/N",
+      "vizKey": "fourNode"
+    },
+    {
+      "lessonId": "lesson-bayes-rule-5",
+      "title": "The Host's Clue",
+      "summary": "The host's action is the evidence, and its likelihood comes from his rules. Forcing pushes the switch door to 2/3.",
+      "milestoneId": "bayes-rule-monty",
+      "built": true,
+      "glyphKey": "door",
+      "vizKey": "dice"
+    },
+    {
+      "lessonId": "lesson-bayes-rule-6",
+      "title": "The Question Behind the Clue",
+      "summary": "The update is set by the exact event you condition on — write the clue as a subset of outcomes and the math is forced.",
+      "milestoneId": "bayes-rule-condition",
+      "built": true,
+      "glyphKey": "1/3",
+      "vizKey": "twoNode"
+    },
+    {
+      "lessonId": "lesson-bayes-rule-7",
+      "title": "Reading Evidence Backwards",
+      "summary": "P(evidence | hypothesis) is not P(hypothesis | evidence). The prosecutor's fallacy: flip the conditional with Bayes and restore the prior.",
+      "milestoneId": "bayes-rule-direction",
+      "built": true,
+      "glyphKey": "H|E",
+      "vizKey": "twoNode"
+    },
+    {
+      "lessonId": "lesson-bayes-rule-8",
+      "title": "Base Rates in the Wild",
+      "summary": "Real judgments hide the base rate — the number you look up. Name it, then update: same rule, every costume.",
+      "milestoneId": "bayes-rule-wild",
+      "built": true,
+      "glyphKey": "12/29",
+      "vizKey": "coin"
     }
   ],
   "roadmap": []

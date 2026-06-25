@@ -166,7 +166,9 @@ const GATED = new Set([
   'lesson-states-streaks', // L4
   'lesson-longer-patterns', // L5
   'lesson-overlap-shortcut', // L6
-  'lesson-bayes-rule-1', 'lesson-bayes-rule-2', 'lesson-bayes-rule-3', // Bayes concept
+  'lesson-bayes-rule-1', 'lesson-bayes-rule-2', 'lesson-bayes-rule-3', // Bayes concept L1–L3
+  'lesson-bayes-rule-4', 'lesson-bayes-rule-5', 'lesson-bayes-rule-6',
+  'lesson-bayes-rule-7', 'lesson-bayes-rule-8',                         // Bayes concept L4–L8
 ])
 // L5 transfer lesson is the logged exception to the retrieval-opener rule.
 const NO_RETRIEVAL_OPENER = new Set(['lesson-longer-patterns'])
@@ -306,7 +308,9 @@ const MASTERY_LESSONS = new Set([
   'lesson-states-streaks',
   'lesson-longer-patterns',
   'lesson-overlap-shortcut',
-  'lesson-bayes-rule-1', 'lesson-bayes-rule-2', 'lesson-bayes-rule-3', // Bayes concept
+  'lesson-bayes-rule-1', 'lesson-bayes-rule-2', 'lesson-bayes-rule-3', // Bayes concept L1–L3
+  'lesson-bayes-rule-4', 'lesson-bayes-rule-5', 'lesson-bayes-rule-6',
+  'lesson-bayes-rule-7', 'lesson-bayes-rule-8',                         // Bayes concept L4–L8
 ])
 for (const lesson of lessons) {
   if (!MASTERY_LESSONS.has(lesson.lessonId)) continue

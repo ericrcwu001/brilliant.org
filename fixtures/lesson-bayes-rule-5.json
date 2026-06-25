@@ -1,0 +1,240 @@
+{
+  "lessonId": "lesson-bayes-rule-5",
+  "courseId": "course-bayes-rule",
+  "title": "The Host's Clue",
+  "patternOptions": ["H"],
+  "milestoneId": "bayes-rule-monty",
+  "unlocks": "lesson-bayes-rule-6",
+  "schemaVersion": 1,
+  "beats": [
+    {
+      "beatId": "recall-n-update",
+      "required": true,
+      "track": "both",
+      "prompt": "Quick warm-up from L4 — match each term to what it does in an N-hypothesis update.",
+      "interaction": {
+        "type": "retrievalGrid",
+        "pairs": [
+          { "left": "N-hypothesis update (L4)", "right": "rescale each by its likelihood, then renormalize" },
+          { "left": "Likelihood (L1)", "right": "how well a hypothesis predicted the evidence" }
+        ]
+      },
+      "feedback": {
+        "correct": "Three hypotheses, same rule: rescale each by its likelihood, then renormalize. The doors will obey it.",
+        "hints": [
+          "From L4: the N-way update is the 2-way rule with more terms.",
+          "Likelihood = how well each hypothesis predicted what you saw.",
+          "Rescale each of the three doors by its likelihood, then divide by the total."
+        ]
+      }
+    },
+    {
+      "beatId": "open-bet",
+      "required": true,
+      "track": "both",
+      "prompt": "Three doors: a car behind one, goats behind the others. You pick Door 1. The host (who knows) opens Door 3 to reveal a goat and offers you the switch to Door 2. Stay or switch — or doesn't it matter?",
+      "interaction": {
+        "type": "prediction",
+        "options": [
+          "Stay — switching is just superstition",
+          "Doesn't matter — two doors left, so 50/50",
+          "Switch — it wins more often"
+        ]
+      },
+      "feedback": {
+        "byOption": {
+          "Stay — switching is just superstition": {
+            "note": "Your door was fixed at 1/3 before the host acted. Switching captures the leftover 2/3.",
+            "correct": false
+          },
+          "Doesn't matter — two doors left, so 50/50": {
+            "note": "The two doors aren't symmetric. Your door kept its original 1/3; all the leftover 2/3 funnels onto the single door the host chose to leave closed.",
+            "correct": false
+          },
+          "Switch — it wins more often": {
+            "note": "Right — switching wins 2/3 of the time. Let's see why the host's forced hand is the evidence.",
+            "correct": true
+          }
+        },
+        "hints": [
+          "No wrong guess — we'll run the 3-door update.",
+          "Two doors left does NOT mean 50/50 — they aren't symmetric.",
+          "Your door stays 1/3; the leftover 2/3 funnels to the switch door."
+        ]
+      }
+    },
+    {
+      "beatId": "name-the-protocol",
+      "required": false,
+      "track": "A",
+      "prompt": "Read this just-in-time primer on the host's protocol — then continue.",
+      "interaction": {
+        "type": "primer",
+        "variant": "custom",
+        "title": "The protocol sets the likelihood",
+        "body": "The host isn't a coin — he follows rules. The likelihood of 'he opened Door 3' depends on those rules: when the car is behind the other live door he's forced to open Door 3 (likelihood 1); when it's behind your door he opens Door 3 only half the time (likelihood ½). The asymmetry between 1 and ½ is the evidence.",
+        "collapsible": true
+      },
+      "feedback": {
+        "correct": "The protocol — the host's rules — sets the likelihood of his action. That's where the evidence lives.",
+        "hints": [
+          "The data isn't 'a goat appeared'; it's which door he opened.",
+          "His rules constrain him: forced to open Door 3 (L=1) vs free to (L=½).",
+          "Likelihood of the action comes from the protocol, not from chance."
+        ]
+      }
+    },
+    {
+      "beatId": "explore-doors",
+      "required": true,
+      "track": "both",
+      "prompt": "Watch the reveal collapse the opened door to 0 and funnel its probability onto the door the host left closed — switch = 2/3.",
+      "interaction": {
+        "type": "bayesUpdate",
+        "display": "bars",
+        "hypotheses": ["Switch door", "Your door", "Opened door"],
+        "priors": [{ "n": 1, "d": 3 }, { "n": 1, "d": 3 }, { "n": 1, "d": 3 }],
+        "likelihoods": [{ "n": 1, "d": 1 }, { "n": 1, "d": 2 }, { "n": 0, "d": 1 }],
+        "evidence": "the host opens Door 3",
+        "interactive": false,
+        "posterior": "2/3"
+      },
+      "hero": {
+        "slowFirst": true,
+        "structuralReadout": "Your door was fixed at 1/3; the host's forced hand funnels the other 2/3 onto the switch door, leaving the opened door at 0 → 2/3.",
+        "reducedMotionFinalFrame": true
+      },
+      "feedback": {
+        "correct": "The host's reveal sends the opened door to 0 and funnels its probability onto the door he left closed: switch = 2/3, your door = 1/3, opened = 0.",
+        "hints": [
+          "Watch all three start at 1/3, then the opened door collapses to 0.",
+          "Your door can't gain from a reveal it didn't cause — it stays 1/3.",
+          "All the freed-up probability lands on the one door the host avoided: 2/3."
+        ]
+      }
+    },
+    {
+      "beatId": "host-likelihood",
+      "required": true,
+      "track": "both",
+      "prompt": "For each door, give the probability that the host opens Door 3 — given where the car is.",
+      "interaction": {
+        "type": "answerEntry",
+        "fields": [
+          { "id": "d1", "label": "P(host opens Door 3 | car behind Door 1)", "accept": ["1/2"] },
+          { "id": "d2", "label": "P(host opens Door 3 | car behind Door 2)", "accept": ["1"] },
+          { "id": "d3", "label": "P(host opens Door 3 | car behind Door 3)", "accept": ["0"] }
+        ]
+      },
+      "feedback": {
+        "correct": "P(opens 3 | car behind 1) = 1/2 (free to open 2 or 3); P(opens 3 | car behind 2) = 1 (forced — can't open your door or the car); P(opens 3 | car behind 3) = 0 (never reveals the car). That 1 vs ½ is the whole edge.",
+        "hints": [
+          "Ask: given where the car is, can the host still open Door 3?",
+          "Car behind your door → he has a free choice (½). Car behind Door 2 → he's forced to open 3 (1). Car behind Door 3 → impossible (0).",
+          "[½, 1, 0]."
+        ]
+      }
+    },
+    {
+      "beatId": "compute-23",
+      "required": true,
+      "track": "both",
+      "prompt": "Each door's prior is 1/3. Weighted by the likelihoods [½, 1, 0] and renormalized — what is P(car behind Door 2 | host opened Door 3)?",
+      "interaction": {
+        "type": "answerEntry",
+        "fields": [
+          { "id": "switch", "label": "P(car behind Door 2 | host opened Door 3)", "accept": ["2/3"] }
+        ]
+      },
+      "interviewNote": "Monty Hall — treating the host's action as evidence whose likelihood comes from his protocol — is a canonical Bayes interview question (interview pack `showcase-monty-hall`). The clean framing: your door is fixed at prior odds 1:2 against the car; the host's forced hand transfers the entire 2/3 onto the one door he avoided.",
+      "feedback": {
+        "correct": "Each door's prior is 1/3. Weighted by [½, 1, 0] and renormalized: (1/3·1)/(1/3·½ + 1/3·1 + 1/3·0) = (1/3)/(1/2) = 2/3 for the switch door.",
+        "hints": [
+          "Numerator = prior of Door 2 × its likelihood = 1/3 · 1.",
+          "Denominator = total chance of the reveal = 1/3·½ + 1/3·1 + 1/3·0 = 1/2.",
+          "(1/3)/(1/2) = 2/3."
+        ]
+      }
+    },
+    {
+      "beatId": "hundred-doors",
+      "required": true,
+      "track": "both",
+      "prompt": "Scale up to 100 doors: you pick 1, the host opens 98 goat doors and leaves one other door closed. What is P(win by switching)?",
+      "interaction": {
+        "type": "answerEntry",
+        "fields": [
+          { "id": "h100", "label": "P(win by switching) with 100 doors", "accept": ["99/100"] }
+        ]
+      },
+      "feedback": {
+        "correct": "Your door is 1/100; the host opens 98 goats, forced to leave exactly one other door closed → that door holds the other 99/100. Bigger N makes switching more compelling, not less.",
+        "hints": [
+          "Your one pick is right 1/100 of the time — that never changes.",
+          "The host's near-total forcing funnels the remaining 99/100 onto the single door he leaves closed.",
+          "Switch wins 99/100."
+        ]
+      }
+    },
+    {
+      "beatId": "triangulate-23",
+      "required": true,
+      "track": "both",
+      "prompt": "Three methods all converge on 2/3 — reveal each lens.",
+      "interaction": {
+        "type": "tripletReveal",
+        "value": "2/3",
+        "lenses": [
+          { "label": "Likelihoods", "body": "priors 1/3 each × [½, 1, 0], renormalized → [2/3, 1/3, 0]" },
+          { "label": "Enumerate", "body": "Car is equally likely behind 1, 2, 3; switching wins whenever you first picked a goat — 2 of 3 times" },
+          { "label": "Odds", "body": "Your door 1/3 vs the rest 2/3; the host funnels the 2/3 onto one door → 2:1 → 2/3" }
+        ],
+        "display": "cards"
+      },
+      "feedback": {
+        "correct": "The likelihood table, the enumeration of car positions, and the odds funnel all give 2/3 — not a wording trick.",
+        "hints": [
+          "Reveal each lens.",
+          "They are three roads to the same number.",
+          "All three say 2/3."
+        ]
+      }
+    },
+    {
+      "beatId": "mastery-challenge",
+      "required": true,
+      "track": "both",
+      "prompt": "Mastery challenge: same three doors, you pick Door 1 — but this host opens a remaining door completely at random and it happens to reveal a goat behind Door 3. What is P(win by switching)?",
+      "interaction": {
+        "type": "masteryChallenge",
+        "scenario": "Same three doors, you pick Door 1 — but this host opens a remaining door completely at random and it happens to reveal a goat behind Door 3.",
+        "fields": [
+          { "id": "fall", "label": "P(switch wins) when the host opened at random", "accept": ["1/2"] }
+        ]
+      },
+      "feedback": {
+        "correct": "If the host opens at random and it merely happens to show a goat, the reveal is equally likely whether the car is behind your door or the other → likelihoods [½, ½, 0] → posteriors [1/2, 1/2, 0]. No edge. It was never the goat; it was the host's intent that made switching 2/3.",
+        "hints": [
+          "This host doesn't avoid the car — he opens at random and got lucky.",
+          "Now P(reveal | your door) = P(reveal | other door) = ½ — equal likelihoods → no update.",
+          "P(switch wins) = 1/2."
+        ]
+      }
+    },
+    {
+      "beatId": "recap",
+      "required": true,
+      "track": "both",
+      "prompt": "Reveal the recap to consolidate the host-as-evidence insight.",
+      "interaction": { "type": "recap" },
+      "feedback": {
+        "correct": "The host's action is the evidence, and its likelihood comes from his rules. Run the 3-hypothesis update and the forcing pushes the switch door to 2/3.",
+        "hints": [
+          "A standard host is forced (L=1) when the car is elsewhere, free (L=½) when it's yours — switch wins 2/3.",
+          "A random host who happens to reveal a goat gives no edge — 1/2. Intent, not the goat, is the clue.",
+          "Next up: the exact event you condition on is the whole ballgame."
+        ]
+      }
+    }
+  ]
+}
