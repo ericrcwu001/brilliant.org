@@ -1,5 +1,5 @@
 # HANDOFF
-<!-- Last updated: Concept medallion tier hover popup — custom .ergo-medallion__tip (dark card: concept name + tier-colored status line; gold/silver/locked) replaces the native title tooltip in ConceptMedallion, shown on hover via ergo-home.css + mirrored in aria-label (gallery only, lg medal unaffected); tsc+lint clean, verified /dev/home Tiers. Prior: Ch3 Mastery badge hue fix (StudyDesk MILESTONE_HUES first-pattern-cracked/state-machine-builder ch1->ch3). Prior admin op (prod, no code, in git history only): force-granted eric.wu@alphaaiengineering.com (uid irXQQXdxIJTIPi6r9PufqChItuk1) L2 Penney's-Game complete+mastered + penneys-game-won seal + streak 3/3 via temp Admin SDK script (deleted after verify) — 2026-06-25 -->
+<!-- Last updated: Lazy Firestore+Functions bundle split — rewrote src/firebase/app.ts so firebase/firestore + firebase/functions are dynamic imports (getDb()/getFns() memoized async accessors with globalThis singletons for HMR safety); added persistent local cache (persistentMultipleTabManager); updated all 9 consumers (firestoreLoader, userDoc, snapshot, track, progress, streaks, milestones, functions, recommend) to await getDb()/getFns() inside their async bodies; converted 3 sync onSnapshot subscribers (subscribeProgressMap, subscribeStreak, subscribeEarnedMilestones) to deferred pattern returning () => void; added loadCourseEntryState() to track.ts (single getDoc round trip for track+welcomeSeen); merged two separate CoursePathPage effects into one; fixed milestones.test.ts mock. NOT committed. Prior: Swapped README.md "Who It's For" personas per user request — PRIMARY is now the curious/no-experience learner (learn-by-doing, no prereqs, Track A/B diagnostic); quant-interview candidate demoted to SECONDARY (Track B). Course-outcome bullets kept under the now-primary persona; User Stories section deliberately left unchanged (surgical). NOT committed. Prior: Fixed inaccurate model dispatch slugs (Task `model` params) across global skills + the coupled workspace rule — `claude-opus-4-8-thinking-max`→`claude-opus-4-8-thinking-max-fast` and `claude-4.6-sonnet-medium-thinking`→`claude-4.6-sonnet-high-thinking` in ~/.cursor/skills/model-routing/SKILL.md (+ availability-note prose de-contradiction), ~/.cursor/skills/security-audit/SKILL.md, and .cursor/rules/model-routing.mdc; `composer-2.5-fast`/`gemini-3-flash` already valid. Excluded prompt-master + .codex/.system openai-docs/imagegen (those are model NAMES/API strings, not Task dispatch slugs). Verified no invalid slugs remain. NOT committed. Prior: Rewrote README.md to foreground the user persona + user stories from docs/mvp_prd.md — new lead sections "Who It's For" (primary persona = quant-interview candidate w/ Green Book + Core Learning Promise bullets; secondary "curious learner" w/ two-track A/B, no prereqs) and "User Stories" (15 canonical As-a/I-want/so-that under Persona & Onboarding / Course Path / Flagship Lesson / Persistence & Habit / For Developers); all technical reference (What It Is, Course, Tech, Architecture, Structure, Getting Started, Commands, Deploy, Security, Status) preserved below it, no facts changed. NOT committed. Prior: Converted home-screen reads to realtime onSnapshot listeners — loadProgressMap→subscribeProgressMap (progress.ts), loadEarnedMilestones→subscribeEarnedMilestones (milestones.ts), added subscribeStreak alongside loadStreak (streaks.ts); CoursePathPage effect now wires all three subscribe fns with [user] dep (removes earnComputed ref + course dep). tsc + eslint both clean. NOT committed. Prior: Stopped tracking vendored Firebase agent skills — `git rm -r --cached .agents/skills/` (79 files) + `.agents/skills/` added to .gitignore; `skills-lock.json` kept as the restore manifest; skill files stay on disk. Committed e760903 (NOT pushed yet → still on origin/main until pushed). (Bugbot whole-repo review, first-commit→HEAD, had earlier found 11 issues — all inside those now-untracked firebase skill docs.) Prior admin op (prod, no code, in git history only): force-granted eric.wu@alphaaiengineering.com (uid irXQQXdxIJTIPi6r9PufqChItuk1) L2 Penney's-Game complete+mastered + penneys-game-won seal + streak 3/3 via temp Admin SDK script (deleted after verify) — 2026-06-25 -->
 
 Orientation doc for a fresh context. Session-by-session narration lives in git
 history + the `docs/`/`audits/` files; this file keeps only what's needed going forward.
@@ -106,6 +106,8 @@ times** for coin flips (why `E[HH]=6` but `E[HT]=4`). Sequenced by `docs/mvp_prd
   **seeded**. `CONTEXT.md` gained `L0 / The introduction` + `Welcome screen` glossary
   entries. Stale-Vite footgun bit again — verify on a freshly-started server.
 - **Security audit + hardening — DONE this session** (brief: `docs/security-audit.md`).
+  **Re-audit addendum (2026-06-24):** post-mastery-challenge pass — no new shippable vuln;
+  F7 (Low, console/IAM runtime SA) documented in brief.
   Multi-model audit (web research → `gemini-3-flash` evidence → `claude-opus-4-8` adjudication
   → `composer` brief). Backend posture confirmed strong (owner-scoped rules, server-authoritative
   callables, no secrets/eval). **Applied:** F2 HTTP security headers (CSP/HSTS/X-Frame-Options/
@@ -1184,6 +1186,10 @@ color-coding, sans display type, compact streak chip all live.
 - **Verified:** `npx tsc -b` exits 0; `npx prettier --check` passes (ran `--write` to auto-format).
   No other files touched. CSS for `.ergo-medallion__icon` owned by another worker.
 
+### README rewrite — persona and user stories (2026-06-24)
+
+Rewrote `README.md` to lead with persona and user stories per the PRD (`docs/mvp_prd.md`). New section order: Who It's For (primary quant-interview-candidate persona + Core Learning Promise bullets + secondary curious-learner persona) → User Stories (5 categories in canonical "As a … I want … so that …" form) → What It Is → Course table → Tech Stack → Architecture → Project Structure → Getting Started → Commands → Deployment → Security Notes → Status. All factual/technical content preserved verbatim. Resolved tension between PRD's narrow quant persona and the shipped two-track diagnostic by framing quant-interview candidate as primary, broader learner as secondary. Only `README.md` modified.
+
 ### End-of-lesson Mastery Challenge — L1-L6 (2026-06-24)
 
 New graded `masteryChallenge` beat inserted **immediately before the recap** of each core lesson
@@ -1226,3 +1232,19 @@ sub-agents** (4 parallel Opus proposers — correctness / quant-transfer / asses
 - **MilestoneIcon fix (uncommitted):** `first-pattern-cracked` last cell now uses
   `fillOpacity={0.3}` + check stroke `currentColor` (removed unreliable
   `var(--ergo-surface)` white-on-white).
+
+### Model-routing slug corrections (2026-06-24)
+
+Fixed two invalid subagent dispatch slugs in three files so they match the actual selectable model list:
+- `claude-opus-4-8-thinking-max` → `claude-opus-4-8-thinking-max-fast` (added `-fast` suffix)
+- `claude-4.6-sonnet-medium-thinking` → `claude-4.6-sonnet-high-thinking` (`medium` → `high`)
+
+Files edited: `.cursor/skills/model-routing/SKILL.md` (2 + 2 replacements + prose note rewrite), `.cursor/skills/security-audit/SKILL.md` (3 opus replacements), `.cursor/rules/model-routing.mdc` (1 + 1 replacements). No other files touched.
+
+### Vite chunk splitting + loading shell + Cache-Control headers (2026-06-24)
+
+Three independent perf/caching edits. **No build run** (concurrent source edits in progress).
+
+- **`vite.config.ts`**: Added `build.rollupOptions.output.manualChunks` function. Used `manualChunks` (not rolldown-native `advancedChunks`) — confirmed supported: `node_modules/rolldown/dist/shared/define-config-DP-RZqh9.d.mts` exports it for Rollup compatibility. Chunks: `fb-firestore`, `fb-functions`, `fb-analytics` (each separate, intentionally NOT merged into `fb-core` so dynamic imports don't pull them onto the first-paint path), `fb-core`, `react-vendor`, `motion-vendor`, `zod`.
+- **`index.html`**: Added inline `<style>` in `<head>` + loading shell inside `#root`. Colors from real token palette: light bg `#f7f8fb`, ink `#161a27`, brand `#4f46e5`; dark-mode media query inverts to `#161a27` bg. Shimmer animation with `prefers-reduced-motion` guard. Pure HTML+CSS (no inline `<script>` — respects CSP `script-src` without `unsafe-inline`).
+- **`firebase.json`**: Added two `headers` entries after the existing `**` security rule: `/assets/**` → `public, max-age=31536000, immutable`; `/index.html` → `no-cache`. All existing security headers untouched.

@@ -7,10 +7,11 @@
 // `loadFlagshipLesson()` in `./loader`; this module is the authed-route path.
 
 import { doc, getDoc } from 'firebase/firestore'
-import { db } from '../firebase/app'
+import { getDb } from '../firebase/app'
 import { CourseSchema, LessonSchema, type Course, type Lesson } from './schema'
 
 export async function loadLessonFromFirestore(lessonId: string): Promise<Lesson> {
+  const db = await getDb()
   const snap = await getDoc(doc(db, 'lessons', lessonId))
   if (!snap.exists()) {
     throw new Error(
@@ -21,6 +22,7 @@ export async function loadLessonFromFirestore(lessonId: string): Promise<Lesson>
 }
 
 export async function loadCourseFromFirestore(courseId: string): Promise<Course> {
+  const db = await getDb()
   const snap = await getDoc(doc(db, 'courses', courseId))
   if (!snap.exists()) {
     throw new Error(

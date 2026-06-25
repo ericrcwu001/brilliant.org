@@ -3,8 +3,8 @@
 // awardMilestonesForCompletion); this module supplies the seal metadata for the
 // course-path gallery + recap stamp, and reads which milestones are earned.
 
-import { collection, getDocs } from 'firebase/firestore'
-import { db } from '../firebase/app'
+import { collection, onSnapshot } from 'firebase/firestore'
+import { getDb } from '../firebase/app'
 import type { Progress } from '../content/schema'
 
 export interface MilestoneMeta {
@@ -40,14 +40,28 @@ export function milestoneMeta(id: string): MilestoneMeta {
   return META_BY_ID[id] ?? { id, title: id, glyph: '★' }
 }
 
-// Read the set of earned milestone ids for the seal gallery. Empty when signed
-// out / none earned / on a read failure.
-export async function loadEarnedMilestones(uid: string): Promise<Set<string>> {
-  try {
-    const snap = await getDocs(collection(db, `users/${uid}/milestones`))
-    return new Set(snap.docs.map((d) => d.id))
-  } catch {
-    return new Set()
+// Realtime earned-milestone ids for the seal gallery. A collection listener so a
+// seal awarded by the completeLesson Cloud Function appears the instant it is
+// written (no manual refresh). Empty/last-known on a listen error.
+export function subscribeEarnedMilestones(
+  uid: string,
+  onChange: (earned: Set<string>) => void,
+): () => void {
+  let unsub: (() => void) | null = null
+  let cancelled = false
+  void getDb().then((db) => {
+    if (cancelled) return
+    unsub = onSnapshot(
+      collection(db, `users/${uid}/milestones`),
+      (snap) => onChange(new Set(snap.docs.map((d) => d.id))),
+      () => {
+        // Denied/offline → keep last-known set (display best-effort).
+      },
+    )
+  })
+  return () => {
+    cancelled = true
+    unsub?.()
   }
 }
 

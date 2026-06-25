@@ -14,7 +14,7 @@ import {
   serverTimestamp,
   type Timestamp,
 } from 'firebase/firestore'
-import { db } from '../firebase/app'
+import { getDb } from '../firebase/app'
 
 export const USERS_COLLECTION = 'users'
 
@@ -26,14 +26,11 @@ export interface UserDoc {
   lastActiveAt?: Timestamp
 }
 
-function userRef(uid: string) {
-  return doc(db, USERS_COLLECTION, uid)
-}
-
 // Returns the profile, or null when the user has authenticated but not yet
 // completed onboarding (drives the first-sign-in → display-name routing).
 export async function fetchUserDoc(uid: string): Promise<UserDoc | null> {
-  const snap = await getDoc(userRef(uid))
+  const db = await getDb()
+  const snap = await getDoc(doc(db, USERS_COLLECTION, uid))
   return snap.exists() ? (snap.data() as UserDoc) : null
 }
 
@@ -43,7 +40,8 @@ export async function createUserDoc(
   uid: string,
   displayName: string,
 ): Promise<void> {
-  const ref = userRef(uid)
+  const db = await getDb()
+  const ref = doc(db, USERS_COLLECTION, uid)
   const existing = await getDoc(ref)
   if (existing.exists()) return
   await setDoc(ref, {
@@ -58,7 +56,8 @@ export async function updateUserDisplayName(
   uid: string,
   displayName: string,
 ): Promise<void> {
-  await updateDoc(userRef(uid), {
+  const db = await getDb()
+  await updateDoc(doc(db, USERS_COLLECTION, uid), {
     displayName: displayName.trim(),
     lastActiveAt: serverTimestamp(),
   })

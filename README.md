@@ -6,13 +6,70 @@
 
 ---
 
+## Who It's For
+
+### Primary persona: curious learner
+
+The primary user is **anyone curious about probability who likes to learn by doing** — no prior probability, statistics, or algebra is assumed. They are not trying to memorize formulas or isolated tricks; they want to build genuine intuition through direct manipulation, one concept at a time. A two-track diagnostic at course start places each learner appropriately: **Track A** scaffolds from a near-zero foundation; **Track B** runs leaner for learners who already feel confident.
+
+After completing the course, a learner should be able to:
+
+- Convert a pattern-matching probability problem into states and transitions.
+- Write recursive expected-time equations from a state machine — without looking anything up.
+- Explain why `HH` and `HT` have different expected waiting times even though both are length-2 coin patterns.
+- Understand why overlapping patterns change expected hitting time.
+- See simulation and theory validate each other and know what it means when they do.
+- Apply the method to a novel length-3 pair (`THH` vs `HTH`) — identify the overlap-breaking transition, assemble the recurrence, and predict which waits longer — with at most two hints and no answer reveal on the setup beats.
+
+### Secondary persona: quant-interview candidate
+
+The course also fully serves a **university underclassman preparing for quant interviews**. They know the standard resources — the Green Book and similar problem lists — but want something more interactive and hands-on than static exercises. They want deeper understanding of the *patterns of thinking* that let them solve unfamiliar probability questions under interview pressure — and that prep is a first-class, fully-served track (**Track B**), not the only way in.
+
+---
+
+## User Stories
+
+### Persona and Onboarding
+
+- As a quant-interview candidate, I want to sign in and save my progress so that I can practice across study sessions and devices.
+- As a first-time learner, I want to see that the course is about state thinking for probability interviews so that I understand why this app is relevant to my goals.
+- As a returning learner, I want to resume exactly where I left off so that I do not lose momentum during a hard lesson.
+
+### Course Path
+
+- As a quant-interview candidate, I want a clear path through pattern hitting time lessons so that I know what to study next.
+- As a learner who completed a lesson, I want the next lesson to unlock so that the course feels like structured progression.
+- As a learner preparing under time pressure, I want future advanced lessons to be visible so that I can see where the course is going.
+
+### Flagship Lesson
+
+- As a quant-interview candidate, I want to choose target patterns like `HH` and `HT` so that I can compare cases that look similar but behave differently.
+- As a learner, I want to simulate coin flips and watch the state machine update so that I can connect random outcomes to state transitions.
+- As a learner, I want to build recurrence equations with draggable tiles so that I practice setting up the problem instead of passively reading the answer.
+- As a learner, I want immediate feedback on correct and incorrect answers so that every check teaches me something.
+- As a learner, I want hints that escalate from nudges to reveals so that I can recover without being handed a black-box explanation.
+- As a learner, I want to predict the expected waiting time before seeing the solution so that I commit to my intuition and can measure it against the math.
+- As a learner, I want to direct substitution steps through taps or drags so that I understand the algebra without doing tedious free-form equation entry.
+- As a learner, I want to compare simulation against theory so that I trust the recurrence result.
+- As a learner, I want to adjust coin bias in a sandbox so that I can explore how the expected time changes beyond the fair-coin case.
+
+### Persistence and Habit
+
+- As a learner, I want my tile placements and predictions to be saved so that leaving mid-lesson does not erase my work.
+- As a learner, I want a streak to persist across sessions so that I have a reason to keep practicing daily.
+- As a learner, I want milestones for important moments so that finishing hard probability lessons feels rewarding.
+
+### For Developers / Content and Trust
+
+- As a developer, I want lesson content seeded from version-controlled fixtures so that Firestore content can be recreated reliably.
+- As a developer, I want lesson content hosted in Firestore at runtime so that the app is structured for future dynamic content.
+- As a developer, I want completion, streak, milestone, and unlock writes handled by Cloud Functions and denied to the client by security rules so that achievements cannot be forged from the browser.
+
+---
+
 ## What It Is
 
 Each lesson is a short sequence of interactive **beats**: concept → problem → instant feedback. Problems use direct manipulation — drag-and-drop equation tiles, tap-to-build state graphs, sliders, a balance-scale solver — and give hand-authored, mistake-specific feedback computed entirely client-side. No AI, no server round-trips for feedback; Phase 1 is intentionally authored.
-
-The app has a two-track diagnostic: **Track A** scaffolds from near-zero foundation; **Track B** runs leaner for confident learners and quant-interview prep. The course description says it best:
-
-> *"For anyone curious about probability who likes to learn by doing — no prior probability, statistics, or algebra assumed. Quant-interview prep is a fully-served optional track, not a prerequisite to walk in."*
 
 ---
 

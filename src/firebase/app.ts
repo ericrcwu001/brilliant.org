@@ -1,11 +1,14 @@
 // Firebase client initialization (Group C foundation). Single source of truth
-// for the app, auth, Firestore, and Functions handles used across the app.
+// for the app, auth, and Functions/Firestore handles used across the app.
 //
 // Config comes from VITE_FIREBASE_* env vars (see .env.example). When
 // VITE_USE_EMULATORS === 'true' (the default dev loop), the SDK connects to the
 // local Emulator Suite so the full Auth + Firestore + Functions path works
 // end-to-end without touching real cloud resources. App Check (Phase 18) is
 // initialized below for real projects and skipped in emulator mode.
+//
+// Firestore and Functions are loaded on-demand (dynamic import) so they stay
+// off the first-paint critical path. Use getDb() / getFns() to obtain handles.
 
 import { initializeApp, type FirebaseApp } from 'firebase/app'
 import {
@@ -13,16 +16,8 @@ import {
   ReCaptchaV3Provider,
 } from 'firebase/app-check'
 import { getAuth, connectAuthEmulator, type Auth } from 'firebase/auth'
-import {
-  getFirestore,
-  connectFirestoreEmulator,
-  type Firestore,
-} from 'firebase/firestore'
-import {
-  getFunctions,
-  connectFunctionsEmulator,
-  type Functions,
-} from 'firebase/functions'
+import type { Firestore } from 'firebase/firestore'
+import type { Functions } from 'firebase/functions'
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
@@ -54,15 +49,54 @@ if (!usingEmulators && appCheckSiteKey) {
 }
 
 export const auth: Auth = getAuth(app)
-export const db: Firestore = getFirestore(app)
-export const functions: Functions = getFunctions(app)
 
 // Connect once; HMR can re-evaluate this module, and the SDK throws if an
 // emulator is connected twice.
 const g = globalThis as { __phhtEmulatorsConnected__?: boolean }
 if (usingEmulators && !g.__phhtEmulatorsConnected__) {
   connectAuthEmulator(auth, 'http://127.0.0.1:9099', { disableWarnings: true })
-  connectFirestoreEmulator(db, '127.0.0.1', 8080)
-  connectFunctionsEmulator(functions, '127.0.0.1', 5001)
   g.__phhtEmulatorsConnected__ = true
+}
+
+// Firestore — lazy-loaded so it stays off the first-paint critical path.
+// Uses a globalThis singleton so HMR module re-eval never calls
+// initializeFirestore twice on the same app (which would throw).
+let dbPromise: Promise<Firestore> | null = null
+export function getDb(): Promise<Firestore> {
+  if (!dbPromise) {
+    dbPromise = (async () => {
+      const g = globalThis as { __ergoDb__?: Firestore }
+      if (g.__ergoDb__) return g.__ergoDb__
+      const {
+        initializeFirestore,
+        persistentLocalCache,
+        persistentMultipleTabManager,
+        connectFirestoreEmulator,
+      } = await import('firebase/firestore')
+      const db = initializeFirestore(app, {
+        localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() }),
+      })
+      if (usingEmulators) connectFirestoreEmulator(db, '127.0.0.1', 8080)
+      g.__ergoDb__ = db
+      return db
+    })()
+  }
+  return dbPromise
+}
+
+// Functions — lazy-loaded so it stays off the first-paint critical path.
+let fnsPromise: Promise<Functions> | null = null
+export function getFns(): Promise<Functions> {
+  if (!fnsPromise) {
+    fnsPromise = (async () => {
+      const g = globalThis as { __ergoFns__?: Functions }
+      if (g.__ergoFns__) return g.__ergoFns__
+      const { getFunctions, connectFunctionsEmulator } = await import('firebase/functions')
+      const functions = getFunctions(app)
+      if (usingEmulators) connectFunctionsEmulator(functions, '127.0.0.1', 5001)
+      g.__ergoFns__ = functions
+      return functions
+    })()
+  }
+  return fnsPromise
 }

@@ -6,7 +6,7 @@
 // unwraps the HttpsCallableResult to its typed `.data` for ergonomics.
 
 import { httpsCallable } from 'firebase/functions'
-import { functions } from '../firebase/app'
+import { getFns } from '../firebase/app'
 
 // Mirrors the flagship derived-field block (docs/mvp_prd.md "Derived learning
 // fields"). The opening bet is qualitative, so `initialPrediction` may be a
@@ -60,6 +60,7 @@ export type RecordQualifyingActionResult = {
 export async function completeLesson(
   input: CompleteLessonInput,
 ): Promise<CompleteLessonResult> {
+  const functions = await getFns()
   const fn = httpsCallable<CompleteLessonInput, CompleteLessonResult>(
     functions,
     'completeLesson',
@@ -74,6 +75,7 @@ export async function recordQualifyingAction(
   // Phase 17: include the learner's IANA timezone so the Cloud Function computes
   // the local-day streak boundary (the streak increments once per local day).
   const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone
+  const functions = await getFns()
   const fn = httpsCallable<
     RecordQualifyingActionInput & { timezone: string },
     RecordQualifyingActionResult

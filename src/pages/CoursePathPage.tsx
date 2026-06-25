@@ -9,13 +9,12 @@ import { useEffect, useRef, useState } from 'react'
 import { useAuth } from '../auth/authContext'
 import { COURSE_ID, loadCourseFromFirestore } from '../content/loader'
 import type { Course, Progress } from '../content/schema'
-import { loadProgressMap } from '../progress/progress'
-import { loadStreak, ZERO_STREAK, type Streak } from '../habit/streaks'
-import { loadEarnedMilestones } from '../habit/milestones'
+import { subscribeProgressMap } from '../progress/progress'
+import { subscribeStreak, ZERO_STREAK, type Streak } from '../habit/streaks'
+import { subscribeEarnedMilestones } from '../habit/milestones'
 import {
-  loadTrack,
+  loadCourseEntryState,
   saveTrack,
-  loadWelcomeSeen,
   markWelcomeSeen,
   type Track,
 } from '../progress/track'
@@ -52,7 +51,6 @@ export function CoursePathPage({ navigate }: { navigate: NavigateFn }) {
   const [streak, setStreak] = useState<Streak>(ZERO_STREAK)
   const [earned, setEarned] = useState<Set<string>>(new Set())
   const [newlyEarned, setNewlyEarned] = useState<Set<string>>(new Set())
-  const earnComputed = useRef(false)
   // Two-track diagnostic at course entry (build-brief §4.8). `undefined` = still
   // loading; `null` = not yet taken (show the gate); 'A'/'B' = chosen.
   const [track, setTrack] = useState<Track | null | undefined>(undefined)
@@ -64,34 +62,16 @@ export function CoursePathPage({ navigate }: { navigate: NavigateFn }) {
     if (!user) return
     const uid = user.uid
     let cancelled = false
-    void loadTrack(uid)
-      .then((t) => {
+    void loadCourseEntryState(uid).then(({ track: t, welcomeSeen: seen }) => {
+      if (!cancelled) {
         // Don't clobber a track the learner just chose this session (Skip ->
         // 'A', or the diagnostic) if this initial load resolves afterward.
-        if (!cancelled) setTrack((prev) => (prev === undefined ? t : prev))
-      })
-      .catch(() => {
-        if (!cancelled) setTrack((prev) => (prev === undefined ? 'B' : prev))
-      })
-    return () => {
-      cancelled = true
-    }
-  }, [user])
-
-  useEffect(() => {
-    if (!user) return
-    const uid = user.uid
-    let cancelled = false
-    void loadWelcomeSeen(uid)
-      .then((seen) => {
+        setTrack((prev) => (prev === undefined ? t : prev))
         // Same guard as the track load: never overwrite a local decision made
         // before this initial read resolves.
-        if (!cancelled)
-          setWelcomeSeen((prev) => (prev === undefined ? seen : prev))
-      })
-      .catch(() => {
-        if (!cancelled) setWelcomeSeen((prev) => (prev === undefined ? true : prev))
-      })
+        setWelcomeSeen((prev) => (prev === undefined ? seen : prev))
+      }
+    })
     return () => {
       cancelled = true
     }
@@ -110,38 +90,29 @@ export function CoursePathPage({ navigate }: { navigate: NavigateFn }) {
   }, [])
 
   useEffect(() => {
-    if (!user || !course) return
+    if (!user) return
     const uid = user.uid
-    const lessonIds = [
-      ...course.lessons.map((l) => l.lessonId),
-      ...course.roadmap.map((r) => r.lessonId),
-    ]
-    let cancelled = false
-    void loadProgressMap(uid, lessonIds).then((map) => {
-      if (!cancelled) setProgressById(map)
-    })
-    void loadStreak(uid).then((s) => {
-      if (!cancelled) setStreak(s)
-    })
-    void loadEarnedMilestones(uid).then((m) => {
-      if (cancelled) return
+    const unsubscribeProgress = subscribeProgressMap(uid, setProgressById)
+    const unsubscribeStreak = subscribeStreak(uid, setStreak)
+    const unsubscribeEarned = subscribeEarnedMilestones(uid, (m) => {
       setEarned(m)
-      // Earn moment (Q11): the first Home load after a new earn plays the
-      // one-time ghost→inked fade. Diff the earned set against a per-user seen
-      // flag in localStorage, then persist so the fade never replays.
-      if (!earnComputed.current && m.size > 0) {
-        earnComputed.current = true
-        const key = seenKey(uid)
-        const seen = readSeen(key)
-        const newly = new Set([...m].filter((id) => !seen.has(id)))
-        if (newly.size > 0) setNewlyEarned(newly)
-        writeSeen(key, m)
-      }
+      // Earn moment (Q11): play the one-time ghost→inked fade for any seal not
+      // yet seen on this device. A live listener now delivers a seal the instant
+      // the completeLesson Cloud Function awards it, so diff every snapshot
+      // against the per-user localStorage seen set, then persist so the fade
+      // never replays.
+      const key = seenKey(uid)
+      const seen = readSeen(key)
+      const newly = new Set([...m].filter((id) => !seen.has(id)))
+      if (newly.size > 0) setNewlyEarned(newly)
+      writeSeen(key, m)
     })
     return () => {
-      cancelled = true
+      unsubscribeProgress()
+      unsubscribeStreak()
+      unsubscribeEarned()
     }
-  }, [user, course])
+  }, [user])
 
   const reviewFired = useRef(false)
   useEffect(() => {

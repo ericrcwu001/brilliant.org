@@ -14,6 +14,46 @@ The Firebase backend is unusually well-hardened for an AI-assisted codebase: own
 
 ---
 
+## Re-Audit Addendum — 2026-06-24 (post "mastery challenge")
+
+**Trigger:** features that landed after the original audit commit (`5db37ea`): the Ergo rebrand, an accent-color refactor, and most notably the **mastery challenge** feature (`68566e1`) — a new `masteryChallenge` interaction (`src/content/schema.ts`, `src/lesson/beats/MasteryChallengeBeat.tsx`), changes to the server-authoritative completion handler (`functions/src/index.ts`), and `scripts/verify-mastery-answers.ts`. **Methodology:** same multi-model pipeline (gemini-3-flash recon + evidence, claude-opus-4-8 adjudication, composer brief).
+
+**Result: no new shippable vulnerability; no code changes applied.** The backend posture documented below is unchanged and still strong. One new Low, console/IAM-only hardening item (**F7**) is added.
+
+### Mastery-challenge evaluation (the headline question)
+
+The mastery challenge grades answers **client-side** (`MasteryChallengeBeat.tsx:34-44` — normalized compare against the fixture `accept` list) and `completeLesson` stores a client-supplied `derived.mastered` without server re-derivation (`functions/src/index.ts:109,178`). Recon flagged this as a possible regression; adjudication **rejected** that framing after reading the code:
+
+- The server has **always** verified only *required-beat-ID presence*, never answer correctness (`functions/src/index.ts:122-134`) — true for every graded beat type, not just `masteryChallenge`. The feature did **not** weaken a previously-strong control; it added one more graded beat under the identical, pre-existing model.
+- Lesson `accept` answers are **world-readable by design** (`firestore.rules:34-37`; the full fixture is seeded to `lessons/{id}` and read by the client for instant grading). Server-side answer verification is therefore trivially bypassable (read the answer from the lesson doc, submit it) — defense-in-depth theater, not a fix.
+- `derived.mastered` is **cosmetic**: it drives only the silver→gold medallion tier and **never gates unlock** (the successor unlocks purely on required-beat presence — `functions/src/index.ts:188`). Its only input (`maxHintLevelByBeat`) lives in the client-written snapshot doc, so there is no server-side source of truth to verify against.
+
+**Verdict:** forging one's *own* mastery/completion is the same self-affecting, no-cross-tenant class already captured by the F1 exploit framing and Finding D (single-player app; no leaderboard, payments, shared data, or privilege surface). **Accepted (Info).** Optional server-side answer verification is *possible* (the lesson doc `completeLesson` already loads contains the `accept` values) but is **low-value and deferred** — it must not be marketed as closing a hole.
+
+### F7 — Cloud Functions likely run as the default (Editor) service account
+
+| | |
+|---|---|
+| **Severity** | Low |
+| **Status** | DOCUMENTED — console/IAM (safe to tighten at deploy time; no runtime-logic change) |
+| **CWE** | CWE-250 / CWE-272 (Least Privilege Violation) |
+| **OWASP** | A05:2021 |
+
+**Evidence:** `functions/src/index.ts:24` `initializeApp()` (no service account) and `:26` `setGlobalOptions({ region: 'us-central1', maxInstances: 10 })` (no `serviceAccount`). Gen-2 callables therefore run as the project's Compute Engine default service account, which carries the broad **Editor** role by default.
+
+**Assessment:** not an exploitable hole — `completeLesson` / `recordQualifyingAction` have no injection/RCE vector and derive all Firestore paths from the server-side uid. This is blast-radius / least-privilege hardening only.
+
+**Remediation (do NOT hardcode blindly):** create a dedicated runtime service account granted only `roles/datastore.user` + `roles/logging.logWriter`, then set `setGlobalOptions({ serviceAccount: '<sa>@<project>.iam.gserviceaccount.com', region: 'us-central1', maxInstances: 10 })` and grant the deployer `roles/iam.serviceAccountUser` on it. Alternatively, trim the default SA's roles in IAM. **Left unapplied in code** because referencing a service account that does not yet exist breaks `firebase deploy --only functions`; create the SA first, then wire the option. The emulator ignores IAM, so local/CI/e2e are unaffected either way.
+
+### Re-confirmed (no change)
+
+- **Unlock *ordering* is not enforced server-side** (`completeLesson` does not verify the predecessor was unlocked before writing completion) — intended single-player flexibility; skipping ahead affects only the forger's own progression. CWE-840 · A04:2021. **Documented, no action.**
+- **KaTeX `dangerouslySetInnerHTML`** (`src/lesson/Katex.tsx`) renders KaTeX output from **trusted fixture** content, not user input — acceptable.
+- **CSP** (`firebase.json:15`) is solid: `script-src` does **not** use `'unsafe-inline'` (only `style-src` does, required by motion/Konva), plus `object-src 'none'`, `base-uri 'self'`, `frame-ancestors 'none'`. C8 (`style-src 'unsafe-inline'`) is acceptable-by-design.
+- F1/F3 remain **deferred** (App Check monitor-then-enforce — binding per `HANDOFF.md`). F2/F5 remain applied. F4 advisories remain **accepted** (no `firebase-admin` bump; never `npm audit fix --force`). F6 / A / B / C / D unchanged.
+
+---
+
 ## Already-Strong Controls
 
 No change needed for the following:
@@ -220,6 +260,7 @@ Each `completeLesson` / `recordQualifyingAction` does a Firestore get + transact
 | **F4** | none (kept `firebase-admin ^13.10.0`) | Accepted — no valid bump exists (latest `firebase-functions` 7.2.5 caps admin at ^13); advisories are unreachable/dev-only |
 | **F5** | `storage.rules` (default-deny) + `firebase.json` (storage block) | Fixed; console verify |
 | **F6, A, B, C, D** | — | Documented, deferred / console-only |
+| **F7** *(re-audit)* | none (console/IAM; do not hardcode a nonexistent SA) | Documented — bind a least-privilege runtime service account at deploy time |
 
 ---
 

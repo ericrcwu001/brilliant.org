@@ -20,10 +20,11 @@ export async function loadMaxHintLevels(
   uid: string,
   lessonIds: string[],
 ): Promise<Record<string, Record<string, number>>> {
-  const [{ db }, { doc, getDoc }] = await Promise.all([
+  const [{ getDb }, { doc, getDoc }] = await Promise.all([
     import('../firebase/app'),
     import('firebase/firestore'),
   ])
+  const db = await getDb()
   const entries = await Promise.all(
     lessonIds.map(async (lessonId) => {
       try {

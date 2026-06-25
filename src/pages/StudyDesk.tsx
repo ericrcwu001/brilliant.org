@@ -14,6 +14,7 @@ import type { Streak } from '../habit/streaks'
 import { MILESTONE_SEQUENCE, isMilestoneMastered } from '../habit/milestones'
 import { useReducedMotion } from '../lesson/useReducedMotion'
 import { ROUTES, type NavigateFn } from './routes'
+import { prefetchLesson } from '../app/prefetch'
 import { WeeklyStreak } from '../habit/WeeklyStreak'
 import { ConceptMedallion } from '../habit/ConceptMedallion'
 import { CourseJourney } from './CourseJourney'
@@ -119,7 +120,7 @@ export function StudyDesk({
             </m.div>
 
             {/* ── Course journey (Agent 3) ── */}
-            <m.div variants={deskItem}>
+            <m.div variants={deskItem} onPointerEnter={prefetchLesson} onFocus={prefetchLesson}>
               <CourseJourney
                 course={course}
                 progressById={progressById}

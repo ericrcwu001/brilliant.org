@@ -8,9 +8,23 @@
       content="width=device-width, initial-scale=1.0, viewport-fit=cover"
     />
     <title>Ergo</title>
+    <style>
+      #initial-shell{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;background:#f7f8fb;color:#161a27;font-family:'Inter',system-ui,'Segoe UI',Roboto,sans-serif}
+      #initial-shell .brand{font-size:20px;font-weight:700;letter-spacing:.02em;color:#4f46e5}
+      #initial-shell .bar{width:200px;height:10px;border-radius:6px;background:linear-gradient(90deg,#e2e5ec 25%,#f1f3f8 37%,#e2e5ec 63%);background-size:400% 100%;animation:ergo-shimmer 1.4s ease infinite}
+      @keyframes ergo-shimmer{0%{background-position:100% 0}100%{background-position:0 0}}
+      @media (prefers-reduced-motion: reduce){#initial-shell .bar{animation:none}}
+      @media (prefers-color-scheme: dark){#initial-shell{background:#161a27;color:#f7f8fb}#initial-shell .brand{color:#818cf8}#initial-shell .bar{background:linear-gradient(90deg,#2a2e3d 25%,#363b4e 37%,#2a2e3d 63%);background-size:400% 100%}}
+    </style>
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <div id="initial-shell" aria-busy="true" aria-live="polite">
+        <div class="brand">Ergo</div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+      </div>
+    </div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

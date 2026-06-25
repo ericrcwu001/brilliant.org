@@ -6,19 +6,17 @@
 // Functions still own completion/mastery/unlock fields).
 
 import { doc, getDoc, serverTimestamp, setDoc } from 'firebase/firestore'
-import { db } from '../firebase/app'
+import { getDb } from '../firebase/app'
 import { COURSE_ID } from '../content/loader'
 import { ProgressSchema } from '../content/schema'
 
 export type Track = 'A' | 'B'
 
-const courseProgressRef = (uid: string) =>
-  doc(db, 'users', uid, 'progress', COURSE_ID)
-
 // Returns the chosen track, or null when the diagnostic hasn't run yet.
 export async function loadTrack(uid: string): Promise<Track | null> {
   try {
-    const snap = await getDoc(courseProgressRef(uid))
+    const db = await getDb()
+    const snap = await getDoc(doc(db, 'users', uid, 'progress', COURSE_ID))
     if (!snap.exists()) return null
     const parsed = ProgressSchema.safeParse(snap.data())
     return parsed.success ? (parsed.data.track ?? null) : null
@@ -29,8 +27,9 @@ export async function loadTrack(uid: string): Promise<Track | null> {
 }
 
 export async function saveTrack(uid: string, track: Track): Promise<void> {
+  const db = await getDb()
   await setDoc(
-    courseProgressRef(uid),
+    doc(db, 'users', uid, 'progress', COURSE_ID),
     { track, schemaVersion: 1, updatedAt: serverTimestamp() },
     { merge: true },
   )
@@ -45,7 +44,8 @@ export async function saveTrack(uid: string, track: Track): Promise<void> {
 // skipped); false when it has never been shown (brand-new account).
 export async function loadWelcomeSeen(uid: string): Promise<boolean> {
   try {
-    const snap = await getDoc(courseProgressRef(uid))
+    const db = await getDb()
+    const snap = await getDoc(doc(db, 'users', uid, 'progress', COURSE_ID))
     if (!snap.exists()) return false
     const parsed = ProgressSchema.safeParse(snap.data())
     return parsed.success ? parsed.data.welcomeSeenAt != null : false
@@ -57,9 +57,29 @@ export async function loadWelcomeSeen(uid: string): Promise<boolean> {
 }
 
 export async function markWelcomeSeen(uid: string): Promise<void> {
+  const db = await getDb()
   await setDoc(
-    courseProgressRef(uid),
+    doc(db, 'users', uid, 'progress', COURSE_ID),
     { welcomeSeenAt: serverTimestamp(), schemaVersion: 1, updatedAt: serverTimestamp() },
     { merge: true },
   )
+}
+
+// Combined reader: loads track + welcomeSeen in a single round trip. Used by
+// CoursePathPage to avoid two identical getDoc calls on entry.
+export async function loadCourseEntryState(
+  uid: string,
+): Promise<{ track: Track | null; welcomeSeen: boolean }> {
+  try {
+    const db = await getDb()
+    const snap = await getDoc(doc(db, 'users', uid, 'progress', COURSE_ID))
+    if (!snap.exists()) return { track: null, welcomeSeen: false }
+    const parsed = ProgressSchema.safeParse(snap.data())
+    if (!parsed.success) return { track: null, welcomeSeen: false }
+    return { track: parsed.data.track ?? null, welcomeSeen: parsed.data.welcomeSeenAt != null }
+  } catch {
+    // Offline/denied: not-yet-chosen track, fail-open welcome (matches existing
+    // loadWelcomeSeen fallback).
+    return { track: null, welcomeSeen: true }
+  }
 }

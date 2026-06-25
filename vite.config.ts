@@ -17,4 +17,20 @@ import babel from '@rolldown/plugin-babel'
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react(), babel({ presets: [reactCompilerPreset()] })],
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks(id: string) {
+          if (!id.includes('node_modules')) return
+          if (id.includes('@firebase/firestore') || id.includes('firebase/firestore')) return 'fb-firestore'
+          if (id.includes('@firebase/functions') || id.includes('firebase/functions')) return 'fb-functions'
+          if (id.includes('@firebase/analytics') || id.includes('firebase/analytics')) return 'fb-analytics'
+          if (id.includes('@firebase') || id.includes('firebase/')) return 'fb-core'
+          if (id.includes('/react-dom/') || id.includes('/react/') || id.includes('/scheduler/')) return 'react-vendor'
+          if (id.includes('/motion/') || id.includes('/framer-motion/') || id.includes('/motion-dom/') || id.includes('/motion-utils/')) return 'motion-vendor'
+          if (id.includes('/zod/')) return 'zod'
+        },
+      },
+    },
+  },
 })

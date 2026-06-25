@@ -1,13 +1,15 @@
 import { describe, it, expect, vi } from 'vitest'
 import type { Progress } from '../content/schema'
 
-// milestones.ts imports firebase/app (Firestore) at the module level.
+// milestones.ts imports firebase/app at the module level.
 // Mock it out so the pure isMilestoneMastered helper can be tested without
 // a live Firebase project or env vars.
 vi.mock('../firebase/app', () => ({
-  db: {},
+  getDb: () => Promise.resolve({}),
+  getFns: () => Promise.resolve({}),
   auth: {},
-  functions: {},
+  app: {},
+  usingEmulators: false,
 }))
 
 import { isMilestoneMastered } from './milestones'

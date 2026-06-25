@@ -17,7 +17,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { doc, getDoc, setDoc } from 'firebase/firestore'
-import { db } from '../firebase/app'
+import { getDb } from '../firebase/app'
 import { SnapshotSchema, type Snapshot } from '../content/schema'
 import type { LessonState } from './beats/types'
 
@@ -49,9 +49,6 @@ export type SnapshotInput = {
 
 const localKey = (uid: string, lessonId: string) =>
   `phht:snapshot:${uid}:${lessonId}`
-
-const snapshotRef = (uid: string, lessonId: string) =>
-  doc(db, 'users', uid, 'snapshots', lessonId)
 
 function toSnapshot(input: SnapshotInput, updatedAt: string): Snapshot {
   const ls = input.lessonState
@@ -132,7 +129,8 @@ export async function loadSnapshot(
   const local = readLocalSnapshot(uid, lessonId)
   let remote: Snapshot | null = null
   try {
-    const snap = await getDoc(snapshotRef(uid, lessonId))
+    const db = await getDb()
+    const snap = await getDoc(doc(db, 'users', uid, 'snapshots', lessonId))
     if (snap.exists()) remote = SnapshotSchema.parse(snap.data())
   } catch {
     // Offline or read error → fall back to the local mirror.
@@ -166,7 +164,8 @@ export function useSnapshotWriter(opts: {
     const snap = latest.current
     if (!snap || !enabled || !uid) return
     // Fire-and-forget: an offline/slow write must never block interaction.
-    void setDoc(snapshotRef(uid, lessonId), snap)
+    void getDb()
+      .then((db) => setDoc(doc(db, 'users', uid, 'snapshots', lessonId), snap))
       .then(() => setWriteError(false))
       .catch(() => setWriteError(true))
   }, [uid, lessonId, enabled])

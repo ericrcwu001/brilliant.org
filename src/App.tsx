@@ -14,20 +14,14 @@ import { useAuth } from './auth/authContext'
 import {
   ROUTES,
   parseLessonId,
-  parseDevLessonId,
   type NavigateFn,
   type NavigateOptions,
 } from './pages/routes'
-import { loadDevLesson } from './content/devLessons'
 import { ErrorBoundary } from './app/ErrorBoundary'
 import { withViewTransition } from './app/viewTransition'
+import { prefetchLesson, prefetchAuth } from './app/prefetch'
 
-const LessonPlayer = lazy(() =>
-  import('./lesson/LessonPlayer').then(m => ({ default: m.LessonPlayer })),
-)
-const DevHomePage = lazy(() =>
-  import('./pages/DevHomePage').then(m => ({ default: m.DevHomePage })),
-)
+const DevRoutes = lazy(() => import('./pages/DevRoutes'))
 const LandingPage = lazy(() =>
   import('./pages/LandingPage').then(m => ({ default: m.LandingPage })),
 )
@@ -157,41 +151,32 @@ function RouteSkeleton() {
 function App() {
   const { path, navigate } = useRouter()
 
+  // Idle prefetch: warms heavy lazy chunks after first paint so subsequent
+  // navigations feel instant. Cancelled on path change to avoid stale work.
+  useEffect(() => {
+    const w = window as typeof window & {
+      requestIdleCallback?: (cb: () => void) => number
+      cancelIdleCallback?: (id: number) => void
+    }
+    const run = () => {
+      if (path === ROUTES.landing || path === ROUTES.auth) prefetchAuth()
+      if (path === ROUTES.coursePath) prefetchLesson()
+    }
+    const id = w.requestIdleCallback ? w.requestIdleCallback(run) : window.setTimeout(run, 300)
+    return () => {
+      if (w.cancelIdleCallback) w.cancelIdleCallback(id)
+      else clearTimeout(id)
+    }
+  }, [path])
+
   // Compute page content for all branches, then wrap once in ErrorBoundary +
   // Suspense so both dev routes and the auth-guarded path share a single
   // boundary/fallback.
   const content = (() => {
     // Dev fixture routes: no auth, no Firebase mount (Group A / e2e entry point +
-    // the Study Desk reskin harness). `?track=A` exercises the Track-A scaffolds
-    // locally (and in the e2e Track-A pass); default is Track B.
-    if (path === ROUTES.devLesson) {
-      const track =
-        new URLSearchParams(window.location.search).get('track') === 'A'
-          ? 'A'
-          : 'B'
-      return <LessonPlayer track={track} />
-    }
-    // Parameterized dev route (build-brief §4.6): /dev/lesson/:lessonId renders any
-    // bundled fixture lesson with no Firebase, so every lesson is exercisable +
-    // e2e-testable in both tracks before it's seeded.
-    const devLessonId = parseDevLessonId(path)
-    if (devLessonId) {
-      const track =
-        new URLSearchParams(window.location.search).get('track') === 'A'
-          ? 'A'
-          : 'B'
-      const lesson = loadDevLesson(devLessonId)
-      if (lesson) return <LessonPlayer lesson={lesson} track={track} />
-      return (
-        <div className="bootscreen" aria-live="polite">
-          <p className="bootscreen__brand">Lesson not found</p>
-          <p className="bootscreen__caption">
-            No bundled fixture for "{devLessonId}".
-          </p>
-        </div>
-      )
-    }
-    if (path === ROUTES.devHome) return <DevHomePage />
+    // the Study Desk reskin harness). Lazily loaded so fixture JSON stays out of
+    // the prod entry chunk.
+    if (path.startsWith('/dev')) return <DevRoutes path={path} />
     return (
       <AuthProvider>
         <GuardedRoutes path={path} navigate={navigate} />
