@@ -1,0 +1,136 @@
+---
+name: lesson-factory
+description: Runs the on-demand multi-agent "software factory" that builds new interactive lessons for the Ergo learning app, grounded in the Green Book (references/green-book.txt). Use when the user asks to build or generate lessons or a new concept/course, to "launch the lesson factory / software factory", or runs /lesson-factory. Orchestrates a Manager (Opus) over three departments (curriculum/learning-science, interactive-game design, coding), fact-checks every problem against the Green Book, checks the existing corpus for overlap, stages each concept on its own branch, tests it on a separate dev Firebase project (brilliant-org-dev), and ships to production only after the user approves via Slack.
+disable-model-invocation: true
+---
+
+# Lesson Factory
+
+An on-demand assembly line that turns Green-Book quant concepts into fully-built, fact-checked,
+interactive **lessons** for the Ergo app — tested on a **dev Firebase project** and shipped to
+production **only after the user approves**. A top-level **Manager (Opus)** runs three departments of
+subagents in parallel.
+
+> Vocabulary (the product's three layers, authoritative):
+> - **Large concept / macro** = a `course` (`fixtures/course-*.json` → Firestore `courses/{id}`).
+> - **Lesson** = `fixtures/lesson-<slug>.json` → Firestore `lessons/{id}`; an ordered list of beats.
+> - **Beat** = one entry in `lesson.beats[]` — a single prompt → interaction → feedback.
+>
+> A **run builds one whole concept** (many lessons). The human approves and deploys **per concept**.
+
+> Firebase projects:
+> - **Dev / staging = `brilliant-org-dev` (#836579828208)** + its linked domain — the factory deploys
+>   and seeds here freely so the user can **test** before approving. Not production.
+> - **Production = `brilliant-org` (#801582458333)** — touched **only** after the user approves a concept.
+
+## Invocation
+
+- `/lesson-factory <concept or Green Book topic>` → build that whole concept end-to-end.
+- `/lesson-factory` (no argument) → the Manager proposes a **Green-Book-grounded backlog** of
+  candidate concepts and asks the user to pick.
+
+## Non-negotiable rules (read first)
+
+1. **Ground truth = the Green Book.** The book (`references/green-book.txt`, gitignored) decides
+   what is legitimate to teach. **Every concept must be anchored to a Green-Book concept** (cite it).
+2. **Anchor-and-source, never invent.** A problem is either a Green-Book problem **or** a similar
+   quant-interview question found by searching, **with its source recorded**. No invented or
+   unsourced problems, ever.
+3. **Two-stage fact-check on every number.** (1) the source states the answer; (2) the lesson's
+   **engine independently reproduces it** and the `validate-fixtures` script cross-checks it. Both, or
+   it doesn't ship.
+4. **Production is approval-gated.** The factory works only on a per-concept branch and tests on the
+   **dev project `brilliant-org-dev`**; the user reviews on the **dev linked domain**. Nothing reaches
+   **`brilliant-org` (prod)** without the user's explicit approval.
+5. **Build by doing.** Every beat must be genuine direct-manipulation. Ambition is encouraged — cost
+   is **not** a reason to reject a mechanic (the user said "get it done").
+6. **Maximize parallelism** everywhere, made safe by a concept-level **Wave-0 contract freeze** +
+   isolated **git worktrees** (see `pipeline.md`).
+7. **Build on the existing corpus — never duplicate it.** Before planning, the Corpus Cartographer
+   surveys **every** existing lesson — shipped (`main` + prod) and in-dev (`concept/*` branches +
+   `brilliant-org-dev`). Don't re-teach covered ground; convert conceptual overlap into deliberate
+   **retrieval practice, spaced review, and interleaving** (Continuity Report; `inclusive-research-5`).
+8. **Surgical & simple per `AGENTS.md`.** Reuse the existing engine, schema, widget catalog, rubric,
+   and research memos before building new.
+
+## Org chart
+
+```
+                         Manager / Director  (Opus)
+              plans the concept · runs Wave-0 · arbitrates escalations
+              · signs off the Scorecard · deploys to dev · Slack-alerts · ships on approval
+        ┌──────────────────────┬──────────────────────┬─────────────────────┐
+   Dept 1: Curriculum     Dept 2: Interactive     Dept 3: Coding
+   (learning science)      Experience (design)     (implementation)
+   5 roles                 9 roles                 rich roster
+        └─────────── self-resolving Dept1↔Dept2 loop ───────────┘
+                 (escalations → Manager; human only if Manager is stuck)
+```
+
+Full rosters, responsibilities, and per-role model assignments: **`departments.md`**.
+
+## Pipeline at a glance
+
+1. **Plan** — Manager + Dept 1 anchor the concept to the Green Book, **survey the existing corpus for
+   overlap (Continuity Report)**, and draft the **Concept Brief** (lesson list) + per-lesson **Lesson
+   Briefs**.
+2. **Design** — Dept 2 turns each Lesson Brief into an **Interaction Spec**; Dept1↔Dept2 loop until
+   a joint **Definition-of-Ready** holds for every beat.
+3. **Wave 0** — Manager freezes shared contracts (schema additions, engine interfaces, dispatcher
+   slots) once, at concept level.
+4. **Build** — Dept 3 implements every lesson in parallel (isolated worktrees): engine + schema +
+   renderer/widget + fixture + tests.
+5. **QA** — two-stage fact-check + the 9-gate **Scorecard** per lesson (`qa-rubric.md`).
+6. **Test + Alert** — when the whole concept is green, the Manager deploys it to **`brilliant-org-dev`**
+   (+ seeds the dev Firestore) and **Slack-DMs the user** the Scorecards + the **dev linked-domain URL**
+   (`deploy.md`).
+7. **Approve → Ship** — on approval: merge the concept branch → `main`, seed + deploy to **prod
+   (`brilliant-org`)**.
+
+Step-by-step orchestration (with parallelism and worktrees): **`pipeline.md`**.
+Artifact templates (Concept Brief, Continuity Report, Lesson Brief, Interaction Spec, Implementation
+Brief, Scorecard): **`artifacts.md`**. QA gates + Definition-of-Done: **`qa-rubric.md`**. Staging, dev
+deploy, seed, prod ship, Slack: **`deploy.md`**.
+
+## Model routing (per `.cursor/rules/model-routing.mdc`)
+
+| Work | Model | Notes |
+|---|---|---|
+| Manager / Director, arbitration, Scorecard sign-off | `claude-opus-4-8-thinking-max-fast` | the brain |
+| Dept 1 & Dept 2 (research / planning / design = reasoning) | `claude-opus-4-8-thinking-max-fast` | readonly **except** the Source Miner + Corpus Cartographer |
+| **Source Miner** (web + `references/`) & **Corpus Cartographer** (Firebase MCP + git) | Opus, **non-readonly** | readonly subagents have no internet/MCP |
+| Dept 3 coders, schema/types, test author, brief drafter | `claude-4.6-sonnet-high-thinking` | code writing/editing |
+| Dept 3 brief reviewer, verification, code reviewer | `claude-opus-4-8-thinking-max-fast` | review/reasoning |
+| Integrator/push, `validate`/seed/deploy (dev+prod) runs | `composer-2.5-fast` | mechanical IO |
+
+The skill's main agent is a **thin dispatcher**: it spawns subagents and moves artifacts between
+stages. The **Manager** makes the judgment calls.
+
+## Environment / prerequisites
+
+- **`references/green-book.txt`** — the grep-searchable Green Book (gitignored). Required ground truth.
+- **Firebase projects** — dev `brilliant-org-dev` (#836579828208, test/staging) and prod
+  `brilliant-org` (#801582458333, approval-gated). Selected per command via `--project` /
+  `GOOGLE_CLOUD_PROJECT` (`deploy.md`).
+- **`.env.dev`** (gitignored) — dev build config (`VITE_USE_EMULATORS=false`, `VITE_INCLUDE_DEV_ROUTES=1`,
+  `brilliant-org-dev` web config). **Auto-generated by the skill's first-run setup** (`deploy.md`) — not
+  a manual step. Dev `/dev/lesson/:id` review is enabled; the dev URL is auto-resolved at deploy.
+- **Slack** — alerts via the `user-slack` MCP, `slack_send_message` to `channel_id` = the user's
+  `user_id` (`U0B9VC0TJBH`); chat echo as fallback.
+- **`.env.factory`** (gitignored) — optional factory config (e.g. Slack target override).
+- Reuse docs: `docs/beat-audit-rubric.md`, `docs/core_instructions.md`, `docs/mvp_prd.md`,
+  `docs/ui_design_system.md`, `docs/proposed-lessons.md`, `docs/interactive-mechanics-backlog.md`,
+  and the research memos in `audits/ideation/inclusive-research-*.md`.
+- **Repo gotchas (`HANDOFF.md`) — obey:** do **not** use `npm run` (call `./node_modules/.bin/*`
+  binaries directly); the **`firebase` CLI uses the v24.3.0 alias**; **Java-dependent emulator/seed/
+  rules steps are user-run** (the factory uses the dev/prod Admin-SDK seed + hosting deploys, which
+  need no Java). Exact commands live in `qa-rubric.md` and `deploy.md`.
+
+## Guardrails
+
+- **Test on `brilliant-org-dev`; never touch prod `brilliant-org` until the user approves the concept.**
+- Never commit to `main` or deploy to prod without explicit user approval of the concept.
+- Never re-teach a concept the corpus already covers — turn the overlap into recall (rule 7).
+- Keep the KMP/probability engine and any new engine **pure, dependency-free, exact** (no floats).
+- If a concept can't be Green-Book-anchored, or a beat genuinely resists being made interactive
+  after honest attempts, the Manager escalates to the user — it does not fabricate or ship.
