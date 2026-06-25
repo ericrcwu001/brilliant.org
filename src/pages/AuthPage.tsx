@@ -5,7 +5,7 @@
 
 import { useState } from 'react'
 import { useAuth } from '../auth/authContext'
-import { authErrorMessage } from '../auth/authErrors'
+import { classifyAuthError, type AuthFieldError } from '../auth/authErrors'
 import type { NavigateFn } from './routes'
 import { ROUTES } from './routes'
 
@@ -21,14 +21,28 @@ export function AuthPage({ navigate }: { navigate: NavigateFn }) {
   const [mode, setMode] = useState<Mode>(initialMode)
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const [error, setError] = useState<string | null>(null)
+  const [error, setError] = useState<AuthFieldError | null>(null)
   const [busy, setBusy] = useState(false)
 
   const isCreate = mode === 'create'
 
+  function clearError() {
+    setError(null)
+  }
+
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault()
     setError(null)
+
+    if (!email.trim()) {
+      setError({ field: 'email', message: 'Enter your email.' })
+      return
+    }
+    if (!password) {
+      setError({ field: 'password', message: 'Enter your password.' })
+      return
+    }
+
     setBusy(true)
     try {
       if (isCreate) {
@@ -37,7 +51,7 @@ export function AuthPage({ navigate }: { navigate: NavigateFn }) {
         await signInWithEmail(email, password)
       }
     } catch (err) {
-      setError(authErrorMessage(err))
+      setError(classifyAuthError(err))
       setBusy(false)
     }
   }
@@ -48,7 +62,7 @@ export function AuthPage({ navigate }: { navigate: NavigateFn }) {
     try {
       await signInWithGoogle()
     } catch (err) {
-      setError(authErrorMessage(err))
+      setError(classifyAuthError(err))
       setBusy(false)
     }
   }
@@ -79,7 +93,7 @@ export function AuthPage({ navigate }: { navigate: NavigateFn }) {
         </p>
 
         <form className="authform" onSubmit={handleSubmit} noValidate>
-          <label className="field">
+          <label className="field" data-error={error?.field === 'email' || undefined}>
             <span className="field__label">Email</span>
             <input
               className="field__input"
@@ -87,12 +101,22 @@ export function AuthPage({ navigate }: { navigate: NavigateFn }) {
               name="email"
               autoComplete="email"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={(e) => {
+                setEmail(e.target.value)
+                if (error?.field === 'email') clearError()
+              }}
+              aria-invalid={error?.field === 'email' || undefined}
+              aria-describedby={error?.field === 'email' ? 'email-hint' : undefined}
               required
             />
+            {error?.field === 'email' && (
+              <span className="field__hint" id="email-hint">
+                {error.message}
+              </span>
+            )}
           </label>
 
-          <label className="field">
+          <label className="field" data-error={error?.field === 'password' || undefined}>
             <span className="field__label">Password</span>
             <input
               className="field__input"
@@ -100,14 +124,26 @@ export function AuthPage({ navigate }: { navigate: NavigateFn }) {
               name="password"
               autoComplete={isCreate ? 'new-password' : 'current-password'}
               value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              onChange={(e) => {
+                setPassword(e.target.value)
+                if (error?.field === 'password') clearError()
+              }}
+              aria-invalid={error?.field === 'password' || undefined}
+              aria-describedby={
+                error?.field === 'password' ? 'password-hint' : undefined
+              }
               required
             />
+            {error?.field === 'password' && (
+              <span className="field__hint" id="password-hint">
+                {error.message}
+              </span>
+            )}
           </label>
 
-          {error && (
+          {error?.field === null && (
             <p className="authform__error" role="alert">
-              {error}
+              {error.message}
             </p>
           )}
 

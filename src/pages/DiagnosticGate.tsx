@@ -1,7 +1,7 @@
 // Pre-L1 diagnostic pre-check (L1 §6 / §3.3). A tiny (~4 question) graded flow
 // that routes the learner to Track A (scaffolded) or Track B (the current
 // experience). Pure UI + client-side scoring; the parent persists the chosen
-// track and proceeds. Tap-only, one question at a time, mobile-first.
+// track and proceeds. Type-in answers, one question at a time, mobile-first.
 
 import { useState } from 'react'
 import type { Track } from '../progress/track'
@@ -9,48 +9,45 @@ import type { Track } from '../progress/track'
 type Question = {
   id: string
   prompt: string
-  options: { id: string; label: string; correct: boolean }[]
+  accept: string[]
+  placeholder?: string
+  suffix?: string
 }
 
+// Normalize for comparison: trim, lowercase, strip whitespace. Each accepted
+// form is listed explicitly (e.g. "1/2" and "0.5" don't unify).
+const norm = (s: string) => s.trim().toLowerCase().replace(/\s+/g, '')
+
 // Each question probes one L1 prerequisite (½, averaging, independence, the
-// "progress resets" idea). Getting most right ⇒ the lean Track B; otherwise the
-// scaffolded Track A. Deliberately short and low-stakes.
+// "progress resets" idea), phrased so a short typed number expresses the idea.
+// Getting most right ⇒ the lean Track B; otherwise the scaffolded Track A.
 const QUESTIONS: Question[] = [
   {
     id: 'half',
-    prompt: 'A fair coin lands heads with probability…',
-    options: [
-      { id: 'a', label: '½ — 1 in 2', correct: true },
-      { id: 'b', label: '⅓ — 1 in 3', correct: false },
-      { id: 'c', label: 'It depends on the last flip', correct: false },
-    ],
+    prompt: 'A fair coin lands heads 1 out of how many equally likely outcomes?',
+    accept: ['2'],
+    placeholder: '?',
   },
   {
     id: 'avg',
-    prompt: 'The average of 2, 4, and 6 is…',
-    options: [
-      { id: 'a', label: '4', correct: true },
-      { id: 'b', label: '6', correct: false },
-      { id: 'c', label: '12', correct: false },
-    ],
+    prompt: 'What is the average of 2, 4, and 6?',
+    accept: ['4'],
+    placeholder: '?',
   },
   {
     id: 'independence',
-    prompt: 'You just flipped four tails in a row. The next flip is…',
-    options: [
-      { id: 'a', label: 'Still 50/50 — the coin has no memory', correct: true },
-      { id: 'b', label: "More likely heads — it's due", correct: false },
-      { id: 'c', label: "More likely tails — it's hot", correct: false },
-    ],
+    prompt:
+      'You just flipped four tails in a row. What percent chance does the next flip land heads?',
+    accept: ['50', '50%', '1/2', '0.5'],
+    placeholder: '0–100',
+    suffix: '%',
   },
   {
     id: 'progress',
-    prompt: "You're waiting for HH and just saw one H. A tail next means…",
-    options: [
-      { id: 'a', label: 'You start over — no progress kept', correct: true },
-      { id: 'b', label: 'You still have your H', correct: false },
-      { id: 'c', label: "You've matched HH", correct: false },
-    ],
+    prompt:
+      "You're waiting for HH and just saw one H. A tail next leaves you with how many H of progress?",
+    accept: ['0', 'none', 'zero'],
+    placeholder: '?',
   },
 ]
 
@@ -63,15 +60,20 @@ export function DiagnosticGate({ onDone }: { onDone: (track: Track) => void }) {
 
   const q = QUESTIONS[index]
   const isLast = index === QUESTIONS.length - 1
-  const picked = answers[q.id] ?? null
+  const value = answers[q.id] ?? ''
+  const filled = value.trim() !== ''
 
   function finish() {
     const correct = QUESTIONS.reduce((n, question) => {
-      const choice = answers[question.id]
-      const opt = question.options.find((o) => o.id === choice)
-      return n + (opt?.correct ? 1 : 0)
+      const a = norm(answers[question.id] ?? '')
+      return n + (question.accept.map(norm).includes(a) ? 1 : 0)
     }, 0)
     onDone(correct >= TRACK_B_THRESHOLD ? 'B' : 'A')
+  }
+
+  function next() {
+    if (isLast) finish()
+    else setIndex((i) => i + 1)
   }
 
   return (
@@ -90,22 +92,29 @@ export function DiagnosticGate({ onDone }: { onDone: (track: Track) => void }) {
       </section>
 
       <main className="region">
-        <div className="mcq" role="radiogroup" aria-label="Choose one">
-          {q.options.map((opt) => {
-            const on = picked === opt.id
-            return (
-              <button
-                type="button"
-                role="radio"
-                aria-checked={on}
-                key={opt.id}
-                className={`mcq__option${on ? ' mcq__option--on' : ''}`}
-                onClick={() => setAnswers((a) => ({ ...a, [q.id]: opt.id }))}
-              >
-                {opt.label}
-              </button>
-            )
-          })}
+        <div className="answer-entry">
+          <label className="answer-entry__field">
+            <span className="answer-entry__label">Your answer</span>
+            <span className="answer-entry__inputwrap">
+              <input
+                type="text"
+                className="answer-entry__input"
+                aria-label={q.prompt}
+                value={value}
+                placeholder={q.placeholder}
+                autoComplete="off"
+                onChange={(e) =>
+                  setAnswers((a) => ({ ...a, [q.id]: e.target.value }))
+                }
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && filled) next()
+                }}
+              />
+              {q.suffix && (
+                <span className="answer-entry__suffix">{q.suffix}</span>
+              )}
+            </span>
+          </label>
         </div>
       </main>
 
@@ -113,8 +122,8 @@ export function DiagnosticGate({ onDone }: { onDone: (track: Track) => void }) {
         <button
           type="button"
           className="btn btn--primary"
-          disabled={picked === null}
-          onClick={() => (isLast ? finish() : setIndex((i) => i + 1))}
+          disabled={!filled}
+          onClick={next}
         >
           {isLast ? 'See my path' : 'Next'}
         </button>

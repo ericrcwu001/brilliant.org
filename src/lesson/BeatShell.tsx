@@ -6,15 +6,20 @@
 import type { ReactNode } from 'react'
 import { FeedbackStrip, type FeedbackView } from './FeedbackStrip'
 
+export type ActionVariant = 'primary' | 'secondary' | 'ghost'
+
 export type PrimaryAction = {
   label: string
   enabled: boolean
   onClick: () => void
+  variant?: ActionVariant
 }
 
 export type SecondaryAction = {
   label: string
   onClick: () => void
+  variant?: ActionVariant
+  enabled?: boolean
 }
 
 export function BeatShell({
@@ -43,8 +48,9 @@ export function BeatShell({
         {secondary && (
           <button
             type="button"
-            className="btn btn--ghost"
+            className={`btn btn--${secondary.variant ?? 'ghost'}`}
             onClick={secondary.onClick}
+            disabled={secondary.enabled === false}
           >
             {secondary.label}
           </button>
@@ -52,15 +58,16 @@ export function BeatShell({
         {tertiary && (
           <button
             type="button"
-            className="btn btn--ghost"
+            className={`btn btn--${tertiary.variant ?? 'ghost'}`}
             onClick={tertiary.onClick}
+            disabled={tertiary.enabled === false}
           >
             {tertiary.label}
           </button>
         )}
         <button
           type="button"
-          className="btn btn--primary"
+          className={`btn btn--${primary.variant ?? 'primary'}`}
           onClick={primary.onClick}
           disabled={!primary.enabled}
         >

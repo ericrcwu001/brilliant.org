@@ -1,0 +1,39 @@
+/* Depth, letterpress, and hairline utility classes.
+   These are pure classname primitives; no element in the app uses them yet
+   (they are consumed starting in Wave 1). All values reference CSS tokens so
+   they stay in sync with the single-source token pipeline. */
+
+/* Inset deboss — pressed/sunken appearance for interactive wells. */
+.deboss {
+  box-shadow: var(--press-deboss);
+}
+
+/* Letterpress — inset deboss + 1 px top-edge highlight + pressed-ink text shadow. */
+.letterpress {
+  box-shadow: var(--press-deboss), var(--edge-highlight);
+  text-shadow: var(--letterpress-ink);
+}
+
+/* Raised paper card — warm background, medium shadow, rounded corners. */
+.paper-card {
+  background: var(--paper-1);
+  box-shadow: var(--paper-shadow-2);
+  border-radius: var(--r-md);
+}
+
+/* Device-pixel hairline border — 0.5 px on retina, 1 px elsewhere. */
+.hairline {
+  border: 1px solid var(--rule);
+}
+
+@media (resolution >= 2dppx) {
+  .hairline {
+    border-width: 0.5px;
+  }
+}
+
+/* Pressable element — compositor-only active-state deboss + micro scale. */
+.press:active {
+  box-shadow: var(--press-deboss);
+  transform: scale(0.98);
+}

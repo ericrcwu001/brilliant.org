@@ -177,3 +177,62 @@ export function nodeCtaLabel(
   if (node.state === 'completed' || node.state === 'needsReview') return 'Review'
   return 'Start'
 }
+
+// ── Ergo chapter model (Course Journey) ─────────────────────────────────────
+
+export interface Chapter {
+  id: string
+  label: string
+  /** CSS custom property prefix, e.g. 'ch1' → var(--ch1) / var(--ch1-tint) */
+  hueVar: string
+  lessonIds: string[]
+}
+
+export const ERGO_CHAPTERS: Chapter[] = [
+  {
+    id: 'foundations',
+    label: 'Foundations',
+    hueVar: 'ch1',
+    lessonIds: ['lesson-first-heads', 'lesson-pattern-hitting-times'],
+  },
+  {
+    id: 'racing-walks',
+    label: 'Racing & Walks',
+    hueVar: 'ch2',
+    lessonIds: ['lesson-penneys-game', 'lesson-gamblers-ruin'],
+  },
+  {
+    id: 'mastery',
+    label: 'Mastery',
+    hueVar: 'ch3',
+    lessonIds: ['lesson-states-streaks', 'lesson-longer-patterns', 'lesson-overlap-shortcut'],
+  },
+]
+
+export function chapterForLesson(lessonId: string): Chapter | undefined {
+  return ERGO_CHAPTERS.find((ch) => ch.lessonIds.includes(lessonId))
+}
+
+export type MathVizKind =
+  | 'coin'
+  | 'stateMachine'
+  | 'raceLanes'
+  | 'randomWalk'
+  | 'twoNode'
+  | 'fourNode'
+  | 'sum'
+  | 'dice'
+
+export const LESSON_VIZ: Record<string, MathVizKind> = {
+  'lesson-first-heads': 'coin',
+  'lesson-pattern-hitting-times': 'stateMachine',
+  'lesson-penneys-game': 'raceLanes',
+  'lesson-gamblers-ruin': 'randomWalk',
+  'lesson-states-streaks': 'twoNode',
+  'lesson-longer-patterns': 'fourNode',
+  'lesson-overlap-shortcut': 'sum',
+}
+
+export function vizForLesson(lessonId: string): MathVizKind {
+  return LESSON_VIZ[lessonId] ?? 'coin'
+}

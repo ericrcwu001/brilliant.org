@@ -17,6 +17,7 @@ import type { FeedbackView } from '../FeedbackStrip'
 import { MilestoneSeal } from '../../habit/MilestoneSeal'
 import { FLAGSHIP_LESSON_ID } from '../../pages/routes'
 import { analytics } from '../../analytics/events'
+import { Katex } from '../Katex'
 
 type RecallId = 'length' | 'overlap' | 'rarity'
 
@@ -117,9 +118,10 @@ export function RecapBeat(props: BeatProps) {
     return (
       <BeatShell
         feedback={revealedG ? { kind: 'correct', text: fb.correct } : undefined}
-        primary={{ label: isLast ? 'Finish' : 'Continue', enabled: true, onClick: onAdvance }}
-        secondary={
-          revealedG ? undefined : { label: 'Reveal recap', onClick: () => setRevealedAnyway(true) }
+        primary={
+          revealedG
+            ? { label: isLast ? 'Finish' : 'Continue', enabled: true, onClick: onAdvance }
+            : { label: 'Reveal recap', enabled: true, onClick: () => setRevealedAnyway(true) }
         }
       >
         <div className="recap">
@@ -129,7 +131,6 @@ export function RecapBeat(props: BeatProps) {
               <MilestoneSeal meta={props.milestone} earned />
             </div>
           )}
-          <p className="recap__q">{beat.prompt}</p>
           {revealedG && (
             <div className={`recap__reveal${reducedMotion ? '' : ' recap__reveal--enter'}`}>
               <p className="recap__principle">{fb.correct}</p>
@@ -287,21 +288,19 @@ export function RecapBeat(props: BeatProps) {
           >
             <div className="recap__hero">
               <span className="recap__seal mono">HH ≠ HT</span>
-              <p
-                className="recap__verdict mono"
-                aria-label={`Expected wait for ${pattern} is ${eHH}${
-                  eHT !== undefined
-                    ? `, greater than ${contrastPattern} at ${eHT}`
-                    : ''
-                }`}
-              >
-                E[{pattern}] = {eHH}
-                {eHT !== undefined && (
-                  <>
-                    {' '}
-                    &gt; E[{contrastPattern}] = {eHT}
-                  </>
-                )}
+              <p className="recap__verdict">
+                <Katex
+                  tex={`E[\\text{${pattern}}] = ${eHH}${
+                    eHT !== undefined
+                      ? ` > E[\\text{${contrastPattern}}] = ${eHT}`
+                      : ''
+                  }`}
+                  ariaLabel={`Expected wait for ${pattern} is ${eHH}${
+                    eHT !== undefined
+                      ? `, greater than ${contrastPattern} at ${eHT}`
+                      : ''
+                  }`}
+                />
               </p>
               <p className="recap__principle">{fb.hints[0]}</p>
             </div>

@@ -5,23 +5,12 @@
 // targeted/varied hint addresses the single most useful mistake, and the hint
 // ladder still drives level escalation + the level-3 answer reveal.
 
-import {
-  cloneElement,
-  isValidElement,
-  useEffect,
-  useId,
-  useLayoutEffect,
-  useMemo,
-  useRef,
-  useState,
-  type ReactElement,
-  type ReactNode,
-} from 'react'
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import type { BeatProps } from './types'
 import type { CanonicalRecurrence, Tile } from '../../content/schema'
 import type { StateId } from '../../engine/types'
 import { BeatShell } from '../BeatShell'
-import { m } from 'motion/react'
+import { m, type PanInfo } from 'motion/react'
 import { SPRING } from '../../motion/tokens'
 import { resolveFeedback, useHintLadder } from '../feedback'
 import { StateGraph, type EdgeRef } from '../konva/StateGraph'
@@ -34,6 +23,7 @@ import {
   progressLine,
   type RowDiagnosis,
 } from '../equationDiagnosis'
+import { Tooltip } from '../../ui/Tooltip'
 
 type Rational = { n: number; d: number }
 
@@ -141,89 +131,6 @@ function resolveEqCopy(
   }
 }
 
-type InfoTipTriggerProps = {
-  onClick?: (e: React.MouseEvent) => void
-  onBlur?: (e: React.FocusEvent) => void
-  onFocus?: (e: React.FocusEvent) => void
-  'aria-label'?: string
-  'aria-describedby'?: string
-}
-
-function InfoTip({
-  label,
-  tip,
-  children,
-  className,
-}: {
-  label: string
-  tip: string
-  children: ReactElement<InfoTipTriggerProps>
-  className?: string
-}) {
-  const [open, setOpen] = useState(false)
-  const [leftPx, setLeftPx] = useState<number | null>(null)
-  const tipId = useId()
-  const wrapRef = useRef<HTMLSpanElement>(null)
-  const bubbleRef = useRef<HTMLSpanElement>(null)
-
-  // Pin the (absolutely positioned) bubble inside the viewport with an explicit
-  // left offset. A trigger near a screen edge would otherwise center a wide
-  // bubble past the edge — clipping the tooltip and, because the hidden bubble
-  // still occupies layout, adding horizontal page scroll. We position via `left`
-  // (not `transform`) so the clamped box stays out of the scrollable overflow,
-  // and compute it for every bubble (open or not) so closed tips can't overflow.
-  useLayoutEffect(() => {
-    const wrap = wrapRef.current
-    const bubble = bubbleRef.current
-    if (!wrap || !bubble) return
-    const margin = 8
-    const vw = document.documentElement.clientWidth
-    const rect = wrap.getBoundingClientRect()
-    const w = bubble.offsetWidth
-    const desired = rect.left + rect.width / 2 - w / 2
-    const clamped = Math.max(margin, Math.min(desired, vw - margin - w))
-    setLeftPx(Math.round(clamped - rect.left))
-  }, [open, tip])
-
-  const trigger = isValidElement(children)
-    ? cloneElement<InfoTipTriggerProps>(children, {
-        'aria-describedby': tipId,
-        'aria-label': children.props['aria-label'] ?? label,
-        onClick: (e: React.MouseEvent) => {
-          children.props.onClick?.(e)
-          setOpen((cur) => !cur)
-        },
-        onBlur: (e: React.FocusEvent) => {
-          children.props.onBlur?.(e)
-          if (!e.currentTarget.contains(e.relatedTarget as Node | null)) setOpen(false)
-        },
-        onFocus: (e: React.FocusEvent) => {
-          children.props.onFocus?.(e)
-          setOpen(true)
-        },
-      })
-    : children
-
-  return (
-    <span
-      ref={wrapRef}
-      className={['infotip', className].filter(Boolean).join(' ')}
-      data-open={open || undefined}
-    >
-      {trigger}
-      <span
-        ref={bubbleRef}
-        className="infotip__bubble"
-        id={tipId}
-        role="tooltip"
-        style={leftPx === null ? undefined : { left: `${leftPx}px`, transform: 'none' }}
-      >
-        {tip}
-      </span>
-    </span>
-  )
-}
-
 // One leading constant slot, then a prob + state slot per target term, so the
 // shape mirrors the canonical recurrence (HH E0 → [const][prob][state][prob][state]).
 function slotTemplate(target: CanonicalRecurrence): SlotKind[] {
@@ -282,7 +189,7 @@ function PrefilledRow({ target, copy }: { target: CanonicalRecurrence; copy: EqC
     const cat = tokenCategory(token)
     const tip = prefilledSlotTip(target, idx, copy)
     return (
-      <InfoTip key={`prefill-${target.lhs}-${idx}`} label={valueOfToken(token)} tip={tip}>
+      <Tooltip key={`prefill-${target.lhs}-${idx}`} label={tip}>
         <span
           tabIndex={0}
           role="button"
@@ -291,7 +198,7 @@ function PrefilledRow({ target, copy }: { target: CanonicalRecurrence; copy: EqC
         >
           {displayTokenValue(token)}
         </span>
-      </InfoTip>
+      </Tooltip>
     )
   }
 
@@ -397,6 +304,13 @@ export function EquationTilesBeat(props: BeatProps) {
   // markers and hints never describe a stale attempt.
   const [checked, setChecked] = useState(false)
   const [solved, setSolved] = useState(false)
+  // Slot element refs for drag hit-testing, keyed as `${rowId}:${idx}`.
+  const slotRefs = useRef<Map<string, HTMLButtonElement>>(new Map())
+  // Guards against a stray onClick firing right after a real drag gesture.
+  const wasDragRef = useRef(false)
+  // Tracks the slot currently under the dragged tile; toggled directly on the
+  // DOM element (classList) so there is zero per-frame React setState.
+  const dragoverSlotKeyRef = useRef<string | null>(null)
 
   // Track-A dyna-link (L1 §5.2): placing a destination-state tile briefly
   // highlights the matching graph edge, bridging the prefix label (∅/H) shown in
@@ -407,6 +321,17 @@ export function EquationTilesBeat(props: BeatProps) {
   useEffect(
     () => () => {
       if (dynaTimer.current) clearTimeout(dynaTimer.current)
+    },
+    [],
+  )
+
+  // Deboss flash on drag-drop settle: one React setState at drop-end only,
+  // drives a CSS keyframe animation on the target slot.
+  const dropFlashTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const [dropFlashKey, setDropFlashKey] = useState<string | null>(null)
+  useEffect(
+    () => () => {
+      if (dropFlashTimer.current) clearTimeout(dropFlashTimer.current)
     },
     [],
   )
@@ -628,6 +553,71 @@ export function EquationTilesBeat(props: BeatProps) {
       ? { label: isLast ? 'Finish' : 'Continue', enabled: true, onClick: onAdvance }
       : { label: 'Check', enabled: allFilled, onClick: onCheck }
 
+  function findSlotAtPoint(x: number, y: number): { rowId: string; idx: number } | null {
+    // motion PanInfo.point is page-relative (pageX/pageY, includes scroll);
+    // getBoundingClientRect is viewport-relative, so convert before hit-testing.
+    const vx = x - window.scrollX
+    const vy = y - window.scrollY
+    for (const [key, el] of slotRefs.current) {
+      const rect = el.getBoundingClientRect()
+      if (vx >= rect.left && vx <= rect.right && vy >= rect.top && vy <= rect.bottom) {
+        const colon = key.indexOf(':')
+        return { rowId: key.slice(0, colon), idx: parseInt(key.slice(colon + 1), 10) }
+      }
+    }
+    return null
+  }
+
+  // Dragover highlight: imperatively toggle the CSS class on slot DOM nodes so
+  // there is zero per-frame React setState. Motion drives the tile transform;
+  // we only touch classList when the pointer crosses a slot boundary.
+  function handleTileDrag(
+    _event: MouseEvent | TouchEvent | PointerEvent,
+    info: PanInfo,
+  ) {
+    const found = findSlotAtPoint(info.point.x, info.point.y)
+    const newKey = found ? `${found.rowId}:${found.idx}` : null
+    if (newKey === dragoverSlotKeyRef.current) return
+    if (dragoverSlotKeyRef.current) {
+      slotRefs.current.get(dragoverSlotKeyRef.current)?.classList.remove('slot--dragover')
+    }
+    if (newKey) {
+      slotRefs.current.get(newKey)?.classList.add('slot--dragover')
+    }
+    dragoverSlotKeyRef.current = newKey
+  }
+
+  function handleTileDragEnd(
+    token: string,
+    _event: MouseEvent | TouchEvent | PointerEvent,
+    info: PanInfo,
+  ) {
+    // Always clear the imperative dragover highlight.
+    if (dragoverSlotKeyRef.current) {
+      slotRefs.current.get(dragoverSlotKeyRef.current)?.classList.remove('slot--dragover')
+      dragoverSlotKeyRef.current = null
+    }
+    // Small movements are taps; let the onClick handler take over.
+    const realDrag = Math.abs(info.offset.x) > 3 || Math.abs(info.offset.y) > 3
+    if (!realDrag) return
+    wasDragRef.current = true
+    const found = findSlotAtPoint(info.point.x, info.point.y)
+    if (!found) return
+    const { rowId, idx } = found
+    const row = buildableRows.find((r) => r.lhs === rowId)
+    if (!row) return
+    const locked = isFaded(row) && idx !== fadedOpenIdx(row.target)
+    if (locked || solved || revealed) return
+    // Reuse the same placement path as tap — no separate code path.
+    placeInto(rowId, idx, token)
+    setSelTile(null)
+    setSelSlot(null)
+    // One setState at drop-end only: triggers the deboss-flash CSS animation.
+    if (dropFlashTimer.current) clearTimeout(dropFlashTimer.current)
+    setDropFlashKey(`${rowId}:${idx}`)
+    dropFlashTimer.current = setTimeout(() => setDropFlashKey(null), 500)
+  }
+
   function slot(row: (typeof buildableRows)[number], idx: number, kind: SlotKind): ReactNode {
     const rowId = row.lhs
     const value = (displayed[rowId] ?? [])[idx]
@@ -652,6 +642,7 @@ export function EquationTilesBeat(props: BeatProps) {
       glow ? 'slot--glow' : '',
       locked ? 'slot--locked' : '',
       showCorrect ? 'slot--correct' : showWrong ? 'slot--wrong' : '',
+      dropFlashKey === `${rowId}:${idx}` ? 'slot--drop-flash' : '',
     ]
       .filter(Boolean)
       .join(' ')
@@ -665,6 +656,10 @@ export function EquationTilesBeat(props: BeatProps) {
       <button
         type="button"
         key={`slot-${rowId}-${idx}`}
+        ref={(el) => {
+          if (el) slotRefs.current.set(`${rowId}:${idx}`, el)
+          else slotRefs.current.delete(`${rowId}:${idx}`)
+        }}
         className={classes}
         aria-label={label}
         onClick={() => onSlotTap(rowId, idx)}
@@ -828,7 +823,9 @@ export function EquationTilesBeat(props: BeatProps) {
 
             <div className="palette">
               <p className="palette__label">
-                {selSlot ? 'Tap a tile to fill the selected slot' : 'Tap a tile, then a slot'}
+                {selSlot
+                  ? 'Tap a tile to fill the selected slot'
+                  : 'Tap a tile, then a slot — or drag a tile into a slot'}
               </p>
               <div className="token-row">
                 {palette.map((tile) => {
@@ -842,10 +839,19 @@ export function EquationTilesBeat(props: BeatProps) {
                       type="button"
                       className={`token token--${cat}${selected ? ' token--selected' : ''}`}
                       aria-pressed={selected}
-                      onClick={() => onTileTap(token)}
+                      onClick={() => {
+                        if (wasDragRef.current) { wasDragRef.current = false; return }
+                        onTileTap(token)
+                      }}
+                      drag
+                      dragSnapToOrigin
                       whileHover={{ y: -3, scale: 1.04 }}
                       whileTap={{ scale: 0.95 }}
+                      whileDrag={{ scale: 1.04, rotate: 3, boxShadow: 'var(--paper-shadow-2)' }}
                       transition={SPRING}
+                      onDrag={handleTileDrag}
+                      onDragEnd={(e, info) => handleTileDragEnd(token, e, info)}
+                      style={{ position: 'relative' }}
                     >
                       {tile.kind === 'state' ? stateLabel(String(tile.value)) : tile.value}
                     </m.button>

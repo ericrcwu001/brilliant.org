@@ -1,0 +1,112 @@
+/* ==========================================================================
+   Wave 0.6 — ui primitive catalog styles
+   All rules use design tokens only (var(--token)); no literal hex/px for
+   colors, shadows, or radii. Nothing in the app carries these classes yet
+   (adoption is Wave 3) → zero visual diff on existing surfaces.
+   ========================================================================== */
+
+/* ── Tooltip ─────────────────────────────────────────────────────────────── */
+
+.ui-tooltip {
+  background: var(--paper-0);
+  color: var(--ink);
+  border: 1px solid var(--rule);
+  border-radius: var(--r-sm);
+  padding: var(--s1) var(--s2);
+  font-family: var(--font-sans);
+  font-size: calc(13px * var(--fs));
+  line-height: 1.4;
+  box-shadow: var(--paper-shadow-2);
+  max-width: 240px;
+  /* Prevent layout flash before Radix positions it */
+  will-change: transform, opacity;
+}
+
+/* ── StatusNote ──────────────────────────────────────────────────────────── */
+
+.ui-status-note {
+  margin: 0;
+  color: var(--graphite);
+  font-family: var(--font-sans);
+  font-size: calc(13px * var(--fs));
+  line-height: 1.5;
+  border-left: 2px solid var(--rule);
+  padding-left: var(--s2);
+}
+
+.ui-status-note[data-tone='info'] {
+  color: var(--quill);
+  border-left-color: var(--quill-tint);
+}
+
+.ui-status-note[data-tone='offline'] {
+  color: var(--graphite-soft);
+  border-left-color: var(--rule-faint);
+}
+
+.ui-status-note[data-tone='error'] {
+  color: var(--wrong-text);
+  border-left-color: var(--wrong-tint);
+}
+
+/* ── Dialog ──────────────────────────────────────────────────────────────── */
+
+/* z-index sits above all app chrome (highest in-app value is the home rail at
+   20) so the scrim covers the sticky lesson header (.topbar, z-index 5). The
+   box must be lifted alongside the scrim or the raised overlay would paint over
+   it. */
+.ui-dialog-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  background: rgba(27, 34, 48, 0.4);
+}
+
+.ui-dialog {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 50;
+  background: var(--paper-0);
+  border: 1px solid var(--rule);
+  border-radius: var(--r-md);
+  padding: var(--s5);
+  box-shadow: var(--paper-shadow-2);
+  min-width: 320px;
+  max-width: min(560px, calc(100vw - var(--s6)));
+  max-height: calc(100vh - var(--s7));
+  overflow-y: auto;
+  color: var(--ink);
+  font-family: var(--font-sans);
+}
+
+/* ── DropdownMenu ────────────────────────────────────────────────────────── */
+
+.ui-dropdown {
+  background: var(--paper-0);
+  border: 1px solid var(--rule);
+  border-radius: var(--r-sm);
+  padding: var(--s1) 0;
+  box-shadow: var(--paper-shadow-2);
+  min-width: 160px;
+}
+
+.ui-dropdown [role='menuitem'] {
+  padding: var(--s2) var(--s3);
+  font-family: var(--font-sans);
+  font-size: calc(14px * var(--fs));
+  color: var(--ink);
+  cursor: default;
+  outline: none;
+}
+
+.ui-dropdown [role='menuitem']:hover,
+.ui-dropdown [role='menuitem'][data-highlighted] {
+  background: var(--paper-1);
+}
+
+.ui-dropdown [role='menuitem'][data-disabled] {
+  color: var(--graphite-soft);
+  pointer-events: none;
+}

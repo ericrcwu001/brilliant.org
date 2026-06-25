@@ -1,0 +1,5 @@
+{
+  "flip-beat":  { "$value": "520ms", "$type": "duration" },
+  "stamp-beat": { "$value": "480ms", "$type": "duration" },
+  "sim-run-cadence": { "$value": "12ms", "$type": "duration" }
+}

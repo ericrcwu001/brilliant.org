@@ -1,4 +1,5 @@
 # HANDOFF
+<!-- Last updated: Agent 3 — Course Journey (Ergo UI reimagining) -->
 
 Orientation doc for a fresh context. Session-by-session narration lives in git
 history + the `docs/`/`audits/` files; this file keeps only what's needed going forward.
@@ -9,9 +10,11 @@ Brilliant-style learn-by-doing web app. Flagship lesson teaches **pattern hittin
 times** for coin flips (why `E[HH]=6` but `E[HT]=4`). Sequenced by `docs/mvp_prd.md`
 (Groups A–D).
 
-- Match `docs/ui_design_system.md` ("The Living Notebook" — bolder cinematic evolution of
-  the notebook; IBM Plex + Fraunces display, design tokens, sticky action bar). The
-  bolder-identity pivot is recorded in `docs/adr/0002-bolder-living-notebook.md`.
+- Match `docs/ui_design_system.md` (**Ergo Design System** — bright, clean, colorful,
+  brilliant.org-like identity; Space Grotesk + Inter + JetBrains Mono; cool-white palette;
+  chapter color-coding; learning journey with rich lesson cards; medallion gallery + streak
+  dots). The Ergo reimagining is recorded in `docs/adr/0003-ergo-bright-reimagining.md`
+  (supersedes ADR-0002). The product is renamed from "Pattern Hitting Times" to **Ergo**.
 - KMP engine stays **pure / dependency-free** (exact rational arithmetic, no floats).
 - Surgical changes, simplicity first, no speculative scope (`AGENTS.md`).
 
@@ -56,10 +59,9 @@ times** for coin flips (why `E[HH]=6` but `E[HT]=4`). Sequenced by `docs/mvp_prd
   terminal) so Firestore picks up the updated L1 fixture **+ the new L0 and L2–L6 lesson
   fixtures + the `built:true` course nodes** (seed reads `fixtures/lesson-*.json`).
 - **Git:** branch `main` in sync with `origin/main` at `5db37ea` (Group C + Study
-  Desk + all 7 lessons + security hardening **are committed/pushed** — the older
-  "everything uncommitted" note was stale). Working tree only has `CONTEXT.md`/
-  `HANDOFF.md`/`docs/ui_design_system.md` modified + a few untracked docs/rules.
-  Don't commit unless asked.
+  Desk + all 7 lessons + security hardening committed/pushed). **Living Notebook
+  overhaul (Waves 0–4) is in the working tree, NOT committed** — large diff across
+  tokens/CSS/surfaces/ui/motion/lesson/auth + VR harness. Don't commit unless asked.
 - **Seeded (prod brilliant-org — DONE this session):** **all 7 lessons** (L0 +
   L1–L6) + the course doc (every node `built:true`) are now live in prod Firestore
   via `SEED_TARGET=prod GOOGLE_CLOUD_PROJECT=brilliant-org tsx scripts/seed-firestore.ts`
@@ -69,12 +71,40 @@ times** for coin flips (why `E[HH]=6` but `E[HT]=4`). Sequenced by `docs/mvp_prd
   L2–L6 beat renderers, so the live client can render them — no redeploy needed.
   Still gated on auth to *enter* lessons (email/password only; Google sign-in off);
   unlock chain + L2–L6 milestone awarding unverified on a live authed walk.
+- **MCQ → AnswerEntry migration — DONE this session:** removed `mcq` interaction
+  type from `InteractionSchema` (replaced with `answerEntry`: array of `{id, label,
+  accept[], placeholder?, suffix?}` fields graded against a normalized accept-list);
+  deleted `McqBeat.tsx`; created `AnswerEntryBeat.tsx`; updated `beats/index.tsx`
+  dispatcher; updated `mastery.ts` GRADED_BEAT_TYPES; updated `validate-fixtures.ts`
+  GRADED_TYPES + OPENER_TYPES + opener error message; replaced `.mcq` CSS block with
+  `.answer-entry` block in `beats-extended.css`; updated `recommend.test.ts`;
+  replaced `gradedMcq` helper with `answerEntry` in `e2e/remaining-lessons.spec.ts`
+  + rewrote completeL2/L3/L4/L5/L6 calls; added `runGhost = runSim` alias. Fixtures
+  and DiagnosticGate.tsx are being edited by other agents in parallel. tsc: clean;
+  eslint: 1 pre-existing error in WalkBoardBeat.tsx (not touched).
 - **State-graph explainer — DONE this session** (per `docs/state-graph-explainer-brief.md`):
   Track-A `primer-graph` beat (static mini dual-label `StateGraph` + annotated key) inserted
   before `simulate`; compact non-interactive `coinsim__legend` added to `simulate` for both
   tracks; `'graph'` primer variant in schema; `phases.ts` off-rail entry; beat count 15 → 16;
   one extra `clickPrimary` in `completeLessonTrackA`. All 42 e2e tests green.
-- **Finish → completion takeover — DONE:** Pressing "Finish" on the last beat now replaces the beat with a full-screen `LessonCelebration` (confetti + spring-in) containing the done-note text, the earned `MilestoneSeal`, and a sticky "Back to course path" CTA in the action bar. A `useEffect` on `done` scrolls to top and focuses the CTA. Previously the celebration rendered off-screen in the `.prompt` section while the recap + "Finish" stayed on-screen below the fold. `tsc`/`eslint` clean; e2e `.done-note` assertions unchanged.
+- **Finish → completion takeover — DONE:** Pressing "Finish" on the last beat replaces the beat with full-screen `LessonCelebration` (wax-seal ink-stamp on `--stamp-beat` + spring-in) containing the done-note, earned `MilestoneSeal`, and sticky "Back to course path" CTA. `useEffect` on `done` scrolls to top and focuses the CTA. e2e `.done-note` assertions unchanged.
+- **First-run welcome + L0-clearly-optional — DONE this session:** new
+  `src/pages/WelcomeScreen.tsx` (full-screen `authcard`-styled greeting that focuses
+  its primary CTA) is shown **once to brand-new accounts only**, at `/path` **before**
+  the `DiagnosticGate`. Flow: landing → auth → display-name → **welcome (new only)** →
+  Quick check → desk; returning sign-ins skip it. Gated on `welcomeSeenAt` **absent** on
+  `users/{uid}/progress/{courseId}` (`loadWelcomeSeen`/`markWelcomeSeen` in
+  `progress/track.ts`; `welcomeSeenAt` added to `ProgressSchema`; rules already allow
+  non-progression fields here, like `track`). "Start the introduction" → L0
+  (`INTRO_LESSON_ID='lesson-first-heads'` in `routes.ts`); "Skip for now" falls through.
+  `CoursePathPage` holds the desk skeleton until welcome+track resolve (no desk flash).
+  L0 now reads optional on the desk: `NodeDetailCard` "Optional" pill +
+  `stateCaption` "Optional · …" + `nodeAria` ", optional" (all in `StudyDesk.tsx`;
+  model unchanged — `DeskNode.optional` already existed). Verified: tsc/eslint/vitest
+  (133) green; **visually confirmed at `/dev/home`** (pill + caption + aria). ⚠ The
+  welcome flow itself is auth-gated (emulator-verify) and entering the intro needs L0
+  **seeded**. `CONTEXT.md` gained `L0 / The introduction` + `Welcome screen` glossary
+  entries. Stale-Vite footgun bit again — verify on a freshly-started server.
 - **Security audit + hardening — DONE this session** (brief: `docs/security-audit.md`).
   Multi-model audit (web research → `gemini-3-flash` evidence → `claude-opus-4-8` adjudication
   → `composer` brief). Backend posture confirmed strong (owner-scoped rules, server-authoritative
@@ -90,7 +120,57 @@ times** for coin flips (why `E[HH]=6` but `E[HT]=4`). Sequenced by `docs/mvp_prd
   7.2.5 caps admin at ^13; bumping yields an invalid tree). Net code change = `firebase.json` +
   new `storage.rules` + the brief. Verified green: `tsc -b`+`vite build`, 133 app + 7 functions
   vitest, 12 rules tests, lint.
-- **Last verified green** (this session): `tsc -b`, `vitest run` (**133 app** + 7 functions),
+- **Living Notebook premium-UI overhaul (Waves 0–4) — DONE in working tree, NOT committed**
+  (per `docs/build-brief-living-notebook.md`): **Wave 0** — Style Dictionary pipeline
+  (`style-dictionary/tokens/*.json` + `scripts/build-tokens.ts` → `tokens.generated.{css,ts}`;
+  `konva/theme.ts` + `motion/tokens.ts` derive shared values; `--mark-wash` de-drifted to
+  0.22; depth/timeline/font tokens); CSS split into `src/styles/surfaces/*` under `@layer`
+  (`app.css` ~15-line barrel); Fraunces variable + `fonts.css` metric fallback; lazy seams
+  (`gsapText`, `Katex`); `useAmbient`; route code-split + `ErrorBoundary` + `viewTransition.ts`;
+  `src/ui/*` primitives + `ui.css`; Playwright VR harness (`playwright.vr.config.ts`, `e2e/vr/`).
+  **Wave 1** — tactile depth + Fraunces display type (landing/auth, home/desk/habit, lesson shell/beats).
+  **Wave 2** — synchronized flip (`StateGraph`), equation-tile drag (additive), confetti → wax-seal
+  ink-stamp + streak SVG stroke-on, router View Transitions + spine traversal, GSAP SplitText
+  (landing/recap), ambient breathing, TheorySimChartBeat sim-sweep batched to ≤30fps.
+  **Wave 3** — React-Aria sliders (`useSliderControl`), `.infotip` → `ui/Tooltip`, offline/restore/
+  failed-write `StatusNote` banners (gated on `persist`), KaTeX recap verdict, field-level auth
+  errors (`classifyAuthError`). New deps: `style-dictionary`, `gsap`, `@gsap/react`, `katex`,
+  Radix tooltip/dialog/popover/dropdown-menu/tabs, `react-aria`, `@fontsource-variable/fraunces`.
+  **Verified green:** `tsc -b`, `eslint .`, `vitest run` **171/171**, `validate`, `vite build`.
+  **NOT run (deferred to manual e2e):** Playwright functional suite (42/3 projects) + VR sweep —
+  ⚠ VR baselines **stale** (last re-baselined Wave-1 look; re-baseline when running VR). Entry
+  chunk ~**312 KB gz** (was ~477 KB via code-splitting); `gsap`/`katex` lazy; >500 KB raw warning
+  remains (Firebase eager in entry + Konva). **Deferred:** Firebase lazy-load (auth-boot refactor),
+  Fraunces glyph subsetting, `@property` registration (no animated custom props yet), e2e cold-chunk
+  warm-up in harness.
+- **KaTeX flash fix — DONE in working tree:** `src/lesson/Katex.tsx` no longer paints raw tex while
+  the lazy lib loads. katex + CSS now preload once at module load via a shared `katexReady` promise +
+  module-singleton `katexLib` (lazy `useState` initializer → synchronous typeset on re-renders); the
+  pre-load fallback is wrapped in `.visually-hidden` (role=math + aria-label keep a11y) so raw markup
+  never flashes. katex stays its own chunk (build-confirmed `katex-*.js`/`.css`, out of entry).
+  `Katex.test.tsx` adds a `visually-hidden` assertion. Green: vitest 171, eslint, `tsc -b`+`vite build`.
+- **Brilliant interactive-mechanics pass — DONE:** audit + prioritized
+  backlog in `docs/interactive-mechanics-backlog.md`, then 4 mechanics implemented across
+  L1/L3 (top picks; drag relaxation approved, no-AI-tutor kept). (1) **True drag-and-drop**
+  on `EquationTilesBeat` — Motion `drag` + `onDragEnd` slot hit-testing (`slotRefs`), `wasDragRef`
+  stray-click guard, `.slot--dragover` highlight; tap + keyboard preserved as the fallback
+  (benefits L1/L3/L5). (2) **Balance-scale solver** — new `balanceSolve` interaction
+  (`schema.ts` union + `BalanceSolveBeat.tsx` + **pure `balanceModel.ts`** so the test pulls no
+  React/Firebase + dispatcher) wired into L1 `guided-solve`, replacing the below-bar
+  `substitution`. Engine-derived balance point (HH E0=6, rhs(x)=otherTerm+selfCoeff·x);
+  `.balance__range` keyboard-drivable; sets `theoreticalValue`; reduced-motion = no tilt anim,
+  still interactive. `SubstitutionBeat`/`substitution` type kept wired (now unused). (3)
+  **Distribution histogram + continuous bias knob** on L3 `house-edge` `walkBoard` — new pure
+  `walkDurationHistogram` in `engine/walk.ts` + SVG bars; realizes the declared-but-unbuilt
+  `display:'histogram'`; renders on mount; Continue stays always-enabled. (4) **Interactive
+  `pattern-pick`** — optional fixture `previews` make L1 compare cards tap-to-preview the
+  near-miss (passive elsewhere, e.g. L5; Continue always-enabled). Clears BOTH below-bar audit
+  beats (`pattern-pick` 2.8, `guided-solve` 3.8). `schema.test.ts` updated (guided-solve now
+  asserts `balanceSolve` + engine E0 in slider domain). **Verified green:** `tsc -b`, `eslint .`,
+  `vitest run` **171/171** (+17), `validate`, `vite build`. e2e helpers' guided-solve step
+  now drives `.balance__range`. Re-run **e2e 42/42** before deploy (warm Vite first — cold
+  lazy-chunk compile flakes).
+- **Last verified green** (prior session — pre-Living-Notebook e2e): `tsc -b`, `vitest run` (**133 app** + 7 functions),
   `validate` (all 7 fixtures + inclusivity gates + 2-beat engine cross-check), `lint`, `build`,
   **`e2e` all 3 projects** (chromium + mobile + reduced-motion, 42/42: flagship Track B + Track A
   + new-lesson spec L0 + L2–L6 × both tracks). Functions `tsc` via the local
@@ -136,6 +216,12 @@ times** for coin flips (why `E[HH]=6` but `E[HT]=4`). Sequenced by `docs/mvp_prd
 - **Tooling:** never batch multiple `StrReplace` to the *same* file in one turn
   (parallel writes raced + clobbered edits). `timeout` is absent on macOS. Keep `tsx`
   scripts under `scripts/` (can't resolve `zod` from `/tmp`).
+- **Tokens:** regenerate via `./node_modules/.bin/tsx scripts/build-tokens.ts`
+  (or `npm run tokens` if your npm works). Edit `style-dictionary/tokens/*.json`, not
+  the generated files.
+- **VR:** run via `--config playwright.vr.config.ts` (kept out of functional suite by
+  `testIgnore: ['**/vr/**']` in `playwright.config.ts`). Baselines under
+  `e2e/vr/__screenshots__/` — currently stale vs Wave 2/3 visuals; re-baseline on sweep.
 
 ## Architecture & Key Decisions
 
@@ -150,8 +236,9 @@ times** for coin flips (why `E[HH]=6` but `E[HT]=4`). Sequenced by `docs/mvp_prd
 - **Pure, node-testable modules** (`hintLadder`, `equationChecker`, `equationDiagnosis`,
   `stateTapHints`, engine); React hooks wrap them.
 - **Konva** only for `StateGraph`/`SimChart`/`BiasChart`/`CourseSpine` (each
-  `'use no memo'` for React Compiler); `konva/theme.ts` mirrors `tokens.css` (keep in
-  sync). Coin stream + tiles are DOM with `aria-live`.
+  `'use no memo'` for React Compiler); `konva/theme.ts` derives from
+  `tokens.generated.ts` (keep in sync with Style Dictionary pipeline). Coin stream +
+  tiles are DOM with `aria-live`.
 - **Routing:** hand-rolled SPA router + auth guard in `src/App.tsx` (no react-router).
   Signed-out → landing/auth; signed-in + no `users/{uid}` → `/onboarding/name`;
   onboarded → `/path`. `users/{uid}` is create-once + display-name-whitelisted.
@@ -248,81 +335,232 @@ Supervised loop over the flagship: `docs/beat-audit-rubric.md` + runner
 — two beats below bar: `pattern-pick` (2.8, passive screen) + `guided-solve` (3.8, low
 agency), both **staged proposals, not yet applied**. O4 (perf) **n/a — not instrumented**.
 
-## Premium-UI / Market-Ready (research + IMPLEMENTED motion layer)
+## Premium-UI / Market-Ready ("The Living Notebook")
 
-**DIRECTION UPDATE (latest session) — pivoted to a BOLDER "Living Notebook".** A grill-me
-session + a 4-agent council (2 codebase crawls + 2 web-research) converged on a bolder,
-cinematic evolution — NOT the earlier "stay restrained / thin additive layer" verdict,
-which is now **superseded**. Full spec is the overhauled `docs/ui_design_system.md` ("The
-Living Notebook"); rationale + trade-offs in `docs/adr/0002-bolder-living-notebook.md`.
-Decisions: intensify the notebook (same world); add **Fraunces** variable display serif
-over IBM Plex; **tactile letterpress/deboss depth** (relax flat-by-default, palette kept);
-**cinematic + ambient motion** on ONE timeline-token clock (unified flip clock + one-shot
-edge "packet", streak stroke-on, equation-tile drag layer, **replace confetti with the
-wax-seal ink stamp**); **layered anim toolset** (keep motion + native View Transitions +
-Konva + **GSAP** scoped to SplitText/hero/recap); **full-foundational infra** (**Style
-Dictionary** single token source → CSS+Konva+motion/GSAP, **CSS Modules** + `@layer`/
-`@property`, migrate sliders/dialogs/tooltips to **Radix Primitives + React Aria**,
-**KaTeX** typeset results); uniform premium across all surfaces; **Playwright
-visual-regression** as the polish ratchet; light-only stays. The "do NOT reskin / thin
-layer" research below is retained as history but no longer governs. NOTHING implemented
-yet for this pivot — doc + ADR + the hand-off execution brief
-(`docs/build-brief-living-notebook.md`: sub-agent waves, file ownership, DoD gates) only.
+**DIRECTION:** Bolder cinematic evolution of the notebook — NOT the earlier "stay restrained /
+thin additive layer" verdict (superseded). Spec: `docs/ui_design_system.md`; rationale:
+`docs/adr/0002-bolder-living-notebook.md`. Orchestration: `docs/build-brief-living-notebook.md`.
 
-**Shipped (prior session) — Motion 12.41 + 5 "wow" moments. Verified: tsc + lint +
-`vite build` green; e2e 42/42 (chromium / mobile / reduced-motion).** Files:
+**Living Notebook overhaul (Waves 0–4) — DONE in working tree, NOT committed.** Style
+Dictionary single token source → CSS + Konva + motion/GSAP; CSS `@layer` surface split;
+Fraunces display serif + tactile letterpress/deboss depth; cinematic motion on one timeline
+(flip packet, ink-stamp celebration, streak stroke-on, GSAP SplitText, View Transitions);
+Radix + React Aria primitives (`src/ui/*`); KaTeX typeset results; Playwright VR harness.
+Light-only stays. See Current State bullet for wave-by-wave detail + verification/deferred items.
+
+**Shipped (prior session) — Motion 12.41 + 5 "wow" moments** (partially evolved by Living
+Notebook Wave 2 — confetti **replaced** by wax-seal ink-stamp on `--stamp-beat`):
 `src/motion/{tokens.ts,MotionProvider.tsx}` (mounted in `main.tsx`: LazyMotion
-`domMax`+`strict`, `MotionConfig reducedMotion="user"`; tokens = JS mirror of
-`--dur-*`/`--ease-*` + SPRING/SPRING_SOFT/SPRING_CELEBRATE). Moments: M1
-`CoinStream.tsx` (coins spring in via AnimatePresence initial={false}; state chip
-pops on change; removed CSS `coin-pop` keyframe). M2 `beats/EquationTilesBeat.tsx`
-(palette `m.button` hover/press lift + token spring-snap into slots; tap flow +
-e2e selectors unchanged — full drag deferred to protect the tested tap/a11y model).
-M3 `lesson/LessonCelebration.tsx` wraps `.done-note` (confetti burst + spring-in;
-"Lesson complete" text kept for e2e). M4 `pages/StudyDesk.tsx` (DeskBody staggered
-reveal via deskContainer/deskItem). M5 `pages/LandingPage.tsx` (staggered hero +
-traveling quill `.preview__signal` in the state machine + magnetic CTAs).
-**Gotchas honored:** Konva files keep `'use no memo'`; global reduced-motion
-`*{…!important}` coexists with MotionConfig; kept our own `useReducedMotion`
-(Motion's hook doesn't live-update). **OPEN follow-ups:** entry bundle is ~477 KB
-gz as a single chunk (no code-splitting — see Phase 0 below); cross-route
-shared-element "zoom into lesson" deferred (needs router work).
+`domMax`+`strict`, `MotionConfig reducedMotion="user"`). Moments: M1 `CoinStream.tsx`,
+M2 `EquationTilesBeat.tsx` (+ drag layer in Wave 2), M3 `LessonCelebration.tsx` (now
+ink-stamp, not confetti), M4 `StudyDesk.tsx`, M5 `LandingPage.tsx`. **Gotchas:** Konva
+`'use no memo'`; global reduced-motion coexists with MotionConfig; keep our own
+`useReducedMotion`. **Remaining perf levers (deferred):** Firebase lazy-load off boot path
+(auth-boot refactor — needs emulator testing); Fraunces true glyph subsetting; `@property`
+when a custom prop is animated; e2e cold-chunk warm-up in harness.
 
-A 5-agent research council (1 read-only codebase crawl + 4 web-research agents,
-June 2026, version-verified) evaluated how to make the UI more premium + market-ready.
-**Verdict: do NOT reskin with a UI kit — keep the bespoke "notebook" CSS and add a thin
-layer.** Recommended "Premium Notebook" stack (additive, React-Compiler/Vite-8 safe):
-1. **Style Dictionary** token pipeline → CSS vars + *resolved* Konva JS (permanently kills
-   the `tokens.css` ↔ `konva/theme.ts` drift; note live drift `--mark-wash` 0.22 vs 0.30).
-2. **Base UI** (`@base-ui-components/react`) headless primitives → dialog/popover/tooltip/
-   menu/toast (none exist today), styled via `[data-*]`+existing tokens. Radix = safe alt.
-3. **Motion** (`motion/react`, `LazyMotion`+`m`) → beat enter/exit, spring feedback,
-   course-path `layoutId`. ⚠ gotchas: keep `'use no memo'` on Konva; the global reduced-motion
-   `*{…0.01ms!important}` rule fights Motion (use `<MotionConfig reducedMotion="user">`);
-   keep our own `useReducedMotion.ts` (Motion's doesn't live-update).
-4. **Native View Transitions API** → page transitions for the hand-rolled router (0 KB).
-5. **KaTeX** (math notation) + **Lucide** (icons, `strokeWidth ~1.5`). Keep Konva as hero viz.
-6. **dotLottie** (lazy) → lesson-complete/mastery celebrations; reserve `--ease-spring` for those.
-Explicitly avoided: MUI/Mantine/Chakra/shadcn/Tailwind-as-system, big-bang `app.css` rewrite,
-runtime CSS-in-JS, React Spring, React's experimental `<ViewTransition>`.
-**Biggest *market-ready* gaps are structural, not visual:** `App.tsx` eager-imports every
-page+Konva+Firebase (no code-splitting), no error boundaries, Konva canvases not keyboard-a11y,
-no SEO/prerender. Suggested order: Phase 0 code-split + error boundaries + WCAG 2.2 AA + web-vitals
-→ Phase 1 token pipeline + Base UI → Phase 2 Motion/KaTeX/Lucide/celebration → Phase 3 prerender/PWA/dark.
+A 5-agent research council (June 2026) evaluated premium + market-ready options.
+**Verdict: do NOT reskin with a UI kit — keep bespoke notebook CSS** (history retained below;
+Living Notebook implements the bolder pivot instead of the thin layer). Recommended stack
+items now largely **implemented** (Style Dictionary ✓, Motion ✓, View Transitions ✓, KaTeX ✓,
+Radix/React Aria ✓, code-split + error boundaries ✓). Still open: prerender/PWA/dark, Konva
+keyboard-a11y, SEO.
+
+## Session State (latest)
+
+**Ergo integration fix (this session):** Three parallel agents (token/font swap, Home shell, Course journey) merged their Ergo work. Integration fixer validated all four gates and made two surgical fixes to the newly-created files:
+
+- **`src/lesson/mathviz/MathViz.tsx`**: Changed `JSX.Element` → `React.JSX.Element` (the project convention; bare `JSX` namespace not available under `"jsx": "react-jsx"` without an explicit import).
+- **`src/pages/CourseJourney.tsx`**: Same `JSX.Element` → `React.JSX.Element` fix; also narrowed `chapterForLesson(...)` result from `Chapter | null | undefined` to `Chapter | null` via `?? null` so the `DetailCard` prop type (`Chapter | null`) is satisfied.
+
+**Final gate results:** `tsc -b` ✅ 0 errors · `eslint .` ✅ 0 warnings/errors · `vitest run` ✅ 30 files / 202 tests · `vite build` ✅ built in 2.77s (chunk-size advisory is pre-existing, not an error).
+
+**Pre-existing vitest issues:** None triggered in this run (the noted BalanceSolveBeat FirebaseError requires a live Firebase connection; schema.test guided-solve assertion passed locally).
+
+**Orphaned files noted (not deleted, not breaking build):** `src/lesson/konva/CourseSpine.tsx` and `src/lesson/LessonPreview.tsx` are no longer imported by `StudyDesk.tsx` but remain in the tree — they compile cleanly and are simply unused top-level exports.
+
+**Ergo Home Shell — Agent 2 (prior session) — DONE in working tree:**
+Rewrote `src/pages/StudyDesk.tsx` to the Ergo Home layout; created two new habit
+components and the surface CSS. `StudyDeskProps` is byte-identical (consumers
+`CoursePathPage` + `DevHomePage` unchanged). ESLint + tsc both exit 0.
+
+- **`src/pages/StudyDesk.tsx`** (rewritten): top bar (`Ergo` wordmark + profile avatar),
+  momentum band (`<WeeklyStreak>` left / `<ConceptMedallion>` gallery right), and
+  `<CourseJourney>` (Agent 3 contract, imports from `./CourseJourney`). Removed all old
+  CourseSpine/LessonPreview/resolveNodes imports. Motion stagger kept. Skeleton = hairline
+  band + 4 journey row placeholders with pulse animation.
+- **`src/habit/WeeklyStreak.tsx`** (new): Props `{count, lastActiveDate, compact?}`.
+  Large tabular streak numeral + "day streak" + 7-dot M–S rail. Approximates which dots
+  are filled from `min(count,7)` trailing days ending at the last active weekday.
+- **`src/habit/ConceptMedallion.tsx`** (new): Props `{meta, earned, earning?, hueVar?}`.
+  44px circle medallion; earned = chapter-color ring + tint fill + mono glyph; locked =
+  grey ring + muted glyph + lock SVG. `earning` triggers a CSS fade-in animation
+  (reduced-motion: none). `hueVar` sets `--medallion-hue` / `--medallion-tint` inline.
+- **`src/styles/surfaces/ergo-home.css`** (new): `.ergo-home`, `.ergo-topbar`,
+  `.ergo-wordmark`, `.ergo-avatar`, `.ergo-momentum`, `.ergo-streak`, `.ergo-medallion`,
+  `.ergo-skeleton`. Uses all Ergo tokens (Agent 1 contract). Agent 1 adds the @import
+  to app.css. Mobile: momentum band stacks vertically; medallion row scrolls horizontally.
+- Milestone→hue mapping in StudyDesk: ch1/ch1/ch1 (Foundations milestones),
+  ch2/ch2/ch2 (Racing & Walks), ch3 (Mastery), ergo-brand (course completion).
+
+
+
+- **Coin-sim state-graph shows on load (this session; orchestrated: Sonnet edit subagent
+  + browser-use verify) — DONE in working tree:** Track-A (`density:'split'`) `CoinSimBeat`
+  opened in a `'stream'` warm-up that hid the `StateGraph` until the learner flipped twice
+  and clicked **"Show the machine"**. Removed the `'stream'` phase entirely — both tracks now
+  open in `'free'` with the graph rendered unconditionally (the `{width>0 && <StateGraph/>}`
+  guard stays), so the canvas appears immediately and animates on each flip. Dropped the dead
+  `'stream'` branches (`Phase` type member, `showGraph`, the stream primary/secondary/hint
+  blocks) + updated the header comment; all other split scaffolds (dual labels, single-step
+  near-miss replay, dimming, gambler note) preserved. Updated the two split e2e flows that
+  clicked "Show the machine" (`e2e/helpers.ts` `completeLessonTrackA`,
+  `e2e/remaining-lessons.spec.ts` `simulate`). **Verified:** `tsc -b`/`eslint`/`vitest` **179**
+  green; flagship (merged) e2e green on a fresh server; **browser-confirmed** the split
+  `simulate` beat renders the `.canvas-frame` canvas (926×482) with primary "Flip" and no
+  "Show the machine" BEFORE any flip, reacting ∅→H on the first flip. ⚠ **Stale-Vite footgun
+  bit again** — the lingering 4321 dev server served pre-edit code (HMR never applied); verify
+  only on a freshly-started server. ⚠ The **track-a** automated e2e still fails *upstream* of
+  `simulate` on a **pre-existing** primer navigation race (`completeLessonTrackA` force-clicks
+  5 consecutive identical "Continue" beats without waiting for the View-Transition to settle,
+  so a click is dropped and it stalls on `primer-graph`) — independent of this change (the
+  primer nav was untouched; merged path with fewer Continues passes).
+
+- **No-MCQ pass (this session; orchestrated, 3 parallel Sonnet subagents) — DONE in
+  working tree:** every graded `mcq` beat (14 across L0/L2–L5) + the `DiagnosticGate`
+  "Quick check" replaced with hands-on interactions; `mcq` plumbing removed. New
+  **`answerEntry`** type-in mechanic (`src/lesson/beats/AnswerEntryBeat.tsx` + `answerEntry`
+  schema variant + dispatcher case + `.answer-entry` CSS + registered in `mastery.ts`
+  `GRADED_BEAT_TYPES` and `validate-fixtures.ts` `GRADED_TYPES`). `McqBeat.tsx` deleted;
+  `mcq` purged from schema/dispatcher/mastery/validator (`OPENER_TYPES`→`retrievalGrid`
+  only)/`beats-extended.css`; `recommend.test.ts` stub → `retrievalGrid`. Conversions:
+  L0 `l0-count`→answerEntry; L2 `recall-6-4`/`first-step-split`/`win-prob-tiles`→retrievalGrid
+  + `pick-your-counter`→answerEntry; L3 `recall-overlap`/`boundary-edge`→retrievalGrid +
+  `guided-solve`→answerEntry; L4 **patternOptions reordered HH-first** (lesson automaton
+  must be HH for the new stateTap), `which-waits-longest`/`plus-one-or-not`→retrievalGrid,
+  `race-or-wait`→raceSim+`hero`, `weak-node`→stateTap; L5 `guided-solve`→answerEntry +
+  `overlap-compare`→retrievalGrid; DiagnosticGate→4 type-in numeric Qs (same 3-of-4→Track B).
+  **Verified green:** `tsc -b`, `eslint .`, `vitest run` **178**, `validate` (all inclusivity
+  gates), `vite build`; **e2e L2/L3/L4 both tracks × 3 projects = 36/36** (`--repeat-each=2`).
+  e2e helpers: new `answerEntry`, role-based `runGhost` (robust to the LN action-bar restyle),
+  `recapFinish` (the LN recap is now **reveal-then-finish**; label-targeted to dodge the
+  in-place flip race).
+  - ⚠ **Pre-existing, NOT this work:** L0/L5/L6/flagship/track-a e2e fail at uncommitted
+    **Living Notebook** beat reworks never e2e-verified — coinSim/`PrimerBeat` avg-timeline
+    (L0), `autocorrelationRuler` (L5/L6), `sumTiles`/`gamblerLedger` (L6), bias-sandbox
+    advance (flagship/track-a). Out of MCQ scope; they pre-date this session.
+  - ⚠ **Vite footgun (bit again):** deleting `McqBeat.tsx` wedged the **running 4321** dev
+    server's HMR — the browser kept rendering the OLD MCQs even though disk/curl were fresh.
+    **Restart the dev server** to see the changes (verified on a fresh one; a stray
+    verification vite may linger on **4456**). VR re-baseline deferred: `dev-lesson-penneys`
+    now snapshots the retrievalGrid (was the mcq); LN baselines were already stale.
+
+- **L5 overlap-why deep-dive (this session):** reworded the `overlap-ruler` prompt ("Each overlap of length L adds 2^L to the wait."); inserted a collapsible `overlap-why` `primer` beat (the gambler/fair-bet/2^L explanation) immediately after `overlap-ruler` in `fixtures/lesson-longer-patterns.json` (`required:false`); added `'overlap-why': 'overlap-ruler'` to `LONGER_PATTERNS.offRailAfter` in `src/lesson/phases.ts`; added `await primer(page) // overlap-why deep-dive (collapsed)` in `completeL5` in `e2e/remaining-lessons.spec.ts`.
+
+- **L3 walk-board decimals + bigger histogram (this session):** on `WalkBoardBeat.tsx` the
+  `ratStr` exact-`Rational` fraction helper was replaced by `dec(r)=Number((r.n/r.d).toFixed(3)).toString()`
+  (≤3 decimals, trailing zeros stripped) and all 6 call sites renamed, so reach/ruin/avg-flips +
+  the per-node `P_i` labels render as clean decimals on every walk-board beat (the biased
+  `house-edge` tilt beat previously showed ugly fractions like `369/671`). The duration histogram
+  below the bias slider was enlarged: `HIST_VH` 130→190 (taller viewBox) and the `max-width:320px`
+  cap removed from `.walkboard__histogram` (`components.css`) so it fills the column. The
+  `landscape` polyline (uses `r.n/r.d` directly) was untouched. Gates: `tsc -b`, `eslint .`,
+  `vitest run` **178/178** green. Gambler's ruin is not in the VR surface set
+  (`e2e/vr/surfaces.spec.ts` = home/flagship/penneys) → VR baselines unaffected.
+- **L3 Gambler's Ruin "Watch one walk" animation (this session; orchestrated: 2 Sonnet + 1
+  composer subagent):** the single walk was instant (printed result only). Now it plays back
+  step-by-step — a `.walkboard__walker` dot glides across the number line at a fixed `STEP_MS=400`
+  per move (independent of walk length) until it lands on 0 (ruin)/N (win), then the outcome text
+  appears. New `traceWalk`/`WalkTrace` in `engine/walk.ts` records the full positions path
+  (mirrors `traceRace`); `WalkBoardBeat.tsx` drives an interval over `stepIdx` (only setState is in
+  the interval callback — satisfies `react-hooks/set-state-in-effect`), reset in the click handler;
+  reduced motion skips the interval and renders the final frame via a derived `idx`. Fixed a latent
+  bug: single-walk seed now uses a dedicated `watches` counter (was `runs`), so repeated presses
+  show *new* walks. CSS glide (`cx` transition) + reduced-motion override in `beats-extended.css`.
+  Added 5 `traceWalk` tests. Gates: vitest **178/178**, `tsc -b` + `eslint` clean. (Animation is
+  timer-driven so unverified by the node/`renderToString` harness — engine-tested + manual.)
+- **L2 Penney's "Watch one race" fix (this session; orchestrated, 1 Sonnet subagent):**
+  `RaceSimBeat.tsx` conflated `seen` (Continue gate) with the batch tally, so "Watch one race"
+  flipped `seen→true` and rendered the 200-race bars instead of a single race. Replaced with an
+  explicit `view: 'idle'|'single'|'batch'` state: "Watch one race" now shows the **full shared
+  coin stream flip-by-flip** (new `traceRace` in `engine/race.ts` returns `{winner, flips}`; the
+  last `winLen` chips highlighted in the winner's lane color) with **no bars**; "Run 200 races"
+  shows the bars; reduced-motion still opens in `batch`. New `.racehero__stream/__flips/__flip`
+  CSS (`beats-extended.css`). Added 2 `traceRace` tests. Gates: vitest **11/11** (race file),
+  `tsc -b` + `eslint` clean. Browser-verified at `/dev/lesson/lesson-penneys-game` (HHH vs THH:
+  8-flip stream `H T T T H · T H H`, last 3 = THH highlighted, bars absent). VR `dev-lesson-penneys`
+  unaffected (snapshots the first MCQ beat, not the race).
+- **Living Notebook overhaul (Waves 0–4)** — see Current State bullet + Premium-UI section.
+  Working tree, not committed. Next: e2e re-run (warm Vite), VR re-baseline, commit when asked.
+- **Onboarding + L1 bug-fix pass — 7 issues from a live Track-A report (this session;
+  orchestrated, 6 Sonnet subagents):**
+  (1+2) `onSkip` in `CoursePathPage.tsx` now also `saveTrack(uid,'A')`+`setTrack('A')` so "Skip
+  for now" lands on the desk (Track A), bypassing the DiagnosticGate; `grid-column: 2` on
+  `.topbar__center` (`shell.css`) un-clips the gate's "QUICK CHECK" (single-child was auto-placing
+  into the 44px col-1 → "QUI…"; no-op for 3-child lesson topbars).
+  (3) `CoinSimBeat.tsx` state graph was invisible on Track A (shared one-shot `useElementWidth`
+  measured 0 because `.canvas-frame` mounts only after "Show the machine") → swapped to a local
+  **callback ref + ResizeObserver**; shared hook untouched (`LessonPreview` reads `.current`).
+  (4) `FirstSuccessTimeline.tsx` (`ground-ev`, DOM chart) got a title, left y-axis (flips + 0/
+  theory/max ticks), x-axis label, and a distinct running-**avg** line (theory line relabeled);
+  `.fst*` classes + button labels preserved.
+  (5) `BalanceSolveBeat.tsx` reworked for clarity: substituted RHS ("3 + ½·E[HH]", value-matched
+  via `balanceModel` otherTerm/selfCoeff), labeled pans + "flips" units, equation-tied tilt
+  feedback, "only value that equals its own equation" solved line, progressive **Need a hint?**
+  surfacing the (previously dead) fixture hints, rewritten `guided-solve` prompt; `balanceModel.ts`
+  + test untouched; `.balance__range`/0-12-step1/`theoreticalValue` preserved (e2e safe).
+  (6) `TheorySimChartBeat.tsx` opens the now-consumed `src/ui/Dialog` once (`varianceShownRef`) on
+  first batch completion to explain variance (empirical≈theory, not exact); "Got it" closes. e2e
+  clicks Continue mid-run (~5s before completion) so the modal never opens in tests.
+  (7) `LessonPlayer.tsx` no longer swallows `completeLesson` failures (`.catch(()=>{})` →
+  `console.error` + `completionError` state + retryable CTA + `completedOnce.current=false`); the
+  unlock chain is otherwise coherent. **RESOLVED (this session):** the prod failure was NOT a
+  seed mismatch. The Gen2 callables' Cloud Run services (`completelesson`/`recordqualifyingaction`,
+  us-central1) had **no `allUsers` `roles/run.invoker`** binding — blocked by the org's (org
+  `209657734628`, alphaaiengineering.com) **Domain Restricted Sharing** policy — so every browser
+  call hit a Cloud Run **403 "request was not authenticated. Empty Authorization header value"**
+  *before* reaching the function (logs showed zero app-level errors). Fixed (DRS-compatible) by
+  disabling the Cloud Run invoker IAM check on both services:
+  `gcloud run services update completelesson --region=us-central1 --project=brilliant-org --no-invoker-iam-check`
+  (same for `recordqualifyingaction`). The function still authenticates internally via the Firebase
+  ID token (`requireUid`). Verified: an unauth `curl` now returns the **function-level**
+  `401 {"status":"UNAUTHENTICATED","message":"You must be signed in."}` instead of the platform 403.
+  **⚠ Redeploy caveat:** a future `firebase deploy --only functions` may re-enable the invoker check
+  (and/or hit the separate build-service-account org-policy error) — re-apply `--no-invoker-iam-check`
+  after any functions redeploy. Final live click-through (finish a lesson → next unlocks) still to be
+  confirmed by the user in the browser.
+  **Gates green:** `tsc -b`, `eslint .`, `validate` (10 fixtures + inclusivity), `vitest run`
+  **171/171**, `vite build`. e2e/VR not run (Vite server declined this session); selectors + beat
+  order preserved by design.
+
+- **Progressive (live-updating) Monte Carlo sims — DONE in working tree (this session;
+  orchestrated: 1 foundation + 4 beat Sonnet subagents):** every batch simulation now plays
+  its runs out over time at a **fixed per-run cadence** so learners watch the values converge
+  live, instead of slamming the final number on screen instantly. Foundation: `sim-run-cadence:
+  12ms` token (`style-dictionary/tokens/timeline.json` → regenerated `tokens.generated.{css,ts}`
+  → `SIM_RUN_CADENCE_MS` in `src/motion/tokens.ts`); shared **`src/lesson/beats/useProgressiveRuns.ts`**
+  (rAF loop lifted from TheorySimChartBeat — pure `runsDueByElapsed` helper + a hook that folds
+  `onTrial` per run, flushes `onFlush` at ≤30fps, exposes `running`/`progress`/`count`/`start({reset})`/
+  `cancel`; NOT gated on reduced-motion — convergence is content); `SecondaryAction.enabled?` added
+  to `BeatShell` (disables Run buttons mid-batch). Beats converted (final numbers identical — same
+  seed/order): **RaceSimBeat** (200 races, live bars), **WalkBoardBeat** (200-walk batch + 400-walk
+  histogram — histogram animates the fill on first reveal but updates **instantly while dragging the
+  bias slider**; single-walk playback untouched), **GamblerLedgerBeat** (cumulative 400-stream mean),
+  **TheorySimChartBeat** (ported onto the shared hook; ~5s→~6s at 12ms). All reuse the existing
+  `.sim-progress` CSS (no new CSS). Total duration scales with run count: ~2.4s/200, ~4.8s/400, ~6s/500
+  (one tunable token). Tests: `useProgressiveRuns.test.ts` (cadence math) + `progressiveSim.test.ts`
+  (progressive accumulation == batch result, incl. bin-for-bin histogram equivalence). **Gates:**
+  `eslint .` clean, `vitest run` **202/202** green. ⚠ `tsc` has ONE **pre-existing, unrelated** error
+  (`src/pages/StudyDesk.tsx` → missing `./CourseJourney`, from the uncommitted Ergo Home WIP — absent
+  at HEAD). Not browser-verified yet (timer-driven; mirrors the proven TheorySimChart pattern).
 
 ## Next Steps (priority order)
 
-0. **Remaining-lessons follow-ups:** (a) **prod re-seed DONE** (all 7 lessons + `built:true`
-   course nodes live in prod brilliant-org); **still TODO: live-walk the unlock chain
-   + milestones** (`three-/six-lessons-complete`) on an authed path (and re-seed the local
-   emulator when next testing there) — the `/dev/lesson` route
-   is Firebase-less so the L4 cross-lesson weak-node reader (`src/progress/recommend.ts`) and
-   mastery persistence are only exercisable against the emulator/authed path; (b) the L4
-   `weak-node` beat is currently a **fixed re-test** (dev-route-safe) — wire it to call
-   `recommendReview`/`selectWeakNode` over the live snapshot on the authed path for true
-   personalization; (c) **validity:** real-beginner playtest + the load proxy
-   (`answer_submitted{hintLevel}`/reveal-rate) per build-brief §10; (d) commit (working tree
-   is large — not yet committed).
+0. **Living Notebook follow-ups:** (a) re-run **e2e 42/42** before deploy (warm Vite
+   first); (b) VR sweep + **re-baseline** (baselines stale vs Wave 2/3); (c) commit when
+   asked (large uncommitted diff). (d) **Remaining-lessons follow-ups:** prod re-seed DONE;
+   still TODO live-walk unlock chain + milestones on authed path; L4 weak-node personalization;
+   real-beginner playtest; commit remaining-lessons work if not yet done.
 1. **Resolve cycle-1 beat-audit proposals** (blocking the Stop Rule): redesign/waive
    `pattern-pick` + `guided-solve`, then continue/stop the loop. See
    `audits/proposals/cycle-1.md`.
@@ -355,6 +593,10 @@ no SEO/prerender. Suggested order: Phase 0 code-split + error boundaries + WCAG 
   Track-A `primer-graph` beat + inline legend in `simulate`),
   `docs/adr/{0001,0002}-*.md` (0002 = bolder "Living Notebook" pivot), `CONTEXT.md` (glossary); audits in
   `audits/ideation/{inclusive-research-*,tech-review-build-brief}.md`
+- **Styles/tokens:** `src/styles/{app.css,tokens.css,tokens.generated.css,fonts.css}`,
+  `src/styles/surfaces/*`, `style-dictionary/tokens/*.json`, `scripts/build-tokens.ts`
+- **UI primitives:** `src/ui/*` (Tooltip, Dialog, DropdownMenu, StatusNote, useSliderControl)
+- **Motion/seams:** `src/motion/{tokens,gsapText,useAmbient}.*`, `src/app/{ErrorBoundary,viewTransition,useOnlineStatus}.ts`
 - **Engine:** `src/engine/{automaton,simulate,types,index}.ts`
 - **Content:** `src/content/{schema,loader,firestoreLoader}.ts`, `fixtures/` (lesson +
   course), `scripts/{validate-fixtures,seed-firestore}.ts`
@@ -370,9 +612,40 @@ no SEO/prerender. Suggested order: Phase 0 code-split + error boundaries + WCAG 
   + `tests/firestore.rules.test.ts`
 - **Firebase config:** `firebase.json`, `.firebaserc`, `.env.{development,production}`
   (gitignored)
-- **e2e:** `e2e/*` + `playwright.config.ts` · **Audits:** `audits/*`
+- **e2e:** `e2e/*` + `playwright.config.ts` · **VR:** `e2e/vr/` +
+  `playwright.vr.config.ts` · **Audits:** `audits/*`
+## Last Session
+
+**Lesson guidance clarity pass (this session; orchestrated: 2 Sonnet edit subagents + composer verify):** Reworked the overlap-chips beat + swept affordances/prompts (user report: the L5 `border-sum` "add HTH overlap tiles" beat read as non-interactive/unexplained). **Components/CSS:** `SumTilesBeat.tsx` (shared by L5 `border-sum` + L6 `sum-it`/`apply-THH`/`apply-HTH`) gained a tap kicker, a "Where these come from" overlap-grounding panel (per length L: prefix==suffix -> 2^L, derived from `autocorrelation`), and a visible `E[wait]=box+box=sum` equation builder that fills as chips are tapped; chips stay `.sumtiles__chips .token` so completion still gates on `placed.size===overlaps.length` (e2e selector intact); new `SumTilesBeat.test.tsx` (10 pure-model tests). `beats-extended.css` gave enabled chips in `.sumtiles__chips`/`.retgrid__palette`/`.wheel__options` `cursor:pointer`+hover+`:focus-visible` (the "don't know where to click" bug — base `.token` was styleless until clicked). `RetrievalGridBeat` got a visible "Tap a result on the left, then its match on the right" label; `SliderBeat` surfaced a visible "drag then lock it in" instruction (was sr-only). **Verified green:** `validate`, `vitest run` **195** (+10 SumTiles), `eslint .`, `tsc -b`+`vite build`. WARNING: **e2e + VR could NOT be cleanly completed** — the concurrent **Ergo refactor** (other agents editing `App.tsx`/`CoinSimBeat`/`RecapBeat`; `app.css` imports a not-yet-created `./surfaces/ergo-journey.css`) breaks the dev server / desyncs the committed e2e scripts. Every e2e failure is in a beat I never touched (Flip/recap/ruler/Track-A) -> not from this work. I added an **empty commented placeholder `src/styles/surfaces/ergo-journey.css`** so the CSS cascade loads; VR re-baselined the 3 lesson surfaces (`dev-lesson-flagship` x2, `dev-lesson-penneys`) but `dev-home` stayed blocked by the in-flight `CourseJourney`. Re-run e2e/VR once Ergo settles. **Prompts:** Applied an action-oriented prompt standard across all 7 lesson fixtures. Every `prompt` now states the concrete action verb (Press / Tap / Drag / Type / Reveal), matches the actual widget, briefly glosses symbols (E[...], recurrence, 2^L) on first use, and replaces vague teasers with read/continue cues. Smoke substring "which one makes you wait longer" preserved in `lesson-pattern-hitting-times.json` `open-bet`. Specific changes:
+- `lesson-first-heads`: l0-half, l0-flip, l0-ground, l0-count
+- `lesson-pattern-hitting-times`: pattern-pick, primer-half, primer-state, primer-graph, simulate, failure-edge, name-the-overlap, ground-ev, refine-prediction, recap
+- `lesson-states-streaks`: retrieval-grid, mixed-primer, plus-one-or-not, race-or-wait, recap-streak
+- `lesson-penneys-game`: whos-first-primer, prob-vs-duration, win-prob-tiles, non-transitive-loop, recap
+- `lesson-gamblers-ruin`: gamblers-fallacy, ground-both, walk-once, prob-tiles, duration-tiles, house-edge, recap
+- `lesson-longer-patterns`: pattern-pick, transfer-primer, simulate, overlap-ruler, failure-edge, equation-tiles, guided-solve, border-sum, recap
+- `lesson-overlap-shortcut`: self-overlap, exponent-primer, sum-it, martingale, apply-THH, apply-HTH, triangulation, recap
+`npm run validate` passed clean (all 7 + inclusivity gates). Only `prompt` fields were edited; no structural changes.
+
+**Sim-beat action-bar emphasis inversion (previous session):** In `WalkBoardBeat`, `RaceSimBeat`,
+`GamblerLedgerBeat`, and `TheorySimChartBeat` the "Run N" batch button is now the filled
+primary CTA, "Watch one" is an outlined secondary, and "Continue" is a quiet ghost (disabled
+in `WalkBoardBeat` until at least one sim has run). All CSS classes already existed;
+no CSS was changed. Changes made:
+- **`BeatShell.tsx`** — added `ActionVariant = 'primary'|'secondary'|'ghost'` type +
+  `variant?` field to `PrimaryAction`/`SecondaryAction`; footer buttons now derive their
+  class from `variant` (falling back to `'ghost'`/`'primary'`).
+- **`WalkBoardBeat.tsx`** — `hasRun = trace !== null || batch !== null`; Continue `enabled:hasRun, variant:'ghost'`; Watch `variant:'secondary'`; Run 200 `variant:'primary'`. **Single-walk step-by-step animation (this session):** replaced `simulateWalk`/`single` state with `traceWalk`/`trace`+`stepIdx`+`watches`; `useEffect` advances `stepIdx` at 400 ms/step (reduced-motion jumps to last frame); walker `<circle className="walkboard__walker">` renders inside the SVG and changes color to ruin/win on landing; outcome text deferred until `stepIdx >= last`.
+- **`RaceSimBeat.tsx`** — removed `reducedMotion` from props destructure; view always starts
+  `'idle'` (no reduced-motion batch shortcut); main BeatShell gets ghost/secondary/primary variants (heatmap branch untouched).
+- **`GamblerLedgerBeat.tsx`** — Continue `variant:'ghost'`; Run 400 `variant:'primary'`.
+- **`TheorySimChartBeat.tsx`** — imported `PrimaryAction`/`SecondaryAction` types; widened
+  local variable annotations; post-run `else` branch gets ghost/secondary/primary (the
+  `if (running)` and `else if (count === 0)` branches unchanged).
+
 - **Commands (call binaries directly, not `npm run`):** `validate` · `seed` ·
-  `vitest run` · `lint` · `build` · `e2e`; the `firebase` v24.3.0 alias for deploys
+  `vitest run` · `lint` · `build` · `e2e` · `./node_modules/.bin/tsx scripts/build-tokens.ts`
+  · VR: `./node_modules/.bin/playwright test --config playwright.vr.config.ts`; the
+  `firebase` v24.3.0 alias for deploys
 - **Reset learner progress** (client deletes are rules-denied → must use CLI/Admin):
   `firebase firestore:delete users --recursive --force --project brilliant-org` wipes
   all `users/*` (profile + progress/snapshots/milestones/streaks), keeps seeded
@@ -385,3 +658,47 @@ no SEO/prerender. Suggested order: Phase 0 code-split + error boundaries + WCAG 
   `GOOGLE_CLOUD_PROJECT=brilliant-org ./node_modules/.bin/tsx scripts/delete-auth-users.ts`
   (Admin SDK `deleteUsers()`; needs gcloud ADC). No bulk `firebase auth:delete` CLI;
   console Auth works for a manual delete.
+
+## Ergo reimagining — Home transferred to production (2026-06-24)
+
+Major UI reimagining: product renamed **Pattern Hitting Times → Ergo**; the signed-in
+**Home** was rebuilt to a bright, premium, brilliant.org-style identity (cool near-white
+base, per-chapter color-coding, "math is the art", sophisticated game-feel — NOT Duolingo).
+Driven by a grill-me design interview; decisions recorded in
+`docs/adr/0003-ergo-bright-reimagining.md` (supersedes ADR-0002); full spec rewritten in
+`docs/ui_design_system.md` ("Ergo Design System", supersedes "The Living Notebook");
+glossary updated in `CONTEXT.md`. Approved mock: `mock/ergo-home.html` (+ `-shot.png`).
+
+- **Tokens/fonts — GLOBAL swap (DONE):** `style-dictionary/tokens/*.json` remapped legacy
+  values to the Ergo palette (so lessons inherit Ergo colors/fonts) + added `--ergo-*`,
+  `--ch1..ch5` (+tints), `--ergo-shadow-sm/md/lg`, `--ring-focus`. Fonts: Space Grotesk /
+  Inter / JetBrains Mono via Fontsource (IBM Plex + Fraunces imports removed from
+  `main.tsx`; `fonts.css` fallbacks updated). `konva/theme.ts` literals + `FONT_MONO`
+  resynced. Regenerated `tokens.generated.{css,ts}`.
+- **Home (DONE):** `StudyDesk.tsx` rewritten (Ergo top bar + momentum band) with
+  `StudyDeskProps` byte-identical (CoursePathPage/DevHomePage untouched). New components:
+  `src/habit/WeeklyStreak.tsx`, `src/habit/ConceptMedallion.tsx`, `src/pages/CourseJourney.tsx`
+  (DOM/SVG vertical journey, replaces the Konva spine on Home), `src/lesson/mathviz/MathViz.tsx`
+  (8 SVG math vizzes). `studyDesk.model.ts` extended additively (ERGO_CHAPTERS, chapterForLesson,
+  LESSON_VIZ, vizForLesson; all 10 pre-existing model tests still pass). New CSS:
+  `src/styles/surfaces/ergo-home.css` + `ergo-journey.css` (imported in `app.css`).
+  Rename to "Ergo": `index.html` title, `App.tsx` bootscreens, `WelcomeScreen.tsx` copy,
+  Home wordmark (hardcoded). Data IDs + lesson/course fixture titles UNCHANGED.
+- **Verified GREEN:** `tsc -b`, `eslint .`, `vitest run` (202), `vite build`. Reference fixes
+  applied: VR `dev-home` anchor `main.desk__main`→`.ergo-journey` (`e2e/vr/surfaces.spec.ts`);
+  re-tagged active `CourseJourney` card with `.lesson-hero-source` (home→lesson view-transition);
+  `LockDotIcon` hardcoded `#C0C4D0`→`var(--ergo-ink-3)`. **No Playwright run here** (user tests
+  manually) — VR baselines (6 snapshots) WILL need re-capture; lesson VR will drift from the font swap.
+- **DEFERRED cleanup (needs greenlight — non-breaking):** dead `home.css` selectors (old Home
+  classes; KEEP list in the brief), orphaned `src/lesson/konva/CourseSpine.tsx` +
+  `src/lesson/LessonPreview.tsx`, 4 unused `@fontsource` deps (fraunces, ibm-plex-sans/mono/serif),
+  stale Fraunces/IBM-Plex comments. `RecapBeat` milestone-stamp branch is dead code.
+- **Lessons NOT touched.** Comprehensive restyle plan drafted (planning only) at
+  `docs/ergo-lesson-restyle-brief.md` (index) + `docs/ergo-lesson-restyle-brief/{01-shell-and-chrome,
+  02-beats-and-visualizations,03-celebration-migration-and-risks}.md`. Core idea: replace
+  notebook *semantics* (chapter `data-ch`→`--lesson-accent`; deboss→soft shadow;
+  wax-seal/tally→ConceptMedallion/WeeklyStreak; StateGraph aligned to Home MathViz). Execution
+  order: Shell→Beats→Celebration→Cleanup→Landing/Auth→VR rebaseline. e2e selectors preserved
+  (values-only sweep). Chapter hues: L0/L1 indigo, L2/L3 teal, L4/L5/L6 coral.
+- **Not committed** (working tree only). `mock/` (ergo-home.html, shot pngs, shot.mjs) is a
+  design artifact, not wired to the app.

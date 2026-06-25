@@ -12,7 +12,7 @@
 //
 // Mounts a <Stage>, so it opts out of the React Compiler (see vite.config.ts).
 
-import { useEffect, useRef } from 'react'
+import { forwardRef, useEffect, useImperativeHandle, useRef } from 'react'
 import Konva from 'konva'
 import { Arc, Circle, Layer, Rect, Stage, Text } from 'react-konva'
 import { C, FONT_MONO } from './theme'
@@ -29,6 +29,23 @@ export interface SpineBeam {
   /** Right edge the beam reaches (the detail panel's left edge), in stage px. */
   toX: number
   y: number
+}
+
+/** Imperative handle for the Konva spine traversal animation. */
+export interface SpineHandle {
+  /** Animate the focus halo (and beam) to `targetY` px, resolving when done. */
+  traverseTo(targetY: number): Promise<void>
+}
+
+interface CourseSpineProps {
+  width: number
+  height: number
+  spineX: number
+  dotRadius: number
+  items: SpineItem[]
+  ys: number[]
+  beam?: SpineBeam | null
+  reducedMotion?: boolean
 }
 
 // Dot fill + ring derive from node state (docs/ui_design_system.md "Node
@@ -56,26 +73,54 @@ function glyphColor(item: SpineItem): string {
   return C.graphiteSoft // locked
 }
 
-export function CourseSpine({
-  width,
-  height,
-  spineX,
-  dotRadius,
-  items,
-  ys,
-  beam = null,
-  reducedMotion = false,
-}: {
-  width: number
-  height: number
-  spineX: number
-  dotRadius: number
-  items: SpineItem[]
-  ys: number[]
-  beam?: SpineBeam | null
-  reducedMotion?: boolean
-}) {
+export const CourseSpine = forwardRef<SpineHandle, CourseSpineProps>(
+  function CourseSpine(
+    {
+      width,
+      height,
+      spineX,
+      dotRadius,
+      items,
+      ys,
+      beam = null,
+      reducedMotion = false,
+    },
+    ref,
+  ) {
   const haloRef = useRef<Konva.Circle | null>(null)
+  const beamRef = useRef<Konva.Rect | null>(null)
+
+  useImperativeHandle(
+    ref,
+    () => ({
+      traverseTo(targetY: number): Promise<void> {
+        return new Promise<void>((resolve) => {
+          const halo = haloRef.current
+          if (!halo) {
+            resolve()
+            return
+          }
+          new Konva.Tween({
+            node: halo,
+            y: targetY,
+            duration: 0.35,
+            easing: Konva.Easings.EaseInOut,
+            onFinish: resolve,
+          }).play()
+          const beamNode = beamRef.current
+          if (beamNode) {
+            new Konva.Tween({
+              node: beamNode,
+              y: targetY - dotRadius * 0.7,
+              duration: 0.35,
+              easing: Konva.Easings.EaseInOut,
+            }).play()
+          }
+        })
+      },
+    }),
+    [dotRadius],
+  )
 
   // Gentle focus pulse on the quill halo (docs/ui_design_system.md Motion):
   // a slow opacity breath, collapsed to a static ring under reduced motion.
@@ -117,6 +162,9 @@ export function CourseSpine({
         {/* Focus beam: a flat --mark-wash band from the focused dot to the panel. */}
         {beam && (
           <Rect
+            ref={(node) => {
+              if (node) beamRef.current = node
+            }}
             x={spineX}
             y={beam.y - dotRadius * 0.7}
             width={Math.max(0, beam.toX - spineX)}
@@ -208,7 +256,8 @@ export function CourseSpine({
       </Layer>
     </Stage>
   )
-}
+},
+)
 
 // A tiny notebook padlock: a rounded body Rect under a thin semicircular shackle.
 function Padlock({ x, y, s }: { x: number; y: number; s: number }) {

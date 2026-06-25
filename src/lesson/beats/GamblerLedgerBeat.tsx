@@ -5,12 +5,13 @@
 // The word "martingale" is deferred to the beat's interviewNote. Tap-only,
 // aria-live; reduced motion shows the converged frame.
 
-import { useMemo, useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import type { BeatProps } from './types'
 import { BeatShell } from '../BeatShell'
 import { expectedWaitFair, gamblerLedger } from '../../engine/correlation'
 import { prefixFunction } from '../../engine/automaton'
 import { mulberry32 } from '../../engine/simulate'
+import { useProgressiveRuns } from './useProgressiveRuns'
 
 function waitFor(target: string, pi: number[], rng: () => number): number {
   let k = 0
@@ -34,18 +35,30 @@ export function GamblerLedgerBeat(props: BeatProps) {
   const [runs, setRuns] = useState(0)
   const [noteOpen, setNoteOpen] = useState(false)
 
+  const sumRef = useRef(0)
+  const trialsRef = useRef(0)
+  const rngRef = useRef<() => number>(() => 0)
+  const [hasResult, setHasResult] = useState(false)
+
+  const sim = useProgressiveRuns({
+    total: 400,
+    onTrial: () => {
+      sumRef.current += waitFor(target, pi, rngRef.current)
+      trialsRef.current += 1
+    },
+    onFlush: () => {
+      const t = trialsRef.current
+      setStats({ trials: t, meanIn: t > 0 ? sumRef.current / t : 0 })
+    },
+    onComplete: () => setHasResult(true),
+  })
+
   if (beat.interaction.type !== 'gamblerLedger') return null
 
   function run() {
-    const rng = mulberry32(0x90d + runs)
-    const trials = 400
-    let total = 0
-    for (let i = 0; i < trials; i++) total += waitFor(target, pi, rng)
-    const prev = stats ?? { trials: 0, meanIn: 0 }
-    const newTrials = prev.trials + trials
-    const meanIn = (prev.meanIn * prev.trials + total) / newTrials
-    setStats({ trials: newTrials, meanIn })
+    rngRef.current = mulberry32(0x90d + runs)
     setRuns((r) => r + 1)
+    sim.start({ reset: false })
   }
 
   const readout =
@@ -54,8 +67,18 @@ export function GamblerLedgerBeat(props: BeatProps) {
 
   return (
     <BeatShell
-      primary={{ label: isLast ? 'Finish' : 'Continue', enabled: !!stats, onClick: onAdvance }}
-      tertiary={{ label: stats ? 'Run 400 more' : 'Run 400 streams', onClick: run }}
+      primary={{
+        label: isLast ? 'Finish' : 'Continue',
+        enabled: hasResult,
+        onClick: onAdvance,
+        variant: 'ghost',
+      }}
+      tertiary={{
+        label: stats ? 'Run 400 more' : 'Run 400 streams',
+        onClick: run,
+        variant: 'primary',
+        enabled: !sim.running,
+      }}
     >
       <div className="ledger">
         <p className="ledger__readout" role="status" aria-live="polite">
@@ -86,6 +109,18 @@ export function GamblerLedgerBeat(props: BeatProps) {
             </p>
           </div>
         </div>
+
+        {(sim.running || stats) && (
+          <div
+            className="sim-progress"
+            role="progressbar"
+            aria-valuemin={0}
+            aria-valuemax={100}
+            aria-valuenow={Math.round(sim.progress * 100)}
+          >
+            <div className="sim-progress__bar" style={{ width: `${Math.round(sim.progress * 100)}%` }} />
+          </div>
+        )}
 
         {stats && (
           <p className="ledger__assert">

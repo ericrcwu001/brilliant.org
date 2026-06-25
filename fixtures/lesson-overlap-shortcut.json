@@ -33,7 +33,7 @@
       "beatId": "self-overlap",
       "required": true,
       "pattern": "HH",
-      "prompt": "Slide HH over itself. Each place the start reappears at the end is an overlap worth 2^L.",
+      "prompt": "Tap each row to slide HH over itself and check for a match where the start reappears at the end. Each overlap of length L is worth 2^L flips (2 to the power L).",
       "interaction": { "type": "autocorrelationRuler" },
       "interviewNote": "These overlap lengths are the pattern's correlation/border set (Guibas\u2013Odlyzko); in binary the Conway leading number encodes the same thing.",
       "feedback": {
@@ -48,7 +48,7 @@
     {
       "beatId": "exponent-primer",
       "required": false,
-      "prompt": "A 10-second refresher you'll lean on.",
+      "prompt": "Quick refresher on powers of two \u2014 read the card, then continue.",
       "interaction": {
         "type": "primer",
         "variant": "exponent",
@@ -67,7 +67,7 @@
       "pattern": "HH",
       "introducesSymbol": "\u03a32^L",
       "groundedBy": ["self-overlap"],
-      "prompt": "Drop a 2^L chip for each overlap you found, and add them up.",
+      "prompt": "Tap each overlap tile to add its 2^L value and total HH's wait.",
       "interaction": { "type": "sumTiles" },
       "feedback": {
         "correct": "4 + 2 = 6 \u2014 that's E[HH], straight off the overlaps. That sum is \u03a32^L.",
@@ -82,7 +82,7 @@
       "beatId": "martingale",
       "required": true,
       "pattern": "HH",
-      "prompt": "Why does \u03a32^L work? Run a fair-betting casino until HH appears: money in is the wait, money out is the surviving parlays. Watch them meet.",
+      "prompt": "Press Run to stream many games and watch money-in (the average wait) converge to money-out (the surviving parlays). That convergence is why \u03a32^L works.",
       "interaction": { "type": "gamblerLedger" },
       "hero": {
         "slowFirst": true,
@@ -103,7 +103,7 @@
       "beatId": "apply-THH",
       "required": true,
       "pattern": "THH",
-      "prompt": "Now the shortcut, on THH. Find its overlaps and sum the chips.",
+      "prompt": "Now apply the shortcut to THH. Each tile is one of its overlaps \u2014 tap each to sum THH's wait.",
       "interaction": { "type": "sumTiles" },
       "feedback": {
         "correct": "THH overlaps only at length 3 \u2192 2\u00b3 = 8. Done in seconds.",
@@ -118,7 +118,7 @@
       "beatId": "apply-HTH",
       "required": true,
       "pattern": "HTH",
-      "prompt": "And HTH \u2014 watch for the sneaky extra overlap.",
+      "prompt": "Apply the shortcut to HTH. Tap each overlap tile \u2014 including the sneaky length-1 overlap \u2014 to total HTH's wait.",
       "interaction": { "type": "sumTiles" },
       "feedback": {
         "correct": "HTH overlaps at lengths 1 and 3 \u2192 2 + 8 = 10. The length-1 overlap is the trap.",
@@ -133,7 +133,7 @@
       "beatId": "triangulation",
       "required": true,
       "comparison": true,
-      "prompt": "Three roads, one number. Will the recurrence, the martingale, and the simulation agree for HH?",
+      "prompt": "Tap each lens card to reveal how the recurrence, the martingale, and the simulation each arrive at the same answer for HH.",
       "interaction": {
         "type": "tripletReveal",
         "value": "6",
@@ -152,7 +152,7 @@
     {
       "beatId": "recap",
       "required": true,
-      "prompt": "The capstone: one number, three ways.",
+      "prompt": "Reveal the recap cards to see one number confirmed three ways \u2014 the course capstone.",
       "interaction": { "type": "recap" },
       "feedback": {
         "correct": "Read the wait straight off the overlaps \u2014 and you know why it works.",

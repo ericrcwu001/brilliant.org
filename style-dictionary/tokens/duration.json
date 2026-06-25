@@ -1,0 +1,6 @@
+{
+  "dur-base":  { "$value": "200ms", "$type": "duration" },
+  "dur-micro": { "$value": "120ms", "$type": "duration" },
+  "dur-slow":  { "$value": "360ms", "$type": "duration" },
+  "dur-tell":  { "$value": "600ms", "$type": "duration" }
+}

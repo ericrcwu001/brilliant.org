@@ -62,6 +62,7 @@ export function RetrievalGridBeat(props: BeatProps) {
       }
     >
       <div className="retgrid">
+        <p className="retgrid__label">Tap a result on the left, then its match on the right.</p>
         <ul className="retgrid__rows">
           {pairs.map((p, i) => {
             const shown = revealed ? p.right : (assign[i] ?? null)

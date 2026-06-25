@@ -10,6 +10,7 @@ import { BeatShell } from '../BeatShell'
 import { BiasChart, type BiasSeries } from '../konva/BiasChart'
 import { C } from '../konva/theme'
 import { useElementWidth } from '../konva/useElementWidth'
+import { useSliderControl } from '../../ui/useSliderControl'
 
 const SERIES_COLORS: Record<string, string> = {
   HH: C.quill,
@@ -34,6 +35,24 @@ export function BiasSandboxBeat(props: BeatProps) {
   const interaction = beat.interaction
   const min = interaction.type === 'slider' ? interaction.min : 0.1
   const max = interaction.type === 'slider' ? interaction.max : 0.9
+
+  const {
+    groupProps,
+    trackProps,
+    labelProps,
+    thumbProps,
+    inputProps,
+    inputRef,
+    trackRef,
+    percent,
+  } = useSliderControl({
+    value: p,
+    onChange: setP,
+    minValue: min,
+    maxValue: max,
+    step: (max - min) / SAMPLE_COUNT,
+    label: 'Coin bias p',
+  })
 
   // Each E-vs-p curve depends only on the bias range + pattern set, not the live
   // p, so sample them once; only the marker recomputes as the slider moves.
@@ -65,6 +84,10 @@ export function BiasSandboxBeat(props: BeatProps) {
     }
   })
 
+  const { className: groupClassName, ...restGroupProps } = groupProps
+  const { className: trackClassName, ...restTrackProps } = trackProps
+  const { className: thumbClassName, style: thumbStyle, ...restThumbProps } = thumbProps
+
   return (
     <BeatShell
       primary={{
@@ -75,24 +98,38 @@ export function BiasSandboxBeat(props: BeatProps) {
       secondary={{ label: 'Skip', onClick: onAdvance }}
     >
       <div className="bias">
-        <label className="bias__control">
+        <div className="bias__control">
           <span className="bias__label">
             Coin bias <span className="mono">p(H) = {p.toFixed(2)}</span>
           </span>
-          {/* step="any" gives continuous, sub-pixel drag — the fixture's 0.05
-              grid is too coarse and reads as jittery. The readout rounds to 2
-              decimals for display only; p stays continuous. */}
-          <input
-            type="range"
-            min={min}
-            max={max}
-            step="any"
-            value={p}
-            onChange={(e) => setP(Number(e.target.value))}
-            className="bias__range"
-            aria-label="Coin bias p"
-          />
-        </label>
+          <div
+            {...restGroupProps}
+            className={['bias__slider', groupClassName].filter(Boolean).join(' ')}
+            data-testid="bias-slider"
+          >
+            <label {...labelProps} className="sr-only">
+              Coin bias p
+            </label>
+            <div
+              {...restTrackProps}
+              ref={trackRef}
+              className={['bias__track', trackClassName].filter(Boolean).join(' ')}
+            >
+              <div
+                {...restThumbProps}
+                className={['bias__thumb', thumbClassName].filter(Boolean).join(' ')}
+                style={{ ...thumbStyle, left: `${percent * 100}%` }}
+              >
+                <input
+                  {...inputProps}
+                  ref={inputRef}
+                  className="bias__range"
+                  aria-label="Coin bias p"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
 
         <div className="bias__chart" ref={boxRef}>
           <div className="canvas-frame">

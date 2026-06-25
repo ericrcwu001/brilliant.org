@@ -112,6 +112,33 @@ export function simulateRace(
   return 'A'
 }
 
+export type RaceTrace = { winner: 'A' | 'B'; flips: ('H' | 'T')[] }
+
+// Like simulateRace, but records the full shared coin stream. The winning
+// pattern occupies exactly the last (winner === 'A' ? a.length : b.length)
+// flips, since KMP completes the instant that suffix matches the pattern.
+export function traceRace(
+  a: string,
+  b: string,
+  p: number,
+  rng: () => number,
+): RaceTrace {
+  const piA = prefixFunction(a)
+  const piB = prefixFunction(b)
+  let sa = 0
+  let sb = 0
+  const flips: ('H' | 'T')[] = []
+  for (let i = 0; i < 1_000_000; i++) {
+    const c: 'H' | 'T' = rng() < p ? 'H' : 'T'
+    flips.push(c)
+    sa = advance(a, piA, sa, c)
+    sb = advance(b, piB, sb, c)
+    if (sa === a.length) return { winner: 'A', flips }
+    if (sb === b.length) return { winner: 'B', flips }
+  }
+  return { winner: 'A', flips }
+}
+
 // Batched race outcomes for the converging win-rate bars + tally.
 export function batchRace(
   a: string,

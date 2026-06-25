@@ -1,0 +1,498 @@
+/* ── Ergo Course Journey styles ──────────────────────────────────────────────
+   Owns: .ergo-journey-layout, .ergo-chapter, .ergo-node*, .ergo-connector,
+         .ergo-card*, .ergo-detail*, .ergo-ring*, .ergo-roadmap, .ergo-mathviz
+   All token names from SHARED CONTRACTS (see docs/ui_design_system.md).
+   Do NOT edit app.css — Agent 1 adds the @import there.
+── */
+
+/* ── Chapter glow tokens (rgba form required for box-shadow) ── */
+[data-ch="ch1"] { --ch-glow: rgba(79,70,229,.18); }
+[data-ch="ch2"] { --ch-glow: rgba(13,148,136,.18); }
+[data-ch="ch3"] { --ch-glow: rgba(240,88,74,.18); }
+[data-ch="ch4"] { --ch-glow: rgba(224,152,46,.14); }
+
+/* ── Layout: two-column grid (journey + detail) ─────────────────────────── */
+
+.ergo-journey-layout {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--s6, 32px);
+  align-items: start;
+  width: 100%;
+}
+
+@media (min-width: 768px) {
+  .ergo-journey-layout {
+    grid-template-columns: 1fr 360px;
+  }
+}
+
+/* ── Journey column (left) ───────────────────────────────────── */
+
+.ergo-journey {
+  position: relative;
+  min-width: 0;
+}
+
+/* ── Chapter section ─────────────────────────────────────────── */
+
+.ergo-chapter {
+  position: relative;
+  margin-bottom: var(--s2, 8px);
+}
+
+.ergo-chapter__label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-left: 52px; /* 32px node-wrap + 16px gap + 4px visual inset */
+  padding-bottom: var(--s3, 12px);
+  margin-top: var(--s5, 24px);
+  font-family: var(--font-sans, 'Inter', sans-serif);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  line-height: 1.4;
+}
+
+.ergo-chapter:first-of-type .ergo-chapter__label {
+  margin-top: 0;
+}
+
+.ergo-chapter__count {
+  font-family: var(--font-mono, 'JetBrains Mono', monospace);
+  font-size: 11px;
+  font-weight: 500;
+  opacity: 0.7;
+  letter-spacing: 0.02em;
+}
+
+.ergo-chapter__body {
+  position: relative;
+}
+
+/* Roadmap chapter: muted */
+.ergo-chapter--roadmap .ergo-chapter__label {
+  opacity: 0.65;
+}
+
+/* ── Vertical connector rail ─────────────────────────────────── */
+/* Per-row ::before creates the continuous rail segment.           */
+/* The rail runs left: 14px (center of 32px node-wrap − 2px).    */
+
+.ergo-row {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: var(--s4, 16px);
+  padding-bottom: var(--s3, 12px);
+}
+
+/* Connector segment below each row */
+.ergo-row::before {
+  content: '';
+  position: absolute;
+  left: 14px;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  border-radius: 2px;
+  background: var(--ergo-line-2, rgba(22,26,39,.14));
+  z-index: 0;
+  opacity: 0.55;
+}
+
+/* Chapter-colored connector per chapter */
+[data-ch="ch1"] .ergo-row::before { background: var(--ch1, #4F46E5); }
+[data-ch="ch2"] .ergo-row::before { background: var(--ch2, #0D9488); }
+[data-ch="ch3"] .ergo-row::before { background: var(--ch3, #F0584A); }
+[data-ch="ch4"] .ergo-row::before { background: var(--ch4, #E0982E); opacity: 0.3; }
+
+/* Hide connector above first row of first chapter */
+.ergo-chapter:first-of-type .ergo-chapter__body .ergo-row:first-child::before {
+  top: 50%;
+}
+
+/* Hide connector below last lesson row (not roadmap) */
+.ergo-chapter:not(.ergo-chapter--roadmap) .ergo-chapter__body .ergo-row:last-child::before {
+  bottom: 50%;
+}
+
+/* Roadmap rows: no connector above the first */
+.ergo-chapter--roadmap .ergo-chapter__body .ergo-row:first-child::before {
+  top: 50%;
+}
+
+/* ── Node wrap and dot ───────────────────────────────────────── */
+
+.ergo-node-wrap {
+  flex-shrink: 0;
+  width: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 24px; /* aligns dot with card thumbnail center */
+  position: relative;
+  z-index: 1;
+}
+
+.ergo-node-wrap--roadmap {
+  opacity: 0.45;
+}
+
+.ergo-node__dot {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--ergo-surface, #fff);
+  border: 2px solid var(--ergo-line-2, rgba(22,26,39,.14));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  flex-shrink: 0;
+  /* transition for state changes */
+  transition: background 180ms ease, border-color 180ms ease, box-shadow 180ms ease;
+}
+
+/* Completed: filled chapter color */
+.ergo-node__dot--completed,
+.ergo-node__dot--needsReview {
+  border: none;
+}
+
+/* Needs-review: amber overlay ring */
+.ergo-node__dot--needsReview {
+  box-shadow: 0 0 0 3px var(--mark-tint, #FBF0DD), 0 0 0 5px var(--mark, #E0982E);
+}
+
+/* Active: chapter-colored ring + soft glow pulse */
+.ergo-node__dot--active {
+  width: 32px;
+  height: 32px;
+  background: var(--ergo-surface, #fff);
+  border-width: 2.5px;
+  animation: ergo-node-pulse 2.4s ease-in-out infinite;
+}
+
+@keyframes ergo-node-pulse {
+  0%, 100% { box-shadow: 0 0 0 4px var(--ch-glow, rgba(79,70,229,.18)); }
+  50%       { box-shadow: 0 0 0 8px var(--ch-glow, rgba(79,70,229,.10)); }
+}
+
+/* Locked: muted ring */
+.ergo-node__dot--locked {
+  background: var(--ergo-surface-2, #F1F3F8);
+  border-color: var(--ergo-line-2, rgba(22,26,39,.14));
+}
+
+/* Roadmap */
+.ergo-node__dot--roadmap {
+  width: 24px;
+  height: 24px;
+  background: var(--ergo-surface-2, #F1F3F8);
+  border-color: var(--ergo-line, rgba(22,26,39,.08));
+}
+
+/* SVG ring positioned centered over the dot */
+.ergo-node__ring {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+
+.ergo-node__check,
+.ergo-node__pip {
+  position: relative;
+  z-index: 1;
+  pointer-events: none;
+}
+
+/* Arc transition (rings animate on mount; reduced-motion skips) */
+.ergo-ring__arc {
+  transition: stroke-dashoffset 360ms cubic-bezier(.2,.7,.2,1);
+}
+
+/* Disable animations when reduced-motion requested */
+[data-reduced] .ergo-node__dot--active {
+  animation: none;
+}
+[data-reduced] .ergo-ring__arc {
+  transition: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .ergo-node__dot--active { animation: none; }
+  .ergo-ring__arc { transition: none; }
+}
+
+/* ── Lesson cards ────────────────────────────────────────────── */
+
+.ergo-card {
+  flex: 1;
+  min-width: 0;
+  background: var(--ergo-surface, #fff);
+  border: 1.5px solid var(--ergo-line, rgba(22,26,39,.08));
+  border-radius: var(--r-lg, 16px);
+  box-shadow: var(--ergo-shadow-sm, 0 1px 2px rgba(22,26,39,.06), 0 1px 3px rgba(22,26,39,.04));
+  padding: var(--s3, 12px) var(--s4, 16px);
+  display: flex;
+  align-items: center;
+  gap: var(--s4, 16px);
+  cursor: pointer;
+  text-align: left;
+  font: inherit;
+  color: inherit;
+  transition: box-shadow 150ms ease, transform 150ms ease, border-color 150ms ease;
+  min-height: 80px;
+  position: relative;
+  z-index: 1;
+}
+
+.ergo-card:hover:not(.ergo-card--locked):not(.ergo-card--roadmap) {
+  box-shadow: var(--ergo-shadow-md, 0 6px 16px rgba(22,26,39,.08));
+  transform: translateY(-1px);
+}
+
+.ergo-card:focus-visible {
+  outline: none;
+  box-shadow: var(--ring-focus, 0 0 0 3px rgba(79,70,229,.35));
+}
+
+/* Active card */
+.ergo-card--active {
+  border-width: 1.5px;
+  box-shadow: var(--ergo-shadow-md, 0 6px 16px rgba(22,26,39,.08));
+}
+
+/* Completed card */
+.ergo-card--completed {
+  border-color: var(--ergo-line, rgba(22,26,39,.08));
+}
+
+/* Needs-review: subtle amber ring */
+.ergo-card--review {
+  border-color: var(--mark-tint, #FBF0DD);
+}
+
+/* Locked card: muted, no hover */
+.ergo-card--locked {
+  opacity: 0.55;
+  cursor: default;
+  pointer-events: none;
+}
+
+/* Roadmap card: more muted */
+.ergo-card--roadmap {
+  opacity: 0.5;
+  cursor: default;
+  pointer-events: none;
+  transform: scale(0.97);
+  transform-origin: left center;
+}
+
+/* ── Card inner content ──────────────────────────────────────── */
+
+.ergo-card__viz {
+  width: 88px;
+  min-width: 88px;
+  height: 72px;
+  border-radius: var(--r-md, 12px);
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.ergo-mathviz {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 0;
+}
+
+.ergo-card__meta {
+  flex: 1;
+  min-width: 0;
+}
+
+.ergo-card__title {
+  font-family: var(--font-display, 'Space Grotesk', sans-serif);
+  font-weight: 600;
+  font-size: 16px;
+  color: var(--ergo-ink, #161A27);
+  line-height: 1.3;
+  margin-bottom: var(--s1, 4px);
+}
+
+.ergo-card__title--roadmap {
+  font-size: 14px;
+  color: var(--ergo-ink-2, #4B5268);
+}
+
+.ergo-card__hook {
+  font-family: var(--font-sans, 'Inter', sans-serif);
+  font-size: 13px;
+  color: var(--ergo-ink-2, #4B5268);
+  line-height: 1.45;
+}
+
+.ergo-card__status {
+  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Mobile: narrower thumbnails */
+@media (max-width: 480px) {
+  .ergo-card__viz {
+    width: 72px;
+    min-width: 72px;
+    height: 60px;
+  }
+  .ergo-card__title {
+    font-size: 14px;
+  }
+}
+
+/* ── Detail column (right) ───────────────────────────────────── */
+
+.ergo-detail-col {
+  min-width: 0;
+}
+
+@media (min-width: 768px) {
+  .ergo-detail-col {
+    position: sticky;
+    top: var(--s6, 32px);
+  }
+}
+
+/* On mobile, detail col appears after journey col */
+@media (max-width: 767px) {
+  .ergo-journey-layout {
+    /* detail card renders second in DOM — stacks below */
+  }
+}
+
+/* ── Detail card ─────────────────────────────────────────────── */
+
+.ergo-detail {
+  background: var(--ergo-surface, #fff);
+  border: 1px solid var(--ergo-line, rgba(22,26,39,.08));
+  border-radius: var(--r-lg, 16px);
+  box-shadow: var(--ergo-shadow-md, 0 6px 16px rgba(22,26,39,.08));
+  padding: var(--s5, 24px);
+}
+
+.ergo-detail__chapter-label {
+  font-family: var(--font-sans, 'Inter', sans-serif);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  margin-bottom: var(--s3, 12px);
+}
+
+.ergo-detail__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--s3, 12px);
+  margin-bottom: var(--s2, 8px);
+}
+
+.ergo-detail__title {
+  font-family: var(--font-display, 'Space Grotesk', sans-serif);
+  font-weight: 600;
+  font-size: 24px;
+  color: var(--ergo-ink, #161A27);
+  line-height: 1.2;
+  flex: 1;
+}
+
+.ergo-detail__desc {
+  font-family: var(--font-sans, 'Inter', sans-serif);
+  font-size: 14px;
+  color: var(--ergo-ink-2, #4B5268);
+  line-height: 1.55;
+  margin-bottom: var(--s5, 24px);
+  margin-top: var(--s2, 8px);
+}
+
+/* ── Progress ring (detail card) ─────────────────────────────── */
+
+.ergo-ring-wrap {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.ergo-ring {
+  display: block;
+}
+
+.ergo-ring__arc {
+  transition: stroke-dashoffset 360ms cubic-bezier(.2,.7,.2,1);
+}
+
+[data-reduced] .ergo-ring__arc { transition: none; }
+@media (prefers-reduced-motion: reduce) { .ergo-ring__arc { transition: none; } }
+
+.ergo-ring__sub {
+  font-family: var(--font-sans, 'Inter', sans-serif);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ergo-ink-3, #8A90A4);
+}
+
+/* ── Detail card CTA button ───────────────────────────────────── */
+
+.ergo-detail__cta {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s2, 8px);
+  width: 100%;
+  padding: 14px var(--s4, 16px);
+  color: #fff;
+  border: none;
+  border-radius: var(--r-md, 12px);
+  font-family: var(--font-sans, 'Inter', sans-serif);
+  font-weight: 600;
+  font-size: 15px;
+  letter-spacing: -0.01em;
+  cursor: pointer;
+  transition: filter 120ms ease, transform 100ms ease;
+  min-height: 48px;
+}
+
+.ergo-detail__cta:hover {
+  filter: brightness(0.9);
+}
+
+.ergo-detail__cta:active {
+  transform: scale(0.98);
+}
+
+.ergo-detail__cta:focus-visible {
+  outline: none;
+  box-shadow: var(--ring-focus, 0 0 0 3px rgba(79,70,229,.35));
+}
+
+[data-reduced] .ergo-detail__cta {
+  transition: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .ergo-detail__cta { transition: none; }
+}

@@ -11,7 +11,8 @@ import { ROUTES, type NavigateFn } from './routes'
 export function ProfilePage({ navigate }: { navigate: NavigateFn }) {
   const { user, userDoc, updateUserProfile, signOut } = useAuth()
   const [name, setName] = useState(userDoc?.displayName ?? '')
-  const [error, setError] = useState<string | null>(null)
+  const [nameError, setNameError] = useState<string | null>(null)
+  const [formError, setFormError] = useState<string | null>(null)
   const [status, setStatus] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
 
@@ -21,18 +22,20 @@ export function ProfilePage({ navigate }: { navigate: NavigateFn }) {
     event.preventDefault()
     const validationError = validateDisplayName(name)
     if (validationError) {
-      setError(validationError)
+      setNameError(validationError)
+      setFormError(null)
       setStatus(null)
       return
     }
-    setError(null)
+    setNameError(null)
+    setFormError(null)
     setStatus(null)
     setBusy(true)
     try {
       await updateUserProfile(name)
       setStatus('Saved.')
     } catch (err) {
-      setError(authErrorMessage(err))
+      setFormError(authErrorMessage(err))
     } finally {
       setBusy(false)
     }
@@ -56,7 +59,7 @@ export function ProfilePage({ navigate }: { navigate: NavigateFn }) {
         <h1 className="profile__heading">Your profile</h1>
 
         <form className="authform" onSubmit={handleSave} noValidate>
-          <label className="field">
+          <label className="field" data-error={nameError ? true : undefined}>
             <span className="field__label">Display name</span>
             <input
               className="field__input"
@@ -68,9 +71,17 @@ export function ProfilePage({ navigate }: { navigate: NavigateFn }) {
               onChange={(e) => {
                 setName(e.target.value)
                 setStatus(null)
+                if (nameError) setNameError(null)
               }}
+              aria-invalid={nameError ? true : undefined}
+              aria-describedby={nameError ? 'display-name-hint' : undefined}
               required
             />
+            {nameError && (
+              <span className="field__hint" id="display-name-hint">
+                {nameError}
+              </span>
+            )}
           </label>
 
           <label className="field">
@@ -84,9 +95,9 @@ export function ProfilePage({ navigate }: { navigate: NavigateFn }) {
             />
           </label>
 
-          {error && (
+          {formError && (
             <p className="authform__error" role="alert">
-              {error}
+              {formError}
             </p>
           )}
           {status && (

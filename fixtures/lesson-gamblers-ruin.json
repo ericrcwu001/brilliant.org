@@ -10,13 +10,12 @@
     {
       "beatId": "recall-overlap",
       "required": true,
-      "prompt": "Warm-up: while waiting for HH, you have one H and then flip a T. What happens to your progress?",
+      "prompt": "Warm-up: you're waiting for HH and have a lone H. Match each next flip to what it does to your progress.",
       "interaction": {
-        "type": "mcq",
-        "options": [
-          { "id": "reset", "label": "It resets — you're back to needing HH from scratch", "correct": true },
-          { "id": "keep", "label": "You keep the H and just need one more", "correct": false },
-          { "id": "half", "label": "You lose half your progress", "correct": false }
+        "type": "retrievalGrid",
+        "pairs": [
+          { "left": "Then you flip a T", "right": "Reset to the start" },
+          { "left": "Then you flip an H", "right": "HH complete" }
         ]
       },
       "feedback": {
@@ -57,7 +56,7 @@
     {
       "beatId": "gamblers-fallacy",
       "required": false,
-      "prompt": "A myth to clear up before we walk.",
+      "prompt": "Read why you're never 'due' \u2014 the coin has no memory \u2014 then continue.",
       "interaction": {
         "type": "primer",
         "variant": "gamblersFallacy",
@@ -73,7 +72,7 @@
     {
       "beatId": "walk-once",
       "required": true,
-      "prompt": "Watch one walk from $2. Heads steps right, tails steps left, until a wall.",
+      "prompt": "Press Run to watch one walk from $2, then run the batch and see the full outcome spread.",
       "interaction": {
         "type": "walkBoard",
         "n": 4,
@@ -94,13 +93,13 @@
     {
       "beatId": "boundary-edge",
       "required": true,
-      "prompt": "What happens when the walk reaches $0 or $4?",
+      "prompt": "Match each amount to what happens when the walk reaches it.",
       "interaction": {
-        "type": "mcq",
-        "options": [
-          { "id": "absorb", "label": "It stops — those are the end states (walls)", "correct": true },
-          { "id": "bounce", "label": "It bounces back toward the middle", "correct": false },
-          { "id": "continue", "label": "It keeps flipping forever", "correct": false }
+        "type": "retrievalGrid",
+        "pairs": [
+          { "left": "Reach $0", "right": "Broke, game ends" },
+          { "left": "Reach $4", "right": "Goal, game ends" },
+          { "left": "Land on $2", "right": "Keep flipping" }
         ]
       },
       "feedback": {
@@ -111,7 +110,7 @@
     {
       "beatId": "ground-both",
       "required": false,
-      "prompt": "Two questions, two quantities.",
+      "prompt": "Read the difference between chance and duration for the same walk, then continue.",
       "interaction": {
         "type": "primer",
         "variant": "custom",
@@ -128,7 +127,7 @@
       "beatId": "prob-tiles",
       "required": true,
       "density": "merged",
-      "prompt": "Build the chance-of-reaching-$4 rule for $2. From $2, half the time you step to $3, half to $1 — and there's no per-flip cost for a chance.",
+      "prompt": "Tap the tiles into the slots to build the chance-of-reaching-$4 rule for $2. From $2, half the time you step to $3, half to $1 \u2014 no per-flip cost for a chance.",
       "interaction": {
         "type": "equationTiles",
         "bank": [
@@ -198,7 +197,7 @@
       "required": true,
       "density": "merged",
       "maxHintLevel": 2,
-      "prompt": "Now build the AVERAGE-FLIPS rule for $2. It's the same split — but this time every flip costs 1, so the +1 comes back.",
+      "prompt": "Tap the tiles into the slots to build the average-flips rule for $2. Same split as before \u2014 but this time every flip costs 1, so the +1 comes back.",
       "interaction": {
         "type": "equationTiles",
         "bank": [
@@ -270,13 +269,12 @@
     {
       "beatId": "guided-solve",
       "required": true,
-      "prompt": "Solving both systems for the start at $2, what do you get?",
+      "prompt": "Solve both systems for the start at $2. Type the chance of reaching $4 and the average number of flips.",
       "interaction": {
-        "type": "mcq",
-        "options": [
-          { "id": "right", "label": "Chance of reaching $4 = \u00bd, average flips = 4", "correct": true },
-          { "id": "swap", "label": "Chance = 4, average flips = \u00bd", "correct": false },
-          { "id": "safe", "label": "Chance = 1, average flips = 2", "correct": false }
+        "type": "answerEntry",
+        "fields": [
+          { "id": "chance", "label": "Chance of reaching $4 from $2", "accept": ["1/2", "0.5"], "placeholder": "e.g. 1/2" },
+          { "id": "avg", "label": "Average flips from $2 until a wall", "accept": ["4"], "placeholder": "?", "suffix": "flips" }
         ]
       },
       "feedback": {
@@ -292,14 +290,14 @@
       "beatId": "house-edge",
       "required": true,
       "comparison": true,
-      "prompt": "Now tilt the coin to 60/40 against you (drag the bias). A tiny edge — how bad can it be?",
+      "prompt": "Use the +/\u2212 buttons to set the coin 60/40 against you, then press Run and watch how often you go broke.",
       "interaction": {
         "type": "walkBoard",
         "n": 4,
         "p": 0.4,
         "start": 2,
         "interactive": true,
-        "display": "landscape"
+        "display": "histogram"
       },
       "hero": {
         "slowFirst": true,
@@ -319,7 +317,7 @@
     {
       "beatId": "recap",
       "required": true,
-      "prompt": "What you just proved.",
+      "prompt": "Reveal the recap cards to review what you proved about Gambler's Ruin.",
       "interaction": { "type": "recap" },
       "feedback": {
         "correct": "Fair still ruins the shorter stack; a tiny edge makes ruin near-certain.",

@@ -1,0 +1,4 @@
+{
+  "bp-laptop": { "$value": "768px", "$type": "dimension" },
+  "page-max":  { "$value": "960px", "$type": "dimension" }
+}

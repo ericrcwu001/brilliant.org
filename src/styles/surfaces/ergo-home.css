@@ -1,0 +1,331 @@
+/* ergo-home.css — Home shell: top bar · momentum band · weekly streak ·
+   medallion gallery · Ergo skeleton. All class names are ergo- prefixed.
+   Uses only Ergo design tokens (Agent 1) + the shared spacing scale (--s1–8).
+   Agent 1 adds the @import for this file to app.css — do not edit app.css. */
+
+/* ── Page container ────────────────────────────────────────── */
+.ergo-home {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 0 var(--s5);
+}
+
+/* ── Top bar ───────────────────────────────────────────────── */
+.ergo-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--s4) 0;
+  border-bottom: 1px solid var(--ergo-line);
+}
+
+.ergo-wordmark {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 22px;
+  letter-spacing: -0.02em;
+  color: var(--ergo-ink);
+  line-height: 1;
+  user-select: none;
+}
+
+.ergo-avatar {
+  /* min 44px hit target achieved via padding compensation below */
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border-radius: 50%;
+  background: var(--ergo-brand);
+  color: #fff;
+  font-family: var(--font-sans);
+  font-weight: 600;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border: none;
+  cursor: pointer;
+  transition: background var(--dur-base, 200ms) var(--ease-out, cubic-bezier(.2,.7,.2,1));
+  /* Extend hit target without changing visual size */
+  position: relative;
+}
+
+.ergo-avatar::after {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  border-radius: 50%;
+}
+
+.ergo-avatar:hover {
+  background: var(--ergo-brand-strong);
+}
+
+.ergo-avatar:focus-visible {
+  outline: none;
+  box-shadow: var(--ring-focus);
+}
+
+/* ── Momentum band ─────────────────────────────────────────── */
+.ergo-momentum {
+  background: var(--ergo-surface);
+  border-radius: var(--r-lg);
+  box-shadow: var(--ergo-shadow-sm);
+  margin: var(--s5) 0;
+  padding: var(--s5);
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+}
+
+.ergo-momentum__left {
+  padding-right: var(--s5);
+  border-right: 1px solid var(--ergo-line);
+}
+
+.ergo-momentum__right {
+  padding-left: var(--s5);
+}
+
+/* ── Weekly streak ─────────────────────────────────────────── */
+.ergo-streak {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s2);
+}
+
+.ergo-streak__header {
+  display: flex;
+  align-items: baseline;
+  gap: var(--s3);
+}
+
+.ergo-streak__number {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: clamp(2rem, 5vw, 3.5rem);
+  color: var(--ergo-brand);
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+
+.ergo-streak__label {
+  font-family: var(--font-sans);
+  font-size: 15px;
+  color: var(--ergo-ink-2);
+  font-weight: 400;
+}
+
+.ergo-streak__dots {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s1);
+  margin-top: var(--s2);
+}
+
+.ergo-streak__day-labels {
+  display: flex;
+  gap: 10px;
+}
+
+.ergo-streak__day-label {
+  width: 20px;
+  text-align: center;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--ergo-ink-3);
+  font-family: var(--font-sans);
+  letter-spacing: 0.04em;
+}
+
+.ergo-streak__day-dots {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.ergo-streak__dot {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: transparent;
+  border: 2px solid var(--ergo-line-2);
+  flex-shrink: 0;
+  display: block;
+}
+
+.ergo-streak__dot--filled {
+  background: var(--ergo-brand);
+  border-color: var(--ergo-brand);
+}
+
+/* ── Medallion gallery ─────────────────────────────────────── */
+.ergo-medallions__label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ergo-ink-3);
+  font-family: var(--font-sans);
+  margin: 0 0 var(--s3);
+}
+
+.ergo-medallions__row {
+  display: flex;
+  gap: var(--s2);
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+/* ── Individual medallion ──────────────────────────────────── */
+.ergo-medallion {
+  /* Chapter hue injected inline via CSS custom properties. */
+  --medallion-hue: var(--ergo-brand);
+  --medallion-tint: var(--ergo-brand-tint);
+
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  flex-shrink: 0;
+}
+
+.ergo-medallion--earned {
+  border: 2.5px solid var(--medallion-hue);
+  background: var(--medallion-tint);
+}
+
+.ergo-medallion--locked {
+  border: 2.5px solid var(--ergo-line-2);
+  background: var(--ergo-surface-2);
+  opacity: 0.7;
+}
+
+.ergo-medallion__glyph {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 10px;
+  line-height: 1;
+  text-align: center;
+}
+
+.ergo-medallion--earned .ergo-medallion__glyph {
+  color: var(--medallion-hue);
+}
+
+.ergo-medallion--locked .ergo-medallion__glyph {
+  color: var(--ergo-ink-3);
+  opacity: 0.35;
+}
+
+.ergo-medallion__lock {
+  position: absolute;
+  bottom: -2px;
+  right: -2px;
+}
+
+/* One-time quiet earn animation — scale + fade from locked style. */
+@keyframes ergo-medallion-earn {
+  from {
+    opacity: 0.4;
+    transform: scale(0.85);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.ergo-medallion--earning {
+  animation: ergo-medallion-earn var(--dur-slow, 360ms) var(--ease-out, cubic-bezier(.2,.7,.2,1)) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ergo-medallion--earning {
+    animation: none;
+  }
+}
+
+/* ── Ergo skeleton (course == null) ────────────────────────── */
+.ergo-skeleton {
+  margin-top: var(--s5);
+}
+
+@keyframes ergo-skeleton-pulse {
+  0%, 100% { opacity: 0.55; }
+  50%       { opacity: 0.9;  }
+}
+
+.ergo-skeleton__band {
+  height: 120px;
+  border-radius: var(--r-lg);
+  background: var(--ergo-surface);
+  box-shadow: var(--ergo-shadow-sm);
+  margin-bottom: var(--s5);
+  animation: ergo-skeleton-pulse 1.8s ease-in-out infinite;
+}
+
+.ergo-skeleton__journey {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s3);
+}
+
+.ergo-skeleton__row {
+  height: 80px;
+  border-radius: var(--r-lg);
+  background: var(--ergo-surface);
+  box-shadow: var(--ergo-shadow-sm);
+  animation: ergo-skeleton-pulse 1.8s ease-in-out infinite;
+}
+
+.ergo-skeleton__row:nth-child(2) { animation-delay: 0.12s; }
+.ergo-skeleton__row:nth-child(3) { animation-delay: 0.24s; }
+.ergo-skeleton__row:nth-child(4) { animation-delay: 0.36s; }
+
+@media (prefers-reduced-motion: reduce) {
+  .ergo-skeleton__band,
+  .ergo-skeleton__row {
+    animation: none;
+    opacity: 0.75;
+  }
+}
+
+/* ── Mobile adjustments ────────────────────────────────────── */
+@media (max-width: 767px) {
+  .ergo-home {
+    padding: 0 var(--s4);
+  }
+
+  .ergo-momentum {
+    grid-template-columns: 1fr;
+  }
+
+  .ergo-momentum__left {
+    padding-right: 0;
+    border-right: none;
+    border-bottom: 1px solid var(--ergo-line);
+    padding-bottom: var(--s4);
+    margin-bottom: var(--s4);
+  }
+
+  .ergo-momentum__right {
+    padding-left: 0;
+  }
+
+  /* Horizontal scroll on mobile if medallions overflow */
+  .ergo-medallions__row {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    padding-bottom: var(--s1);
+  }
+
+  .ergo-medallions__row::-webkit-scrollbar {
+    display: none;
+  }
+}

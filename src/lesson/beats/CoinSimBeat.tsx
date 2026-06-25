@@ -6,18 +6,17 @@
 // committed stream segment are kept in component state — never per-frame.
 //
 // Track B (density 'merged') keeps the original single-beat flow, byte-for-byte.
-// Track A (density 'split', L1 §4.3/§5.4) segments it: (1) a stream-only warm-up,
-// (2) the graph appears, (3) a single-stepped near-miss replay with the other
-// channels dimmed. A >=3 same-face run surfaces a one-time gambler's-fallacy note.
+// Track A (density 'split', L1 §4.3/§5.4) shares the graph-visible-from-load
+// opening and adds: dual state labels, a single-stepped near-miss replay with the
+// other channels dimmed, and a one-time gambler's-fallacy note on a >=3 same-face run.
 
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import type { BeatProps } from './types'
 import type { StateId } from '../../engine/types'
 import { nextStateOf } from '../../engine/simulate'
 import { BeatShell } from '../BeatShell'
 import { CoinStream, type Flip } from '../CoinStream'
 import { StateGraph, type EdgeRef } from '../konva/StateGraph'
-import { useElementWidth } from '../konva/useElementWidth'
 
 const labelOf = (automaton: BeatProps['automaton'], id: StateId) =>
   automaton.states.find((s) => s.id === id)?.label ?? ''
@@ -25,7 +24,7 @@ const labelOf = (automaton: BeatProps['automaton'], id: StateId) =>
 const DEFAULT_GAMBLER_NOTE =
   "A long streak feels 'due' to break, but each flip is independent — the coin has no memory."
 
-type Phase = 'stream' | 'free' | 'replaying' | 'done'
+type Phase = 'free' | 'replaying' | 'done'
 
 export function CoinSimBeat({
   beat,
@@ -52,8 +51,8 @@ export function CoinSimBeat({
   const [sawChange, setSawChange] = useState(false)
   const [activeEdge, setActiveEdge] = useState<EdgeRef | null>(null)
   const [pulseKey, setPulseKey] = useState(0)
-  // Track A opens on a stream-only warm-up; Track B opens with the graph visible.
-  const [phase, setPhase] = useState<Phase>(split ? 'stream' : 'free')
+  // Both tracks open with the graph visible; Track A adds the split scaffolds below.
+  const [phase, setPhase] = useState<Phase>('free')
   const [announce, setAnnounce] = useState('Flip the coin to begin.')
   const [gambler, setGambler] = useState<string | null>(null)
 
@@ -61,7 +60,19 @@ export function CoinSimBeat({
   const run = useRef<{ face: 'H' | 'T' | null; len: number }>({ face: null, len: 0 })
   const gamblerShown = useRef(false)
 
-  const [boxRef, width] = useElementWidth<HTMLDivElement>()
+  const [width, setWidth] = useState(0)
+  const roRef = useRef<ResizeObserver | null>(null)
+  const boxRef = useCallback((el: HTMLDivElement | null) => {
+    roRef.current?.disconnect()
+    if (!el) {
+      roRef.current = null
+      return
+    }
+    setWidth(el.clientWidth)
+    const ro = new ResizeObserver(() => setWidth(el.clientWidth))
+    ro.observe(el)
+    roRef.current = ro
+  }, [])
   const timers = useRef<ReturnType<typeof setTimeout>[]>([])
   useEffect(
     () => () => {
@@ -72,7 +83,6 @@ export function CoinSimBeat({
 
   const stageH = Math.max(220, Math.round((width || 320) * 0.52))
   const gated = flipCount >= minFlips && sawChange
-  const showGraph = phase !== 'stream'
 
   const e0 = automaton.states[0].id
   const isAbsorbing = (id: StateId) =>
@@ -192,15 +202,7 @@ export function CoinSimBeat({
   let primaryLabel: string
   let primaryEnabled = true
   let onPrimary: () => void
-  if (phase === 'stream') {
-    if (flipCount >= 2) {
-      primaryLabel = 'Show the machine'
-      onPrimary = () => setPhase('free')
-    } else {
-      primaryLabel = 'Flip'
-      onPrimary = flipOnce
-    }
-  } else if (phase === 'free') {
+  if (phase === 'free') {
     if (gated) {
       primaryLabel = 'Continue'
       onPrimary = startReplay
@@ -223,7 +225,7 @@ export function CoinSimBeat({
   }
 
   const secondary =
-    ((phase === 'free' && gated) || phase === 'done') || (phase === 'stream' && flipCount >= 2)
+    (phase === 'free' && gated) || phase === 'done'
       ? { label: 'Flip', onClick: flipOnce }
       : undefined
 
@@ -236,32 +238,28 @@ export function CoinSimBeat({
       secondary={secondary}
     >
       <div className={`coinsim${dimStream ? ' coinsim--focus' : ''}`}>
-        {showGraph && (
-          <div className="canvas-frame" ref={boxRef}>
-            {width > 0 && (
-              <StateGraph
-                automaton={automaton}
-                width={width}
-                height={stageH}
-                activeState={state}
-                activeEdge={activeEdge}
-                reducedMotion={reducedMotion}
-                pulseKey={pulseKey}
-                labelMode={split ? 'dual' : 'prefix'}
-              />
-            )}
-          </div>
-        )}
-        {showGraph && (
-          <p className="coinsim__legend">
-            <span className="coinsim__legend-item">circle = state</span>
-            <span className="coinsim__legend-item">
-              arrow = a flip (<span className="coin coin--H coin--inline">H</span> gold,{' '}
-              <span className="coin coin--T coin--inline">T</span> teal)
-            </span>
-            <span className="coinsim__legend-item">ringed = done</span>
-          </p>
-        )}
+        <div className="canvas-frame" ref={boxRef}>
+          {width > 0 && (
+            <StateGraph
+              automaton={automaton}
+              width={width}
+              height={stageH}
+              activeState={state}
+              activeEdge={activeEdge}
+              reducedMotion={reducedMotion}
+              pulseKey={pulseKey}
+              labelMode={split ? 'dual' : 'prefix'}
+            />
+          )}
+        </div>
+        <p className="coinsim__legend">
+          <span className="coinsim__legend-item">circle = state</span>
+          <span className="coinsim__legend-item">
+            arrow = a flip (<span className="coin coin--H coin--inline">H</span> gold,{' '}
+            <span className="coin coin--T coin--inline">T</span> teal)
+          </span>
+          <span className="coinsim__legend-item">ringed = done</span>
+        </p>
         {split ? (
           <div
             className={
@@ -280,11 +278,6 @@ export function CoinSimBeat({
             stateLabel={labelOf(automaton, state)}
             announce={announce}
           />
-        )}
-        {phase === 'stream' && (
-          <p className="hint-note">
-            Just watch the H/T stream and the chip for now — flip a couple of times.
-          </p>
         )}
         {phase === 'free' && !gated && (
           <p className="hint-note">

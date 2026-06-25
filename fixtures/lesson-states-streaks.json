@@ -2,7 +2,7 @@
   "lessonId": "lesson-states-streaks",
   "courseId": "course-pattern-hitting-times",
   "title": "Mixed Review & Streaks",
-  "patternOptions": ["H", "HT", "THH", "HH", "HTH", "HHH"],
+  "patternOptions": ["HH", "H", "HT", "THH", "HTH", "HHH"],
   "milestoneId": "first-pattern-cracked",
   "unlocks": "lesson-longer-patterns",
   "schemaVersion": 1,
@@ -10,7 +10,7 @@
     {
       "beatId": "retrieval-grid",
       "required": true,
-      "prompt": "Match each result to its value — pulling from everything so far.",
+      "prompt": "Match each result to its value \u2014 E[pattern] means the expected (average) wait for that pattern. Tap a result on the left, then its match on the right.",
       "interaction": {
         "type": "retrievalGrid",
         "pairs": [
@@ -32,7 +32,7 @@
     {
       "beatId": "mixed-primer",
       "required": false,
-      "prompt": "Why we're mixing it all together.",
+      "prompt": "Read why mixed practice works, then continue.",
       "interaction": {
         "type": "primer",
         "variant": "custom",
@@ -48,13 +48,13 @@
     {
       "beatId": "which-waits-longest",
       "required": true,
-      "prompt": "Of these, which pattern takes the LONGEST on average to appear?",
+      "prompt": "Match each pattern to its average wait. Which one waits the longest?",
       "interaction": {
-        "type": "mcq",
-        "options": [
-          { "id": "hth", "label": "HTH (10)", "correct": true },
-          { "id": "thh", "label": "THH (8)", "correct": false },
-          { "id": "hh", "label": "HH (6)", "correct": false }
+        "type": "retrievalGrid",
+        "pairs": [
+          { "left": "HTH", "right": "10" },
+          { "left": "THH", "right": "8" },
+          { "left": "HH", "right": "6" }
         ]
       },
       "feedback": {
@@ -69,14 +69,12 @@
     {
       "beatId": "race-or-wait",
       "required": true,
-      "prompt": "Two friends watch ONE coin: one waits for HH, the other for HT. Who appears first more often?",
+      "prompt": "Two friends watch ONE coin: one waits for HH, the other for HT. Press Run to watch one race, then run the batch \u2014 who appears first more often?",
+      "hero": { "slowFirst": true, "structuralReadout": "On one shared stream, HH and HT each win about 50 of every 100 races — a dead tie.", "reducedMotionFinalFrame": true },
       "interaction": {
-        "type": "mcq",
-        "options": [
-          { "id": "tie", "label": "It's a tie — 50/50", "correct": true },
-          { "id": "ht", "label": "HT — it's faster on its own", "correct": false },
-          { "id": "hh", "label": "HH", "correct": false }
-        ]
+        "type": "raceSim",
+        "patterns": ["HH", "HT"],
+        "display": "lanes"
       },
       "feedback": {
         "correct": "A tie — \"who's first\" on a shared stream isn't \"who's faster alone.\"",
@@ -90,13 +88,12 @@
     {
       "beatId": "plus-one-or-not",
       "required": true,
-      "prompt": "Which kind of recurrence carries a \"+1\" for every flip?",
+      "prompt": "Match each kind of recurrence \u2014 the rule linking a state to its neighbors \u2014 to its per-flip cost.",
       "interaction": {
-        "type": "mcq",
-        "options": [
-          { "id": "dur", "label": "A duration (average flips)", "correct": true },
-          { "id": "prob", "label": "A probability (a chance)", "correct": false },
-          { "id": "both", "label": "Both of them", "correct": false }
+        "type": "retrievalGrid",
+        "pairs": [
+          { "left": "A duration (average flips)", "right": "+1 every flip" },
+          { "left": "A probability (a chance)", "right": "No +1" }
         ]
       },
       "feedback": {
@@ -111,13 +108,12 @@
     {
       "beatId": "weak-node",
       "required": true,
-      "prompt": "One more, on the idea that trips people up most — overlap as memory. While waiting for HH, a lone H then a T means…",
+      "prompt": "On the HH machine: you've matched a lone H (state E1). Tap where each next flip sends you.",
       "interaction": {
-        "type": "mcq",
-        "options": [
-          { "id": "reset", "label": "Full reset — start over from scratch", "correct": true },
-          { "id": "keep", "label": "Keep the H, need one more", "correct": false },
-          { "id": "half", "label": "Lose half the progress", "correct": false }
+        "type": "stateTap",
+        "transitions": [
+          { "from": "E1", "on": "T" },
+          { "from": "E1", "on": "H" }
         ]
       },
       "feedback": {
@@ -132,7 +128,7 @@
     {
       "beatId": "recap-streak",
       "required": true,
-      "prompt": "How it all connects.",
+      "prompt": "Reveal the recap cards to see how wait, race, and walk all connect.",
       "interaction": { "type": "recap" },
       "interviewNote": "Mixed retrieval like this is the spaced-practice core of durable problem-solving: when the problem arrives unlabeled, you've rehearsed choosing the right tool (wait vs race, probability vs duration).",
       "feedback": {

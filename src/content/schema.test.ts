@@ -24,9 +24,16 @@ describe('flagship fixture', () => {
     }
   })
 
-  it('guided-solve steps equal the engine substitution steps for HH', () => {
+  it('guided-solve is a balanceSolve whose engine solution sits in the slider domain', () => {
     const beat = lesson.beats.find((b) => b.beatId === 'guided-solve')!
-    if (beat.interaction.type !== 'substitution') throw new Error('wrong type')
-    expect(beat.interaction.steps).toEqual(buildAutomaton('HH', 0.5).substitutionSteps)
+    expect(beat.interaction.type).toBe('balanceSolve')
+    if (beat.interaction.type !== 'balanceSolve') return
+    expect(beat.interaction.solveState ?? 'E0').toBe('E0')
+    // The balance point the learner must reach is the engine's solved E0 (= 6);
+    // it must be reachable within the authored [min, max] candidate domain.
+    const e0 = buildAutomaton('HH', 0.5).expectedTimes['E0']
+    expect(e0).toBe(6)
+    expect(beat.interaction.min).toBeLessThanOrEqual(e0)
+    expect(beat.interaction.max).toBeGreaterThanOrEqual(e0)
   })
 })

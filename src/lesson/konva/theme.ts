@@ -1,59 +1,63 @@
 // Canvas palette: the Konva renderer cannot read CSS custom properties, so this
-// is the single mirror of the relevant tokens in src/styles/tokens.css. Keep
-// these in sync with the design tokens (docs/ui_design_system.md "Color
-// Tokens"). Components must import from here rather than inlining hex.
+// is the single mirror of the relevant tokens in src/styles/tokens.generated.ts.
+// Shared color tokens are imported from the generated file (single source of
+// truth — no manual sync, no drift). Canvas-only extras (translucent washes,
+// hero tokens) remain as literals here since they have no CSS counterpart.
+
+import { TOKENS } from '../../styles/tokens.generated'
 
 export const C = {
-  paper0: '#FCFAF5',
-  paper1: '#F6F2E9',
-  paper2: '#EFEADD',
-  ruleFaint: '#E7E1D2',
-  rule: '#D8D1BF',
-  ink: '#1B2230',
-  graphite: '#4C4F59',
-  graphiteSoft: '#7C7E87',
-  quill: '#2E4FB0',
-  quillStrong: '#233E8C',
-  quillTint: '#E5EAF7',
-  heads: '#C0892C',
-  headsTint: '#F6EAD2',
-  tails: '#2A7C88',
-  tailsTint: '#DCEDEF',
-  correct: '#2F8F5B',
-  wrong: '#CE4A3E',
-  mark: '#E8B23A',
-  markWash: 'rgba(232, 178, 58, 0.30)',
+  // ── Shared tokens — sourced from the generated pipeline ──────────────────
+  paper0: TOKENS.paper0,
+  paper1: TOKENS.paper1,
+  paper2: TOKENS.paper2,
+  ruleFaint: TOKENS.ruleFaint,
+  rule: TOKENS.rule,
+  ink: TOKENS.ink,
+  graphite: TOKENS.graphite,
+  graphiteSoft: TOKENS.graphiteSoft,
+  quill: TOKENS.quill,
+  quillStrong: TOKENS.quillStrong,
+  quillTint: TOKENS.quillTint,
+  heads: TOKENS.heads,
+  headsTint: TOKENS.headsTint,
+  tails: TOKENS.tails,
+  tailsTint: TOKENS.tailsTint,
+  correct: TOKENS.correct,
+  wrong: TOKENS.wrong,
+  mark: TOKENS.mark,
+  markWash: TOKENS.markWash,
+  // ── Canvas-only extras — no CSS custom-property counterparts ─────────────
   // Translucent quill washes for the simulation chart's area fill + live head
-  // glow (Konva needs rgba; these mirror --quill #2E4FB0).
-  quillFill: 'rgba(46, 79, 176, 0.16)',
-  quillFillFade: 'rgba(46, 79, 176, 0)',
-  quillGlow: 'rgba(46, 79, 176, 0.20)',
+  // glow (Konva needs rgba; these mirror --quill #4F46E5).
+  quillFill: 'rgba(79, 70, 229, 0.16)',
+  quillFillFade: 'rgba(79, 70, 229, 0)',
+  quillGlow: 'rgba(79, 70, 229, 0.20)',
   // Faint ink band marking the convergence target around the theory line.
-  inkBand: 'rgba(27, 34, 48, 0.05)',
+  inkBand: 'rgba(22, 26, 39, 0.05)',
   // ── Remaining-lesson hero tokens, pre-stocked (build-brief §4.4) so Wave-2
-  // authors never edit this shared palette. Notebook-toned, drawn from the
-  // existing quill / heads / tails / correct-wrong families.
+  // authors never edit this shared palette.
   //
-  // L2 race lanes (A = quill blue, B = a warm contrast) + their fills.
-  laneA: '#2E4FB0',
-  laneATint: '#E5EAF7',
-  laneB: '#B26A2B',
-  laneBTint: '#F3E6D6',
+  // L2 race lanes (A = quill indigo, B = warm amber) + their fills.
+  laneA: '#4F46E5',
+  laneATint: '#EEF0FE',
+  laneB: '#E0982E',
+  laneBTint: '#FBF0DD',
   // L2 TournamentHeatmap diverging gradient: B-favored → tie → A-favored.
-  heatLo: '#B26A2B',
-  heatMid: '#EFEADD',
-  heatHi: '#2E4FB0',
+  heatLo: '#E0982E',
+  heatMid: '#F1F3F8',
+  heatHi: '#4F46E5',
   // L3 ruin / win outcomes (semantic names distinct from correct/wrong) + fills.
-  ruin: '#CE4A3E',
-  ruinTint: '#F6DEDA',
-  win: '#2F8F5B',
-  winTint: '#D8EFE0',
+  ruin: '#E5484D',
+  ruinTint: '#FDECEC',
+  win: '#16A36B',
+  winTint: '#E4F6EE',
   // L3 walker swarm: a neutral in-flight dot (absorbed walkers take win/ruin).
-  swarm: '#7C7E87',
-  swarmTint: 'rgba(124, 126, 135, 0.18)',
+  swarm: '#8A90A4',
+  swarmTint: 'rgba(138, 144, 164, 0.18)',
 } as const
 
 export const edgeColor = (on: 'H' | 'T') => (on === 'H' ? C.heads : C.tails)
 
 export const FONT_MONO =
-  '"IBM Plex Mono", ui-monospace, "SF Mono", Consolas, monospace'
+  '"JetBrains Mono", ui-monospace, "SF Mono", Consolas, monospace'

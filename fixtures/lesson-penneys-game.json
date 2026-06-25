@@ -10,13 +10,13 @@
     {
       "beatId": "recall-6-4",
       "required": true,
-      "prompt": "Quick warm-up from last time: on a fair coin, which wait is longer?",
+      "prompt": "Quick warm-up from last time — match each wait to its average length on a fair coin.",
       "interaction": {
-        "type": "mcq",
-        "options": [
-          { "id": "hh", "label": "HH takes longer (6 vs 4)", "correct": true },
-          { "id": "ht", "label": "HT takes longer", "correct": false },
-          { "id": "same", "label": "They're the same", "correct": false }
+        "type": "retrievalGrid",
+        "pairs": [
+          { "left": "E[HH] — the wait for HH", "right": "6" },
+          { "left": "E[HT] — the wait for HT", "right": "4" },
+          { "left": "E[H] — the wait for the first heads", "right": "2" }
         ]
       },
       "feedback": {
@@ -31,7 +31,7 @@
     {
       "beatId": "whos-first-primer",
       "required": false,
-      "prompt": "A quick distinction before the game.",
+      "prompt": "Read this key distinction \u2014 'who's first' is not 'how long' \u2014 then continue.",
       "interaction": {
         "type": "primer",
         "variant": "custom",
@@ -96,13 +96,12 @@
     {
       "beatId": "first-step-split",
       "required": true,
-      "prompt": "Why a tie? After the very first H lands, what decides the HH-vs-HT race?",
+      "prompt": "Why a tie? After the first H lands, match each next flip to who it hands the race to.",
       "interaction": {
-        "type": "mcq",
-        "options": [
-          { "id": "next", "label": "The next single flip: H gives HH, T gives HT", "correct": true },
-          { "id": "longrun", "label": "Whoever has waited longer overall", "correct": false },
-          { "id": "neither", "label": "Nothing — it's already decided", "correct": false }
+        "type": "retrievalGrid",
+        "pairs": [
+          { "left": "Next flip is H", "right": "HH wins" },
+          { "left": "Next flip is T", "right": "HT wins" }
         ]
       },
       "feedback": {
@@ -117,13 +116,11 @@
     {
       "beatId": "pick-your-counter",
       "required": true,
-      "prompt": "New game: you pick HHH. Going second, which pattern should I pick to beat you most often?",
+      "prompt": "New game: you pick HHH. Going second, type the 3-flip pattern (H/T) that beats HHH most often.",
       "interaction": {
-        "type": "mcq",
-        "options": [
-          { "id": "thh", "label": "THH", "correct": true },
-          { "id": "ttt", "label": "TTT (the opposite)", "correct": false },
-          { "id": "hht", "label": "HHT", "correct": false }
+        "type": "answerEntry",
+        "fields": [
+          { "id": "counter", "label": "Your 3-flip counter to HHH", "accept": ["THH"], "placeholder": "e.g. THH" }
         ]
       },
       "feedback": {
@@ -158,7 +155,7 @@
     {
       "beatId": "prob-vs-duration",
       "required": false,
-      "prompt": "One idea before we write the win-chance down.",
+      "prompt": "Read how a win-chance differs from a wait-time, then continue.",
       "interaction": {
         "type": "primer",
         "variant": "custom",
@@ -174,21 +171,12 @@
     {
       "beatId": "win-prob-tiles",
       "required": true,
-      "prompt": "Which equation shape describes a win CHANCE (not a wait time)?",
+      "prompt": "A win-CHANCE is not a wait-TIME. Match each quantity to how its recurrence \u2014 the rule linking a state to its neighbors \u2014 behaves.",
       "interaction": {
-        "type": "mcq",
-        "options": [
-          {
-            "id": "noplus",
-            "label": "w = ½·(chance from here) + ½·(chance from there), ending at 1 or 0",
-            "correct": true
-          },
-          {
-            "id": "plus",
-            "label": "w = 1 + ½·w₁ + ½·w₀ (a +1 each flip)",
-            "correct": false
-          },
-          { "id": "const", "label": "w is just a fixed number, no equation", "correct": false }
+        "type": "retrievalGrid",
+        "pairs": [
+          { "left": "A win CHANCE (probability)", "right": "No +1, just a split" },
+          { "left": "A wait TIME (duration)", "right": "+1 every flip" }
         ]
       },
       "feedback": {
@@ -204,7 +192,7 @@
       "beatId": "non-transitive-loop",
       "required": true,
       "comparison": true,
-      "prompt": "If every pattern can be countered, is there a single \"best\" one?",
+      "prompt": "Tap the pattern that beats the current target. Is there a single \"best\" pattern?",
       "interaction": {
         "type": "dominanceWheel",
         "patterns": ["HHH", "THH", "TTH", "HTT"]
@@ -221,7 +209,7 @@
     {
       "beatId": "recap",
       "required": true,
-      "prompt": "What you just showed yourself.",
+      "prompt": "Reveal the recap cards to review what you showed: race \u2260 wait, second-mover edge, no best pattern.",
       "interaction": { "type": "recap" },
       "feedback": {
         "correct": "Race ≠ wait; going second wins; there's no best pattern.",

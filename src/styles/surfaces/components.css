@@ -1,0 +1,128 @@
+/* ===================================================================
+   Phase 13 — Auth-first onboarding + course path
+   (new sections only; tokens from tokens.css, no literal theme hex)
+   =================================================================== */
+
+/* --- Secondary button variant (design system: paper fill, ink border) --- */
+
+.btn--secondary {
+  background: var(--paper-0);
+  color: var(--ink);
+  border: 1.5px solid var(--ink);
+}
+.btn--secondary:hover:not(:disabled) {
+  background: var(--paper-1);
+  box-shadow: var(--paper-shadow-1);
+}
+.btn--secondary:not(:disabled):active {
+  box-shadow: var(--press-deboss);
+  transform: scale(0.98);
+}
+
+/* --- Shared loading skeleton (hairline, not a spinner) --- */
+
+.skeleton {
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--r-sm);
+  background: var(--paper-2);
+}
+@media (prefers-reduced-motion: no-preference) {
+  .skeleton::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    transform: translateX(-100%);
+    background: linear-gradient(
+      90deg,
+      transparent,
+      var(--paper-1),
+      transparent
+    );
+    animation: skeleton-shimmer 1.4s var(--ease-inout) infinite;
+  }
+}
+@keyframes skeleton-shimmer {
+  to {
+    transform: translateX(100%);
+  }
+}
+
+/* --- Boot screen (auth state resolving) --- */
+
+.bootscreen {
+  min-height: 100vh;
+  max-width: 360px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: var(--s3);
+  padding: var(--s5) var(--s4);
+}
+.bootscreen__brand {
+  margin: 0 0 var(--s2);
+  font-family: var(--font-mono);
+  font-size: calc(12px * var(--fs));
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--quill-strong);
+}
+.bootscreen__caption {
+  margin: var(--s2) 0 0;
+  color: var(--graphite);
+}
+.bootscreen__line {
+  height: 14px;
+}
+.bootscreen__line:first-child {
+  width: 60%;
+}
+.bootscreen__line:last-child {
+  width: 40%;
+}
+
+/* ──────────────────────────────────────────────────────────────────────────
+   L3 WalkBoardBeat — histogram display + continuous bias knob
+   ────────────────────────────────────────────────────────────────────────── */
+
+.walkboard__knob {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s1);
+  margin: var(--s2) 0 var(--s1);
+}
+
+.walkboard__knob-label {
+  font-size: calc(11px * var(--fs));
+  color: var(--graphite);
+}
+
+.walkboard__knob-input {
+  width: 100%;
+  accent-color: var(--quill);
+  cursor: pointer;
+  touch-action: none;
+}
+
+.walkboard__knob-ends {
+  display: flex;
+  justify-content: space-between;
+  font-size: calc(9px * var(--fs));
+  color: var(--graphite-soft);
+}
+
+.walkboard__histogram {
+  display: block;
+  width: 100%;
+  margin: var(--s1) auto 0;
+  overflow: visible;
+}
+
+.walkboard__hist-summary {
+  margin: var(--s1) 0 0;
+  font-size: calc(10px * var(--fs));
+  color: var(--graphite);
+  line-height: 1.4;
+}
+

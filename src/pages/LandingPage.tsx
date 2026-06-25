@@ -5,11 +5,14 @@
 // Primary CTA creates an account; secondary signs in.
 
 import type { CSSProperties } from 'react'
+import { useEffect, useRef } from 'react'
 import { m } from 'motion/react'
 import type { NavigateFn } from './routes'
 import { ROUTES } from './routes'
 import { DUR, EASE, SPRING } from '../motion/tokens'
 import { useReducedMotion } from '../lesson/useReducedMotion'
+import { revealHeadline } from '../motion/gsapText'
+import { useAmbient } from '../motion/useAmbient'
 
 const container = {
   hidden: {},
@@ -21,6 +24,14 @@ const item = {
 }
 
 export function LandingPage({ navigate }: { navigate: NavigateFn }) {
+  const reduced = useReducedMotion()
+  const titleRef = useRef<HTMLHeadingElement>(null)
+  // GSAP SplitText reveal owns the Fraunces hero (design doc §Display-type
+  // reveals). It starts hidden (opacity 0) so there's no flash before gsap loads;
+  // revealHeadline reveals it per-line, or instantly under reduced motion.
+  useEffect(() => {
+    void revealHeadline(titleRef.current, { reduced })
+  }, [reduced])
   return (
     <main className="hero">
       <m.div
@@ -29,17 +40,11 @@ export function LandingPage({ navigate }: { navigate: NavigateFn }) {
         initial="hidden"
         animate="show"
       >
-        <m.h1 className="hero__title" variants={item}>
-          Pattern Hitting Times
-        </m.h1>
-        {/* De-gatekept subline (proposed §2.7): curiosity-first, with the quant
-            framing kept as an opt-in reassurance rather than the doorman. */}
+        <h1 className="hero__title" ref={titleRef} style={{ opacity: 0 }}>
+          Why does <code>HH</code> take longer to appear than <code>HT</code>?
+        </h1>
         <m.p className="hero__subtitle" variants={item}>
-          Learn probability by playing with it.
-        </m.p>
-        <m.p className="hero__reassure" variants={item}>
-          Starts from zero — no formulas required to walk in. Deep enough for
-          quant-interview prep.
+          State thinking for quant interviews.
         </m.p>
 
         <StateMachinePreview />
@@ -75,14 +80,17 @@ export function LandingPage({ navigate }: { navigate: NavigateFn }) {
 // prefers-reduced-motion); on top, a quill "signal" travels the chain and pauses
 // at each node, reinforcing "advance a step on each match". aria-hidden.
 function StateMachinePreview() {
-  const reduced = useReducedMotion()
+  const previewRef = useRef<HTMLDivElement>(null)
+  // Ambient breathing pauses when offscreen, tab-hidden, idle, or reduced-motion
+  // (Restraint Rails) — replacing the bare reduced-motion gate.
+  const ambient = useAmbient(previewRef)
   const nodes = [
     { id: 'empty', label: '\u2205' },
     { id: 'h', label: 'H' },
     { id: 'hh', label: 'HH' },
   ]
   return (
-    <m.div className="preview" aria-hidden="true" variants={item}>
+    <m.div className="preview" aria-hidden="true" variants={item} ref={previewRef}>
       <svg className="preview__svg" viewBox="0 0 320 120" role="presentation">
         <line className="preview__edge" x1="60" y1="60" x2="160" y2="60" />
         <line className="preview__edge" x1="160" y1="60" x2="260" y2="60" />
@@ -99,7 +107,7 @@ function StateMachinePreview() {
             </text>
           </g>
         ))}
-        {!reduced && (
+        {ambient && (
           <m.circle
             className="preview__signal"
             r="5"

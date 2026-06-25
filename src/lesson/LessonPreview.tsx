@@ -13,8 +13,8 @@ import type { Automaton, StateId } from '../engine/types'
 import { nextStateOf } from '../engine/simulate'
 import { StateGraph, type EdgeRef } from './konva/StateGraph'
 import { useElementWidth } from './konva/useElementWidth'
-
-const STEP_MS = 900
+import { useAmbient } from '../motion/useAmbient'
+import { FLIP_BEAT_MS } from '../motion/tokens'
 
 interface Frame {
   state: StateId
@@ -64,7 +64,10 @@ export function LessonPreview({
     return () => io.disconnect()
   }, [boxRef])
 
-  const running = onScreen && !reducedMotion && width > 0
+  // Ambient caps: also pause the loop when the tab is hidden or the user is idle
+  // (not just offscreen / reduced-motion), per the Restraint Rails.
+  const ambient = useAmbient(boxRef)
+  const running = onScreen && !reducedMotion && width > 0 && ambient
 
   // Autonomous flip loop: walk from ∅ to the matched pattern, then reset. Only
   // the committed step lands in state (never per-frame) — Konva animates the
@@ -84,7 +87,7 @@ export function LessonPreview({
           pulseKey: prev.pulseKey + 1,
         }
       })
-    }, STEP_MS)
+    }, FLIP_BEAT_MS)
     return () => clearInterval(id)
   }, [running, automaton, e0, absorbing])
 

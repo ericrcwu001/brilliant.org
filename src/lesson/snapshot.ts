@@ -15,7 +15,7 @@
 // builder's slot placements under `equationTiles`, keeping the snapshot to the
 // three interactionState keys Phase 18 will whitelist.
 
-import { useCallback, useEffect, useMemo, useRef } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { doc, getDoc, setDoc } from 'firebase/firestore'
 import { db } from '../firebase/app'
 import { SnapshotSchema, type Snapshot } from '../content/schema'
@@ -146,6 +146,8 @@ export async function loadSnapshot(
 export type SnapshotWriter = {
   save: (input: SnapshotInput) => void
   flush: () => void
+  /** Set when the latest fire-and-forget remote write failed; cleared on success. */
+  writeError: boolean
 }
 
 // Debounced, fire-and-forget snapshot writer with a synchronous localStorage
@@ -158,12 +160,15 @@ export function useSnapshotWriter(opts: {
   const { uid, lessonId, enabled } = opts
   const latest = useRef<Snapshot | null>(null)
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const [writeError, setWriteError] = useState(false)
 
   const writeRemote = useCallback(() => {
     const snap = latest.current
     if (!snap || !enabled || !uid) return
     // Fire-and-forget: an offline/slow write must never block interaction.
-    void setDoc(snapshotRef(uid, lessonId), snap).catch(() => {})
+    void setDoc(snapshotRef(uid, lessonId), snap)
+      .then(() => setWriteError(false))
+      .catch(() => setWriteError(true))
   }, [uid, lessonId, enabled])
 
   const save = useCallback(
@@ -210,5 +215,5 @@ export function useSnapshotWriter(opts: {
     }
   }, [enabled, flush, writeRemote])
 
-  return useMemo(() => ({ save, flush }), [save, flush])
+  return useMemo(() => ({ save, flush, writeError }), [save, flush, writeError])
 }

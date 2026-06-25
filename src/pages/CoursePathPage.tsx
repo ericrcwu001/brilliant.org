@@ -12,11 +12,18 @@ import type { Course, Progress } from '../content/schema'
 import { loadProgressMap } from '../progress/progress'
 import { loadStreak, ZERO_STREAK, type Streak } from '../habit/streaks'
 import { loadEarnedMilestones } from '../habit/milestones'
-import { loadTrack, saveTrack, type Track } from '../progress/track'
+import {
+  loadTrack,
+  saveTrack,
+  loadWelcomeSeen,
+  markWelcomeSeen,
+  type Track,
+} from '../progress/track'
 import { analytics } from '../analytics/events'
 import { StudyDesk } from './StudyDesk'
 import { DiagnosticGate } from './DiagnosticGate'
-import type { NavigateFn } from './routes'
+import { WelcomeScreen } from './WelcomeScreen'
+import { lessonPath, INTRO_LESSON_ID, type NavigateFn } from './routes'
 
 const seenKey = (uid: string) => `phht:seenSeals:${uid}`
 
@@ -49,6 +56,9 @@ export function CoursePathPage({ navigate }: { navigate: NavigateFn }) {
   // Two-track diagnostic at course entry (build-brief §4.8). `undefined` = still
   // loading; `null` = not yet taken (show the gate); 'A'/'B' = chosen.
   const [track, setTrack] = useState<Track | null | undefined>(undefined)
+  // First-run welcome (new accounts). `undefined` = still loading; `false` =
+  // show it; `true` = already shown (started the intro or skipped).
+  const [welcomeSeen, setWelcomeSeen] = useState<boolean | undefined>(undefined)
 
   useEffect(() => {
     if (!user) return
@@ -60,6 +70,22 @@ export function CoursePathPage({ navigate }: { navigate: NavigateFn }) {
       })
       .catch(() => {
         if (!cancelled) setTrack('B')
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [user])
+
+  useEffect(() => {
+    if (!user) return
+    const uid = user.uid
+    let cancelled = false
+    void loadWelcomeSeen(uid)
+      .then((seen) => {
+        if (!cancelled) setWelcomeSeen(seen)
+      })
+      .catch(() => {
+        if (!cancelled) setWelcomeSeen(true)
       })
     return () => {
       cancelled = true
@@ -124,9 +150,33 @@ export function CoursePathPage({ navigate }: { navigate: NavigateFn }) {
     }
   }, [progressById])
 
+  // First-run welcome (new accounts): greet + offer the optional intro (L0)
+  // before the diagnostic. Shown once; persisted as `welcomeSeenAt` on the
+  // course progress doc. Takes precedence over the diagnostic below.
+  if (user && welcomeSeen === false) {
+    const uid = user.uid
+    return (
+      <WelcomeScreen
+        displayName={displayName}
+        onStartIntro={() => {
+          void markWelcomeSeen(uid).catch(() => {})
+          setWelcomeSeen(true)
+          navigate(lessonPath(INTRO_LESSON_ID))
+        }}
+        onSkip={() => {
+          void markWelcomeSeen(uid).catch(() => {})
+          setWelcomeSeen(true)
+          void saveTrack(uid, 'A').catch(() => {})
+          setTrack('A')
+        }}
+      />
+    )
+  }
+
   // Course entry: run the ~60s diagnostic once if the learner has no track yet,
-  // persist the choice, then reveal the path. L0 stays offered to everyone.
-  if (user && track === null) {
+  // persist the choice, then reveal the path. Gated behind the welcome so a
+  // brand-new account always sees the welcome first. L0 stays offered to everyone.
+  if (user && welcomeSeen === true && track === null) {
     const uid = user.uid
     return (
       <DiagnosticGate
@@ -138,9 +188,14 @@ export function CoursePathPage({ navigate }: { navigate: NavigateFn }) {
     )
   }
 
+  // Hold the desk skeleton until the first-run gates (welcome → diagnostic) have
+  // resolved, so the real desk never flashes before them for a new account.
+  const firstRunResolving =
+    !!user && (welcomeSeen === undefined || track === undefined)
+
   return (
     <StudyDesk
-      course={course}
+      course={firstRunResolving ? null : course}
       progressById={progressById}
       streak={streak}
       earned={earned}

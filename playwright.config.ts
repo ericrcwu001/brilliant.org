@@ -8,6 +8,10 @@ const baseURL = `http://localhost:${PORT}`
 
 export default defineConfig({
   testDir: './e2e',
+  // Visual-regression specs live in e2e/vr/ and run via playwright.vr.config.ts
+  // (own snapshot path template). Keep them out of the functional suite so the
+  // 42-test baseline across the 3 functional projects stays clean.
+  testIgnore: ['**/vr/**'],
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 1 : 0,

@@ -35,6 +35,7 @@ export function LessonPage({
 }) {
   const { user } = useAuth()
   const [state, setState] = useState<LoadState>({ status: 'loading' })
+  const [reloadNonce, setReloadNonce] = useState(0)
 
   useEffect(() => {
     if (!user) return
@@ -66,7 +67,7 @@ export function LessonPage({
     return () => {
       cancelled = true
     }
-  }, [user, lessonId])
+  }, [user, lessonId, reloadNonce])
 
   // Gate on the loaded lessonId so stale results from a previous lesson show the
   // skeleton (not the wrong lesson) until the new fetch resolves — without a
@@ -118,6 +119,16 @@ export function LessonPage({
         </header>
         <section className="lessonloading" role="alert">
           <p className="prompt__text">{state.message}</p>
+          <button
+            type="button"
+            className="btn btn--ghost"
+            onClick={() => {
+              setState({ status: 'loading' })
+              setReloadNonce((n) => n + 1)
+            }}
+          >
+            Retry
+          </button>
           <button
             type="button"
             className="btn btn--primary"

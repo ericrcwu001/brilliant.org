@@ -35,3 +35,31 @@ export async function saveTrack(uid: string, track: Track): Promise<void> {
     { merge: true },
   )
 }
+
+// First-run welcome (new accounts). The welcome offer of the optional intro (L0)
+// is shown once; `welcomeSeenAt` on the same course progress doc records that it
+// has been shown. Like `track`, it is not in the rules' progression deny-list, so
+// the client may write it.
+
+// Returns true once the learner has been shown the welcome (started the intro or
+// skipped); false when it has never been shown (brand-new account).
+export async function loadWelcomeSeen(uid: string): Promise<boolean> {
+  try {
+    const snap = await getDoc(courseProgressRef(uid))
+    if (!snap.exists()) return false
+    const parsed = ProgressSchema.safeParse(snap.data())
+    return parsed.success ? parsed.data.welcomeSeenAt != null : false
+  } catch {
+    // Offline/denied/unparseable → fail open (don't trap the learner behind the
+    // welcome); the caller treats this as already-seen.
+    return true
+  }
+}
+
+export async function markWelcomeSeen(uid: string): Promise<void> {
+  await setDoc(
+    courseProgressRef(uid),
+    { welcomeSeenAt: serverTimestamp(), schemaVersion: 1, updatedAt: serverTimestamp() },
+    { merge: true },
+  )
+}

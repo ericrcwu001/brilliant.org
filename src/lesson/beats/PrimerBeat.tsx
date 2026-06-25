@@ -27,23 +27,23 @@ function HalfDemo() {
   const [pick, setPick] = useState<number | null>(null)
   return (
     <div className="primer__demo">
-      <div className="primer__cells" role="group" aria-label="One in two">
-        {[0, 1].map((i) => (
+      <div className="primer__cells" role="group" aria-label="A coin's two outcomes">
+        {(['Heads', 'Tails'] as const).map((label, i) => (
           <button
             type="button"
-            key={i}
+            key={label}
             className={`primer__cell${pick === i ? ' primer__cell--on' : ''}`}
             aria-pressed={pick === i}
             onClick={() => setPick((c) => (c === i ? null : i))}
           >
-            {i + 1}
+            {label}
           </button>
         ))}
       </div>
       <p className="primer__readout" aria-live="polite">
         {pick === null
-          ? 'Tap one of the two outcomes.'
-          : '1 of 2 outcomes = ½ = a 50% chance.'}
+          ? 'Tap either outcome — there is no wrong answer.'
+          : `${pick === 0 ? 'Heads' : 'Tails'} is 1 of 2 equally likely outcomes = ½ = a 50% chance.`}
       </p>
     </div>
   )

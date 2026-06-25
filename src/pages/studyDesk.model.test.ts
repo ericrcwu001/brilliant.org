@@ -112,6 +112,17 @@ describe('studyDesk model — recommended-action priority (Q9)', () => {
     expect(action).toEqual({ kind: 'start', lessonId: L2 })
   })
 
+  it('a reviewed lesson (needsReview cleared) advances focus to the next lesson', () => {
+    const progress: Record<string, Progress> = {
+      [L1]: { completionStatus: 'completed', needsReview: false },
+      [L2]: { unlockedAt: 1 },
+    }
+    const nodes = resolveNodes(builtCourse, progress)
+    expect(nodes[1].state).toBe('completed')
+    const action = recommendedAction(nodes, progress)
+    expect(action).toEqual({ kind: 'start', lessonId: L2 })
+  })
+
   it('all lessons mastered → Replay / course complete', () => {
     const progress: Record<string, Progress> = Object.fromEntries(
       builtCourse.lessons.map((l) => [

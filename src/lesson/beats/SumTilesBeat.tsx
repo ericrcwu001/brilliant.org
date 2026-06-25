@@ -19,8 +19,8 @@ export function SumTilesBeat(props: BeatProps) {
 
   if (beat.interaction.type !== 'sumTiles') return null
 
-  const runningTotal = [...placed].reduce((acc, k) => acc + 2 ** k, 0)
   const complete = placed.size === overlaps.length
+  const runningTotal = [...placed].reduce((acc, k) => acc + 2 ** k, 0)
   const interviewNote = beat.interviewNote
 
   const primary = complete
@@ -30,6 +30,16 @@ export function SumTilesBeat(props: BeatProps) {
   return (
     <BeatShell primary={primary}>
       <div className="sumtiles">
+        <p
+          className={'sumtiles__kicker' + (complete ? ' sumtiles__kicker--done' : '')}
+          role="status"
+          aria-live="polite"
+        >
+          {complete
+            ? `All overlaps in — E[wait for ${target}] = ${sum}.`
+            : `Tap each overlap tile to add it to the wait for ${target}.`}
+        </p>
+
         <div className="sumtiles__chips" aria-label="Overlap terms">
           {overlaps.map((k) => {
             const on = placed.has(k)
@@ -48,20 +58,44 @@ export function SumTilesBeat(props: BeatProps) {
                   })
                 }
               >
-                2^{k} = {2 ** k}
+                2<sup>{k}</sup> = {2 ** k}
               </button>
             )
           })}
         </div>
 
-        <p className="sumtiles__total" role="status" aria-live="polite">
-          Running total: <strong>{runningTotal}</strong>
-          {complete && (
-            <>
-              {' '}— that&apos;s E[wait] for {target} = <strong>{sum}</strong>
-            </>
-          )}
-        </p>
+        <div className="sumtiles__equation" aria-hidden="true">
+          <span className="sumtiles__eq-lhs">E[wait for {target}] =</span>
+          {overlaps.map((k, i) => (
+            <span key={k} className="sumtiles__eq-term">
+              {i > 0 && <span className="sumtiles__eq-plus">+</span>}
+              <span className={'sumtiles__slot' + (placed.has(k) ? ' sumtiles__slot--filled' : '')}>
+                {placed.has(k) ? String(2 ** k) : '\u25a1'}
+              </span>
+            </span>
+          ))}
+          {complete && <span className="sumtiles__eq-result">= {runningTotal}</span>}
+        </div>
+
+        <div className="sumtiles__borders">
+          <p className="sumtiles__borders-label">Where these come from</p>
+          <div className="sumtiles__border-rows">
+            {overlaps.map((L) => {
+              const prefix = target.slice(0, L)
+              const suffix = target.slice(target.length - L)
+              return (
+                <div key={L} className="sumtiles__border-row">
+                  <span className="sumtiles__border-match">
+                    length {L}: <strong>{prefix}</strong> = <strong>{suffix}</strong>
+                  </span>
+                  <span className="sumtiles__border-value">
+                    {'\u2192 '}2<sup>{L}</sup> = {2 ** L}
+                  </span>
+                </div>
+              )
+            })}
+          </div>
+        </div>
 
         {interviewNote && (
           <div className="sumtiles__note">

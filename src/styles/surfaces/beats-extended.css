@@ -1,0 +1,1163 @@
+/* === L1 inclusive redesign (Track-A scaffolds) ============================
+   All mobile-first: column layouts, >=44px tap targets, no hover-only
+   affordances, fluid Konva widths (sized by the host), reduced-motion-safe. */
+
+/* --- JIT primer cards (PrimerBeat + the equation variable primer) --- */
+.primer {
+  display: flex;
+  flex-direction: column;
+}
+.primer__disclosure {
+  display: flex;
+  align-items: center;
+  gap: var(--s2);
+  width: 100%;
+  min-height: 44px;
+  padding: var(--s3) var(--s4);
+  border: 1px solid var(--rule);
+  border-radius: var(--r-lg);
+  background: var(--paper-1);
+  cursor: pointer;
+  text-align: left;
+  color: var(--ink);
+}
+.primer__disclosure:focus-visible {
+  outline: 2px solid var(--quill);
+  outline-offset: 2px;
+}
+.primer__chevron {
+  margin-left: auto;
+  font-family: var(--font-mono);
+  font-size: calc(20px * var(--fs));
+  color: var(--quill-strong);
+}
+.primer__card,
+.eqtiles__primer .primer__card {
+  border: 1px solid var(--rule);
+  border-radius: var(--r-lg);
+  background: var(--paper-1);
+  padding: var(--s4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--s3);
+  box-shadow: var(--paper-shadow-1);
+}
+.primer__kicker {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: calc(12px * var(--fs));
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--quill-strong);
+}
+.primer__title {
+  margin: 0;
+  font-size: calc(18px * var(--fs));
+  font-weight: 600;
+}
+.primer__body {
+  margin: 0;
+  font-size: calc(15px * var(--fs));
+  line-height: 22px;
+  color: var(--graphite);
+}
+.primer__demo {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s2);
+}
+.primer__cells {
+  display: flex;
+  gap: var(--s2);
+  flex-wrap: wrap;
+}
+.primer__cell {
+  flex: 1 1 0;
+  min-width: 56px;
+  min-height: 48px;
+  border: 1.5px solid var(--rule);
+  border-radius: var(--r-md);
+  background: var(--paper-0);
+  font-family: var(--font-mono);
+  font-size: calc(18px * var(--fs));
+  color: var(--ink);
+  cursor: pointer;
+}
+.primer__cell--on {
+  border-color: var(--quill);
+  background: var(--quill-tint);
+  color: var(--quill-strong);
+}
+.primer__cell:focus-visible {
+  outline: 2px solid var(--quill);
+  outline-offset: 2px;
+}
+.primer__readout {
+  margin: 0;
+  min-height: 20px;
+  font-size: calc(14px * var(--fs));
+  color: var(--graphite);
+}
+
+/* --- Graded type-in answer (AnswerEntryBeat + DiagnosticGate) --- */
+.answer-entry {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s3);
+}
+.answer-entry__field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s2);
+}
+.answer-entry__label {
+  font-family: var(--font-sans);
+  font-size: calc(15px * var(--fs));
+  color: var(--ink);
+}
+.answer-entry__inputwrap {
+  display: flex;
+  align-items: center;
+  gap: var(--s2);
+}
+.answer-entry__input {
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 48px;
+  padding: var(--s3) var(--s4);
+  border: 1.5px solid var(--rule);
+  border-radius: var(--r-md);
+  background: var(--paper-0);
+  font-family: var(--font-mono);
+  font-size: calc(18px * var(--fs));
+  color: var(--ink);
+}
+.answer-entry__input:focus-visible {
+  outline: 2px solid var(--quill);
+  outline-offset: 2px;
+  border-color: var(--quill);
+}
+.answer-entry__input--correct {
+  border-color: var(--correct);
+  background: var(--correct-tint);
+}
+.answer-entry__input--wrong {
+  border-color: var(--wrong);
+  background: var(--wrong-tint);
+}
+.answer-entry__input:disabled {
+  cursor: default;
+}
+.answer-entry__suffix {
+  font-family: var(--font-sans);
+  font-size: calc(15px * var(--fs));
+  color: var(--graphite);
+}
+
+/* --- First-success grounding timeline --- */
+.fst {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s3);
+}
+.fst__chart {
+  position: relative;
+  height: 140px;
+  border: 1px solid var(--rule);
+  border-radius: var(--r-md);
+  background: var(--paper-0);
+  padding: var(--s2);
+  overflow: hidden;
+}
+.fst__theory {
+  position: absolute;
+  left: 0;
+  right: 0;
+  border-top: 2px dashed var(--quill);
+  pointer-events: none;
+}
+.fst__theory-label {
+  position: absolute;
+  right: var(--s2);
+  top: -10px;
+  font-family: var(--font-mono);
+  font-size: calc(11px * var(--fs));
+  color: var(--quill-strong);
+  background: var(--paper-0);
+  padding: 0 4px;
+}
+.fst__bars {
+  position: absolute;
+  inset: var(--s2);
+  display: flex;
+  align-items: flex-end;
+  gap: 3px;
+}
+.fst__bar {
+  flex: 1 1 0;
+  min-width: 3px;
+  background: var(--heads);
+  border-radius: 2px 2px 0 0;
+}
+.fst__empty {
+  margin: auto;
+  font-size: calc(13px * var(--fs));
+  color: var(--graphite-soft);
+}
+.fst__readout {
+  margin: 0;
+  min-height: 20px;
+  font-size: calc(14px * var(--fs));
+  color: var(--graphite);
+}
+.fst__controls {
+  display: flex;
+  gap: var(--s2);
+  flex-wrap: wrap;
+}
+.fst__title {
+  margin: 0;
+  font-size: calc(13px * var(--fs));
+  font-weight: 600;
+  color: var(--graphite);
+}
+.fst__plot {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: var(--s1);
+}
+.fst__plot > .fst__chart {
+  flex: 1;
+  min-width: 0;
+}
+.fst__yaxis {
+  position: relative;
+  width: 40px;
+  flex-shrink: 0;
+  height: 140px;
+  display: flex;
+  align-items: center;
+}
+.fst__yaxis-label {
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+  font-family: var(--font-mono);
+  font-size: calc(10px * var(--fs));
+  color: var(--graphite-soft);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  user-select: none;
+}
+.fst__ytick {
+  position: absolute;
+  right: 2px;
+  font-family: var(--font-mono);
+  font-size: calc(10px * var(--fs));
+  color: var(--graphite-soft);
+  line-height: 1;
+}
+.fst__xaxis {
+  margin: 0;
+  padding-left: calc(40px + var(--s1));
+  font-family: var(--font-mono);
+  font-size: calc(11px * var(--fs));
+  color: var(--graphite-soft);
+  text-align: right;
+}
+.fst__mean {
+  position: absolute;
+  left: 0;
+  right: 0;
+  border-top: 2px solid var(--graphite);
+  pointer-events: none;
+}
+.fst__mean-label {
+  position: absolute;
+  left: var(--s2);
+  top: -10px;
+  font-family: var(--font-mono);
+  font-size: calc(11px * var(--fs));
+  color: var(--graphite);
+  background: var(--paper-0);
+  padding: 0 4px;
+}
+
+/* --- Equation-tiles Track-A extras --- */
+.eqtiles__graph {
+  margin: 0;
+}
+.eqtiles__primer {
+  display: flex;
+  flex-direction: column;
+}
+.eqtiles__selfexplain {
+  margin: 0;
+  font-size: calc(14px * var(--fs));
+  font-style: italic;
+  color: var(--graphite);
+}
+.slot--locked {
+  background: var(--paper-2);
+  border-style: dashed;
+  color: var(--graphite);
+  cursor: default;
+}
+
+/* --- CoinSim Track-A channel dimming --- */
+.coinsim__stream--dim {
+  opacity: 0.45;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .coinsim__stream {
+    transition: opacity var(--dur-base) var(--ease-out);
+  }
+}
+
+/* --- Overlap tap-which-edge comparison --- */
+.overlap__tap {
+  margin: 0;
+  border: 1px solid var(--rule);
+  border-radius: var(--r-lg);
+  background: var(--paper-1);
+  padding: var(--s3) var(--s4) var(--s4);
+}
+.overlap__tap-q {
+  padding: 0 var(--s2);
+  font-size: calc(15px * var(--fs));
+  color: var(--ink);
+}
+.recap__belief {
+  margin: 0;
+  padding: var(--s2) var(--s3);
+  border-left: 3px solid var(--quill);
+  background: var(--quill-tint);
+  border-radius: var(--r-xs);
+  font-size: calc(14px * var(--fs));
+  color: var(--ink);
+}
+
+/* ── Remaining-lesson shared widgets (build-brief §4.4 / Wave 1) ───────────── */
+
+/* retrievalGrid: left↔right matching */
+.retgrid {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s3);
+}
+.retgrid__rows {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--s2);
+}
+.retgrid__row {
+  display: flex;
+  align-items: center;
+  gap: var(--s3);
+}
+.retgrid__left {
+  flex: 0 0 42%;
+  font-size: calc(15px * var(--fs));
+  color: var(--ink);
+}
+.retgrid__slot {
+  flex: 1;
+  min-height: 44px;
+  padding: var(--s2) var(--s3);
+  border: 1px dashed var(--rule);
+  border-radius: var(--r-md);
+  background: var(--paper-1);
+  font-family: var(--font-mono);
+  color: var(--graphite);
+  text-align: left;
+  cursor: pointer;
+}
+.retgrid__slot--sel {
+  border-style: solid;
+  border-color: var(--quill);
+  outline: 2px solid var(--quill);
+  outline-offset: 1px;
+}
+.retgrid__slot--filled {
+  color: var(--ink);
+  border-style: solid;
+}
+.retgrid__slot--correct {
+  border-color: var(--correct);
+  background: var(--correct-tint);
+}
+.retgrid__slot--wrong {
+  border-color: var(--wrong);
+  background: var(--wrong-tint);
+}
+.retgrid__palette {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s2);
+}
+
+/* sumTiles + ruler shared total + note */
+.sumtiles,
+.ruler {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s3);
+}
+.sumtiles__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s2);
+}
+.sumtiles__total,
+.ruler__total {
+  margin: 0;
+  font-size: calc(16px * var(--fs));
+  color: var(--ink);
+}
+.sumtiles__note,
+.ruler__note {
+  margin-top: var(--s2);
+}
+.sumtiles__note-toggle,
+.ruler__note-toggle {
+  min-height: 36px;
+  padding: var(--s1, 4px) var(--s3);
+  border: 1px dashed var(--rule);
+  border-radius: var(--r-md);
+  background: transparent;
+  font-size: calc(12px * var(--fs));
+  color: var(--graphite-soft);
+  cursor: pointer;
+}
+.sumtiles__note-body,
+.ruler__note-body {
+  margin: 0;
+  padding: var(--s2) var(--s3);
+  border-left: 3px solid var(--rule);
+  font-size: calc(13px * var(--fs));
+  color: var(--graphite);
+}
+
+/* autocorrelationRuler rows */
+.ruler__rows {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s2);
+}
+.ruler__row {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: var(--s2) var(--s3);
+  border: 1px solid var(--rule);
+  border-radius: var(--r-md);
+  background: var(--paper-1);
+  font-family: var(--font-mono);
+  text-align: left;
+  cursor: pointer;
+}
+.ruler__row--border {
+  border-color: var(--correct);
+  background: var(--correct-tint);
+}
+.ruler__row--none {
+  opacity: 0.6;
+}
+.ruler__top,
+.ruler__bot {
+  display: inline-flex;
+}
+.ruler__cell {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.4em;
+  color: var(--graphite);
+}
+.ruler__cell--match {
+  color: var(--correct-text);
+  font-weight: 600;
+}
+.ruler__verdict {
+  font-size: calc(12px * var(--fs));
+  color: var(--graphite-soft);
+}
+
+/* tripletReveal */
+.triplet {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s3);
+}
+.triplet__lenses {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--s2);
+}
+.triplet--axis .triplet__lenses {
+  flex-direction: row;
+  flex-wrap: wrap;
+}
+.triplet__card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s1, 4px);
+  width: 100%;
+  min-height: 44px;
+  padding: var(--s3);
+  border: 1px solid var(--rule);
+  border-radius: var(--r-md);
+  background: var(--paper-1);
+  text-align: left;
+  cursor: pointer;
+}
+.triplet--axis .triplet__card {
+  flex: 1;
+}
+.triplet__card--open {
+  border-color: var(--quill);
+}
+.triplet__label {
+  font-weight: 600;
+  color: var(--ink);
+}
+.triplet__body {
+  font-size: calc(13px * var(--fs));
+  color: var(--graphite);
+}
+.triplet__value {
+  font-family: var(--font-mono);
+  font-size: calc(20px * var(--fs));
+  color: var(--quill);
+}
+.triplet__tap {
+  font-size: calc(12px * var(--fs));
+  color: var(--graphite-soft);
+}
+.triplet__converge {
+  margin: 0;
+  font-size: calc(15px * var(--fs));
+  color: var(--ink);
+}
+
+/* --- Balance-scale solver (BalanceSolveBeat) --- */
+.balance {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s3);
+}
+.balance__explain {
+  margin: 0;
+  font-size: calc(14px * var(--fs));
+  color: var(--graphite);
+  line-height: 1.5;
+}
+.balance__svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  border: 1px solid var(--rule-faint);
+  border-radius: var(--r-lg);
+  background: var(--paper-1);
+  box-shadow: var(--paper-shadow-1);
+}
+/* transform-box:view-box ensures transformOrigin uses SVG viewport coords */
+.balance__beam-g {
+  transform-box: view-box;
+}
+.balance__beam-g--anim {
+  transition: transform var(--dur-base) var(--ease-out);
+}
+.balance__pans {
+  display: flex;
+  align-items: stretch;
+  gap: var(--s3);
+}
+.balance__pan {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--s1);
+  padding: var(--s3) var(--s4);
+  border: 1px solid var(--rule);
+  border-radius: var(--r-md);
+  background: var(--paper-0);
+  box-shadow: var(--paper-shadow-1);
+  min-width: 0;
+}
+.balance__pan--left {
+  align-items: flex-start;
+}
+.balance__pan--right {
+  align-items: flex-end;
+  text-align: right;
+}
+.balance__pan-expr {
+  font-family: var(--font-mono);
+  font-size: calc(11px * var(--fs));
+  letter-spacing: 0.04em;
+  color: var(--graphite-soft);
+  word-break: break-all;
+}
+.balance__pan-caption {
+  font-size: calc(11px * var(--fs));
+  color: var(--graphite-soft);
+  font-style: italic;
+}
+.balance__pan-val {
+  font-family: var(--font-mono);
+  font-size: calc(28px * var(--fs));
+  font-weight: 600;
+  line-height: 1;
+  color: var(--quill);
+}
+.balance__pan-center {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: var(--s6);
+}
+.balance__equals {
+  font-family: var(--font-mono);
+  font-size: calc(20px * var(--fs));
+  color: var(--graphite-soft);
+}
+.balance__solved {
+  font-family: var(--font-mono);
+  font-size: calc(16px * var(--fs));
+  font-weight: 600;
+  color: var(--correct-text);
+  text-align: center;
+  line-height: 1.2;
+}
+.balance__control {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s2);
+}
+.balance__range {
+  width: 100%;
+  min-height: 44px;
+  cursor: pointer;
+  accent-color: var(--quill);
+  box-shadow: var(--press-deboss);
+  border-radius: var(--r-sm);
+}
+.balance__range:focus-visible {
+  outline: 2px solid var(--quill);
+  outline-offset: 2px;
+  border-radius: var(--r-sm);
+}
+.balance__range:disabled {
+  cursor: default;
+  opacity: 0.6;
+  accent-color: var(--correct);
+}
+.balance__hint {
+  margin: 0;
+  min-height: 20px;
+  font-size: calc(14px * var(--fs));
+  color: var(--graphite);
+  text-align: center;
+}
+.balance__hints-area {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s2);
+}
+.balance__revealed-hints {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--s2);
+}
+.balance__revealed-hint {
+  margin: 0;
+  padding: var(--s2) var(--s3);
+  border-left: 3px solid var(--rule);
+  font-size: calc(13px * var(--fs));
+  color: var(--graphite);
+}
+.balance__hint-btn {
+  align-self: flex-start;
+  min-height: 36px;
+  padding: var(--s1) var(--s3);
+  border: 1px dashed var(--rule);
+  border-radius: var(--r-md);
+  background: transparent;
+  font-size: calc(12px * var(--fs));
+  color: var(--graphite-soft);
+  cursor: pointer;
+}
+.balance__hint-btn:hover {
+  color: var(--graphite);
+  border-color: var(--graphite-soft);
+}
+.balance__hint-btn:focus-visible {
+  outline: 2px solid var(--quill);
+  outline-offset: 2px;
+}
+
+/* ── Lesson hero widgets (L2 race, L3 walk, L6 ledger) ─────────────────────── */
+.racehero,
+.walkboard,
+.ledger,
+.wheel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s3);
+}
+.racehero__readout,
+.walkboard__readout,
+.ledger__readout {
+  margin: 0;
+  font-size: calc(17px * var(--fs));
+  font-weight: 500;
+  color: var(--ink);
+}
+.racehero__single,
+.walkboard__single,
+.walkboard__batch,
+.walkboard__exact {
+  margin: 0;
+  font-size: calc(14px * var(--fs));
+  color: var(--graphite);
+}
+.racehero__bars {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s2);
+}
+.racehero__bar {
+  display: flex;
+  align-items: center;
+  gap: var(--s2);
+}
+.racehero__barlabel {
+  flex: 0 0 3em;
+  font-family: var(--font-mono);
+  color: var(--ink);
+}
+.racehero__track {
+  flex: 1;
+  height: 18px;
+  background: var(--paper-2);
+  border-radius: var(--r-md);
+  overflow: hidden;
+}
+.racehero__fill {
+  display: block;
+  height: 100%;
+}
+.racehero__fill--a {
+  background: var(--quill, #2e4fb0);
+}
+.racehero__fill--b {
+  background: #b26a2b;
+}
+.racehero__pct {
+  flex: 0 0 2.5em;
+  text-align: right;
+  font-family: var(--font-mono);
+  color: var(--graphite);
+}
+.racehero__stream {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s2);
+}
+.racehero__flips {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s1);
+}
+.racehero__flip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: 28px;
+  block-size: 28px;
+  border-radius: var(--r-sm);
+  background: var(--paper-2);
+  color: var(--graphite);
+  font-family: var(--font-mono);
+  font-size: calc(14px * var(--fs));
+  font-weight: 600;
+}
+.racehero__flip--win {
+  color: var(--paper-0);
+}
+.racehero__flip--a {
+  background: var(--quill);
+}
+.racehero__flip--b {
+  background: #b26a2b;
+}
+.heatmap {
+  border-collapse: collapse;
+  font-family: var(--font-mono);
+  font-size: calc(12px * var(--fs));
+}
+.heatmap th,
+.heatmap td {
+  border: 1px solid var(--rule);
+  padding: var(--s2);
+  text-align: center;
+  min-width: 44px;
+}
+.walkboard__svg,
+.walkboard__landscape {
+  width: 100%;
+  height: auto;
+  background: var(--paper-1);
+  border: 1px solid var(--rule);
+  border-radius: var(--r-md);
+}
+.walkboard__walker {
+  transition: cx var(--walk-step, 400ms) linear, fill 200ms ease;
+}
+@media (prefers-reduced-motion: reduce) {
+  .walkboard__walker {
+    transition: none;
+  }
+}
+.walkboard__duallabel {
+  margin: 0;
+  font-size: calc(12px * var(--fs));
+  color: var(--graphite-soft);
+  text-align: center;
+}
+.walkboard__controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s3);
+}
+.walkboard__stepper {
+  display: flex;
+  align-items: center;
+  gap: var(--s2);
+  font-size: calc(13px * var(--fs));
+  color: var(--ink);
+}
+.walkboard__stepper button {
+  width: 44px;
+  height: 44px;
+  border: 1px solid var(--rule);
+  border-radius: var(--r-md);
+  background: var(--paper-1);
+  font-size: calc(18px * var(--fs));
+  cursor: pointer;
+}
+.ledger__cols {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s4);
+}
+.ledger__col {
+  flex: 1;
+  min-width: 9rem;
+  padding: var(--s3);
+  border: 1px solid var(--rule);
+  border-radius: var(--r-md);
+  background: var(--paper-1);
+}
+.ledger__coltitle {
+  margin: 0 0 var(--s2);
+  font-size: calc(12px * var(--fs));
+  color: var(--graphite-soft);
+}
+.ledger__rows {
+  margin: 0;
+  padding-left: var(--s4);
+  font-family: var(--font-mono);
+  font-size: calc(13px * var(--fs));
+  color: var(--graphite);
+}
+.ledger__sum,
+.ledger__mean {
+  margin: var(--s2) 0 0;
+  font-family: var(--font-mono);
+  font-size: calc(22px * var(--fs));
+  font-variant-numeric: tabular-nums;
+  color: var(--quill);
+}
+.ledger__sub {
+  margin: 0;
+  font-size: calc(12px * var(--fs));
+  color: var(--graphite-soft);
+}
+.ledger__assert {
+  margin: 0;
+  font-size: calc(15px * var(--fs));
+  color: var(--ink);
+}
+.ledger__note,
+.walkboard__note {
+  margin-top: var(--s2);
+}
+.ledger__note-toggle {
+  min-height: 36px;
+  padding: 4px var(--s3);
+  border: 1px dashed var(--rule);
+  border-radius: var(--r-md);
+  background: transparent;
+  font-size: calc(12px * var(--fs));
+  color: var(--graphite-soft);
+  cursor: pointer;
+}
+.ledger__note-body {
+  margin: 0;
+  padding: var(--s2) var(--s3);
+  border-left: 3px solid var(--rule);
+  font-size: calc(13px * var(--fs));
+  color: var(--graphite);
+}
+.wheel__q {
+  margin: 0;
+  font-size: calc(16px * var(--fs));
+  color: var(--ink);
+}
+.wheel__options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s2);
+}
+.wheel__cycle {
+  margin: var(--s2) 0 0;
+  padding-left: var(--s4);
+  font-size: calc(13px * var(--fs));
+  color: var(--graphite);
+}
+.wheel__moral {
+  margin: var(--s2) 0 0;
+  font-size: calc(15px * var(--fs));
+  color: var(--ink);
+}
+.recap__takeaways {
+  margin: var(--s2) 0 0;
+  padding-left: var(--s4);
+  font-size: calc(14px * var(--fs));
+  color: var(--graphite);
+  line-height: 1.6;
+}
+
+/* --- State-graph explainer (primer graph demo + simulate legend) --- */
+.primer__graph {
+  margin: 0;
+}
+.primer__key {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--s2);
+  font-size: calc(14px * var(--fs));
+  color: var(--graphite);
+}
+.primer__key li {
+  display: flex;
+  align-items: center;
+  gap: var(--s2);
+}
+.primer__key-mark {
+  flex: 0 0 auto;
+  width: 16px;
+  height: 16px;
+}
+.primer__key-mark--node {
+  border: 1.5px solid var(--graphite);
+  border-radius: var(--r-pill);
+  background: var(--paper-0);
+}
+.primer__key-mark--ring {
+  border: 2px solid var(--correct);
+  border-radius: var(--r-pill);
+  background: var(--paper-0);
+}
+.primer__key-mark--h {
+  height: 3px;
+  border-radius: 2px;
+  background: var(--heads);
+}
+.primer__key-mark--t {
+  height: 3px;
+  border-radius: 2px;
+  background: var(--tails);
+}
+.coinsim__legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s2) var(--s4);
+  margin: 0;
+  font-size: calc(13px * var(--fs));
+  color: var(--graphite);
+}
+.coinsim__legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s1);
+}
+
+/* ── Tap affordances for chips outside .palette ─────────────────────────────
+   Base .token has no cursor/hover; .palette .token gets them in beats.css.
+   These selectors extend the same affordance to the three other chip containers
+   that host tappable buttons: SumTiles chips, RetrievalGrid palette, and
+   DominanceWheel options. Scoped to :not(:disabled):not(.token--placed) so
+   already-placed and disabled chips do not get the pointer treatment. */
+.sumtiles__chips .token:not(:disabled):not(.token--placed),
+.retgrid__palette .token:not(:disabled):not(.token--placed),
+.wheel__options .token:not(:disabled):not(.token--placed) {
+  cursor: pointer;
+}
+@media (hover: hover) {
+  .sumtiles__chips .token:not(:disabled):not(.token--placed):hover,
+  .retgrid__palette .token:not(:disabled):not(.token--placed):hover,
+  .wheel__options .token:not(:disabled):not(.token--placed):hover {
+    border-color: var(--quill);
+    background: var(--quill-tint);
+    box-shadow: var(--e1);
+  }
+}
+.sumtiles__chips .token:not(:disabled):not(.token--placed):focus-visible,
+.retgrid__palette .token:not(:disabled):not(.token--placed):focus-visible,
+.wheel__options .token:not(:disabled):not(.token--placed):focus-visible {
+  outline: 2px solid var(--quill);
+  outline-offset: 2px;
+}
+
+/* Placed/added state for SumTiles chips: filled look so "added" is clear.
+   Overrides .token--placed { cursor: help } from beats.css for this container.
+   Tap again to remove (toggle), so cursor stays pointer. */
+.sumtiles__chips .token--placed {
+  cursor: pointer;
+  background: var(--quill-tint);
+  border-color: var(--quill);
+  color: var(--quill-strong);
+}
+@media (hover: hover) {
+  .sumtiles__chips .token--placed:hover {
+    background: var(--quill-tint);
+    border-color: var(--quill);
+    box-shadow: var(--e1);
+  }
+}
+
+/* ── SumTilesBeat extended layout ──────────────────────────────────────────── */
+.sumtiles__kicker {
+  margin: 0;
+  font-size: calc(13px * var(--fs));
+  font-weight: 500;
+  color: var(--graphite-soft);
+}
+.sumtiles__kicker--done {
+  color: var(--correct-text);
+}
+.sumtiles__equation {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--s1);
+  font-family: var(--font-mono);
+  font-size: calc(15px * var(--fs));
+  color: var(--ink);
+}
+.sumtiles__eq-lhs {
+  color: var(--graphite);
+}
+.sumtiles__eq-term {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 2px;
+}
+.sumtiles__slot {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 2em;
+  min-height: 1.6em;
+  padding: 2px var(--s2);
+  border: 1px dashed var(--rule);
+  border-radius: var(--r-sm);
+  background: var(--paper-1);
+  color: var(--graphite-soft);
+  font-family: var(--font-mono);
+  font-size: calc(14px * var(--fs));
+}
+.sumtiles__slot--filled {
+  border-style: solid;
+  border-color: var(--quill);
+  background: var(--quill-tint);
+  color: var(--quill-strong);
+  font-weight: 600;
+}
+.sumtiles__eq-plus {
+  color: var(--graphite-soft);
+}
+.sumtiles__eq-result {
+  color: var(--quill-strong);
+  font-weight: 600;
+}
+.sumtiles__borders {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s2);
+  padding: var(--s3) var(--s4);
+  border: 1px solid var(--rule);
+  border-radius: var(--r-md);
+  background: var(--paper-1);
+}
+.sumtiles__borders-label {
+  margin: 0;
+  font-size: calc(11px * var(--fs));
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--graphite-soft);
+}
+.sumtiles__border-rows {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s1);
+}
+.sumtiles__border-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--s2);
+  font-family: var(--font-mono);
+  font-size: calc(13px * var(--fs));
+  color: var(--graphite);
+}
+.sumtiles__border-match {
+  color: var(--ink);
+}
+.sumtiles__border-value {
+  color: var(--quill-strong);
+}
+
+/* ── RetrievalGrid workflow label ────────────────────────────────────────── */
+.retgrid__label {
+  margin: 0;
+  font-size: calc(13px * var(--fs));
+  color: var(--graphite-soft);
+}
+
+/* ── SliderBeat visible instruction ─────────────────────────────────────── */
+.numline__instruction {
+  margin: 0;
+  font-size: calc(13px * var(--fs));
+  color: var(--graphite-soft);
+}

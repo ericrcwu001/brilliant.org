@@ -1,16 +1,18 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
-// Self-hosted IBM Plex (Fontsource), bundled by Vite — no third-party font
+// Self-hosted Ergo typefaces (Fontsource), bundled by Vite — no third-party font
 // request, so an ad/script blocker (e.g. uBlock) can't break first paint.
-// Weights mirror the former Google Fonts set: Sans/Mono 400·500·600, Serif 500·600.
-import '@fontsource/ibm-plex-sans/400.css'
-import '@fontsource/ibm-plex-sans/500.css'
-import '@fontsource/ibm-plex-sans/600.css'
-import '@fontsource/ibm-plex-mono/400.css'
-import '@fontsource/ibm-plex-mono/500.css'
-import '@fontsource/ibm-plex-mono/600.css'
-import '@fontsource/ibm-plex-serif/500.css'
-import '@fontsource/ibm-plex-serif/600.css'
+import '@fontsource/space-grotesk/500.css'
+import '@fontsource/space-grotesk/600.css'
+import '@fontsource/space-grotesk/700.css'
+import '@fontsource/inter/400.css'
+import '@fontsource/inter/500.css'
+import '@fontsource/inter/600.css'
+import '@fontsource/jetbrains-mono/400.css'
+import '@fontsource/jetbrains-mono/500.css'
+import '@fontsource/jetbrains-mono/700.css'
+// Metric-adjusted system fallbacks — eliminates CLS on font swap.
+import './styles/fonts.css'
 import './styles/tokens.css'
 import './styles/app.css'
 import App from './App.tsx'

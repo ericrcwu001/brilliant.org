@@ -1,0 +1,7 @@
+{
+  "font-display": { "$value": "'Space Grotesk', ui-sans-serif, system-ui, sans-serif",        "$type": "fontFamily" },
+  "font-mono":    { "$value": "'JetBrains Mono', ui-monospace, 'SF Mono', Consolas, monospace", "$type": "fontFamily" },
+  "font-sans":    { "$value": "'Inter', system-ui, 'Segoe UI', Roboto, sans-serif",            "$type": "fontFamily" },
+  "font-serif":   { "$value": "'Inter', system-ui, 'Segoe UI', Roboto, sans-serif",            "$type": "fontFamily" },
+  "fs":           { "$value": 1, "$type": "number" }
+}

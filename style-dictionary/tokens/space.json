@@ -1,0 +1,10 @@
+{
+  "s1": { "$value": "4px",  "$type": "dimension" },
+  "s2": { "$value": "8px",  "$type": "dimension" },
+  "s3": { "$value": "12px", "$type": "dimension" },
+  "s4": { "$value": "16px", "$type": "dimension" },
+  "s5": { "$value": "24px", "$type": "dimension" },
+  "s6": { "$value": "32px", "$type": "dimension" },
+  "s7": { "$value": "48px", "$type": "dimension" },
+  "s8": { "$value": "64px", "$type": "dimension" }
+}

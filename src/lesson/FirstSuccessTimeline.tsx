@@ -44,27 +44,43 @@ export function FirstSuccessTimeline({
   }
 
   const theoryPct = Math.min(100, (theory / scaleMax) * 100)
+  const meanPct = Math.min(100, (mean / scaleMax) * 100)
 
   return (
     <div className="fst">
-      <div className="fst__chart" aria-hidden="true">
-        <div className="fst__theory" style={{ bottom: `${theoryPct}%` }}>
-          <span className="fst__theory-label">avg {theory}</span>
+      <p className="fst__title">Flips until the pattern appears, run by run</p>
+      <div className="fst__plot">
+        <div className="fst__yaxis" aria-hidden="true">
+          <span className="fst__yaxis-label">flips</span>
+          <span className="fst__ytick" style={{ top: 0 }}>{Math.round(scaleMax)}</span>
+          <span className="fst__ytick" style={{ bottom: `${theoryPct}%` }}>{theory}</span>
+          <span className="fst__ytick" style={{ bottom: 0 }}>0</span>
         </div>
-        <div className="fst__bars">
-          {agg.recent.length === 0 ? (
-            <p className="fst__empty">Tap “Run 10 times” to start.</p>
-          ) : (
-            agg.recent.map((f, i) => (
-              <span
-                key={i}
-                className="fst__bar"
-                style={{ height: `${Math.min(100, (f / scaleMax) * 100)}%` }}
-              />
-            ))
+        <div className="fst__chart" aria-hidden="true">
+          <div className="fst__theory" style={{ bottom: `${theoryPct}%` }}>
+            <span className="fst__theory-label">theory {theory}</span>
+          </div>
+          {agg.count > 0 && (
+            <div className="fst__mean" style={{ bottom: `${meanPct}%` }}>
+              <span className="fst__mean-label">avg {mean.toFixed(1)}</span>
+            </div>
           )}
+          <div className="fst__bars">
+            {agg.recent.length === 0 ? (
+              <p className="fst__empty">Tap "Run 10 times" to start.</p>
+            ) : (
+              agg.recent.map((f, i) => (
+                <span
+                  key={i}
+                  className="fst__bar"
+                  style={{ height: `${Math.min(100, (f / scaleMax) * 100)}%` }}
+                />
+              ))
+            )}
+          </div>
         </div>
       </div>
+      <p className="fst__xaxis">recent runs →</p>
 
       <p className="fst__readout" role="status" aria-live="polite">
         {agg.count === 0

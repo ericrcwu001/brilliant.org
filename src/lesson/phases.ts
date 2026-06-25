@@ -108,6 +108,7 @@ const LONGER_PATTERNS: PhaseConfig = {
   ],
   offRailAfter: {
     'transfer-primer': 'pattern-pick',
+    'overlap-why': 'overlap-ruler',
   },
 }
 

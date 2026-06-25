@@ -16,10 +16,40 @@ const MESSAGES: Record<string, string> = {
   'auth/network-request-failed': 'Network error. Check your connection.',
 }
 
+const EMAIL_CODES = new Set([
+  'auth/invalid-email',
+  'auth/email-already-in-use',
+  'auth/user-not-found',
+])
+
+const PASSWORD_CODES = new Set([
+  'auth/missing-password',
+  'auth/weak-password',
+  'auth/wrong-password',
+  'auth/invalid-credential',
+])
+
+export type AuthField = 'email' | 'password' | null
+
+export interface AuthFieldError {
+  field: AuthField
+  message: string
+}
+
+function authErrorCode(error: unknown): string {
+  return typeof error === 'object' && error !== null && 'code' in error
+    ? String((error as { code: unknown }).code)
+    : ''
+}
+
 export function authErrorMessage(error: unknown): string {
-  const code =
-    typeof error === 'object' && error !== null && 'code' in error
-      ? String((error as { code: unknown }).code)
-      : ''
-  return MESSAGES[code] ?? 'Something went wrong. Please try again.'
+  return MESSAGES[authErrorCode(error)] ?? 'Something went wrong. Please try again.'
+}
+
+export function classifyAuthError(error: unknown): AuthFieldError {
+  const code = authErrorCode(error)
+  const message = MESSAGES[code] ?? 'Something went wrong. Please try again.'
+  if (EMAIL_CODES.has(code)) return { field: 'email', message }
+  if (PASSWORD_CODES.has(code)) return { field: 'password', message }
+  return { field: null, message }
 }

@@ -17,7 +17,7 @@ import { SliderBeat } from './SliderBeat'
 import { SubstitutionBeat } from './SubstitutionBeat'
 import { EquationTilesBeat } from './EquationTilesBeat'
 import { PrimerBeat } from './PrimerBeat'
-import { McqBeat } from './McqBeat'
+import { AnswerEntryBeat } from './AnswerEntryBeat'
 import { RetrievalGridBeat } from './RetrievalGridBeat'
 import { SumTilesBeat } from './SumTilesBeat'
 import { AutocorrelationRulerBeat } from './AutocorrelationRulerBeat'
@@ -26,6 +26,7 @@ import { RaceSimBeat } from './RaceSimBeat'
 import { DominanceWheelBeat } from './DominanceWheelBeat'
 import { WalkBoardBeat } from './WalkBoardBeat'
 import { GamblerLedgerBeat } from './GamblerLedgerBeat'
+import { BalanceSolveBeat } from './BalanceSolveBeat'
 
 function ContinueStub({ beat, isLast, onAdvance }: BeatProps) {
   return (
@@ -64,10 +65,12 @@ export function BeatView(props: BeatProps) {
       return <RecapBeat {...props} />
     case 'substitution':
       return <SubstitutionBeat {...props} />
+    case 'balanceSolve':
+      return <BalanceSolveBeat {...props} />
     case 'primer':
       return <PrimerBeat {...props} />
-    case 'mcq':
-      return <McqBeat {...props} />
+    case 'answerEntry':
+      return <AnswerEntryBeat {...props} />
     case 'slider':
       return props.beat.beatId === 'bias-sandbox' ? (
         <BiasSandboxBeat {...props} />

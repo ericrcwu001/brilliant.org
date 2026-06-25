@@ -5,6 +5,8 @@ import {
   winMatrix,
   batchRace,
   conwayLeadingNumbers,
+  simulateRace,
+  traceRace,
 } from './race'
 import { mulberry32 } from './simulate'
 
@@ -64,5 +66,22 @@ describe('simulateRace (shared stream, statistical)', () => {
     const { a, b } = batchRace('HH', 'HT', 0.5, mulberry32(999), 4000)
     expect(a / (a + b)).toBeGreaterThan(0.45)
     expect(a / (a + b)).toBeLessThan(0.55)
+  })
+})
+
+describe('traceRace (single race, full stream)', () => {
+  it('records flips ending in the winning pattern', () => {
+    const t = traceRace('HHH', 'THH', 0.5, mulberry32(7))
+    const win = t.winner === 'A' ? 'HHH' : 'THH'
+    expect(t.flips.length).toBeGreaterThanOrEqual(win.length)
+    expect(t.flips.slice(-win.length).join('')).toBe(win)
+  })
+
+  it('agrees with simulateRace on the winner for the same seed', () => {
+    for (let s = 0; s < 20; s++) {
+      const trace = traceRace('HH', 'HT', 0.5, mulberry32(s))
+      const direct = simulateRace('HH', 'HT', 0.5, mulberry32(s))
+      expect(trace.winner).toBe(direct)
+    }
   })
 })

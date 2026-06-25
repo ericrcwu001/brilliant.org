@@ -7,7 +7,7 @@ function gradedBeat(beatId: string, required = true): Beat {
     beatId,
     required,
     prompt: 'x',
-    interaction: { type: 'mcq', options: [{ id: 'a', label: 'a', correct: true }] },
+    interaction: { type: 'retrievalGrid', pairs: [{ left: 'a', right: 'b' }] },
     feedback: { correct: 'ok', hints: ['1', '2', '3'] },
   } as Beat
 }

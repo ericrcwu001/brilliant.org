@@ -88,6 +88,25 @@ export function simulateWalk(
   return { end: pos <= 0 ? 'ruin' : 'win', steps }
 }
 
+export type WalkTrace = { end: 'ruin' | 'win'; positions: number[] }
+
+// Like simulateWalk, but records every position. positions[0] = start, last
+// element is the wall (0 or N). steps === positions.length - 1.
+export function traceWalk(
+  i: number,
+  N: number,
+  p: number,
+  rng: () => number,
+): WalkTrace {
+  let pos = i
+  const positions = [pos]
+  while (pos > 0 && pos < N && positions.length < 1_000_000) {
+    pos += rng() < p ? 1 : -1
+    positions.push(pos)
+  }
+  return { end: pos <= 0 ? 'ruin' : 'win', positions }
+}
+
 // Batched walk outcomes for the WalkerSwarm + DistributionHistogram.
 export function batchWalkStats(
   i: number,
@@ -104,4 +123,65 @@ export function batchWalkStats(
     totalSteps += r.steps
   }
   return { ruin, win: trials - ruin, meanSteps: trials > 0 ? totalSteps / trials : 0 }
+}
+
+export type DurationHistogram = {
+  bins: { lo: number; hi: number; count: number }[]
+  trials: number
+  meanSteps: number
+  ruinRate: number  // fraction of walks ending in ruin
+  maxCount: number  // largest single-bin count (for bar scaling)
+}
+
+// Run `trials` seeded simulateWalks, bin step counts into `binCount` equal-width
+// bins from 0 to the 95th-percentile observed step count (a sensible cap that
+// shows the fat tail without extreme outliers collapsing the x-axis scale).
+// Pure + deterministic given rng; meanSteps uses the uncapped true sample mean.
+export function walkDurationHistogram(
+  i: number,
+  N: number,
+  p: number,
+  rng: () => number,
+  trials: number,
+  binCount = 12,
+): DurationHistogram {
+  if (trials <= 0) {
+    return { bins: [], trials: 0, meanSteps: 0, ruinRate: 0, maxCount: 0 }
+  }
+
+  const allSteps: number[] = []
+  let ruinCount = 0
+  let totalSteps = 0
+
+  for (let t = 0; t < trials; t++) {
+    const r = simulateWalk(i, N, p, rng)
+    allSteps.push(r.steps)
+    if (r.end === 'ruin') ruinCount++
+    totalSteps += r.steps
+  }
+
+  const meanSteps = totalSteps / trials
+  const ruinRate = ruinCount / trials
+
+  const sorted = [...allSteps].sort((a, b) => a - b)
+  const p95Idx = Math.min(Math.floor(trials * 0.95), trials - 1)
+  // Ensure cap >= binCount so binWidth >= 1 (avoids degenerate zero-width bins).
+  const cap = Math.max(sorted[p95Idx], binCount)
+  const binWidth = cap / binCount
+
+  const counts = new Array<number>(binCount).fill(0)
+  for (const s of allSteps) {
+    const idx = Math.min(Math.floor(s / binWidth), binCount - 1)
+    counts[idx]++
+  }
+
+  const bins = counts.map((count, k) => ({
+    lo: k * binWidth,
+    hi: (k + 1) * binWidth,
+    count,
+  }))
+
+  const maxCount = Math.max(...counts)
+
+  return { bins, trials, meanSteps, ruinRate, maxCount }
 }

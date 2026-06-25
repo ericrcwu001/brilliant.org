@@ -94,6 +94,11 @@ export const InteractionSchema = z.discriminatedUnion('type', [
     type: z.literal('patternPick'),
     patterns: z.array(z.string()),
     mode: z.enum(['single', 'compare']),
+    // Optional per-pattern near-miss preview copy (L1 interactivity upgrade,
+    // cycle-1 P-1 option 3). When present each card becomes a tap target that
+    // reveals its pattern's near-miss one-liner; absent => passive cards (today's
+    // behavior, e.g. L5).
+    previews: z.record(z.string(), z.string()).optional(),
   }),
   z.object({
     type: z.literal('coinSim'),
@@ -126,6 +131,15 @@ export const InteractionSchema = z.discriminatedUnion('type', [
     steps: z.array(SubstitutionStepSchema),
   }),
   z.object({
+    type: z.literal('balanceSolve'),
+    // The state whose expected wait is solved by balancing (default 'E0').
+    solveState: StateIdSchema.optional(),
+    // Inclusive integer domain for the adjustable candidate weight.
+    min: z.number(),
+    max: z.number(),
+    step: z.number().optional(), // default 1
+  }),
+  z.object({
     type: z.literal('overlap'),
     highlight: z.array(TransitionRefSchema),
   }),
@@ -155,11 +169,19 @@ export const InteractionSchema = z.discriminatedUnion('type', [
     title: z.string().optional(),
     collapsible: z.boolean().optional(),
   }),
-  // Graded single-select for retrieval / the diagnostic pre-check (L1 §3.2).
+  // Graded type-in answer (replaces the single-select mcq). One or more short
+  // free-entry fields graded against a normalized accept-list, run through the
+  // hint ladder like other graded beats. Tap/keyboard-native, no motion.
   z.object({
-    type: z.literal('mcq'),
-    options: z.array(
-      z.object({ id: z.string(), label: z.string(), correct: z.boolean() }),
+    type: z.literal('answerEntry'),
+    fields: z.array(
+      z.object({
+        id: z.string(),
+        label: z.string(),
+        accept: z.array(z.string()),
+        placeholder: z.string().optional(),
+        suffix: z.string().optional(),
+      }),
     ),
   }),
   // ── Remaining-lesson widget variants (build-brief §4.4). Each maps 1:1 to a
@@ -377,6 +399,10 @@ export const ProgressSchema = z.object({
   // client-side to users/{uid}/progress/{courseId}. Not in the rules deny-list,
   // so the client may write it; absent ⇒ default Track B in the renderer.
   track: z.enum(['A', 'B']).optional(),
+  // First-run welcome screen (new accounts). Set when the learner has seen the
+  // welcome — i.e. started the intro or skipped; absent ⇒ not yet welcomed. A
+  // server timestamp, like the unlock/complete stamps below.
+  welcomeSeenAt: z.unknown().optional(),
   currentBeat: z.string().optional(),
   completionStatus: z.enum(['in_progress', 'completed']).optional(),
   masteryStatus: z.enum(['not_mastered', 'mastered']).optional(),

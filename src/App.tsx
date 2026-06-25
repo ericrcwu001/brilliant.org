@@ -7,17 +7,10 @@
 // auth entirely (preserves the Group A/e2e entry point); every other route is
 // gated by <AuthProvider> + the guard in <GuardedRoutes>.
 
-import { useCallback, useEffect, useState } from 'react'
-import { LessonPlayer } from './lesson/LessonPlayer'
-import { DevHomePage } from './pages/DevHomePage'
+import { lazy, Suspense, useCallback, useEffect, useState } from 'react'
+import { flushSync } from 'react-dom'
 import { AuthProvider } from './auth/AuthProvider'
 import { useAuth } from './auth/authContext'
-import { LandingPage } from './pages/LandingPage'
-import { AuthPage } from './pages/AuthPage'
-import { DisplayNamePage } from './pages/DisplayNamePage'
-import { CoursePathPage } from './pages/CoursePathPage'
-import { ProfilePage } from './pages/ProfilePage'
-import { LessonPage } from './pages/LessonPage'
 import {
   ROUTES,
   parseLessonId,
@@ -26,6 +19,33 @@ import {
   type NavigateOptions,
 } from './pages/routes'
 import { loadDevLesson } from './content/devLessons'
+import { ErrorBoundary } from './app/ErrorBoundary'
+import { withViewTransition } from './app/viewTransition'
+
+const LessonPlayer = lazy(() =>
+  import('./lesson/LessonPlayer').then(m => ({ default: m.LessonPlayer })),
+)
+const DevHomePage = lazy(() =>
+  import('./pages/DevHomePage').then(m => ({ default: m.DevHomePage })),
+)
+const LandingPage = lazy(() =>
+  import('./pages/LandingPage').then(m => ({ default: m.LandingPage })),
+)
+const AuthPage = lazy(() =>
+  import('./pages/AuthPage').then(m => ({ default: m.AuthPage })),
+)
+const DisplayNamePage = lazy(() =>
+  import('./pages/DisplayNamePage').then(m => ({ default: m.DisplayNamePage })),
+)
+const CoursePathPage = lazy(() =>
+  import('./pages/CoursePathPage').then(m => ({ default: m.CoursePathPage })),
+)
+const ProfilePage = lazy(() =>
+  import('./pages/ProfilePage').then(m => ({ default: m.ProfilePage })),
+)
+const LessonPage = lazy(() =>
+  import('./pages/LessonPage').then(m => ({ default: m.LessonPage })),
+)
 
 function useRouter() {
   const [path, setPath] = useState(() => window.location.pathname)
@@ -37,12 +57,15 @@ function useRouter() {
   }, [])
 
   const navigate = useCallback((to: string, opts?: NavigateOptions) => {
-    if (opts?.replace) {
-      window.history.replaceState({}, '', to)
-    } else {
-      window.history.pushState({}, '', to)
+    const apply = () => {
+      if (opts?.replace) {
+        window.history.replaceState({}, '', to)
+      } else {
+        window.history.pushState({}, '', to)
+      }
+      flushSync(() => setPath(window.location.pathname))
     }
-    setPath(window.location.pathname)
+    withViewTransition(apply, 'home-lesson')
   }, [])
 
   return { path, navigate }
@@ -113,7 +136,7 @@ function GuardedRoutes({
 function BootScreen() {
   return (
     <div className="bootscreen" aria-busy="true" aria-live="polite">
-      <p className="bootscreen__brand">Pattern hitting times</p>
+      <p className="bootscreen__brand">Ergo</p>
       <div className="skeleton bootscreen__line" />
       <div className="skeleton bootscreen__line" />
       <p className="bootscreen__caption">Signing you in…</p>
@@ -121,39 +144,65 @@ function BootScreen() {
   )
 }
 
+function RouteSkeleton() {
+  return (
+    <div className="bootscreen" aria-busy="true">
+      <p className="bootscreen__brand">Ergo</p>
+      <div className="skeleton bootscreen__line" />
+      <div className="skeleton bootscreen__line" />
+    </div>
+  )
+}
+
 function App() {
   const { path, navigate } = useRouter()
 
-  // Dev fixture routes: no auth, no Firebase mount (Group A / e2e entry point +
-  // the Study Desk reskin harness). `?track=A` exercises the Track-A scaffolds
-  // locally (and in the e2e Track-A pass); default is Track B.
-  if (path === ROUTES.devLesson) {
-    const track =
-      new URLSearchParams(window.location.search).get('track') === 'A' ? 'A' : 'B'
-    return <LessonPlayer track={track} />
-  }
-  // Parameterized dev route (build-brief §4.6): /dev/lesson/:lessonId renders any
-  // bundled fixture lesson with no Firebase, so every lesson is exercisable +
-  // e2e-testable in both tracks before it's seeded.
-  const devLessonId = parseDevLessonId(path)
-  if (devLessonId) {
-    const track =
-      new URLSearchParams(window.location.search).get('track') === 'A' ? 'A' : 'B'
-    const lesson = loadDevLesson(devLessonId)
-    if (lesson) return <LessonPlayer lesson={lesson} track={track} />
+  // Compute page content for all branches, then wrap once in ErrorBoundary +
+  // Suspense so both dev routes and the auth-guarded path share a single
+  // boundary/fallback.
+  const content = (() => {
+    // Dev fixture routes: no auth, no Firebase mount (Group A / e2e entry point +
+    // the Study Desk reskin harness). `?track=A` exercises the Track-A scaffolds
+    // locally (and in the e2e Track-A pass); default is Track B.
+    if (path === ROUTES.devLesson) {
+      const track =
+        new URLSearchParams(window.location.search).get('track') === 'A'
+          ? 'A'
+          : 'B'
+      return <LessonPlayer track={track} />
+    }
+    // Parameterized dev route (build-brief §4.6): /dev/lesson/:lessonId renders any
+    // bundled fixture lesson with no Firebase, so every lesson is exercisable +
+    // e2e-testable in both tracks before it's seeded.
+    const devLessonId = parseDevLessonId(path)
+    if (devLessonId) {
+      const track =
+        new URLSearchParams(window.location.search).get('track') === 'A'
+          ? 'A'
+          : 'B'
+      const lesson = loadDevLesson(devLessonId)
+      if (lesson) return <LessonPlayer lesson={lesson} track={track} />
+      return (
+        <div className="bootscreen" aria-live="polite">
+          <p className="bootscreen__brand">Lesson not found</p>
+          <p className="bootscreen__caption">
+            No bundled fixture for "{devLessonId}".
+          </p>
+        </div>
+      )
+    }
+    if (path === ROUTES.devHome) return <DevHomePage />
     return (
-      <div className="bootscreen" aria-live="polite">
-        <p className="bootscreen__brand">Lesson not found</p>
-        <p className="bootscreen__caption">No bundled fixture for “{devLessonId}”.</p>
-      </div>
+      <AuthProvider>
+        <GuardedRoutes path={path} navigate={navigate} />
+      </AuthProvider>
     )
-  }
-  if (path === ROUTES.devHome) return <DevHomePage />
+  })()
 
   return (
-    <AuthProvider>
-      <GuardedRoutes path={path} navigate={navigate} />
-    </AuthProvider>
+    <ErrorBoundary>
+      <Suspense fallback={<RouteSkeleton />}>{content}</Suspense>
+    </ErrorBoundary>
   )
 }
 

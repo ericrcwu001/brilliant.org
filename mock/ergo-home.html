@@ -1,0 +1,1106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ergo — Home</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+/* ── Design Tokens ───────────────────────────────────────────── */
+:root {
+  --ergo-bg: #F7F8FB;
+  --ergo-surface: #FFFFFF;
+  --ergo-surface-2: #F1F3F8;
+  --ergo-ink: #161A27;
+  --ergo-ink-2: #4B5268;
+  --ergo-ink-3: #8A90A4;
+  --ergo-line: rgba(22,26,39,.08);
+  --ergo-line-2: rgba(22,26,39,.14);
+
+  --ergo-brand: #4F46E5;
+  --ergo-brand-strong: #4338CA;
+  --ergo-brand-tint: #EEF0FE;
+
+  --ch1: #4F46E5; --ch1-tint: #EEF0FE;
+  --ch2: #0D9488; --ch2-tint: #E2F4F1;
+  --ch3: #F0584A; --ch3-tint: #FDECEA;
+  --ch4: #E0982E; --ch4-tint: #FBF0DD;
+
+  --ok: #16A36B;
+  --bad: #E5484D;
+  --mark: #E0982E;
+  --heads: #D99A2B;
+  --tails: #0D9488;
+
+  --shadow-sm: 0 1px 2px rgba(22,26,39,.06), 0 1px 3px rgba(22,26,39,.04);
+  --shadow-md: 0 6px 16px rgba(22,26,39,.08);
+  --shadow-lg: 0 16px 40px rgba(22,26,39,.12);
+  --ring-focus: 0 0 0 3px rgba(79,70,229,.35);
+
+  --r-sm: 8px;
+  --r-md: 12px;
+  --r-lg: 16px;
+  --r-xl: 20px;
+  --r-pill: 999px;
+
+  --s1: 4px;
+  --s2: 8px;
+  --s3: 12px;
+  --s4: 16px;
+  --s5: 24px;
+  --s6: 32px;
+  --s7: 48px;
+  --s8: 64px;
+}
+
+/* ── Reset & Base ────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 16px; }
+body {
+  background: var(--ergo-bg);
+  color: var(--ergo-ink);
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── Page Shell ──────────────────────────────────────────────── */
+.page {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 0 var(--s5);
+}
+
+/* ── Top Bar ─────────────────────────────────────────────────── */
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--s4) 0;
+  border-bottom: 1px solid var(--ergo-line);
+}
+.wordmark {
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 600;
+  font-size: 22px;
+  letter-spacing: -0.02em;
+  color: var(--ergo-ink);
+  line-height: 1;
+}
+.avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--ergo-brand);
+  color: #fff;
+  font-family: 'Inter', sans-serif;
+  font-weight: 600;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+/* ── Momentum Band ───────────────────────────────────────────── */
+.momentum-band {
+  background: var(--ergo-surface);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-sm);
+  margin: var(--s5) 0;
+  padding: var(--s5);
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0;
+}
+.momentum-left {
+  padding-right: var(--s5);
+  border-right: 1px solid var(--ergo-line);
+}
+.momentum-right {
+  padding-left: var(--s5);
+}
+.streak-header {
+  display: flex;
+  align-items: baseline;
+  gap: var(--s3);
+  margin-bottom: var(--s3);
+}
+.streak-number {
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 600;
+  font-size: 42px;
+  color: var(--ergo-brand);
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+.streak-label {
+  font-family: 'Inter', sans-serif;
+  font-size: 15px;
+  color: var(--ergo-ink-2);
+  font-weight: 400;
+}
+.day-tracker {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s1);
+  margin-top: var(--s2);
+}
+.day-labels {
+  display: flex;
+  gap: 10px;
+}
+.day-label {
+  width: 20px;
+  text-align: center;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--ergo-ink-3);
+  font-family: 'Inter', sans-serif;
+  letter-spacing: 0.04em;
+}
+.day-dots {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+.day-dot {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--ergo-brand);
+  flex-shrink: 0;
+}
+.day-dot.empty {
+  background: transparent;
+  border: 2px solid var(--ergo-line-2);
+}
+
+.mastered-label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ergo-ink-3);
+  margin-bottom: var(--s3);
+  font-family: 'Inter', sans-serif;
+}
+.medallions {
+  display: flex;
+  gap: var(--s2);
+  flex-wrap: wrap;
+  align-items: center;
+}
+.medallion {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  flex-shrink: 0;
+}
+.medallion.earned {
+  border: 2.5px solid currentColor;
+}
+.medallion.locked {
+  border: 2.5px solid var(--ergo-line-2);
+  background: var(--ergo-surface-2);
+  opacity: 0.7;
+}
+.medallion-glyph {
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 700;
+  font-size: 10px;
+  line-height: 1;
+  text-align: center;
+}
+.medallion.locked .medallion-glyph {
+  opacity: 0.35;
+  color: var(--ergo-ink-3);
+}
+.lock-icon {
+  position: absolute;
+  bottom: -2px;
+  right: -2px;
+  width: 14px;
+  height: 14px;
+  background: var(--ergo-surface);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ── Journey Section ─────────────────────────────────────────── */
+.journey-section {
+  display: grid;
+  grid-template-columns: 1fr 380px;
+  gap: var(--s6);
+  align-items: start;
+}
+.journey-col {
+  position: relative;
+}
+
+/* ── Chapter Labels ──────────────────────────────────────────── */
+.chapter-label {
+  font-family: 'Inter', sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  margin-bottom: var(--s3);
+  margin-top: var(--s5);
+  padding-left: 52px;
+}
+.chapter-label:first-child { margin-top: 0; }
+
+/* ── Lesson Row ──────────────────────────────────────────────── */
+.lessons-group {
+  position: relative;
+}
+.lesson-row {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--s4);
+  margin-bottom: var(--s3);
+  position: relative;
+}
+
+/* Vertical connector line */
+.connector-wrap {
+  position: absolute;
+  left: 14px;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  z-index: 0;
+}
+.connector-segment {
+  width: 4px;
+  border-radius: 2px;
+  height: 100%;
+}
+
+/* Node */
+.node-wrap {
+  position: relative;
+  flex-shrink: 0;
+  width: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1;
+  margin-top: 32px;
+}
+.node {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  background: var(--ergo-surface);
+  flex-shrink: 0;
+}
+.node.completed {
+  background: var(--ergo-brand);
+}
+.node.completed-ch2 {
+  background: var(--ch2);
+}
+.node.active {
+  background: var(--ergo-surface);
+  border: 2.5px solid var(--ch2);
+  box-shadow: 0 0 0 4px rgba(13,148,136,.18);
+}
+.node.available {
+  background: var(--ergo-surface);
+  border: 2.5px solid var(--ch2);
+}
+.node.locked {
+  background: var(--ergo-surface-2);
+  border: 2px solid var(--ergo-line-2);
+}
+.node.roadmap {
+  background: var(--ergo-surface-2);
+  border: 2px solid var(--ergo-line);
+}
+.node-check {
+  color: #fff;
+}
+
+/* Lesson Card */
+.lesson-card {
+  flex: 1;
+  background: var(--ergo-surface);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-sm);
+  padding: var(--s3) var(--s4);
+  display: flex;
+  align-items: center;
+  gap: var(--s4);
+  cursor: pointer;
+  transition: box-shadow 0.15s ease, transform 0.15s ease;
+  border: 1.5px solid transparent;
+  min-height: 80px;
+}
+.lesson-card:hover {
+  box-shadow: var(--shadow-md);
+  transform: translateY(-1px);
+}
+.lesson-card.completed-card {
+  border-color: transparent;
+}
+.lesson-card.active-card {
+  border: 1.5px solid var(--ch2);
+  box-shadow: var(--shadow-md);
+}
+.lesson-card.locked-card {
+  opacity: 0.55;
+  cursor: default;
+}
+.lesson-card.locked-card:hover {
+  box-shadow: var(--shadow-sm);
+  transform: none;
+}
+.lesson-card.roadmap-card {
+  opacity: 0.5;
+  cursor: default;
+}
+.lesson-card.roadmap-card:hover {
+  box-shadow: var(--shadow-sm);
+  transform: none;
+}
+
+.lesson-thumb {
+  width: 88px;
+  height: 72px;
+  border-radius: var(--r-md);
+  background: var(--ergo-surface-2);
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+.lesson-meta {
+  flex: 1;
+}
+.lesson-title {
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 600;
+  font-size: 16px;
+  color: var(--ergo-ink);
+  margin-bottom: var(--s1);
+  line-height: 1.3;
+}
+.lesson-desc {
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  color: var(--ergo-ink-2);
+  line-height: 1.45;
+}
+.lesson-status {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+}
+
+/* ── Detail Card ─────────────────────────────────────────────── */
+.detail-card {
+  background: var(--ergo-surface);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-md);
+  padding: var(--s5);
+  position: sticky;
+  top: var(--s5);
+}
+.detail-chapter-label {
+  font-family: 'Inter', sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--ch2);
+  margin-bottom: var(--s3);
+}
+.detail-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--s3);
+  margin-bottom: var(--s2);
+}
+.detail-title {
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 600;
+  font-size: 24px;
+  color: var(--ergo-ink);
+  line-height: 1.2;
+}
+.detail-desc {
+  font-family: 'Inter', sans-serif;
+  font-size: 14px;
+  color: var(--ergo-ink-2);
+  line-height: 1.55;
+  margin-bottom: var(--s5);
+}
+.progress-ring-wrap {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+.progress-ring-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--ch2);
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+.progress-ring-sub {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ergo-ink-3);
+  font-family: 'Inter', sans-serif;
+}
+.detail-meta {
+  display: flex;
+  gap: var(--s5);
+  align-items: center;
+  padding: var(--s3) 0;
+  border-top: 1px solid var(--ergo-line);
+  border-bottom: 1px solid var(--ergo-line);
+  margin-bottom: var(--s5);
+}
+.detail-meta-item {
+  display: flex;
+  align-items: center;
+  gap: var(--s1);
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  color: var(--ergo-ink-2);
+}
+.start-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s2);
+  width: 100%;
+  padding: 14px var(--s4);
+  background: var(--ch2);
+  color: #fff;
+  border: none;
+  border-radius: var(--r-md);
+  font-family: 'Inter', sans-serif;
+  font-weight: 600;
+  font-size: 15px;
+  cursor: pointer;
+  transition: background 0.15s ease, transform 0.1s ease;
+  letter-spacing: -0.01em;
+}
+.start-btn:hover { background: #0a7a70; }
+.start-btn:active { transform: scale(0.98); }
+
+/* ── Journey layout helpers ──────────────────────────────────── */
+.chapter-group {
+  position: relative;
+  padding-left: 0;
+}
+.chapter-body {
+  position: relative;
+  padding-bottom: var(--s2);
+}
+
+/* The big vertical line lives behind nodes */
+.journey-line-container {
+  position: absolute;
+  left: 14px;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  border-radius: 2px;
+  overflow: hidden;
+}
+.journey-line-gradient {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    to bottom,
+    var(--ch1) 0%,
+    var(--ch1) 25%,
+    var(--ch2) 25%,
+    var(--ch2) 55%,
+    var(--ch3) 55%,
+    var(--ch3) 80%,
+    var(--ch4) 80%,
+    var(--ch4) 100%
+  );
+  opacity: 0.35;
+}
+
+/* ── Node progress ring via SVG ──────────────────────────────── */
+.node-ring {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 36px;
+  height: 36px;
+}
+
+/* ── Footnote spacing ────────────────────────────────────────── */
+.bottom-spacer { height: var(--s8); }
+</style>
+</head>
+<body>
+
+<div class="page">
+
+  <!-- ── TOP BAR ───────────────────────────────────────────── -->
+  <header class="topbar">
+    <span class="wordmark">Ergo</span>
+    <div class="avatar">M</div>
+  </header>
+
+  <!-- ── MOMENTUM BAND ─────────────────────────────────────── -->
+  <div class="momentum-band">
+
+    <!-- Left: Streak -->
+    <div class="momentum-left">
+      <div class="streak-header">
+        <span class="streak-number">12</span>
+        <span class="streak-label">day streak</span>
+      </div>
+      <div class="day-tracker">
+        <div class="day-labels">
+          <span class="day-label">M</span>
+          <span class="day-label">T</span>
+          <span class="day-label">W</span>
+          <span class="day-label">T</span>
+          <span class="day-label">F</span>
+          <span class="day-label">S</span>
+          <span class="day-label">S</span>
+        </div>
+        <div class="day-dots">
+          <div class="day-dot"></div>
+          <div class="day-dot"></div>
+          <div class="day-dot"></div>
+          <div class="day-dot"></div>
+          <div class="day-dot"></div>
+          <div class="day-dot"></div>
+          <div class="day-dot empty"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right: Concepts Mastered -->
+    <div class="momentum-right">
+      <div class="mastered-label">Concepts mastered</div>
+      <div class="medallions">
+
+        <!-- Earned: E[H] – indigo ch1 -->
+        <div class="medallion earned" style="color:var(--ch1);background:var(--ch1-tint);">
+          <span class="medallion-glyph" style="color:var(--ch1);font-size:9px;">E[H]</span>
+        </div>
+
+        <!-- Earned: ∅→H – indigo ch1 -->
+        <div class="medallion earned" style="color:var(--ch1);background:var(--ch1-tint);">
+          <span class="medallion-glyph" style="color:var(--ch1);font-size:8px;">∅→H</span>
+        </div>
+
+        <!-- Earned: HH≠HT – indigo ch1 -->
+        <div class="medallion earned" style="color:var(--ch1);background:var(--ch1-tint);">
+          <span class="medallion-glyph" style="color:var(--ch1);font-size:7px;">HH≠HT</span>
+        </div>
+
+        <!-- Locked: A≻B -->
+        <div class="medallion locked">
+          <span class="medallion-glyph">A≻B</span>
+          <div class="lock-icon">
+            <svg width="8" height="9" viewBox="0 0 8 9" fill="none">
+              <rect x="1" y="4" width="6" height="5" rx="1" fill="#8A90A4"/>
+              <path d="M2 4V3a2 2 0 0 1 4 0v1" stroke="#8A90A4" stroke-width="1.2" fill="none"/>
+            </svg>
+          </div>
+        </div>
+
+        <!-- Locked: i/N -->
+        <div class="medallion locked">
+          <span class="medallion-glyph">i/N</span>
+          <div class="lock-icon">
+            <svg width="8" height="9" viewBox="0 0 8 9" fill="none">
+              <rect x="1" y="4" width="6" height="5" rx="1" fill="#8A90A4"/>
+              <path d="M2 4V3a2 2 0 0 1 4 0v1" stroke="#8A90A4" stroke-width="1.2" fill="none"/>
+            </svg>
+          </div>
+        </div>
+
+        <!-- Locked: ✓×3 -->
+        <div class="medallion locked">
+          <span class="medallion-glyph" style="font-size:8px;">✓×3</span>
+          <div class="lock-icon">
+            <svg width="8" height="9" viewBox="0 0 8 9" fill="none">
+              <rect x="1" y="4" width="6" height="5" rx="1" fill="#8A90A4"/>
+              <path d="M2 4V3a2 2 0 0 1 4 0v1" stroke="#8A90A4" stroke-width="1.2" fill="none"/>
+            </svg>
+          </div>
+        </div>
+
+        <!-- Locked: Σ2ᴸ -->
+        <div class="medallion locked">
+          <span class="medallion-glyph" style="font-size:9px;">Σ2ᴸ</span>
+          <div class="lock-icon">
+            <svg width="8" height="9" viewBox="0 0 8 9" fill="none">
+              <rect x="1" y="4" width="6" height="5" rx="1" fill="#8A90A4"/>
+              <path d="M2 4V3a2 2 0 0 1 4 0v1" stroke="#8A90A4" stroke-width="1.2" fill="none"/>
+            </svg>
+          </div>
+        </div>
+
+        <!-- Locked: Mₜ -->
+        <div class="medallion locked">
+          <span class="medallion-glyph">Mₜ</span>
+          <div class="lock-icon">
+            <svg width="8" height="9" viewBox="0 0 8 9" fill="none">
+              <rect x="1" y="4" width="6" height="5" rx="1" fill="#8A90A4"/>
+              <path d="M2 4V3a2 2 0 0 1 4 0v1" stroke="#8A90A4" stroke-width="1.2" fill="none"/>
+            </svg>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ── COURSE JOURNEY ────────────────────────────────────── -->
+  <div class="journey-section">
+
+    <!-- LEFT: Journey -->
+    <div class="journey-col">
+
+      <!-- Big gradient connector line behind all nodes -->
+      <div style="position:relative;">
+        <div class="journey-line-container" style="top:40px;bottom:60px;">
+          <div class="journey-line-gradient"></div>
+        </div>
+
+        <!-- ════ CHAPTER 1: FOUNDATIONS ════ -->
+        <div style="padding-left:52px;margin-bottom:4px;">
+          <div class="chapter-label" style="color:var(--ch1);padding-left:0;margin-top:0;">Foundations</div>
+        </div>
+
+        <!-- Lesson 1: First Heads — COMPLETED -->
+        <div class="lesson-row">
+          <div class="node-wrap">
+            <div class="node completed" style="background:var(--ch1);">
+              <!-- Progress ring SVG overlay -->
+              <svg class="node-ring" viewBox="0 0 36 36">
+                <circle cx="18" cy="18" r="16" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="2.5"/>
+                <circle cx="18" cy="18" r="16" fill="none" stroke="white" stroke-width="2.5"
+                  stroke-dasharray="100.5" stroke-dashoffset="0"
+                  stroke-linecap="round" transform="rotate(-90 18 18)"/>
+              </svg>
+              <svg class="node-check" width="14" height="14" viewBox="0 0 14 14" fill="none">
+                <path d="M2.5 7L5.5 10L11.5 4" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </div>
+          </div>
+          <div class="lesson-card completed-card">
+            <div class="lesson-thumb" style="background:var(--ch1-tint);">
+              <!-- Coin viz -->
+              <svg width="72" height="60" viewBox="0 0 72 60" fill="none">
+                <circle cx="36" cy="30" r="20" fill="var(--ch1-tint)" stroke="var(--ch1)" stroke-width="2"/>
+                <defs>
+                  <radialGradient id="coinGrad" cx="40%" cy="35%" r="60%">
+                    <stop offset="0%" stop-color="rgba(255,255,255,0.4)"/>
+                    <stop offset="100%" stop-color="rgba(79,70,229,0.1)"/>
+                  </radialGradient>
+                </defs>
+                <circle cx="36" cy="30" r="20" fill="url(#coinGrad)" stroke="var(--ch1)" stroke-width="2"/>
+                <text x="36" y="35" text-anchor="middle" font-family="JetBrains Mono,monospace" font-weight="700" font-size="18" fill="var(--ch1)">H</text>
+              </svg>
+            </div>
+            <div class="lesson-meta">
+              <div class="lesson-title">First Heads</div>
+              <div class="lesson-desc">Flip until the first H — and meet E[H] = 2.</div>
+            </div>
+            <div class="lesson-status">
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                <circle cx="10" cy="10" r="9" fill="var(--ok)" opacity="0.12"/>
+                <path d="M5.5 10.5L8.5 13.5L14.5 7" stroke="var(--ok)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <!-- Lesson 2: Pattern Hitting Times — COMPLETED -->
+        <div class="lesson-row">
+          <div class="node-wrap">
+            <div class="node completed" style="background:var(--ch1);">
+              <svg class="node-ring" viewBox="0 0 36 36">
+                <circle cx="18" cy="18" r="16" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="2.5"/>
+                <circle cx="18" cy="18" r="16" fill="none" stroke="white" stroke-width="2.5"
+                  stroke-dasharray="100.5" stroke-dashoffset="0"
+                  stroke-linecap="round" transform="rotate(-90 18 18)"/>
+              </svg>
+              <svg class="node-check" width="14" height="14" viewBox="0 0 14 14" fill="none">
+                <path d="M2.5 7L5.5 10L11.5 4" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </div>
+          </div>
+          <div class="lesson-card completed-card">
+            <div class="lesson-thumb" style="background:var(--ch1-tint);">
+              <!-- State machine: ∅ → H → HH -->
+              <svg width="88" height="60" viewBox="0 0 88 60" fill="none">
+                <circle cx="14" cy="30" r="10" fill="var(--ch1-tint)" stroke="var(--ch1)" stroke-width="1.8"/>
+                <text x="14" y="34" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="8" font-weight="700" fill="var(--ch1)">∅</text>
+                <circle cx="44" cy="30" r="10" fill="var(--ch1-tint)" stroke="var(--ch1)" stroke-width="1.8"/>
+                <text x="44" y="34" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="8" font-weight="700" fill="var(--ch1)">H</text>
+                <circle cx="74" cy="30" r="10" fill="var(--ch1-tint)" stroke="var(--ch1)" stroke-width="1.8"/>
+                <circle cx="74" cy="30" r="13" fill="none" stroke="var(--ch1)" stroke-width="1.2" stroke-dasharray="3 2"/>
+                <text x="74" y="34" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="7" font-weight="700" fill="var(--ch1)">HH</text>
+                <!-- arrows -->
+                <path d="M24 30 L33 30" stroke="var(--ch1)" stroke-width="1.5" stroke-linecap="round" marker-end="url(#arr1)"/>
+                <path d="M54 30 L63 30" stroke="var(--ch1)" stroke-width="1.5" stroke-linecap="round" marker-end="url(#arr1)"/>
+                <text x="29" y="27" text-anchor="middle" font-family="Inter,sans-serif" font-size="7" fill="var(--ch1)">H</text>
+                <text x="59" y="27" text-anchor="middle" font-family="Inter,sans-serif" font-size="7" fill="var(--ch1)">H</text>
+                <!-- T loop back on H node -->
+                <path d="M36 22 Q44 10 52 22" stroke="var(--ch1)" stroke-width="1.2" fill="none" stroke-dasharray="2 2"/>
+                <defs>
+                  <marker id="arr1" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
+                    <path d="M0,0 L6,3 L0,6 Z" fill="var(--ch1)"/>
+                  </marker>
+                </defs>
+              </svg>
+            </div>
+            <div class="lesson-meta">
+              <div class="lesson-title">Pattern Hitting Times</div>
+              <div class="lesson-desc">Why HH takes longer than HT: E[HH]=6 vs E[HT]=4.</div>
+            </div>
+            <div class="lesson-status">
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                <circle cx="10" cy="10" r="9" fill="var(--ok)" opacity="0.12"/>
+                <path d="M5.5 10.5L8.5 13.5L14.5 7" stroke="var(--ok)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <!-- ════ CHAPTER 2: RACING & WALKS ════ -->
+        <div style="padding-left:52px;margin-bottom:4px;margin-top:var(--s5);">
+          <div class="chapter-label" style="color:var(--ch2);padding-left:0;margin-top:0;">Racing &amp; Walks</div>
+        </div>
+
+        <!-- Lesson 3: Penney's Game — ACTIVE -->
+        <div class="lesson-row">
+          <div class="node-wrap">
+            <div class="node active">
+              <svg class="node-ring" viewBox="0 0 36 36">
+                <circle cx="18" cy="18" r="16" fill="none" stroke="var(--ergo-line-2)" stroke-width="2.5"/>
+                <circle cx="18" cy="18" r="16" fill="none" stroke="var(--ch2)" stroke-width="2.5"
+                  stroke-dasharray="40.2 100.5"
+                  stroke-linecap="round" transform="rotate(-90 18 18)"/>
+              </svg>
+              <svg width="8" height="8" viewBox="0 0 8 8">
+                <circle cx="4" cy="4" r="3.5" fill="var(--ch2)"/>
+              </svg>
+            </div>
+          </div>
+          <div class="lesson-card active-card">
+            <div class="lesson-thumb" style="background:var(--ch2-tint);">
+              <!-- Race lanes viz -->
+              <svg width="88" height="60" viewBox="0 0 88 60" fill="none">
+                <!-- Lane 1: HHT -->
+                <rect x="6" y="8" width="76" height="18" rx="9" fill="var(--ch2-tint)" stroke="var(--ch2)" stroke-width="1.5"/>
+                <!-- Lane 2: THH -->
+                <rect x="6" y="34" width="76" height="18" rx="9" fill="var(--ch2-tint)" stroke="var(--ch2)" stroke-width="1.5"/>
+                <!-- Token on lane 1 at ~40% -->
+                <circle cx="36" cy="17" r="7" fill="var(--ch2)" opacity="0.9"/>
+                <!-- Token on lane 2 at ~55% -->
+                <circle cx="48" cy="43" r="7" fill="var(--ch2)" opacity="0.6"/>
+                <!-- Labels -->
+                <text x="72" y="21" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="7.5" font-weight="700" fill="var(--ch2)">HHT</text>
+                <text x="72" y="47" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="7.5" font-weight="700" fill="var(--ch2)">THH</text>
+                <!-- Finish markers -->
+                <line x1="68" y1="8" x2="68" y2="26" stroke="var(--ch2)" stroke-width="1" stroke-dasharray="2 1.5"/>
+                <line x1="68" y1="34" x2="68" y2="52" stroke="var(--ch2)" stroke-width="1" stroke-dasharray="2 1.5"/>
+              </svg>
+            </div>
+            <div class="lesson-meta">
+              <div class="lesson-title">Penney's Game</div>
+              <div class="lesson-desc">Pick a pattern that beats your opponent's — non-transitively.</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Lesson 4: Gambler's Ruin — AVAILABLE -->
+        <div class="lesson-row">
+          <div class="node-wrap">
+            <div class="node available">
+              <svg class="node-ring" viewBox="0 0 36 36">
+                <circle cx="18" cy="18" r="16" fill="none" stroke="var(--ergo-line-2)" stroke-width="2"/>
+              </svg>
+              <svg width="8" height="8" viewBox="0 0 8 8">
+                <circle cx="4" cy="4" r="3" fill="none" stroke="var(--ch2)" stroke-width="1.5"/>
+              </svg>
+            </div>
+          </div>
+          <div class="lesson-card">
+            <div class="lesson-thumb" style="background:var(--ch2-tint);">
+              <!-- Random walk viz -->
+              <svg width="88" height="60" viewBox="0 0 88 60" fill="none">
+                <!-- Left wall -->
+                <line x1="8" y1="8" x2="8" y2="52" stroke="var(--ch2)" stroke-width="2.5" stroke-linecap="round"/>
+                <!-- Right wall -->
+                <line x1="80" y1="8" x2="80" y2="52" stroke="var(--ch2)" stroke-width="2.5" stroke-linecap="round"/>
+                <!-- Zig-zag walk -->
+                <polyline points="8,38 18,28 26,36 34,22 42,32 50,20 58,30 66,18 74,28" 
+                  stroke="var(--ch2)" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+                <!-- Current position dot -->
+                <circle cx="74" cy="28" r="4.5" fill="var(--ch2)"/>
+              </svg>
+            </div>
+            <div class="lesson-meta">
+              <div class="lesson-title">Gambler's Ruin</div>
+              <div class="lesson-desc">Random-walk between two walls; reach N before 0, with P = i/N.</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ════ CHAPTER 3: MASTERY ════ -->
+        <div style="padding-left:52px;margin-bottom:4px;margin-top:var(--s5);">
+          <div class="chapter-label" style="color:var(--ch3);padding-left:0;margin-top:0;">Mastery</div>
+        </div>
+
+        <!-- Lesson 5: States & Streaks — LOCKED -->
+        <div class="lesson-row">
+          <div class="node-wrap">
+            <div class="node locked">
+              <svg class="node-ring" viewBox="0 0 36 36">
+                <circle cx="18" cy="18" r="16" fill="none" stroke="var(--ergo-line-2)" stroke-width="1.5"/>
+              </svg>
+              <svg width="12" height="13" viewBox="0 0 12 13" fill="none">
+                <rect x="1.5" y="6" width="9" height="7" rx="1.5" fill="#C0C4D0"/>
+                <path d="M3 6V4.5a3 3 0 0 1 6 0V6" stroke="#C0C4D0" stroke-width="1.4" fill="none"/>
+              </svg>
+            </div>
+          </div>
+          <div class="lesson-card locked-card">
+            <div class="lesson-thumb" style="background:var(--ergo-surface-2);">
+              <!-- 2-node graph viz -->
+              <svg width="88" height="60" viewBox="0 0 88 60" fill="none">
+                <circle cx="24" cy="30" r="12" fill="var(--ergo-surface-2)" stroke="var(--ch3)" stroke-width="1.8" opacity="0.5"/>
+                <circle cx="64" cy="30" r="12" fill="var(--ergo-surface-2)" stroke="var(--ch3)" stroke-width="1.8" opacity="0.5"/>
+                <!-- Arrow between -->
+                <path d="M36 30 L51 30" stroke="var(--ch3)" stroke-width="1.5" opacity="0.5" marker-end="url(#arr3)"/>
+                <!-- Self-loop on left node -->
+                <path d="M14 21 Q14 8 24 8 Q34 8 34 21" stroke="var(--ch3)" stroke-width="1.2" fill="none" opacity="0.4" stroke-dasharray="2 2"/>
+                <defs>
+                  <marker id="arr3" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
+                    <path d="M0,0 L6,3 L0,6 Z" fill="var(--ch3)" opacity="0.5"/>
+                  </marker>
+                </defs>
+              </svg>
+            </div>
+            <div class="lesson-meta">
+              <div class="lesson-title">States &amp; Streaks</div>
+              <div class="lesson-desc">Consolidate the state-machine method on streaks.</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Lesson 6: Longer Patterns — LOCKED -->
+        <div class="lesson-row">
+          <div class="node-wrap">
+            <div class="node locked">
+              <svg class="node-ring" viewBox="0 0 36 36">
+                <circle cx="18" cy="18" r="16" fill="none" stroke="var(--ergo-line-2)" stroke-width="1.5"/>
+              </svg>
+              <svg width="12" height="13" viewBox="0 0 12 13" fill="none">
+                <rect x="1.5" y="6" width="9" height="7" rx="1.5" fill="#C0C4D0"/>
+                <path d="M3 6V4.5a3 3 0 0 1 6 0V6" stroke="#C0C4D0" stroke-width="1.4" fill="none"/>
+              </svg>
+            </div>
+          </div>
+          <div class="lesson-card locked-card">
+            <div class="lesson-thumb" style="background:var(--ergo-surface-2);">
+              <!-- 4-node chain -->
+              <svg width="88" height="60" viewBox="0 0 88 60" fill="none">
+                <circle cx="12" cy="30" r="8" fill="var(--ergo-surface-2)" stroke="var(--ch3)" stroke-width="1.6" opacity="0.5"/>
+                <circle cx="34" cy="30" r="8" fill="var(--ergo-surface-2)" stroke="var(--ch3)" stroke-width="1.6" opacity="0.5"/>
+                <circle cx="56" cy="30" r="8" fill="var(--ergo-surface-2)" stroke="var(--ch3)" stroke-width="1.6" opacity="0.5"/>
+                <circle cx="78" cy="30" r="8" fill="var(--ergo-surface-2)" stroke="var(--ch3)" stroke-width="1.6" opacity="0.5"/>
+                <line x1="21" y1="30" x2="25" y2="30" stroke="var(--ch3)" stroke-width="1.4" opacity="0.5" marker-end="url(#arr3b)"/>
+                <line x1="43" y1="30" x2="47" y2="30" stroke="var(--ch3)" stroke-width="1.4" opacity="0.5" marker-end="url(#arr3b)"/>
+                <line x1="65" y1="30" x2="69" y2="30" stroke="var(--ch3)" stroke-width="1.4" opacity="0.5" marker-end="url(#arr3b)"/>
+                <defs>
+                  <marker id="arr3b" markerWidth="5" markerHeight="5" refX="4" refY="2.5" orient="auto">
+                    <path d="M0,0 L5,2.5 L0,5 Z" fill="var(--ch3)" opacity="0.5"/>
+                  </marker>
+                </defs>
+              </svg>
+            </div>
+            <div class="lesson-meta">
+              <div class="lesson-title">Longer Patterns</div>
+              <div class="lesson-desc">Transfer the method: THH vs HTH (8 vs 10).</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Lesson 7: The Overlap Shortcut — LOCKED -->
+        <div class="lesson-row">
+          <div class="node-wrap">
+            <div class="node locked">
+              <svg class="node-ring" viewBox="0 0 36 36">
+                <circle cx="18" cy="18" r="16" fill="none" stroke="var(--ergo-line-2)" stroke-width="1.5"/>
+              </svg>
+              <svg width="12" height="13" viewBox="0 0 12 13" fill="none">
+                <rect x="1.5" y="6" width="9" height="7" rx="1.5" fill="#C0C4D0"/>
+                <path d="M3 6V4.5a3 3 0 0 1 6 0V6" stroke="#C0C4D0" stroke-width="1.4" fill="none"/>
+              </svg>
+            </div>
+          </div>
+          <div class="lesson-card locked-card">
+            <div class="lesson-thumb" style="background:var(--ergo-surface-2);">
+              <!-- Σ2^L viz -->
+              <svg width="88" height="60" viewBox="0 0 88 60" fill="none">
+                <text x="18" y="38" font-family="JetBrains Mono,monospace" font-weight="700" font-size="28" fill="var(--ch3)" opacity="0.4">Σ</text>
+                <!-- Chip 2¹ -->
+                <rect x="38" y="14" width="14" height="14" rx="4" fill="var(--ch3)" opacity="0.2" stroke="var(--ch3)" stroke-width="1.2" opacity2="0.4"/>
+                <text x="45" y="25" text-anchor="middle" font-family="JetBrains Mono,monospace" font-weight="700" font-size="8" fill="var(--ch3)" opacity="0.5">2¹</text>
+                <!-- Chip 2² -->
+                <rect x="56" y="22" width="14" height="14" rx="4" fill="var(--ch3)" opacity="0.25" stroke="var(--ch3)" stroke-width="1.2"/>
+                <text x="63" y="33" text-anchor="middle" font-family="JetBrains Mono,monospace" font-weight="700" font-size="8" fill="var(--ch3)" opacity="0.5">2²</text>
+                <!-- Chip 2³ -->
+                <rect x="72" y="32" width="14" height="14" rx="4" fill="var(--ch3)" opacity="0.3" stroke="var(--ch3)" stroke-width="1.2"/>
+                <text x="79" y="43" text-anchor="middle" font-family="JetBrains Mono,monospace" font-weight="700" font-size="8" fill="var(--ch3)" opacity="0.5">2³</text>
+              </svg>
+            </div>
+            <div class="lesson-meta">
+              <div class="lesson-title">The Overlap Shortcut</div>
+              <div class="lesson-desc">One line: E = Σ 2<sup>L</sup>, with a martingale proof.</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ════ CHAPTER 4: ON THE ROADMAP ════ -->
+        <div style="padding-left:52px;margin-bottom:4px;margin-top:var(--s5);">
+          <div class="chapter-label" style="color:var(--ch4);opacity:0.6;padding-left:0;margin-top:0;">On the Roadmap</div>
+        </div>
+
+        <!-- Lesson 8: Weighted Coins & Dice — ROADMAP -->
+        <div class="lesson-row">
+          <div class="node-wrap" style="opacity:0.45;">
+            <div class="node roadmap" style="width:24px;height:24px;">
+              <svg style="width:36px;height:36px;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);" viewBox="0 0 36 36">
+                <circle cx="18" cy="18" r="16" fill="none" stroke="var(--ergo-line-2)" stroke-width="1.5"/>
+              </svg>
+            </div>
+          </div>
+          <div class="lesson-card roadmap-card" style="transform:scale(0.97);transform-origin:left center;">
+            <div class="lesson-thumb" style="background:var(--ergo-surface-2);width:72px;height:60px;">
+              <!-- Dice viz -->
+              <svg width="72" height="60" viewBox="0 0 72 60" fill="none">
+                <!-- Die 1 -->
+                <rect x="6" y="10" width="26" height="26" rx="6" fill="var(--ergo-surface-2)" stroke="var(--ch4)" stroke-width="1.5" opacity="0.5"/>
+                <circle cx="12" cy="16" r="2.5" fill="var(--ch4)" opacity="0.4"/>
+                <circle cx="19" cy="23" r="2.5" fill="var(--ch4)" opacity="0.4"/>
+                <circle cx="26" cy="30" r="2.5" fill="var(--ch4)" opacity="0.4"/>
+                <!-- Die 2 -->
+                <rect x="38" y="18" width="26" height="26" rx="6" fill="var(--ergo-surface-2)" stroke="var(--ch4)" stroke-width="1.5" opacity="0.5"/>
+                <circle cx="44" cy="24" r="2.5" fill="var(--ch4)" opacity="0.4"/>
+                <circle cx="51" cy="31" r="2.5" fill="var(--ch4)" opacity="0.4"/>
+                <circle cx="58" cy="24" r="2.5" fill="var(--ch4)" opacity="0.4"/>
+                <circle cx="58" cy="38" r="2.5" fill="var(--ch4)" opacity="0.4"/>
+              </svg>
+            </div>
+            <div class="lesson-meta">
+              <div class="lesson-title" style="font-size:14px;color:var(--ergo-ink-2);">Weighted Coins &amp; Dice</div>
+              <div class="lesson-desc" style="font-size:12px;">Beyond fair coins: biased flips and larger alphabets.</div>
+            </div>
+          </div>
+        </div>
+
+      </div><!-- end position:relative wrapper -->
+    </div><!-- end journey-col -->
+
+    <!-- RIGHT: Active Lesson Detail Card -->
+    <div>
+      <div class="detail-card">
+        <div class="detail-chapter-label">Chapter 2 · Racing &amp; Walks</div>
+
+        <div class="detail-header">
+          <div class="detail-title">Penney's Game</div>
+          <div class="progress-ring-wrap">
+            <!-- Progress ring SVG: 40% -->
+            <svg width="64" height="64" viewBox="0 0 64 64">
+              <circle cx="32" cy="32" r="26" fill="none" stroke="var(--ergo-line-2)" stroke-width="5"/>
+              <circle cx="32" cy="32" r="26" fill="none" stroke="var(--ch2)" stroke-width="5"
+                stroke-dasharray="65.3 163.4"
+                stroke-linecap="round"
+                transform="rotate(-90 32 32)"/>
+              <text x="32" y="36" text-anchor="middle"
+                font-family="JetBrains Mono,monospace"
+                font-weight="700" font-size="13"
+                fill="var(--ch2)"
+                font-variant-numeric="tabular-nums">40%</text>
+            </svg>
+            <span class="progress-ring-sub">Complete</span>
+          </div>
+        </div>
+
+        <p class="detail-desc">Pick a pattern that beats your opponent's — non-transitively. Explore why no pattern is unbeatable.</p>
+
+        <div class="detail-meta">
+          <div class="detail-meta-item">
+            <!-- Clock icon -->
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+              <circle cx="7" cy="7" r="6" stroke="var(--ergo-ink-3)" stroke-width="1.3"/>
+              <path d="M7 4v3l2 2" stroke="var(--ergo-ink-3)" stroke-width="1.3" stroke-linecap="round"/>
+            </svg>
+            <span>~20 min</span>
+          </div>
+          <div class="detail-meta-item">
+            <!-- Bar chart icon -->
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+              <rect x="1" y="8" width="3" height="5" rx="1" fill="var(--ergo-ink-3)"/>
+              <rect x="5.5" y="5" width="3" height="8" rx="1" fill="var(--ergo-ink-3)"/>
+              <rect x="10" y="2" width="3" height="11" rx="1" fill="var(--ergo-ink-3)"/>
+            </svg>
+            <span>Intermediate</span>
+          </div>
+        </div>
+
+        <button class="start-btn">
+          Start lesson
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+            <path d="M3 8h10M9 4l4 4-4 4" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+  </div><!-- end journey-section -->
+
+  <div class="bottom-spacer"></div>
+
+</div><!-- end page -->
+
+</body>
+</html>

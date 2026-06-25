@@ -1,0 +1,438 @@
+/* --- Lesson shell --- */
+
+.lesson {
+  display: flex;
+  flex-direction: column;
+  /* 100vh counts the area behind the mobile browser toolbar, leaving the sticky
+     action bar under the chrome on first paint; dvh tracks the visible viewport
+     (100vh kept as a fallback for browsers without dvh). */
+  min-height: 100vh;
+  min-height: 100dvh;
+  width: 100%;
+}
+
+/* Laptop: content sits in a centered column; the paper-grain page background
+   shows through seamlessly around it. Top bar and action bar are inside the
+   column, so they align to it automatically. */
+@media (min-width: 768px) {
+  .lesson {
+    max-width: var(--page-max);
+    margin: 0 auto;
+  }
+}
+
+/* Top bar: back / title + phase rail / streak */
+.topbar {
+  display: grid;
+  grid-template-columns: 44px 1fr auto;
+  align-items: center;
+  gap: var(--s3);
+  padding: var(--s3) var(--s4);
+  /* Clear the notch / status bar when edge-to-edge (viewport-fit=cover). */
+  padding-top: calc(var(--s3) + env(safe-area-inset-top));
+  border-bottom: 1px solid var(--rule);
+  background: var(--paper-0);
+  position: sticky;
+  top: 0;
+  z-index: 5;
+}
+
+@media (resolution >= 2dppx) {
+  .topbar {
+    border-bottom-width: 0.5px;
+  }
+}
+
+.topbar__back {
+  width: 44px;
+  height: 44px;
+  border: none;
+  background: transparent;
+  color: var(--graphite);
+  font-size: calc(20px * var(--fs));
+  border-radius: var(--r-md);
+  cursor: pointer;
+}
+.topbar__back:hover:not(:disabled) {
+  background: var(--paper-1);
+  color: var(--ink);
+}
+.topbar__back:disabled {
+  color: var(--graphite-soft);
+  cursor: default;
+}
+.topbar__back:focus-visible {
+  outline: 2px solid var(--quill);
+  outline-offset: 2px;
+}
+
+.topbar__center {
+  grid-column: 2;
+  display: flex;
+  flex-direction: column;
+  gap: var(--s2);
+  min-width: 0;
+}
+
+.topbar__title {
+  font-size: calc(12px * var(--fs));
+  line-height: 16px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--graphite);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.streak {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s1);
+  padding: var(--s1) var(--s2);
+  border: 1px solid var(--rule);
+  border-radius: var(--r-pill);
+  font-family: var(--font-mono);
+  font-size: calc(12px * var(--fs));
+  color: var(--graphite-soft);
+}
+
+/* --- Per-beat progress rail --- */
+
+.rail-row {
+  display: flex;
+  align-items: center;
+  gap: var(--s2);
+  min-width: 0;
+}
+
+/* One segment per beat; horizontally scrollable with a hidden scrollbar so
+   upcoming beats peek at the right edge. Fixed segment width keeps ~4 beats
+   visible on mobile; the laptop max-width caps the rail at ~6. */
+.rail {
+  display: flex;
+  align-items: center;
+  gap: var(--s2);
+  flex: 1 1 auto;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.rail::-webkit-scrollbar {
+  display: none;
+}
+
+.rail__seg {
+  flex: 0 0 auto;
+  width: 40px;
+  padding: var(--s1) 0;
+}
+
+.rail__bar {
+  display: block;
+  height: 4px;
+  border-radius: var(--r-pill);
+  background: var(--seg-tint);
+  transition:
+    height var(--dur-micro) var(--ease-out),
+    opacity var(--dur-micro) var(--ease-out);
+}
+
+/* Phase tints group adjacent beats by color; no phase label text. */
+.rail__seg--bet {
+  --seg-tint: var(--quill);
+}
+.rail__seg--explore {
+  --seg-tint: var(--heads);
+}
+.rail__seg--model {
+  --seg-tint: var(--tails);
+}
+.rail__seg--prove {
+  --seg-tint: var(--correct);
+}
+
+.rail__seg--upcoming .rail__bar {
+  opacity: 0.3;
+}
+.rail__seg--current .rail__bar {
+  height: 6px;
+  box-shadow: var(--e1);
+}
+.rail__seg:hover .rail__bar {
+  opacity: 1;
+}
+
+@media (min-width: 768px) {
+  /* Laptop: the column is wide enough for every beat, so let segments spread to
+     fill the top-bar width instead of scrolling. */
+  .rail__seg {
+    flex: 1 1 auto;
+    width: auto;
+    min-width: 48px;
+  }
+}
+
+/* --- Off-rail bias sandbox chip --- */
+
+.biaschip {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  padding: var(--s1) var(--s3);
+  border: 1px dashed var(--rule);
+  border-radius: var(--r-pill);
+  font-family: var(--font-mono);
+  font-size: calc(12px * var(--fs));
+  color: var(--graphite-soft);
+  background: transparent;
+  white-space: nowrap;
+}
+.biaschip--active {
+  border-style: solid;
+  border-color: var(--mark);
+  color: var(--ink);
+  background: var(--mark-wash);
+}
+
+/* --- Prompt strip --- */
+
+.prompt {
+  padding: var(--s5) var(--s4) var(--s4);
+}
+.prompt__kicker {
+  font-family: var(--font-mono);
+  font-size: calc(12px * var(--fs));
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--quill-strong);
+  margin: 0 0 var(--s2);
+}
+.prompt__text {
+  font-family: var(--font-display);
+  font-size: clamp(1.375rem, 4vw, 2rem);
+  line-height: 1.2;
+  font-weight: 500;
+  font-optical-sizing: auto;
+  letter-spacing: -0.02em;
+  text-wrap: balance;
+  margin: 0;
+}
+.prompt__text code {
+  font-family: var(--font-mono);
+  background: var(--paper-2);
+  border-radius: var(--r-xs);
+  padding: 0 var(--s1);
+}
+
+/* --- Interaction region --- */
+
+.region {
+  flex: 1 1 auto;
+  padding: 0 var(--s4) var(--s7);
+}
+
+/* Laptop: scale prompt type up one step and let the interaction region fill
+   the taller column (docs/ui_design_system.md "Vertical fill"). */
+@media (min-width: 768px) {
+  .prompt {
+    padding: var(--s6) var(--s4) var(--s5);
+  }
+  .region {
+    min-height: 55vh;
+    padding: 0 var(--s4) var(--s8);
+  }
+}
+
+.stub {
+  border: 1px solid var(--rule);
+  border-radius: var(--r-lg);
+  background: var(--paper-1);
+  padding: var(--s4);
+}
+.stub__type {
+  font-family: var(--font-mono);
+  font-size: calc(11px * var(--fs));
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--graphite-soft);
+  margin: 0 0 var(--s3);
+}
+.stub__note {
+  color: var(--graphite);
+  margin: var(--s3) 0 0;
+  font-size: calc(14px * var(--fs));
+}
+
+.chips {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s2);
+}
+.chip {
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  padding: var(--s2) var(--s3);
+  border: 1px solid var(--rule);
+  border-radius: var(--r-md);
+  background: var(--paper-0);
+  font-size: calc(15px * var(--fs));
+}
+
+.compare {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s3);
+}
+.compare__card {
+  flex: 1 1 0;
+  min-width: 7rem;
+  text-align: center;
+  padding: var(--s5) var(--s3);
+  border: 1.5px solid var(--quill);
+  border-radius: var(--r-lg);
+  background: var(--quill-tint);
+  font-family: var(--font-mono);
+  font-size: calc(28px * var(--fs));
+  font-weight: 600;
+  color: var(--quill-strong);
+}
+/* Interactive variant (when the fixture authors `previews`): the card is a tap
+   target that reveals its pattern's near-miss line. */
+.compare__card--tap {
+  appearance: none;
+  cursor: pointer;
+  transition:
+    box-shadow var(--dur-micro) var(--ease-out),
+    transform var(--dur-micro) var(--ease-out);
+}
+.compare__card--tap:hover {
+  box-shadow: var(--paper-shadow-1);
+}
+.compare__card--tap:focus-visible {
+  outline: 2px solid var(--quill);
+  outline-offset: 2px;
+}
+.compare__card--on {
+  border-color: var(--quill-strong);
+  box-shadow: var(--press-deboss), 0 0 0 3px var(--quill-tint);
+}
+.compare__preview {
+  margin-top: var(--s3);
+  min-height: 1.5em;
+  text-align: center;
+  line-height: 1.5;
+  color: var(--ink);
+  font-size: calc(14px * var(--fs));
+}
+
+.token-row {
+  display: flex;
+  gap: var(--s2);
+  flex-wrap: wrap;
+}
+.token {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0 var(--s2);
+  border: 1px solid var(--rule);
+  border-radius: var(--r-sm);
+  background: var(--paper-0);
+  font-family: var(--font-mono);
+  font-weight: 500;
+  font-size: calc(18px * var(--fs));
+  box-shadow: var(--press-deboss);
+}
+.token--state {
+  color: var(--quill);
+}
+.token--prob {
+  color: var(--heads);
+}
+.token--const {
+  color: var(--graphite);
+}
+
+/* --- Konva canvas regions (state graph, chart) --- */
+
+.canvas-frame {
+  border: 1px solid var(--rule);
+  border-radius: var(--r-lg);
+  background:
+    /* edge-confined faint grid (docs/ui_design_system.md "Background Texture") */
+    linear-gradient(var(--rule-faint) 1px, transparent 1px) 0 0 / 24px 24px,
+    linear-gradient(90deg, var(--rule-faint) 1px, transparent 1px) 0 0 / 24px 24px,
+    var(--paper-0);
+  background-blend-mode: normal;
+  overflow: hidden;
+  line-height: 0;
+}
+
+/* --- View Transitions (Wave 2-D) --- */
+/*
+ * view-transition-name is applied ONLY via these CSS rules so the property is
+ * never set on live DOM under normal rendering. This prevents the stacking-context
+ * side-effect (and avoids Playwright a11y-tree surprises) when no transition is
+ * in progress.
+ *
+ * The data-vt attribute is written by withViewTransition() BEFORE startViewTransition
+ * is called, so the "old" snapshot already sees the correct names.
+ */
+
+/* Beat↔beat: tag the interaction region for the directional slide. */
+:root[data-vt='beat'] .region {
+  view-transition-name: beat-region;
+}
+
+/* Home↔lesson hero: tag the LessonPreview on the home side and the first-beat
+   prompt text on the lesson side with the same name so they morph together. */
+:root[data-vt='home-lesson'] .lesson-hero-source {
+  view-transition-name: lesson-hero;
+}
+:root[data-vt='home-lesson'] .prompt__text {
+  view-transition-name: lesson-hero;
+}
+
+/* --- Transition animation overrides --- */
+
+/* Home↔lesson hero morph: flip-beat-paced FLIP using ease-inout. */
+:root[data-vt='home-lesson']::view-transition-group(lesson-hero) {
+  animation-duration: var(--flip-beat);
+  animation-timing-function: var(--ease-inout);
+}
+:root[data-vt='home-lesson']::view-transition-old(lesson-hero),
+:root[data-vt='home-lesson']::view-transition-new(lesson-hero) {
+  animation-duration: var(--flip-beat);
+  animation-timing-function: var(--ease-inout);
+}
+
+/* Beat↔beat directional slide: region slides out left and in right. */
+:root[data-vt='beat']::view-transition-old(beat-region) {
+  animation: vt-beat-out var(--dur-base) var(--ease-inout) both;
+}
+:root[data-vt='beat']::view-transition-new(beat-region) {
+  animation: vt-beat-in var(--dur-base) var(--ease-inout) both;
+}
+
+@keyframes vt-beat-out {
+  to {
+    opacity: 0;
+    transform: translateX(-12px);
+  }
+}
+@keyframes vt-beat-in {
+  from {
+    opacity: 0;
+    transform: translateX(12px);
+  }
+}
+

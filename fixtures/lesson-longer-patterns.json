@@ -40,7 +40,7 @@
     {
       "beatId": "pattern-pick",
       "required": true,
-      "prompt": "Lock in the pair we'll work with.",
+      "prompt": "Here are the two patterns we'll build: THH and HTH. Review the compare cards, then continue.",
       "interaction": {
         "type": "patternPick",
         "patterns": ["THH", "HTH"],
@@ -54,7 +54,7 @@
     {
       "beatId": "transfer-primer",
       "required": false,
-      "prompt": "One word before we slide things around.",
+      "prompt": "Read what self-overlap means, then continue to find HTH's overlaps.",
       "interaction": {
         "type": "primer",
         "variant": "custom",
@@ -70,7 +70,7 @@
     {
       "beatId": "simulate",
       "required": true,
-      "prompt": "Flip until THH appears. Feel the deeper, 4-state graph — and watch a near-miss.",
+      "prompt": "Press Flip and watch the state chip advance toward THH. Keep flipping until THH appears and you see a near-miss.",
       "interaction": {
         "type": "coinSim",
         "mode": "free",
@@ -89,7 +89,7 @@
       "beatId": "overlap-ruler",
       "required": true,
       "pattern": "HTH",
-      "prompt": "Slide HTH over itself. Where does the start reappear at the end? Each overlap adds a 2^L term.",
+      "prompt": "Tap each row to slide HTH over itself and check for a match where the start reappears at the end. An overlap of length L adds 2^L flips (2 to the power L) to the expected wait.",
       "interaction": { "type": "autocorrelationRuler" },
       "interviewNote": "Sliding a pattern over itself is the autocorrelation / Guibas–Odlyzko correlation set; the border lengths are exactly the overlaps that set the expected wait.",
       "feedback": {
@@ -102,10 +102,30 @@
       }
     },
     {
+      "beatId": "overlap-why",
+      "required": false,
+      "prompt": "Optional: why each overlap is worth 2^L.",
+      "interaction": {
+        "type": "primer",
+        "variant": "custom",
+        "title": "Why an overlap of length L is worth 2^L",
+        "body": "A fresh $1 bettor steps in before every flip, each betting the pattern begins right now. A fair coin doubles a winning bet, so a bettor who has called L flips correctly is holding 2^L. The moment the pattern lands, the only bettors still holding money are the ones whose calls match the pattern's start and its end at once \u2014 exactly the self-overlaps the ruler finds. Each overlap of length L leaves one such survivor with 2^L, and because every bet is fair, the average wait equals the cash on the table: HTH's overlaps of length 1 and 3 give 2\u00b9 + 2\u00b3 = 2 + 8 = 10.",
+        "collapsible": true
+      },
+      "feedback": {
+        "correct": "Each overlap = one fair bet still alive = 2^L on the table.",
+        "hints": [
+          "A fair coin doubles a winning bet.",
+          "After L correct flips, a bettor holds 2^L.",
+          "Survivors are exactly your overlaps \u2014 sum the 2^L."
+        ]
+      }
+    },
+    {
       "beatId": "failure-edge",
       "required": true,
       "maxHintLevel": 2,
-      "prompt": "On the THH graph: you've matched TH. The next flip is make-or-break. Where does each outcome send you?",
+      "prompt": "On the THH graph, tap the destination state for each outcome \u2014 H and T \u2014 then press Check.",
       "interaction": {
         "type": "stateTap",
         "transitions": [
@@ -127,7 +147,7 @@
       "required": true,
       "pattern": "THH",
       "maxHintLevel": 2,
-      "prompt": "Build the wait-time system for THH. E₀ is worked; complete E₁ and E₂.",
+      "prompt": "Tap the tiles into the slots to complete the wait-time equations for THH. E₀ is worked out \u2014 complete E₁ and E₂.",
       "interaction": {
         "type": "equationTiles",
         "bank": [
@@ -211,13 +231,12 @@
     {
       "beatId": "guided-solve",
       "required": true,
-      "prompt": "Solve both systems. What are the waits?",
+      "prompt": "You built THH's equations and found HTH's overlaps. Type each pattern's average wait.",
       "interaction": {
-        "type": "mcq",
-        "options": [
-          { "id": "right", "label": "THH = 8, HTH = 10", "correct": true },
-          { "id": "swap", "label": "THH = 10, HTH = 8", "correct": false },
-          { "id": "same", "label": "Both 8", "correct": false }
+        "type": "answerEntry",
+        "fields": [
+          { "id": "thh", "label": "Average flips to see THH", "accept": ["8"], "placeholder": "?", "suffix": "flips" },
+          { "id": "hth", "label": "Average flips to see HTH", "accept": ["10"], "placeholder": "?", "suffix": "flips" }
         ]
       },
       "feedback": {
@@ -245,7 +264,7 @@
       "pattern": "HTH",
       "introducesSymbol": "\u03a32^L",
       "groundedBy": ["overlap-ruler"],
-      "prompt": "Add HTH's overlap chips. Each overlap length L drops a 2^L tile; the sum is the wait.",
+      "prompt": "Each tile is one of HTH's overlaps. Tap each tile to add its 2^L value and build HTH's wait.",
       "interaction": { "type": "sumTiles" },
       "feedback": {
         "correct": "2\u00b9 + 2\u00b3 = 2 + 8 = 10 \u2014 the border sum is the wait.",
@@ -260,13 +279,12 @@
       "beatId": "overlap-compare",
       "required": true,
       "comparison": true,
-      "prompt": "What's the single difference that makes HTH wait longer than THH?",
+      "prompt": "What makes HTH wait longer? Match each pattern to how it recovers from a near-miss.",
       "interaction": {
-        "type": "mcq",
-        "options": [
-          { "id": "selfloop", "label": "HTH keeps a matched H on a near-miss; THH doesn't", "correct": true },
-          { "id": "length", "label": "HTH is longer", "correct": false },
-          { "id": "luck", "label": "Nothing — it's random", "correct": false }
+        "type": "retrievalGrid",
+        "pairs": [
+          { "left": "THH on a near-miss", "right": "Resets further back" },
+          { "left": "HTH on a near-miss", "right": "Keeps a matched H" }
         ]
       },
       "feedback": {
@@ -281,7 +299,7 @@
     {
       "beatId": "recap",
       "required": true,
-      "prompt": "What you transferred to brand-new patterns.",
+      "prompt": "Reveal the recap to see what you transferred to brand-new patterns: THH = 8, HTH = 10.",
       "interaction": { "type": "recap" },
       "feedback": {
         "correct": "You built, solved, and overlap-checked two unseen patterns: THH = 8, HTH = 10.",

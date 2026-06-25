@@ -26,6 +26,9 @@ import { MilestoneSeal } from '../habit/MilestoneSeal'
 import { StreakTally } from '../habit/StreakTally'
 import { analytics } from '../analytics/events'
 import { LessonCelebration } from './LessonCelebration'
+import { withViewTransition } from '../app/viewTransition'
+import { useOnlineStatus } from '../app/useOnlineStatus'
+import { StatusNote } from '../ui/StatusNote'
 
 // `lesson` is optional: `/dev/lesson` renders the local fixture (no prop, no
 // persistence), while the authed route passes a Firestore-loaded lesson plus
@@ -50,6 +53,7 @@ export function LessonPlayer({
   const [lesson] = useState<Lesson>(() => lessonProp ?? loadFlagshipLesson())
   const persist = !!persistence?.uid
   const lessonId = persistence?.lessonId ?? lesson.lessonId
+  const online = useOnlineStatus()
 
   // Beats render for a track when they carry no `track` (or 'both'), or match
   // the active track. Track-exclusive beats are authored `required: false`, so
@@ -67,6 +71,11 @@ export function LessonPlayer({
     if (!initialSnapshot) return 0
     const i = visibleBeats.findIndex((b) => b.beatId === initialSnapshot.beatId)
     return i >= 0 ? i : 0
+  })
+  const [showRestoringNote, setShowRestoringNote] = useState(() => {
+    if (!initialSnapshot) return false
+    const i = visibleBeats.findIndex((b) => b.beatId === initialSnapshot.beatId)
+    return i > 0
   })
   const [done, setDone] = useState(false)
   const [needsReview, setNeedsReview] = useState(false)
@@ -91,6 +100,7 @@ export function LessonPlayer({
     initialSnapshot ? snapshotToLessonState(initialSnapshot) : {},
   )
   const [completion, setCompletion] = useState<CompleteLessonResult | null>(null)
+  const [completionError, setCompletionError] = useState(false)
   // Habit loop (Phase 17): the streak tally shown in the top bar.
   const [streak, setStreak] = useState<Streak>(ZERO_STREAK)
   const reducedMotion = useReducedMotion()
@@ -126,15 +136,35 @@ export function LessonPlayer({
   // never gates unlock. A future L4 mixed review re-surfaces beats when false.
   const mastered = computeMastered(visibleBeats, maxHintLevelByBeat)
 
+  // Stable beat-navigation callbacks for withViewTransition. These are defined
+  // with useCallback so the React Compiler can correctly analyse them as
+  // side-effectful (state-setter calls), preventing it from silently skipping
+  // the withViewTransition call site as a pure no-op.
+  const doAdvanceBeat = useCallback(() => {
+    setIndex((i) => Math.min(i + 1, visibleBeats.length - 1))
+  }, [visibleBeats.length])
+
+  const doBackBeat = useCallback(() => {
+    setDone(false)
+    setIndex((i) => Math.max(i - 1, 0))
+  }, [])
+
   // Referentially stable so the equation-builder's report-up effect doesn't loop.
+  const clearRestoringNote = useCallback(() => {
+    setShowRestoringNote(false)
+  }, [])
+
   const setLessonState = useCallback(
-    (patch: Partial<LessonState>) =>
-      setLessonStateRaw((prev) => ({ ...prev, ...patch })),
-    [],
+    (patch: Partial<LessonState>) => {
+      clearRestoringNote()
+      setLessonStateRaw((prev) => ({ ...prev, ...patch }))
+    },
+    [clearRestoringNote],
   )
 
   const onHintLevelChange = useCallback(
     (level: number) => {
+      clearRestoringNote()
       setHintLevelByBeat((prev) =>
         prev[beat.beatId] === level ? prev : { ...prev, [beat.beatId]: level },
       )
@@ -157,7 +187,7 @@ export function LessonPlayer({
         }))
       }
     },
-    [beat.beatId, beat.maxHintLevel],
+    [beat.beatId, beat.maxHintLevel, clearRestoringNote],
   )
 
   // --- Persistence (Phase 15) -------------------------------------------------
@@ -243,7 +273,40 @@ export function LessonPlayer({
   // --- Completion (Phase 16) --------------------------------------------------
   const completedOnce = useRef(false)
 
+  const submitCompletion = useCallback(
+    (beats: string[]) => {
+      setCompletionError(false)
+      writer.flush()
+      return completeLesson({
+        lessonId,
+        completedBeats: beats,
+        needsReview,
+        derived: {
+          initialPrediction: lessonState.initialPrediction ?? null,
+          finalPrediction: lessonState.finalPrediction ?? null,
+          empiricalMean: lessonState.empiricalMean ?? null,
+          theoreticalValue: lessonState.theoreticalValue ?? null,
+          simRuns: lessonState.simRuns ?? null,
+          mastered,
+        },
+      })
+        .then((res) => {
+          setCompletion(res)
+          for (const milestoneId of res.awardedMilestones ?? []) {
+            analytics.milestoneEarned({ lessonId, milestoneId })
+          }
+        })
+        .catch((err) => {
+          console.error('completeLesson failed', err)
+          setCompletionError(true)
+          completedOnce.current = false
+        })
+    },
+    [writer, lessonId, needsReview, lessonState, mastered],
+  )
+
   function advance() {
+    clearRestoringNote()
     const firstTime = !completedBeats.includes(beat.beatId)
     const nextCompleted = firstTime
       ? [...completedBeats, beat.beatId]
@@ -277,38 +340,15 @@ export function LessonPlayer({
       setDone(true)
       if (persist && !completedOnce.current) {
         completedOnce.current = true
-        writer.flush()
-        void completeLesson({
-          lessonId,
-          completedBeats: nextCompleted,
-          needsReview,
-          derived: {
-            initialPrediction: lessonState.initialPrediction ?? null,
-            finalPrediction: lessonState.finalPrediction ?? null,
-            empiricalMean: lessonState.empiricalMean ?? null,
-            theoreticalValue: lessonState.theoreticalValue ?? null,
-            simRuns: lessonState.simRuns ?? null,
-            mastered,
-          },
-        })
-          .then((res) => {
-            setCompletion(res)
-            // milestone_earned for each milestone this completion newly awarded
-            // (lesson milestone + course-completion when all three are done).
-            for (const milestoneId of res.awardedMilestones ?? []) {
-              analytics.milestoneEarned({ lessonId, milestoneId })
-            }
-          })
-          .catch(() => {})
+        void submitCompletion(nextCompleted)
       }
       return
     }
-    setIndex((i) => Math.min(i + 1, visibleBeats.length - 1))
+    withViewTransition(doAdvanceBeat, 'beat')
   }
 
   function back() {
-    setDone(false)
-    setIndex((i) => Math.max(i - 1, 0))
+    withViewTransition(doBackBeat, 'beat')
   }
 
   const atStart = index === 0
@@ -346,7 +386,23 @@ export function LessonPlayer({
                   : ''}
               {completion?.unlockedLessonId ? ' · next lesson unlocked' : ''}
             </p>
-            <MilestoneSeal meta={milestone} earned />
+            {completionError && (
+              <p className="done-note__error" role="alert">
+                We couldn't save your progress, so the next lesson may stay locked.{' '}
+                <button
+                  type="button"
+                  className="btn btn--secondary"
+                  onClick={() => {
+                    if (completedOnce.current) return
+                    completedOnce.current = true
+                    void submitCompletion(completedBeats)
+                  }}
+                >
+                  Try again
+                </button>
+              </p>
+            )}
+            <MilestoneSeal meta={milestone} earned stamped />
           </div>
         </LessonCelebration>
 
@@ -398,6 +454,20 @@ export function LessonPlayer({
         </div>
         <StreakTally count={streak.count} compact />
       </header>
+
+      {persist && !online && (
+        <StatusNote tone="offline">
+          Saved locally — syncs when you're back online.
+        </StatusNote>
+      )}
+      {persist && showRestoringNote && (
+        <StatusNote tone="info">Restoring your work…</StatusNote>
+      )}
+      {persist && writer.writeError && (
+        <StatusNote tone="error">
+          Couldn't sync your progress — saved locally.
+        </StatusNote>
+      )}
 
       <section className="prompt">
         {!beat.required && <p className="prompt__kicker">Extension</p>}

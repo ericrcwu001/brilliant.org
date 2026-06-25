@@ -9,6 +9,7 @@ import { BeatShell } from '../BeatShell'
 import { resolveFeedback } from '../feedback'
 import type { FeedbackView } from '../FeedbackStrip'
 import { analytics } from '../../analytics/events'
+import { useSliderControl } from '../../ui/useSliderControl'
 
 export function SliderBeat(props: BeatProps) {
   const { beat, lessonId, pattern, automaton, reducedMotion, isLast, onAdvance, setLessonState } =
@@ -24,6 +25,30 @@ export function SliderBeat(props: BeatProps) {
   const [value, setValue] = useState(mid)
   const [moved, setMoved] = useState(false)
   const [locked, setLocked] = useState(false)
+
+  const {
+    groupProps,
+    trackProps,
+    labelProps,
+    outputProps,
+    thumbProps,
+    inputProps,
+    inputRef,
+    trackRef,
+    output,
+    percent,
+  } = useSliderControl({
+    value,
+    onChange: (v) => {
+      if (locked) return
+      setValue(v)
+      setMoved(true)
+    },
+    minValue: min,
+    maxValue: max,
+    step,
+    label: beat.prompt,
+  })
 
   if (interaction.type !== 'slider') return null
 
@@ -50,6 +75,10 @@ export function SliderBeat(props: BeatProps) {
 
   const numlineClass =
     'numline' + (reducedMotion ? ' numline--still' : '') + (locked ? ' numline--locked' : '')
+
+  const { className: groupClassName, ...restGroupProps } = groupProps
+  const { className: trackClassName, ...restTrackProps } = trackProps
+  const { className: thumbClassName, style: thumbStyle, ...restThumbProps } = thumbProps
 
   return (
     <BeatShell
@@ -79,11 +108,27 @@ export function SliderBeat(props: BeatProps) {
             }
       }
     >
-      <div className={numlineClass}>
-        <output className="numline__value" aria-live="polite">
-          {value}
+      <div
+        {...restGroupProps}
+        className={[numlineClass, groupClassName].filter(Boolean).join(' ')}
+        data-testid="prediction-slider"
+      >
+        <label {...labelProps} className="sr-only">
+          {beat.prompt}
+        </label>
+        {!locked && (
+          <p className="numline__instruction" aria-hidden="true">
+            Drag the slider to your estimate, then lock it in.
+          </p>
+        )}
+        <output {...outputProps} className="numline__value">
+          {output}
         </output>
-        <div className="numline__track">
+        <div
+          {...restTrackProps}
+          ref={trackRef}
+          className={['numline__track', trackClassName].filter(Boolean).join(' ')}
+        >
           <div className="numline__rule" aria-hidden="true" />
           {ticks.map((t, i) => (
             <span
@@ -105,21 +150,18 @@ export function SliderBeat(props: BeatProps) {
               </span>
             </span>
           )}
-          <input
-            className="numline__range"
-            type="range"
-            min={min}
-            max={max}
-            step={step}
-            value={value}
-            disabled={locked}
-            aria-label={beat.prompt}
-            aria-valuetext={`${value}${locked ? ', locked prediction' : ''}`}
-            onChange={(e) => {
-              setValue(Number(e.target.value))
-              setMoved(true)
-            }}
-          />
+          <div
+            {...restThumbProps}
+            className={['numline__thumb', thumbClassName].filter(Boolean).join(' ')}
+            style={{ ...thumbStyle, left: `${percent * 100}%` }}
+          >
+            <input
+              {...inputProps}
+              ref={inputRef}
+              className="numline__range"
+              disabled={locked}
+            />
+          </div>
         </div>
       </div>
     </BeatShell>

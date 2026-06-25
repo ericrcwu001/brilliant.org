@@ -104,17 +104,17 @@ const NO_RETRIEVAL_OPENER = new Set(['lesson-longer-patterns'])
 const HERO_TYPES = new Set(['raceSim', 'walkBoard', 'gamblerLedger'])
 // Graded interactions (a "graded beat" for the early-win / opener checks).
 const GRADED_TYPES = new Set([
-  'mcq',
   'retrievalGrid',
   'equationTiles',
   'substitution',
   'patternPick',
   'stateTap',
+  'answerEntry',
 ])
 // The two hardest graded types — never the first graded beat (early-win rule).
 const HARDEST_TYPES = new Set(['equationTiles', 'substitution'])
 // A valid retrieval opener.
-const OPENER_TYPES = new Set(['mcq', 'retrievalGrid'])
+const OPENER_TYPES = new Set(['retrievalGrid'])
 
 function visibleFor(beats: Beat[], track: 'A' | 'B'): Beat[] {
   return beats.filter((b) => (b.track ?? 'both') === 'both' || b.track === track)
@@ -171,7 +171,7 @@ for (const lesson of lessons) {
     }
     if (!NO_RETRIEVAL_OPENER.has(id) && !OPENER_TYPES.has(firstGraded.interaction.type)) {
       problems.push(
-        `first graded beat "${firstGraded.beatId}" (${firstGraded.interaction.type}) is not a retrieval opener (mcq/retrievalGrid)`,
+        `first graded beat "${firstGraded.beatId}" (${firstGraded.interaction.type}) is not a retrieval opener (retrievalGrid)`,
       )
     }
   }

@@ -17,6 +17,10 @@ test-results
 playwright-report
 .playwright-artifacts*
 
+# Stray default-config snapshots from ad-hoc runs.
+# Real VR baselines live in e2e/vr/__screenshots__/ and stay tracked.
+*.spec.ts-snapshots/
+
 # Environment files
 .env
 .env.*

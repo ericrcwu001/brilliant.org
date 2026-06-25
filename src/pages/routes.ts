@@ -22,6 +22,9 @@ export const ROUTES = {
 
 export const FLAGSHIP_LESSON_ID = 'lesson-pattern-hitting-times'
 
+/** The optional warm-up lesson (L0) offered from the first-run welcome screen. */
+export const INTRO_LESSON_ID = 'lesson-first-heads'
+
 export function lessonPath(lessonId: string): string {
   return `/lesson/${lessonId}`
 }

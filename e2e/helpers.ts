@@ -74,8 +74,12 @@ export async function completeLesson(page: Page) {
   await clickPrimary(page, 'Lock prediction')
   await clickPrimary(page, 'Continue')
 
-  // 7 guided-solve (substitution): reveal the algebra, then continue.
-  await page.getByRole('button', { name: 'Show algebra' }).click()
+  // 7 guided-solve (balanceSolve): drive the range to balance at 6, then continue.
+  // Domain: min=0 max=12 step=1; Home→0, 6×ArrowRight→6 (the balance point).
+  const balanceRange = page.locator('.balance__range')
+  await balanceRange.focus()
+  await balanceRange.press('Home')
+  for (let i = 0; i < 6; i++) await balanceRange.press('ArrowRight')
   await clickPrimary(page, 'Continue')
 
   // 8 theory-vs-sim: run a batch, then continue (secondary while running / primary in reduced motion).
@@ -114,11 +118,8 @@ export async function completeLessonTrackA(page: Page) {
   await clickPrimary(page, 'Continue') // primer: state
   await clickPrimary(page, 'Continue') // primer: graph
 
-  // simulate (split): stream warm-up -> reveal graph -> gate -> single-step replay
+  // simulate (split): graph visible from load -> gate -> single-step replay
   const flip = page.getByRole('button', { name: 'Flip', exact: true })
-  await flip.click()
-  await flip.click()
-  await clickPrimary(page, 'Show the machine')
   for (let i = 0; i < 12; i++) await flip.click()
   await expect(primary).toHaveText('Continue')
   await primary.click() // begin the single-stepped replay
@@ -157,8 +158,11 @@ export async function completeLessonTrackA(page: Page) {
   await clickPrimary(page, 'Lock prediction')
   await clickPrimary(page, 'Continue')
 
-  // guided-solve
-  await page.getByRole('button', { name: 'Show algebra' }).click()
+  // guided-solve (balanceSolve): drive the range to balance at 6, then continue.
+  const balanceRange = page.locator('.balance__range')
+  await balanceRange.focus()
+  await balanceRange.press('Home')
+  for (let i = 0; i < 6; i++) await balanceRange.press('ArrowRight')
   await clickPrimary(page, 'Continue')
 
   // theory-vs-sim

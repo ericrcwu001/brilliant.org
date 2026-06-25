@@ -1,0 +1,8 @@
+{
+  "r-xs":   { "$value": "4px",   "$type": "dimension" },
+  "r-sm":   { "$value": "8px",   "$type": "dimension" },
+  "r-md":   { "$value": "12px",  "$type": "dimension" },
+  "r-lg":   { "$value": "16px",  "$type": "dimension" },
+  "r-xl":   { "$value": "20px",  "$type": "dimension" },
+  "r-pill": { "$value": "999px", "$type": "dimension" }
+}

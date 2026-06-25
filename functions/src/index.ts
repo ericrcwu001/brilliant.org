@@ -144,7 +144,20 @@ export const completeLesson = onCall(
       const nextSnap = nextRef ? await tx.get(nextRef) : null
 
       if (progressSnap.get('completionStatus') === 'completed') {
-        // Idempotent: a second completion does not re-write or re-unlock.
+        // Replay = a review. Finishing it satisfies the review so the Study Desk
+        // advances focus to the next lesson (recommendedAction stops returning
+        // 'review'). Cleared even if this pass struggled, per product intent.
+        if (progressSnap.get('needsReview') === true) {
+          tx.set(
+            progressRef,
+            {
+              needsReview: false,
+              updatedAt: FieldValue.serverTimestamp(),
+              schemaVersion: PROGRESS_SCHEMA_VERSION,
+            },
+            { merge: true },
+          )
+        }
         return true
       }
 

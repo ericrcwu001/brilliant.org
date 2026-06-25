@@ -6,6 +6,9 @@
 // `earning` plays the one-time quiet ghost→inked fade on the first Home load
 // after a new earn (Q11). When `onClick` is supplied the seal becomes a button
 // (tap to expand title + status in the gallery, Q20); otherwise it is inert.
+//
+// `stamped` triggers the wax-seal ink-stamp animation (seal--stamped) — used
+// on the completion takeover in LessonPlayer so the seal lands with impact.
 
 import type { MilestoneMeta } from './milestones'
 
@@ -14,17 +17,19 @@ export function MilestoneSeal({
   earned,
   earning = false,
   active = false,
+  stamped = false,
   onClick,
 }: {
   meta: MilestoneMeta
   earned: boolean
   earning?: boolean
   active?: boolean
+  stamped?: boolean
   onClick?: () => void
 }) {
   const className = `seal${earned ? ' seal--earned' : ' seal--ghost'}${
     earning ? ' seal--earning' : ''
-  }${active ? ' seal--active' : ''}`
+  }${active ? ' seal--active' : ''}${stamped ? ' seal--stamped' : ''}`
   const inner = (
     <>
       <span className="seal__ring" aria-hidden="true">

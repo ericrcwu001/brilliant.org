@@ -44,11 +44,15 @@
     {
       "beatId": "pattern-pick",
       "required": true,
-      "prompt": "We'll compare HH against HT side by side, both with a fair coin.",
+      "prompt": "Tap a pattern to preview its near-miss, then continue comparing both.",
       "interaction": {
         "type": "patternPick",
         "patterns": ["HH", "HT"],
-        "mode": "compare"
+        "mode": "compare",
+        "previews": {
+          "HH": "Matched one H, then flip a T: you fall all the way back to the start - no progress kept.",
+          "HT": "Matched one H, then flip another H: you keep a matched H and stay one flip away."
+        }
       },
       "feedback": {
         "correct": "Compare mode locked in: HH vs HT, same fair coin.",
@@ -63,7 +67,7 @@
       "beatId": "primer-half",
       "required": false,
       "track": "A",
-      "prompt": "Before we flip, a quick refresher.",
+      "prompt": "Read the \u00bd refresher below, then continue.",
       "interaction": {
         "type": "primer",
         "variant": "half",
@@ -80,7 +84,7 @@
       "beatId": "primer-state",
       "required": false,
       "track": "A",
-      "prompt": "One more idea before we flip.",
+      "prompt": "Read what a 'state' is, then continue.",
       "interaction": {
         "type": "primer",
         "variant": "state",
@@ -97,7 +101,7 @@
       "beatId": "primer-graph",
       "required": false,
       "track": "A",
-      "prompt": "One more thing before we flip: how to read this picture.",
+      "prompt": "Read the state graph guide below, then continue.",
       "interaction": {
         "type": "primer",
         "variant": "graph",
@@ -113,7 +117,7 @@
     {
       "beatId": "simulate",
       "required": true,
-      "prompt": "Flip the coin and watch the state machine. Where does progress go on each flip?",
+      "prompt": "Press Flip and watch the state chip advance on the machine. Notice where progress goes after each flip.",
       "interaction": {
         "type": "coinSim",
         "mode": "free",
@@ -131,7 +135,7 @@
     {
       "beatId": "failure-edge",
       "required": true,
-      "prompt": "You've got one H so far. The next flip is the make-or-break moment. On the diagram, where does your progress go?",
+      "prompt": "On the diagram, tap the destination state for each next flip (H and T), then press Check.",
       "interaction": {
         "type": "stateTap",
         "transitions": [
@@ -164,7 +168,7 @@
       "beatId": "name-the-overlap",
       "required": false,
       "track": "A",
-      "prompt": "What just happened?",
+      "prompt": "HH and HT handle a near-miss differently. Read this note, then continue.",
       "interaction": {
         "type": "primer",
         "variant": "custom",
@@ -249,7 +253,7 @@
       "beatId": "ground-ev",
       "required": false,
       "track": "A",
-      "prompt": "Before you pick a number, let's watch what \"average\" really means.",
+      "prompt": "Run a few simulations and watch the average settle toward a steady value, then continue.",
       "interaction": {
         "type": "primer",
         "variant": "average",
@@ -265,7 +269,7 @@
     {
       "beatId": "refine-prediction",
       "required": true,
-      "prompt": "Now commit to a number: how many flips, on average, until HH?",
+      "prompt": "Drag the slider to your best estimate of the average wait for HH, then lock it in.",
       "interaction": { "type": "slider", "min": 2, "max": 12, "step": 1 },
       "feedback": {
         "correct": "Locked. We'll mark your prediction on the chart and test it against simulation.",
@@ -279,22 +283,13 @@
     {
       "beatId": "guided-solve",
       "required": true,
-      "prompt": "Tap through the steps to find E0 — the average number of flips until HH. Each step plugs a value we already know into the next line.",
+      "prompt": "What is E[HH] — the average number of flips until HH? It's the value that makes its own equation balance. Slide the beam until the left side (E[HH]) equals the right side.",
       "interaction": {
-        "type": "substitution",
-        "steps": [
-          { "display": "E2 = 0", "substitute": "E2", "resultValue": 0 },
-          {
-            "display": "E1 = 1 + 1/2 E2 + 1/2 E0",
-            "substitute": "E1",
-            "resultValue": 4
-          },
-          {
-            "display": "E0 = 1 + 1/2 E1 + 1/2 E0",
-            "substitute": "E0",
-            "resultValue": 6
-          }
-        ]
+        "type": "balanceSolve",
+        "solveState": "E0",
+        "min": 0,
+        "max": 12,
+        "step": 1
       },
       "feedback": {
         "correct": "E[HH] = 6. Substituting the absorbing state and solving gives the exact expected wait.",
@@ -356,7 +351,7 @@
     {
       "beatId": "recap",
       "required": true,
-      "prompt": "Recap: your prediction, the theory, the simulation, and the overlap insight.",
+      "prompt": "Reveal each recap card to review your prediction, the theory, the simulation, and the overlap insight.",
       "interaction": { "type": "recap" },
       "feedback": {
         "correct": "Look what you just did: you turned a coin question into a little machine, built its equations, and proved HH takes about 6 flips while HT takes 4 — by hand. That's the exact method professionals use.",

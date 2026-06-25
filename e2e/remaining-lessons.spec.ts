@@ -18,8 +18,9 @@ async function primaryClick(page: Page) {
   await p.click({ force: true })
 }
 
-const gradedMcq = async (page: Page, name: RegExp) => {
-  await page.getByRole('radio', { name }).first().click()
+const answerEntry = async (page: Page, values: string[]) => {
+  const inputs = page.locator('.answer-entry__input')
+  for (let i = 0; i < values.length; i++) await inputs.nth(i).fill(values[i])
   await primaryClick(page) // Check
   await primaryClick(page) // Continue
 }
@@ -31,9 +32,27 @@ const predict = async (page: Page, name: RegExp) => {
 
 const primer = (page: Page) => primaryClick(page)
 
+// Drive a "watch it resolve" sim hero (raceSim / gamblerLedger): click the batch
+// "Run N…" action — located by accessible name so it works regardless of which
+// action-bar slot/variant it renders in — then the now-enabled Continue/Finish.
 const runGhost = async (page: Page) => {
-  await page.locator('.actionbar .btn--ghost', { hasText: /Run \d+/ }).first().click()
-  await primaryClick(page)
+  await page.getByRole('button', { name: /Run \d+/ }).first().click()
+  const cont = page.getByRole('button', { name: /^(Continue|Finish)$/ })
+  await expect(cont).toBeEnabled()
+  await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight))
+  await cont.click({ force: true })
+}
+
+// The generic (non-flagship) recap is a two-step generate-then-reveal: the
+// primary action is "Reveal recap" first, then "Finish" once revealed.
+const recapFinish = async (page: Page) => {
+  // The generic (non-flagship) recap is a two-step generate-then-reveal sharing
+  // one primary slot whose label flips in place: "Reveal recap" -> "Finish".
+  // Target each action by its exact label so a click never races the flip.
+  await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight))
+  await page.getByRole('button', { name: 'Reveal recap' }).click({ force: true })
+  await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight))
+  await page.getByRole('button', { name: /^(Finish|Continue)$/ }).click({ force: true })
 }
 
 const tapAllThenContinue = async (page: Page, selector: string) => {
@@ -82,11 +101,6 @@ const eqRows = async (
 
 const simulate = async (page: Page, split: boolean) => {
   const flip = page.getByRole('button', { name: 'Flip', exact: true })
-  if (split) {
-    await flip.click()
-    await flip.click()
-    await primaryClick(page) // "Show the machine"
-  }
   for (let i = 0; i < 12; i++) await flip.click()
   await primaryClick(page) // Continue → start replay
   if (split) await primaryClick(page) // Step → near-miss
@@ -109,44 +123,48 @@ function urlFor(lessonId: string, track: 'A' | 'B') {
 // ── Per-lesson completion scripts (track-agnostic unless noted) ──────────────
 
 async function completeL2(page: Page) {
-  await gradedMcq(page, /HH takes longer/)
+  await matchGrid(page, ['6', '4', '2']) // recall-6-4
   await primer(page)
   await predict(page, /coin-flip tie/)
   await runGhost(page) // race-the-tie
-  await gradedMcq(page, /next single flip/)
-  await gradedMcq(page, /^THH$/)
+  await matchGrid(page, ['HH wins', 'HT wins']) // first-step-split
+  await answerEntry(page, ['THH']) // pick-your-counter
   await runGhost(page) // race-the-counter
   await primer(page)
-  await gradedMcq(page, /chance from here/)
+  await matchGrid(page, ['No +1, just a split', '+1 every flip']) // win-prob-tiles
   await page.locator('.wheel__options .token').first().click()
   await primaryClick(page) // non-transitive-loop continue
-  await primaryClick(page) // recap finish
+  await recapFinish(page)
   await done(page)
 }
 
 async function completeL3(page: Page) {
-  await gradedMcq(page, /resets/)
+  await matchGrid(page, ['Reset to the start', 'HH complete']) // recall-overlap
   await predict(page, /About 50/)
   await primer(page)
   await primaryClick(page) // walk-once (hero)
-  await gradedMcq(page, /stops/)
+  await matchGrid(page, ['Broke, game ends', 'Goal, game ends', 'Keep flipping']) // boundary-edge
   await primer(page)
   await eqRows(page, [['0', '1/2', E(3), '1/2', E(1)]], false) // prob-tiles
   await eqRows(page, [['1', '1/2', E(3), '1/2', E(1)]], false) // duration-tiles
-  await gradedMcq(page, /average flips = 4/)
+  await answerEntry(page, ['1/2', '4']) // guided-solve
   await primaryClick(page) // house-edge (hero)
-  await primaryClick(page) // recap finish
+  await recapFinish(page)
   await done(page)
 }
 
 async function completeL4(page: Page) {
-  await matchGrid(page, ['6', '4', '8', '7/8'])
+  await matchGrid(page, ['6', '4', '8', '7/8']) // retrieval-grid opener
   await primer(page)
-  await gradedMcq(page, /HTH/)
-  await gradedMcq(page, /tie/)
-  await gradedMcq(page, /duration/)
-  await gradedMcq(page, /Full reset/)
-  await primaryClick(page) // recap finish
+  await matchGrid(page, ['10', '8', '6']) // which-waits-longest
+  await runGhost(page) // race-or-wait (raceSim)
+  await matchGrid(page, ['+1 every flip', 'No +1']) // plus-one-or-not
+  // weak-node (stateTap on HH): E1 on T -> E0 (reset), E1 on H -> E2 (done).
+  await page.locator('.tap-card').nth(0).getByRole('radio', { name: Estate(0) }).click()
+  await page.locator('.tap-card').nth(1).getByRole('radio', { name: Estate(2) }).click()
+  await primaryClick(page) // Check
+  await primaryClick(page) // Continue
+  await recapFinish(page)
   await done(page)
 }
 
@@ -156,6 +174,7 @@ async function completeL5(page: Page, split: boolean) {
   await primer(page) // transfer-primer
   await simulate(page, split)
   await tapAllThenContinue(page, '.ruler__row') // overlap-ruler
+  await primer(page) // overlap-why deep-dive (collapsed)
   // failure-edge: E2 on H → E3, E2 on T → E1.
   await page.locator('.tap-card').nth(0).getByRole('radio', { name: Estate(3) }).click()
   await page.locator('.tap-card').nth(1).getByRole('radio', { name: Estate(1) }).click()
@@ -169,12 +188,12 @@ async function completeL5(page: Page, split: boolean) {
     ],
     split,
   )
-  await gradedMcq(page, /THH = 8, HTH = 10/)
+  await answerEntry(page, ['8', '10']) // guided-solve
   await page.getByRole('button', { name: /Run \d+ simulations/ }).click()
   await page.getByRole('button', { name: 'Continue', exact: true }).click()
   await tapAllThenContinue(page, '.sumtiles__chips .token') // border-sum
-  await gradedMcq(page, /keeps a matched H/)
-  await primaryClick(page) // recap finish
+  await matchGrid(page, ['Resets further back', 'Keeps a matched H']) // overlap-compare
+  await recapFinish(page)
   await done(page)
 }
 
@@ -187,7 +206,7 @@ async function completeL6(page: Page) {
   await tapAllThenContinue(page, '.sumtiles__chips .token') // apply-THH
   await tapAllThenContinue(page, '.sumtiles__chips .token') // apply-HTH
   await tapAllThenContinue(page, '.triplet__card') // triangulation
-  await primaryClick(page) // recap finish
+  await recapFinish(page)
   await done(page)
 }
 
@@ -220,6 +239,6 @@ test('L0 First Heads is completable at the dev route', async ({ page }) => {
   await primer(page) // ½ primer
   await simulate(page, false) // count-by-hand coinSim (single-letter H: graceful replay)
   await primer(page) // average primer
-  await gradedMcq(page, /About 2/)
+  await answerEntry(page, ['2']) // l0-count
   await done(page)
 })

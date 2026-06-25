@@ -40,7 +40,7 @@
     {
       "beatId": "l0-half",
       "required": false,
-      "prompt": "Before we flip, a quick refresher.",
+      "prompt": "\u00bd means 1 in 2 \u2014 read the card, then continue.",
       "interaction": {
         "type": "primer",
         "variant": "half",
@@ -56,7 +56,7 @@
     {
       "beatId": "l0-flip",
       "required": true,
-      "prompt": "Flip the coin and watch the state chip. How quickly does the first heads arrive?",
+      "prompt": "Press the Flip button and watch the state chip advance toward H. How quickly does the first heads arrive?",
       "interaction": {
         "type": "coinSim",
         "mode": "free",
@@ -75,7 +75,7 @@
     {
       "beatId": "l0-ground",
       "required": false,
-      "prompt": "Before you commit to a number, let's watch what \"average\" really means.",
+      "prompt": "Run the demo a few times and watch the running average settle, then continue.",
       "interaction": {
         "type": "primer",
         "variant": "average",
@@ -91,13 +91,11 @@
     {
       "beatId": "l0-count",
       "required": true,
-      "prompt": "So, on average, how many flips until the first heads?",
+      "prompt": "Look at where the average settled, then type the average number of flips until the first heads.",
       "interaction": {
-        "type": "mcq",
-        "options": [
-          { "id": "two", "label": "About 2 flips", "correct": true },
-          { "id": "four", "label": "About 4 flips", "correct": false },
-          { "id": "ten", "label": "About 10 flips", "correct": false }
+        "type": "answerEntry",
+        "fields": [
+          { "id": "count", "label": "Average flips until the first heads", "accept": ["2"], "placeholder": "?", "suffix": "flips" }
         ]
       },
       "feedback": {
