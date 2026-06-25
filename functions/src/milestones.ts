@@ -20,25 +20,13 @@ export const LESSON_MILESTONES: Record<string, string> = {
   'lesson-overlap-shortcut': 'martingale-mastered',
 }
 
-// Mid-course milestone: awarded once the first three lessons (the flagship plus
-// the question/arena extensions) are completed.
+// Mid-course milestone: awarded once the first three flagship lessons are
+// completed. Flagship-only (hand-authored; not modeled in the course schema).
 export const MID_COURSE_MILESTONE = 'three-lessons-complete'
 export const MID_COURSE_PATH = [
   'lesson-pattern-hitting-times',
   'lesson-penneys-game',
   'lesson-gamblers-ruin',
-]
-
-// Course-completion milestone: awarded once every lesson in FULL_COURSE_PATH is
-// completed.
-export const COURSE_COMPLETION_MILESTONE = 'six-lessons-complete'
-export const FULL_COURSE_PATH = [
-  'lesson-pattern-hitting-times',
-  'lesson-penneys-game',
-  'lesson-gamblers-ruin',
-  'lesson-states-streaks',
-  'lesson-longer-patterns',
-  'lesson-overlap-shortcut',
 ]
 
 // Idempotent award: writes users/{uid}/milestones/{milestoneId} only if it does
@@ -71,11 +59,15 @@ async function isLessonCompleted(
   return snap.exists && snap.get('completionStatus') === 'completed'
 }
 
-// Award the milestone for a just-completed lesson, plus the mid-course milestone
-// (first three lessons) and the course-completion milestone (all six) when their
-// paths are fully done. Idempotent throughout. Returns the milestone ids newly
-// awarded by this call. Call AFTER the lesson's progress doc has been written as
-// completed (so the path checks see it).
+// Award the milestones earned by completing `lessonId`: the lesson's own
+// milestone (optional on-ramps earn none), the concept-completion milestone once
+// every required lesson of that concept is done, and — for the flagship only —
+// the hand-authored mid-course mark. Milestones resolve from the seeded
+// lesson/course docs, so EVERY concept awards its own badge set (not just the
+// flagship). Idempotent throughout. Returns the milestone ids newly awarded by
+// this call. Call AFTER the lesson's progress doc has been written as completed.
+type CourseNode = { lessonId: string; milestoneId?: string; optional?: boolean }
+
 export async function awardMilestonesForCompletion(
   db: Firestore,
   uid: string,
@@ -83,32 +75,56 @@ export async function awardMilestonesForCompletion(
 ): Promise<string[]> {
   const newly: string[] = []
 
-  const lessonMilestone = LESSON_MILESTONES[lessonId]
+  // Resolve the lesson's concept + node from the seeded docs.
+  const lessonSnap = await db.doc(`lessons/${lessonId}`).get()
+  const courseId = lessonSnap.get('courseId') as string | undefined
+  const courseSnap = courseId ? await db.doc(`courses/${courseId}`).get() : null
+  const courseData = courseSnap?.exists ? courseSnap.data() : undefined
+  const nodes = (courseData?.lessons ?? []) as CourseNode[]
+  const node = nodes.find((n) => n.lessonId === lessonId)
+
+  // 1) The lesson's own milestone — optional on-ramps earn no gallery badge.
+  const lessonMilestone =
+    node?.milestoneId ?? (lessonSnap.get('milestoneId') as string | undefined)
   if (
     lessonMilestone &&
+    node?.optional !== true &&
     (await awardMilestone(db, uid, lessonMilestone, lessonId))
   ) {
     newly.push(lessonMilestone)
   }
 
-  const midDone = await Promise.all(
-    MID_COURSE_PATH.map((id) => isLessonCompleted(db, uid, id)),
-  )
-  if (
-    midDone.every(Boolean) &&
-    (await awardMilestone(db, uid, MID_COURSE_MILESTONE, lessonId))
-  ) {
-    newly.push(MID_COURSE_MILESTONE)
+  // 2) Concept-completion milestone once every required lesson is completed.
+  const completionMilestone = courseData?.completionMilestoneId as
+    | string
+    | undefined
+  if (completionMilestone) {
+    const required = nodes
+      .filter((n) => n.optional !== true)
+      .map((n) => n.lessonId)
+    const done = await Promise.all(
+      required.map((id) => isLessonCompleted(db, uid, id)),
+    )
+    if (
+      required.length > 0 &&
+      done.every(Boolean) &&
+      (await awardMilestone(db, uid, completionMilestone, lessonId))
+    ) {
+      newly.push(completionMilestone)
+    }
   }
 
-  const allDone = await Promise.all(
-    FULL_COURSE_PATH.map((id) => isLessonCompleted(db, uid, id)),
-  )
-  if (
-    allDone.every(Boolean) &&
-    (await awardMilestone(db, uid, COURSE_COMPLETION_MILESTONE, lessonId))
-  ) {
-    newly.push(COURSE_COMPLETION_MILESTONE)
+  // 3) Flagship-only mid-course mark (hand-authored; not in the course schema).
+  if (LESSON_MILESTONES[lessonId]) {
+    const midDone = await Promise.all(
+      MID_COURSE_PATH.map((id) => isLessonCompleted(db, uid, id)),
+    )
+    if (
+      midDone.every(Boolean) &&
+      (await awardMilestone(db, uid, MID_COURSE_MILESTONE, lessonId))
+    ) {
+      newly.push(MID_COURSE_MILESTONE)
+    }
   }
 
   return newly

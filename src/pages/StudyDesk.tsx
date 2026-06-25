@@ -11,7 +11,7 @@ import { m } from 'motion/react'
 import { DUR, EASE } from '../motion/tokens'
 import type { Course, Progress } from '../content/schema'
 import type { Streak } from '../habit/streaks'
-import { MILESTONE_SEQUENCE, isMilestoneMastered } from '../habit/milestones'
+import { conceptBadges, isMilestoneMasteredForCourse } from '../habit/milestones'
 import { useReducedMotion } from '../lesson/useReducedMotion'
 import { ROUTES, type NavigateFn } from './routes'
 import { prefetchLesson } from '../app/prefetch'
@@ -33,19 +33,6 @@ export interface StudyDeskProps {
   onBack?: () => void
   /** Title to display beside the back button (concept name). */
   conceptTitle?: string
-}
-
-// Milestone id → Ergo chapter hue variable name (without '--' prefix).
-// Keyed by which lesson/concept the milestone represents; fallback is ergo-brand.
-const MILESTONE_HUES: Record<string, string> = {
-  'hh-ht-mastered':        'ch1',   // lesson-pattern-hitting-times (Ch1 Foundations)
-  'first-pattern-cracked': 'ch3',   // lesson-states-streaks "Mixed Review & Streaks" (Ch3 Mastery)
-  'state-machine-builder': 'ch3',   // lesson-longer-patterns "Longer Patterns & Overlap" (Ch3 Mastery)
-  'penneys-game-won':      'ch2',   // lesson-penneys-game (Ch2 Racing & Walks)
-  'gamblers-ruin-solved':  'ch2',   // lesson-gamblers-ruin (Ch2 Racing & Walks)
-  'three-lessons-complete':'ch2',   // mid-course milestone — caps Ch2 Racing & Walks
-  'martingale-mastered':   'ch3',   // lesson-overlap-shortcut (Ch3 Mastery)
-  'six-lessons-complete':  'ergo-brand', // course completion — brand indigo (capstone)
 }
 
 // Stagger: sections rise in sequence on load; reduced-motion drops the slide
@@ -133,14 +120,19 @@ export function StudyDesk({
                     role="list"
                     aria-label="Concepts mastered"
                   >
-                    {MILESTONE_SEQUENCE.map((meta) => (
+                    {conceptBadges(course).map(({ meta, hueVar, capstone }) => (
                       <ConceptMedallion
                         key={meta.id}
                         meta={meta}
                         earned={earned.has(meta.id)}
                         earning={newlyEarned?.has(meta.id)}
-                        mastered={isMilestoneMastered(meta.id, progressById)}
-                        hueVar={MILESTONE_HUES[meta.id]}
+                        mastered={isMilestoneMasteredForCourse(
+                          course,
+                          meta.id,
+                          progressById,
+                        )}
+                        hueVar={hueVar}
+                        capstone={capstone}
                       />
                     ))}
                   </div>

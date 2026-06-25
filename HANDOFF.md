@@ -25,6 +25,19 @@
 - After any fixture change, **re-seed prod** (`SEED_TARGET=prod GOOGLE_CLOUD_PROJECT=brilliant-org ./node_modules/.bin/tsx scripts/seed-firestore.ts`) — the live client loads lessons from Firestore at runtime.
 - Live unlock chain + L2–L6 milestone awarding unverified on a live authed walk.
 
+## Platform fixes (concept-agnostic) — entry-lesson unlock + per-concept badges
+
+Two cross-cutting bugs fixed (UNCOMMITTED). Verified green: `tsc -b`, `eslint src`, `vitest run` (340 tests), functions `tsc --noEmit`, `vite build --mode dev`; Bugbot clean.
+
+1. **Chapter 1 of EVERY concept is now startable.** `src/pages/studyDesk.model.ts` `nodeState()` dropped the hardcoded `FLAGSHIP_LESSON_ID` unlock; it now unlocks each concept's **entry lesson** (first non-optional node) generically (`resolveNodes` computes `entryIndex`). Removed the now-unused `FLAGSHIP_LESSON_ID` import (still used by `RecapBeat.tsx`). New `studyDesk.model.test.ts` case covers a non-flagship first lesson. (Root cause: only `lesson-pattern-hitting-times` was ever auto-available, so non-flagship concepts' first lesson stayed `locked` with no Start CTA.)
+2. **Per-concept badge sets.** The "Concepts mastered" gallery now derives from the OPEN concept's own course doc, not the global flagship list:
+   - `src/habit/milestones.ts`: new `conceptBadges(course)` (one medallion per non-optional lesson + a completion capstone; the flagship keeps its hand-authored `MILESTONE_SEQUENCE` incl. the mid-course mark), `isMilestoneMasteredForCourse(course, id, progressById)`, and `MILESTONE_HUES` moved here (non-flagship hues derive from `course.chapters[].accent`).
+   - `src/pages/StudyDesk.tsx`: renders `conceptBadges(course)` (no more global `MILESTONE_SEQUENCE`/`MILESTONE_HUES`).
+   - `src/habit/ConceptMedallion.tsx`: new `capstone?` prop replaces the hardcoded `meta.id === 'six-lessons-complete'` check.
+   - `functions/src/milestones.ts`: `awardMilestonesForCompletion` now resolves the lesson's milestone + completion milestone from the seeded `lessons/{id}` + `courses/{courseId}` docs, so EVERY concept awards its own badges; flagship-only `three-lessons-complete` mid-course mark kept; removed dead `FULL_COURSE_PATH`/`COURSE_COMPLETION_MILESTONE`.
+
+**To take effect on a live env:** rebuild + `firebase deploy` **hosting AND functions** (award logic changed), then re-seed so course docs carry `lessons[].milestoneId`/`optional` + `completionMilestoneId` (already present in enriched fixtures). Known follow-up (out of scope): the lesson-recap stamp medallion for non-flagship lessons still uses `milestoneMeta()`'s ★ fallback (a different surface; needs glyph plumbed from the course node).
+
 ## Environment Gotchas (these will bite you)
 
 - **Firebase CLI must run under Node v24.3.0.** Newer Node breaks the `node-fetch@2` bundled in firebase-tools. Use the `firebase` alias in `~/.zshrc` (pinned to v24.3.0), NOT `npx firebase` or the global.
@@ -47,12 +60,66 @@
 - **Perf:** Firestore + Functions are deferred off first paint — `src/firebase/app.ts` eagerly exports app+auth+App Check only; memoized async `getDb()`/`getFns()` dynamically import the SDKs; `vite.config.ts` uses native `rolldownOptions.output.codeSplitting` (eager `fb-core`/`react-vendor`/`motion-vendor`/`zod` only).
 - **Design tokens:** Style Dictionary single source (`style-dictionary/tokens/*.json` → `tokens.generated.{css,ts}`) feeds CSS + Konva + motion. CSS split into `src/styles/surfaces/*` under `@layer`.
 
-## Bayes-Rule Worktree (`concept/bayes-rule`) — CSS blocker fixed
-`src/styles/surfaces/beats-extended.css` in `.lf/bayes-rule/` now contains all `.bayes-bars*`, `.bayes-tree*`, `.bayes-icons*`, and `.bayes-seq*` rules (37 selectors). Token-only (no hex). Reduced-motion via `@media (prefers-reduced-motion: reduce)` on fill transitions. `vite build` + `tsc -b` green. Committed as `df331d8`.
+## Bayes-Rule Worktree (`concept/bayes-rule`) — n-hypothesis bars done
+`BayesUpdateBeat.tsx` `BarsDisplay` now has two paths: **Path A** (n=2, interactive≠false) is the existing 2-hyp slider, byte-for-byte unchanged; **Path B** (`direct = n>2 || interactive===false`) renders N labeled bars for Prior and Posterior via `bayesPosterior`, no slider, `interacted` starts `true`. 0-width bars (Monty Hall opened door) fall out naturally. CSS: `.bayes-bars__fill--h2 { background: var(--ch5) }` added. Tests: 44 passing (Monty Hall n=3 posteriors, `interactive:false` n=2, slider-path predicate checks, all existing tests). `tsc -b` + `vitest run` both green. Committed as `14df12f`.
 
 ## Lesson-Factory Skill Redesign (Living Departments) — DONE
 
 Implemented the nested "living departments" redesign end-to-end (see `docs/adr/0007-lesson-factory-nested-department-leads.md`). Each department is now a persistent, non-readonly Opus **department lead** subagent that spawns/manages its own ephemeral workers; the Manager stays the single root orchestrator and spawns the 4 leads (Dept 1/2/3 + Interview Studio). Coordination is Manager-mediated via on-disk `concepts/<slug>/` artifacts (no peer-to-peer); **all units are 3 layers** (Manager → lead → workers) — the Dept 3 Lead provisions a worktree per lesson and spawns that lesson's role chain directly (no per-lesson runner), batched as an assembly line; nesting is hard-required via a first-run preflight probe that verifies a lead can spawn a worker (no flat fallback). Files: `SKILL.md` (intro, org chart, model-routing table + Department Lead row, dispatcher paragraph, global-override + probe note), `departments.md` (Lead paragraph on all 4 units + intro reframe + Dept 3/Studio specifics), `pipeline.md` (§0 probe, §1–2 Manager-mediated loop via resumed leads, §3 Wave-0 via Dept 3 Lead, §4 Dept 3 Lead worktree-per-lesson build, §5b Studio Lead, parallelism summary), `deploy.md` (worktree note), light touch-ups to `qa-rubric.md` / `artifacts.md` / `interview-packs.md`, and `docs/adr/0007-...md` (incl. a dated Revision note recording the 4→3 layer reduction). The global `model-routing` skill/rule was intentionally left unchanged. Plans: `/Users/ericwu/.cursor/plans/living_departments_nested_leads_1f1050f5.plan.md` (initial), `/Users/ericwu/.cursor/plans/flatten_dept3_to_three_layers_a2c75585.plan.md` (depth fix).
+
+## Combinatorics Lesson Factory — Dept 2 work (L1 + L2 + L3 + L4)
+
+**L1** — `concepts/combinatorics/lesson-combinatorics-1/interaction-spec.md` (231 lines). 10 beats.
+- **New type:** `countingTree` (frozen Zod schema, CountingTreeBeat.tsx renderer, engine dep `combinatorics.ts product/factorial/nPk`)
+- **VERDICT = READY.** Goldens: product([2,2,2])=8n, product([2,3,2])=12n, product([3,3,3])=27n, nPk(365,3)=48228180n.
+
+**L1** — `concepts/combinatorics/lesson-combinatorics-1/interaction-spec.md` (231 lines). 10 beats. **BUILT (Dept 3, worktree `.lf/combinatorics-1`, branch `lesson/combinatorics-1`).**
+- **New type:** `countingTree` — REAL renderer `src/lesson/beats/CountingTreeBeat.tsx` (DOM/SVG, tap-to-expand levels, live running-product badge, graded when `accept` present, hero auto-play, reduced-motion final frame, notation badge via `beat.introducesSymbol`). Firebase mock via `vi.mock('../../firebase/app')`.
+- **10-beat order:** l1-recall (retrievalGrid, required, first graded) → l1-bet (prediction byOption, required) → l1-primer (primer custom, collapsible, not required) → l1-win (countingTree graded, hero ★, required) → l1-scaffold (countingTree ungraded, track:A, not required) → l1-explore (countingTree ungraded, required) → l1-multadd (answerEntry, comparison, interviewNote, required) → l1-model (countingTree ungraded, introducesSymbol:"n!", groundedBy, required) → l1-prove (masteryChallenge required, penultimate, pattern UNSET) → l1-recap (required)
+- **4 gates GREEN:** `tsc -b --force` ✓ · `vitest run` ✓ (295 tests / 37 files) · `tsx validate-fixtures.ts` ✓ ("✓ inclusivity gate: lesson-combinatorics-1" + "✓ mastery-challenge gate: lesson-combinatorics-1" + "All fixtures valid.") · `eslint src` ✓ (clean, zero warnings).
+- **Files created (NEW only, no shared files edited):** `fixtures/lesson-combinatorics-1.json`, `src/lesson/beats/CountingTreeBeat.tsx`, `src/lesson/beats/CountingTreeBeat.test.tsx`, `src/content/lesson-combinatorics-1.factcheck.test.ts`, `e2e/combinatorics-1.spec.ts`, `src/styles/surfaces/combinatorics-1.css`.
+- **Lead must add:** (1) `import { CountingTreeBeat } from './CountingTreeBeat'` + `case 'countingTree': return <CountingTreeBeat {...props} />` in `src/lesson/beats/index.tsx`; (2) `@import './surfaces/combinatorics-1.css';` in `src/styles/app.css`.
+
+**L2** — `concepts/combinatorics/lesson-combinatorics-2/interaction-spec.md` (261 lines). 10 beats. **BUILT (Dept 3, worktree `.lf/combinatorics-2`, branch `lesson/combinatorics-2`).**
+- **New type:** `selectionGrid` — REAL renderer `src/lesson/beats/SelectionGridBeat.tsx` (DOM/SVG, order=on/off/toggle, live count badge, role="switch", hero fan animation, reduced-motion static frame). All hooks before early return.
+- **10-beat order:** l2-primer (primer custom) → l2-recall (retrievalGrid) → l2-bet (prediction byOption) → l2-win (selectionGrid order=on, accept=["60"]) → l2-scaffold (Track A primer) → l2-explore (selectionGrid order=toggle, hero ★) → l2-model (tripletReveal cards, introducesSymbol) → l2-fraction (answerEntry, accept=["1/6"]/["5/54","20/216"]) → l2-prove (masteryChallenge required, pattern unset) → l2-recap
+- **4 gates GREEN:** `tsc -b --force` ✓ · `vitest run` ✓ (308 tests / 37 files) · `tsx validate-fixtures.ts` ✓ ("✓ inclusivity gate: lesson-combinatorics-2" + "✓ mastery-challenge gate: lesson-combinatorics-2" + "All fixtures valid.") · `eslint src` ✓.
+- **Files created (NEW only, no shared files edited):** `fixtures/lesson-combinatorics-2.json`, `src/lesson/beats/SelectionGridBeat.tsx`, `src/lesson/beats/SelectionGridBeat.test.tsx`, `src/content/lesson-combinatorics-2.factcheck.test.ts`, `e2e/combinatorics-2.spec.ts`, `src/styles/surfaces/combinatorics-2.css`.
+- **Lead must add:** (1) `import { SelectionGridBeat } from './SelectionGridBeat'` + `case 'selectionGrid': return <SelectionGridBeat {...props} />` in `src/lesson/beats/index.tsx`; (2) `@import './surfaces/combinatorics-2.css';` in `src/styles/app.css`.
+
+**L3** — `concepts/combinatorics/lesson-combinatorics-3/interaction-spec.md` (435 lines). 10 beats.
+- **New type:** `pascalTriangle` (frozen Zod schema, PascalTriangleBeat.tsx renderer, engine dep `combinatorics.ts nCk/pascalRow`)
+- **10-beat order:** l3-primer (primer exponent, collapsible) → l3-recall (retrievalGrid, 3 pairs, first graded) → l3-bet (prediction byOption, next row=32) → l3-win (answerEntry, coeff ab in (a+b)²="2") → l3-scaffold-a (Track-A primer custom, faded (a+b)² expansion) → l3-explore (pascalTriangle NEW, rows=5, hero ★ row-5 doubling) → l3-model (tripletReveal cards, introducesSymbol "(a+b)ⁿ/Σ", groundedBy l3-explore+l3-primer, comparison) → l3-applied (answerEntry, (1+√2)ⁿ+(1−√2)ⁿ∈ℤ accept "yes", interviewNote GB p.36-37 digit=9) → l3-prove (masteryChallenge required, a²b coeff=30, pattern UNSET, penultimate) → l3-recap
+- **VERDICT = READY.** Zero Dept-1 kickbacks. Engine goldens: pascalRow(4)=[1n,4n,6n,4n,1n] sum 16n; pascalRow(5) sum 32n; nCk(2,1)=2n; nCk(3,1)*10=30n; symmetry invariant ∀ row 0..5.
+- Dept 3 needs: add pascalTriangle to InteractionSchema union + dispatcher + PascalTriangleBeat.tsx; add lesson-combinatorics-1..4 to GATED+MASTERY_LESSONS; extend validate-fixtures combinatorics engine cross-check.
+
+**L4** — `concepts/combinatorics/lesson-combinatorics-4/interaction-spec.md` (303 lines). Concept CAPSTONE. 10 beats.
+- **New type:** `vennCounter` (frozen Zod schema, VennCounterBeat.tsx renderer, engine dep `combinatorics.ts unionSize/inclusionExclusion/derangements/nCk/reduce`)
+- **Poker-hand counter delivered via `masteryChallenge` reuse** (`l4-prove`), NOT a 5th new type. Total new Combinatorics types = 4.
+- **10-beat order:** l4-primer (primer custom, collapsible) → l4-recall (retrievalGrid, 3 pairs, first graded beat) → l4-bet (prediction byOption, n=23) → l4-win (answerEntry, 4!=24) → l4-explore (vennCounter NEW, hero, initial:{a:8,b:6,ab:3}) → l4-model (tripletReveal, D₅=44, P=11/30, interviewNote) → l4-birthday-scaffold (slider Track-A) → l4-birthday (answerEntry, complement 1−365·364·⋯·343/365²³) → l4-prove (masteryChallenge required, 624/1/4165, penultimate, interviewNote) → l4-recap
+- **VERDICT = READY.** Zero Dept-1 kickbacks. Engine goldens: factorial(5n)=120n, nCk(52n,5n)=2598960n, derangements(5n)=44n, unionSize(8n,6n,3n)=11n, reduce(624n,2598960n)={1n,4165n}.
+- Dept 3 needs: add `vennCounter` to InteractionSchema union + dispatcher + VennCounterBeat.tsx renderer; author `fixtures/lesson-combinatorics-4.json`; extend validate-fixtures (10 combinatorics engine cross-checks, L1–4 in GATED+MASTERY_LESSONS, exempt patternOptions:[] for course-combinatorics).
+
+**L5** — `concepts/combinatorics/lesson-combinatorics-5/interaction-spec.md` (≈370 lines). 10 beats.
+- **New type:** `pigeonholeBoard` (frozen Zod schema, PigeonholeBoardBeat.tsx renderer, engine dep `combinatorics.ts pigeonholeMin/forcesCollision`)
+- **10-beat order:** l5-recall (retrievalGrid, 3 pairs, first graded, comparison pivot L1+L2→existence) → l5-bet (prediction byOption, 4 options, sock drawer) → l5-primer (primer custom, pigeons/holes/⌈·⌉, collapsible) → l5-win (answerEntry, accept=["4"]) → l5-explore (pigeonholeBoard NEW, items=4 holes=3, hero ★, the cinematic forced-collision moment) → l5-scaffold (pigeonholeBoard items=7 holes=3, Track-A, ⌈7/3⌉=3) → l5-model (tripletReveal cards, introducesSymbol ⌈N/H⌉, interviewNote) → l5-apply (answerEntry 2-field, holes=25+verdict=yes, handshakes 26/25) → l5-prove (masteryChallenge required, accept=["3"], 51 ants / 25 regions, penultimate) → l5-recap
+- **VERDICT = READY.** Zero Dept-1 kickbacks. Engine goldens: pigeonholeMin(51,25)=3, forcesCollision(4,3)=true, forcesCollision(3,3)=false, forcesCollision(26,25)=true.
+- Dept 3 needs: add `pigeonholeBoard` to InteractionSchema union + dispatcher + PigeonholeBoardBeat.tsx; add lesson-combinatorics-1..6 to GATED+MASTERY_LESSONS; extend validate-fixtures (pigeonholeMin/forcesCollision engine cross-checks on l5-prove/l5-win/l5-apply/pigeonholeBoard beats).
+
+**L6** — `concepts/combinatorics/lesson-combinatorics-6/interaction-spec.md` (≈400 lines). Concept FINALE (poker probability). 10 beats.
+- **New types:** `probabilityCounter` (ungraded — NOT in GRADED_TYPES; ProbabilityCounterBeat.tsx) + `handRanker` (graded — ADD to GRADED_TYPES; HandRankerBeat.tsx). Total new Combinatorics types = **6**.
+- **Engine:** add `probabilityFromCounts(fav:number, total:number):{n:bigint,d:bigint}` (thin wrapper around existing `reduce`). Goldens: 624→1/4165, 3744→6/4165, 123552→198/4165, 20→5/54.
+- **10-beat order:** l6-primer (primer custom, collapsible, P=favorable/total) → l6-recall (retrievalGrid, 3 pairs, first graded: L4 four-of-a-kind 1/4165 + L2 dice 5/54 + P formula) → l6-bet (prediction byOption, rank rarest→commonest) → l6-win (answerEntry, 624/2,598,960 → accept 1/4165, guaranteed early win) → l6-explore (probabilityCounter NEW, full house 13·4·12·6=3744 → 6/4165, hero ★ "3744/2,598,960 SNAPS to 6/4165") → l6-model (tripletReveal cards, introducesSymbol P=favorable/total, interviewNote shared-4165 denominator) → l6-rank (handRanker NEW, graded check, four-of-a-kind 1/4165 vs full house 6/4165, rarestFirst) → l6-pairs-scaffold (probabilityCounter Track-A, 78·6·6·44=123,552→198/4165) → l6-prove (masteryChallenge required, two pairs 123,552→198/4165 re-rank 1<6<198, penultimate, pattern UNSET) → l6-recap (closes Combinatorics arc)
+- **VERDICT = READY.** Zero Dept-1 kickbacks. All GB p.34/p.40 sourced; engine-verified. computeMastered keys: {l6-recall, l6-win, l6-rank, l6-prove}.
+- Dept 3 needs: add `probabilityCounter` + `handRanker` to InteractionSchema union + dispatcher + renderers; add `probabilityFromCounts` to combinatorics.ts; `handRanker` IN GRADED_TYPES; `probabilityCounter` NOT in GRADED_TYPES; add lesson-combinatorics-1..6 to GATED+MASTERY_LESSONS; extend validate-fixtures (11 L6 engine cross-checks); author fixtures/lesson-combinatorics-6.json.
+
+**Wave-0 contract freeze DONE (Schema/Types Specialist).** All 5 edits applied and verified green:
+- `src/content/schema.ts`: 7 new variants (countingTree/selectionGrid/pascalTriangle/vennCounter/pigeonholeBoard/probabilityCounter/handRanker) appended to InteractionSchema.
+- `src/lesson/beats/index.tsx`: 7 stub case labels before `default:` routing to ContinueStub.
+- `src/engine/combinatorics.ts`: new file — pure BigInt engine (factorial/nPk/nCk/product/pascalRow/unionSize/inclusionExclusion/derangements/pigeonholeMin/forcesCollision/reduce/probabilityFromCounts).
+- `src/engine/combinatorics.test.ts`: new file — 6 golden test cases, all passing.
+- `scripts/validate-fixtures.ts`: import of 11 engine names, lesson-combinatorics-1..6 in GATED+MASTERY_LESSONS, countingTree/selectionGrid/handRanker in GRADED_TYPES, Stage-2 engine self-check block.
+- `tsc -b` ✓ · `vitest run combinatorics.test.ts` ✓ (6/6) · `tsx validate-fixtures.ts` ✓ (ends "All fixtures valid." + "✓ combinatorics engine self-check (Stage-2 anchor)").
 
 ## Next Steps (priority order)
 

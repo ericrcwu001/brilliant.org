@@ -22,6 +22,7 @@ export function ConceptMedallion({
   mastered = false,
   hueVar,
   size = 'sm',
+  capstone = false,
 }: {
   meta: MilestoneMeta
   earned: boolean
@@ -29,6 +30,8 @@ export function ConceptMedallion({
   mastered?: boolean
   hueVar?: string
   size?: 'sm' | 'md' | 'lg'
+  /** Concept-completion medallion — gets the larger capstone ring treatment. */
+  capstone?: boolean
 }) {
   const hue = hueVar ?? 'ergo-brand'
   const style = {
@@ -47,8 +50,7 @@ export function ConceptMedallion({
   const stateClass = earned
     ? `ergo-medallion--earned${earning ? ' ergo-medallion--earning' : ''}${tierClass}`
     : 'ergo-medallion--locked'
-  const capstoneClass =
-    meta.id === 'six-lessons-complete' ? ' ergo-medallion--capstone' : ''
+  const capstoneClass = capstone ? ' ergo-medallion--capstone' : ''
 
   // Tier shown on hover via a custom popup (.ergo-medallion__tip) and mirrored in
   // aria-label for screen readers. Gallery only; the lg celebration medallion has

@@ -138,3 +138,39 @@ describe('studyDesk model — recommended-action priority (Q9)', () => {
     )
   })
 })
+
+describe('studyDesk model — non-flagship concept entry', () => {
+  // A second concept whose first lesson is neither the flagship nor optional.
+  // Chapter 1 of EVERY concept must be startable on the first visit, with no
+  // server-seeded unlock and no completed predecessor.
+  const secondConcept: Course = {
+    ...course,
+    courseId: 'course-bayes-rule',
+    completionMilestoneId: 'bayes-rule-complete',
+    lessons: [
+      {
+        lessonId: 'lesson-bayes-rule-1',
+        title: 'The Update Rule',
+        summary: 'Two coins, one flip.',
+        milestoneId: 'bayes-rule-update',
+        built: true,
+      },
+      {
+        lessonId: 'lesson-bayes-rule-2',
+        title: 'The Base-Rate Trap',
+        summary: 'A 99% test on a rare disease.',
+        milestoneId: 'bayes-rule-base-rate',
+        built: true,
+      },
+    ],
+  }
+
+  it('first visit: the entry lesson is available even though it is not the flagship', () => {
+    const nodes = resolveNodes(secondConcept, {})
+    expect(nodes[0].state).toBe('available')
+    expect(nodes[1].state).toBe('locked')
+    const action = recommendedAction(nodes, {})
+    expect(action).toEqual({ kind: 'start', lessonId: 'lesson-bayes-rule-1' })
+    expect(nodeCtaLabel(nodes[0], undefined)).toBe('Start')
+  })
+})

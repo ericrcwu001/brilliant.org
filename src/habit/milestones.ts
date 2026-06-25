@@ -5,7 +5,8 @@
 
 import { collection, onSnapshot } from 'firebase/firestore'
 import { getDb } from '../firebase/app'
-import type { Progress } from '../content/schema'
+import type { Course, Progress } from '../content/schema'
+import { COURSE_ID } from '../content/courseIds'
 
 export interface MilestoneMeta {
   id: string
@@ -38,6 +39,76 @@ const META_BY_ID: Record<string, MilestoneMeta> = Object.fromEntries(
 
 export function milestoneMeta(id: string): MilestoneMeta {
   return META_BY_ID[id] ?? { id, title: id, glyph: '★' }
+}
+
+// Milestone id → Ergo chapter hue variable name (without '--' prefix) for the
+// flagship's hand-authored gallery. Other concepts derive hues from their own
+// course chapters (see conceptBadges); fallback is ergo-brand.
+const MILESTONE_HUES: Record<string, string> = {
+  'hh-ht-mastered': 'ch1',
+  'penneys-game-won': 'ch2',
+  'gamblers-ruin-solved': 'ch2',
+  'three-lessons-complete': 'ch2',
+  'first-pattern-cracked': 'ch3',
+  'state-machine-builder': 'ch3',
+  'martingale-mastered': 'ch3',
+  'six-lessons-complete': 'ergo-brand',
+}
+
+// One gallery medallion: seal metadata + its hue + whether it is the
+// concept-completion capstone. Everything the Study Desk needs to render a
+// concept's "Concepts mastered" row.
+export interface ConceptBadge {
+  meta: MilestoneMeta
+  hueVar: string
+  capstone: boolean
+}
+
+// Map each lesson id to its chapter accent (e.g. 'ch2') from the course doc.
+function chapterAccentByLesson(course: Course): Record<string, string> {
+  const byLesson: Record<string, string> = {}
+  for (const chapter of course.chapters ?? []) {
+    for (const lessonId of chapter.lessonIds) byLesson[lessonId] = chapter.accent
+  }
+  return byLesson
+}
+
+// The badge set for a concept, derived from ITS OWN lessons + completion
+// milestone, so every macro-concept gets a distinct gallery (not the flagship's).
+// The flagship keeps its hand-authored, interleaved sequence (it carries a
+// mid-course mark + bespoke titles/glyphs/icons not modeled in the schema).
+export function conceptBadges(course: Course): ConceptBadge[] {
+  if (course.courseId === COURSE_ID) {
+    return MILESTONE_SEQUENCE.map((meta) => ({
+      meta,
+      hueVar: MILESTONE_HUES[meta.id] ?? 'ergo-brand',
+      capstone: meta.id === course.completionMilestoneId,
+    }))
+  }
+  const hueByLesson = chapterAccentByLesson(course)
+  const lessonBadges: ConceptBadge[] = course.lessons
+    .filter((lesson) => !(lesson.optional ?? false))
+    .map((lesson) => ({
+      meta: {
+        id: lesson.milestoneId,
+        title: lesson.title,
+        glyph: lesson.glyphKey ?? '★',
+      },
+      hueVar: hueByLesson[lesson.lessonId] ?? course.accent ?? 'ergo-brand',
+      capstone: false,
+    }))
+  return [
+    ...lessonBadges,
+    {
+      meta: {
+        id: course.completionMilestoneId,
+        title: `${course.title} mastered`,
+        glyph: '✓',
+      },
+      hueVar: 'ergo-brand',
+      capstone: true,
+    },
+  ]
 }
 
 // Realtime earned-milestone ids for the seal gallery. A collection listener so a
@@ -110,4 +181,25 @@ export function isMilestoneMastered(
   const agg = MILESTONE_AGGREGATE_LESSONS[milestoneId]
   if (agg) return agg.every((id) => lessonAced(progressById[id]))
   return false
+}
+
+// Per-concept gold-tier check: resolves the milestone against the course's OWN
+// lessons (completion = every required lesson aced; otherwise the single lesson
+// behind the milestone), falling back to the flagship's hand-authored aggregate
+// map for marks not tied to one lesson (e.g. three-lessons-complete).
+export function isMilestoneMasteredForCourse(
+  course: Course,
+  milestoneId: string,
+  progressById: Record<string, Progress>,
+): boolean {
+  if (milestoneId === course.completionMilestoneId) {
+    const required = course.lessons.filter((l) => !(l.optional ?? false))
+    return (
+      required.length > 0 &&
+      required.every((l) => lessonAced(progressById[l.lessonId]))
+    )
+  }
+  const lesson = course.lessons.find((l) => l.milestoneId === milestoneId)
+  if (lesson) return lessonAced(progressById[lesson.lessonId])
+  return isMilestoneMastered(milestoneId, progressById)
 }

@@ -6,7 +6,6 @@
 // presentational StudyDesk stays a pure render of these values.
 
 import type { Course, Progress } from '../content/schema'
-import { FLAGSHIP_LESSON_ID } from './routes'
 
 export type DeskNodeState =
   | 'completed'
@@ -50,19 +49,21 @@ export function glyphFor(lessonId: string): string {
 // node variant. Completed-with-review takes its own state so the spine can draw
 // the filled dot + --mark ring (docs/home-study-desk.md §2.4 / Q8).
 function nodeState(
-  lessonId: string,
   built: boolean,
   progress: Progress | undefined,
   predecessorCompleted: boolean,
   optional: boolean,
+  isEntry: boolean,
 ): DeskNodeState {
   if (progress?.completionStatus === 'completed') {
     return progress.needsReview ? 'needsReview' : 'completed'
   }
   if (!built) return 'locked'
-  // The flagship and any optional on-ramp (L1 §6) are always available; the
-  // on-ramp is ungated so it never locks behind a predecessor.
-  if (lessonId === FLAGSHIP_LESSON_ID || optional) return 'available'
+  // The concept's entry lesson (first required) and any optional on-ramp (L1 §6)
+  // are always available, so chapter 1 of EVERY concept can be started on the
+  // first visit (no server-seeded unlock needed). The on-ramp is ungated so it
+  // never locks behind a predecessor.
+  if (isEntry || optional) return 'available'
   if (progress?.unlockedAt != null || progress?.completionStatus === 'in_progress') {
     return 'available'
   }
@@ -74,6 +75,9 @@ export function resolveNodes(
   course: Course,
   progressById: Record<string, Progress>,
 ): DeskNode[] {
+  // The entry lesson is the first non-optional node — the always-startable head
+  // of the concept's required spine (concept-relative, not a hardcoded flagship).
+  const entryIndex = course.lessons.findIndex((l) => !(l.optional ?? false))
   return course.lessons.map((lesson, index) => {
     const predecessor = index === 0 ? null : course.lessons[index - 1]?.lessonId ?? null
     const predecessorCompleted =
@@ -90,11 +94,11 @@ export function resolveNodes(
       optional: lesson.optional ?? false,
       index,
       state: nodeState(
-        lesson.lessonId,
         lesson.built,
         progressById[lesson.lessonId],
         predecessorCompleted,
         lesson.optional ?? false,
+        index === entryIndex,
       ),
     }
   })
