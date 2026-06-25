@@ -16,6 +16,19 @@ import {
 } from '../src/content/schema'
 import type { Beat, Lesson } from '../src/content/schema'
 import { buildAutomaton } from '../src/engine/automaton'
+import {
+  nCk,
+  nPk,
+  pascalRow,
+  product,
+  unionSize,
+  inclusionExclusion,
+  derangements,
+  pigeonholeMin,
+  forcesCollision,
+  probabilityFromCounts,
+  reduce,
+} from '../src/engine/combinatorics'
 
 const fixturesDir = join(dirname(fileURLToPath(import.meta.url)), '..', 'fixtures')
 
@@ -101,6 +114,13 @@ const GATED = new Set([
   'lesson-states-streaks', // L4
   'lesson-longer-patterns', // L5
   'lesson-overlap-shortcut', // L6
+  // Combinatorics concept (Wave-0 contract).
+  'lesson-combinatorics-1',
+  'lesson-combinatorics-2',
+  'lesson-combinatorics-3',
+  'lesson-combinatorics-4',
+  'lesson-combinatorics-5',
+  'lesson-combinatorics-6',
 ])
 // L5 transfer lesson is the logged exception to the retrieval-opener rule.
 const NO_RETRIEVAL_OPENER = new Set(['lesson-longer-patterns'])
@@ -116,6 +136,13 @@ const GRADED_TYPES = new Set([
   'stateTap',
   'answerEntry',
   'masteryChallenge',
+  // Combinatorics graded types (Wave-0 contract). countingTree/selectionGrid are
+  // graded only when `accept` is present; handRanker is always graded. In every
+  // combinatorics lesson the retrievalGrid recall is the first graded beat, so
+  // the early-win / opener checks are unaffected by these additions.
+  'countingTree',
+  'selectionGrid',
+  'handRanker',
 ])
 // The two hardest graded types — never the first graded beat (early-win rule).
 const HARDEST_TYPES = new Set(['equationTiles', 'substitution'])
@@ -240,6 +267,13 @@ const MASTERY_LESSONS = new Set([
   'lesson-states-streaks',
   'lesson-longer-patterns',
   'lesson-overlap-shortcut',
+  // Combinatorics concept (Wave-0 contract).
+  'lesson-combinatorics-1',
+  'lesson-combinatorics-2',
+  'lesson-combinatorics-3',
+  'lesson-combinatorics-4',
+  'lesson-combinatorics-5',
+  'lesson-combinatorics-6',
 ])
 for (const lesson of lessons) {
   if (!MASTERY_LESSONS.has(lesson.lessonId)) continue
@@ -263,6 +297,47 @@ for (const lesson of lessons) {
     }
   }
   console.log(`✓ mastery-challenge gate: ${lesson.lessonId}`)
+}
+
+// ── 6. Combinatorics engine self-check (Stage-2 math anchor for
+// course-combinatorics). The per-fixture cross-check — every countingTree /
+// selectionGrid / vennCounter / pigeonholeBoard / probabilityCounter /
+// handRanker target + `accept` reproduced from the engine — lands with the
+// lesson fixtures in the build wave (see concepts/combinatorics/
+// wave0-contracts.md). Until then this asserts the frozen engine reproduces
+// every Green-Book headline number so the interface cannot silently drift.
+{
+  const ok = (label: string, cond: boolean) => {
+    if (!cond) fail(`combinatorics engine self-check failed: ${label}`)
+  }
+  ok('nCk(52,5)=2598960', nCk(52, 5) === 2_598_960n)
+  ok('nPk(5,3)=60', nPk(5, 3) === 60n)
+  ok('nPk(365,3)=48228180', nPk(365, 3) === 48_228_180n)
+  ok('pascalRow(4)=[1,4,6,4,1]', pascalRow(4).join(',') === '1,4,6,4,1')
+  ok('product([13,4,12,6])=3744', product([13, 4, 12, 6]) === 3744n)
+  ok('product([78,6,6,44])=123552', product([78, 6, 6, 44]) === 123_552n)
+  ok('unionSize(8,6,3)=11', unionSize(8, 6, 3) === 11n)
+  ok('derangements(5)=44', derangements(5) === 44n)
+  ok(
+    'inclusionExclusion(at-least-one)=76',
+    inclusionExclusion([
+      { size: 120, sign: 1 },
+      { size: 60, sign: -1 },
+      { size: 20, sign: 1 },
+      { size: 5, sign: -1 },
+      { size: 1, sign: 1 },
+    ]) === 76n,
+  )
+  ok('pigeonholeMin(51,25)=3', pigeonholeMin(51, 25) === 3)
+  ok('forcesCollision(4,3)=true', forcesCollision(4, 3) === true)
+  ok('forcesCollision(3,3)=false', forcesCollision(3, 3) === false)
+  const p1 = probabilityFromCounts(624, 2_598_960)
+  ok('P(624/2598960)=1/4165', p1.n === 1n && p1.d === 4165n)
+  const p2 = probabilityFromCounts(20, 216)
+  ok('P(20/216)=5/54', p2.n === 5n && p2.d === 54n)
+  const r = reduce(44n, 120n)
+  ok('reduce(44,120)=11/30', r.n === 11n && r.d === 30n)
+  console.log('✓ combinatorics engine self-check (Stage-2 anchor)')
 }
 
 console.log('\nAll fixtures valid.')

@@ -98,6 +98,16 @@ export function BeatView(props: BeatProps) {
       return <WalkBoardBeat {...props} />
     case 'gamblerLedger':
       return <GamblerLedgerBeat {...props} />
+    // Combinatorics concept (Wave-0 contract — stub slots routed to ContinueStub;
+    // real renderers land per-lesson in the build wave, replacing each case body).
+    case 'countingTree':
+    case 'selectionGrid':
+    case 'pascalTriangle':
+    case 'vennCounter':
+    case 'pigeonholeBoard':
+    case 'probabilityCounter':
+    case 'handRanker':
+      return <ContinueStub {...props} />
     default:
       return <ContinueStub {...props} />
   }

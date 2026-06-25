@@ -250,6 +250,89 @@ export const InteractionSchema = z.discriminatedUnion('type', [
     lenses: z.array(z.object({ label: z.string(), body: z.string() })),
     display: z.enum(['cards', 'axis']).optional(),
   }),
+  // ── Combinatorics concept (Wave-0 contract freeze). Seven new interaction
+  // types for lesson-combinatorics-1..6; each maps 1:1 to a beat view in
+  // beats/index.tsx (stub-routed in Wave 0; real renderers land per-lesson in
+  // the build wave). Engine dep: src/engine/combinatorics.ts (pure/exact BigInt).
+  //
+  // L1 product-rule tree; each level multiplies the running product. Graded when
+  // `accept` is present (running product normalized against the accept list).
+  z.object({
+    type: z.literal('countingTree'),
+    levels: z.array(
+      z.object({
+        label: z.string(),
+        options: z.number().int().positive(),
+      }),
+    ),
+    accept: z.array(z.string()).optional(),
+  }),
+  // L2 pick-k-of-n with an order on/off toggle (nPk vs nCk, exactly ×k! apart).
+  // Graded when `accept` is present (current count normalized).
+  z.object({
+    type: z.literal('selectionGrid'),
+    n: z.number().int().positive(),
+    k: z.number().int().positive(),
+    order: z.enum(['toggle', 'on', 'off']),
+    labels: z.array(z.string()).optional(),
+    accept: z.array(z.string()).optional(),
+  }),
+  // L3 Pascal's triangle: tap to reveal C(n,k) (= sum of the two above); each row
+  // sums to 2^n; the symmetric pair C(n,k)=C(n,n-k) mirrors live. Ungraded in L3.
+  z.object({
+    type: z.literal('pascalTriangle'),
+    rows: z.number().int().positive(),
+    reveal: z.enum(['tap', 'all']).optional(),
+    showRowSums: z.boolean().optional(),
+    showSymmetry: z.boolean().optional(),
+    accept: z.array(z.string()).optional(),
+  }),
+  // L4 inclusion–exclusion: step/drag |A|, |B|, |A∩B|; |A∪B| updates via the
+  // signed sum. Ungraded explore in L4 (`sets` defaults to 2).
+  z.object({
+    type: z.literal('vennCounter'),
+    sets: z.union([z.literal(2), z.literal(3)]).optional(),
+    maxSize: z.number().int().positive().optional(),
+    initial: z
+      .object({
+        a: z.number().int(),
+        b: z.number().int(),
+        ab: z.number().int(),
+      })
+      .partial()
+      .optional(),
+    accept: z.array(z.string()).optional(),
+  }),
+  // L5 pigeonhole: place N items into H holes; when N > H a collision is forced.
+  // Ungraded explore in L5 (`accept` omitted).
+  z.object({
+    type: z.literal('pigeonholeBoard'),
+    items: z.number().int().positive(),
+    holes: z.number().int().positive(),
+    holeLabels: z.array(z.string()).optional(),
+    itemLabel: z.string().optional(),
+    accept: z.array(z.string()).optional(),
+  }),
+  // L6 favorable/total counter: tap factor chips to build the favorable count;
+  // the reduced fraction favorable/total updates live. Ungraded explore in L6.
+  z.object({
+    type: z.literal('probabilityCounter'),
+    factors: z.array(
+      z.object({ label: z.string(), value: z.number().int().positive() }),
+    ),
+    total: z.number().int().positive(),
+    accept: z.array(z.string()).optional(),
+  }),
+  // L6 finale: rank hands by probability over a shared denominator (rarer ⇔
+  // smaller numerator). GRADED (engine sorts by `favorable`).
+  z.object({
+    type: z.literal('handRanker'),
+    hands: z.array(
+      z.object({ label: z.string(), favorable: z.number().int().positive() }),
+    ),
+    total: z.number().int().positive(),
+    order: z.enum(['rarestFirst', 'commonestFirst']).optional(),
+  }),
 ])
 
 const HintTripleSchema = z.tuple([z.string(), z.string(), z.string()])
