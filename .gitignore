@@ -58,3 +58,7 @@ firebase-export-*
 *.njsproj
 *.sln
 *.sw?
+
+# Vendored agent skills (firebase/agent-skills). Restored locally from
+# skills-lock.json; the skill content itself is not committed to the repo.
+.agents/skills/
