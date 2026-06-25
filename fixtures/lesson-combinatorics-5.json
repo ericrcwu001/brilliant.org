@@ -1,0 +1,256 @@
+{
+  "lessonId": "lesson-combinatorics-5",
+  "courseId": "course-combinatorics",
+  "title": "The Pigeon Hole Principle",
+  "patternOptions": ["H"],
+  "milestoneId": "pigeonhole-mastered",
+  "unlocks": "lesson-combinatorics-6",
+  "schemaVersion": 1,
+  "beats": [
+    {
+      "beatId": "l5-recall",
+      "required": true,
+      "comparison": true,
+      "prompt": "Warm up — match each counting scenario to the right tool or verdict.",
+      "interaction": {
+        "type": "retrievalGrid",
+        "pairs": [
+          { "left": "Outfits: 4 shirts × 3 pants", "right": "multiply" },
+          { "left": "Poker hands from 52 cards: C(52,5)", "right": "2,598,960" },
+          { "left": "4 socks, 3 colors — what must occur?", "right": "some color repeats" }
+        ]
+      },
+      "feedback": {
+        "correct": "Three tools, three questions — multiply for independent choices, nCk when order doesn't matter, pigeonhole when N > H forces a repeat. Today: existence.",
+        "hints": [
+          "Tap a scenario on the left, then its match on the right.",
+          "Outfits → multiply; poker hands → nCk; 4 socks, 3 colors → some color must repeat.",
+          "The third pair introduces existence: not 'how many ways' but 'what must happen.'"
+        ]
+      }
+    },
+    {
+      "beatId": "l5-bet",
+      "required": true,
+      "prompt": "Your drawer has 2 red, 20 yellow, and 31 blue socks. It's pitch dark. How many socks must you grab to be certain you're holding a matching pair?",
+      "interaction": {
+        "type": "prediction",
+        "options": ["4 socks", "20 socks", "32 socks", "About half (~27)"]
+      },
+      "feedback": {
+        "byOption": {
+          "4 socks": {
+            "note": "Good instinct — let's prove it: with only 3 colors, a 4th sock has to match.",
+            "correct": true
+          },
+          "20 socks": {
+            "note": "Let's test it — that's just the yellow pile, and pile size won't decide the answer."
+          },
+          "32 socks": {
+            "note": "Let's test it — anchoring on the biggest pile overshoots; the colors are what matter."
+          },
+          "About half (~27)": {
+            "note": "Let's test it — you'll need far fewer than half once you count colors."
+          }
+        }
+      }
+    },
+    {
+      "beatId": "l5-primer",
+      "required": false,
+      "prompt": "Before we prove the sock answer — a quick card on pigeons, holes, and the ⌈·⌉ ceiling.",
+      "interaction": {
+        "type": "primer",
+        "variant": "custom",
+        "title": "Pigeons, holes, and the ceiling ⌈·⌉",
+        "body": "A **pigeon** is any item you're placing; a **hole** is any container it can land in. When you have more pigeons than holes — **N > H** — at least one hole must hold two pigeons. In general, with N pigeons and H holes, some hole holds at least **⌈N/H⌉** (ceiling: divide N by H and round UP to the next whole number). Examples: ⌈4/3⌉ = 2 (four 3-ways forces a pair); ⌈7/3⌉ = 3 (seven into three forces a triple). Pigeonhole is an *existence* tool — it proves something must occur, without listing arrangements.",
+        "collapsible": true
+      },
+      "feedback": {
+        "correct": "Keep that in mind — every existence argument below names pigeons, counts holes, and checks N > H.",
+        "hints": [
+          "A pigeon is any item placed; a hole is any container.",
+          "When N > H, some hole holds ≥2. In general, some hole holds ≥⌈N/H⌉ (ceiling, rounded up).",
+          "Read and tap Continue."
+        ]
+      }
+    },
+    {
+      "beatId": "l5-win",
+      "required": true,
+      "prompt": "Your drawer has 2 red, 20 yellow, and 31 blue socks. It's pitch dark. How many socks must you grab to guarantee a matching pair?",
+      "interaction": {
+        "type": "answerEntry",
+        "fields": [
+          {
+            "id": "min-socks",
+            "label": "Minimum socks to guarantee a match",
+            "accept": ["4"],
+            "placeholder": "?",
+            "suffix": "socks"
+          }
+        ]
+      },
+      "feedback": {
+        "correct": "Exactly — 3 colors are 3 holes, so 4 socks force two to match. Pile sizes never mattered.",
+        "hints": [
+          "Tempting to use 20 or 31 — but pile size is a decoy. Count the colors: that's the number of holes.",
+          "With 3 colors (3 holes), 3 socks can still be all-different — one per color. What must happen to the 4th?",
+          "The 4th sock must share a color with one of the first three. So 3 + 1 = 4 socks guarantee a match."
+        ]
+      }
+    },
+    {
+      "beatId": "l5-explore",
+      "required": true,
+      "prompt": "Place the 4 socks into the 3 color bins. Try to avoid putting two socks in the same bin.",
+      "interaction": {
+        "type": "pigeonholeBoard",
+        "items": 4,
+        "holes": 3,
+        "holeLabels": ["Red", "Yellow", "Blue"],
+        "itemLabel": "sock"
+      },
+      "hero": {
+        "slowFirst": true,
+        "structuralReadout": "After 3 socks fill every color, the 4th sock has nowhere new to go — the collision lights up.",
+        "reducedMotionFinalFrame": true
+      },
+      "feedback": {
+        "correct": "The 4th sock has nowhere new to go — the collision is forced. That's the pigeonhole principle in action.",
+        "hints": [
+          "Try to place all 4 socks so no bin holds two — you'll find it's impossible.",
+          "Once each color (Red, Yellow, Blue) holds one sock, the 4th has no new color to go to.",
+          "3 holes, 4 pigeons — some hole must hold ≥⌈4/3⌉ = 2."
+        ]
+      }
+    },
+    {
+      "beatId": "l5-scaffold",
+      "required": false,
+      "track": "A",
+      "prompt": "Now try 7 socks and 3 color bins. Place all 7 — can you keep bins even?",
+      "interaction": {
+        "type": "pigeonholeBoard",
+        "items": 7,
+        "holes": 3,
+        "holeLabels": ["Red", "Yellow", "Blue"],
+        "itemLabel": "sock"
+      },
+      "feedback": {
+        "correct": "7 socks, 3 colors — no matter how you place them, some color holds ≥ 3 = ⌈7/3⌉. The principle scales past 'just two.'",
+        "hints": [
+          "Place all 7 socks — try to keep bins even.",
+          "With 3 holes and 7 socks, 7 ÷ 3 = 2.33…, so some hole holds at least 3.",
+          "⌈7/3⌉ = 3. Some color-sock pile is forced to 3 or more."
+        ]
+      }
+    },
+    {
+      "beatId": "l5-model",
+      "required": false,
+      "introducesSymbol": "⌈N/H⌉",
+      "groundedBy": ["l5-win", "l5-explore"],
+      "interviewNote": "In quant interviews, the pigeonhole skill that matters is identifying the holes when they aren't handed to you. The pigeons are usually obvious (people, socks, coin combinations). The trap is recognizing what the holes ARE — not the 26 people at the party but their 25 possible handshake counts {1..25}; not the 51 ants but the 25 grid regions they scatter into. Once you see the holes, the argument is one line: if N > H, forcesCollision = true; for the guaranteed minimum, compute ⌈N/H⌉. Callback to L1: the 3 counterfeit-coin bags (3 × 3 = 9 combos, 7 possible sums) reappear here — forcesCollision(9, 7) = true, so 2 coins per bag can't uniquely identify all 27 weight combos. Same engine, different holes.",
+      "prompt": "Three lenses on the same principle — tap each card to reveal.",
+      "interaction": {
+        "type": "tripletReveal",
+        "value": "⌈N/H⌉",
+        "lenses": [
+          {
+            "label": "Base case: 4 socks, 3 colors",
+            "body": "4 > 3 → forcesCollision = true. With 3 holes, 3 socks can still be all-different (one per color). The 4th has nowhere new to land. Some hole holds ≥⌈4/3⌉ = 2."
+          },
+          {
+            "label": "General formula: ⌈N/H⌉",
+            "body": "With N pigeons and H holes, some hole holds at least ⌈N/H⌉ (ceiling of N ÷ H). Example: ⌈7/3⌉ = 3 — 7 socks into 3 bins forces a pile of ≥3, not just 2."
+          },
+          {
+            "label": "Existence, not enumeration",
+            "body": "Pigeonhole never lists arrangements — it proves one must exist. Don't reach for multiply or nCk. The question is: 'what must occur?' Answer: some hole holds ≥⌈N/H⌉."
+          }
+        ],
+        "display": "cards"
+      },
+      "feedback": {
+        "correct": "Three views, one tool — N > H forces a repeat; ⌈N/H⌉ tells how many must pile up. Existence, not enumeration.",
+        "hints": [
+          "Tap each card — what does the base case say? The general formula? The key distinction?",
+          "Base case: 4 > 3 → 2 in one bin. General: ⌈7/3⌉ = 3. Existence: we never list arrangements.",
+          "Read all three lenses, then Continue."
+        ]
+      }
+    },
+    {
+      "beatId": "l5-apply",
+      "required": true,
+      "prompt": "A welcome party: 25 members join plus you — 26 people total. Everyone shakes hands with at least 1 and at most 25 others. First, identify the holes. Then decide: must two people have shaken exactly the same number of hands?",
+      "interaction": {
+        "type": "answerEntry",
+        "fields": [
+          {
+            "id": "holes",
+            "label": "How many distinct handshake-count values are possible?",
+            "accept": ["25"],
+            "placeholder": "?",
+            "suffix": "possible counts"
+          },
+          {
+            "id": "verdict",
+            "label": "Must two people share a count?",
+            "accept": ["yes", "Yes", "YES"],
+            "placeholder": "yes or no"
+          }
+        ]
+      },
+      "feedback": {
+        "correct": "Yes — 26 people into 25 count-slots {1..25}; 26 > 25 forces two to share a number.",
+        "hints": [
+          "Don't count people (the pigeons) — the holes are the 25 possible handshake counts {1..25}.",
+          "26 people each have a count in {1, 2, …, 25}: 26 pigeons, 25 holes — is 26 > 25? Yes.",
+          "forcesCollision(26, 25) = true — two people must share a count. Verdict: yes."
+        ]
+      }
+    },
+    {
+      "beatId": "l5-prove",
+      "required": true,
+      "prompt": "51 ants wander onto a unit square. You cut the square into a 5×5 grid of 25 equal smaller squares. You have a circular glass of radius 1/7. What is the minimum number of ants that must share one of the 25 regions?",
+      "interaction": {
+        "type": "masteryChallenge",
+        "scenario": "Remember: once you name the holes and count pigeons, ⌈N/H⌉ gives the guaranteed minimum. Here the partition is handed to you — 25 regions.",
+        "fields": [
+          {
+            "id": "min-per-region",
+            "label": "Minimum ants in the most-crowded region",
+            "accept": ["3"],
+            "placeholder": "?",
+            "suffix": "ants"
+          }
+        ]
+      },
+      "feedback": {
+        "correct": "Exactly — 25 regions, ⌈51/25⌉ = 3, so some region holds ≥3 ants; a radius-1/7 glass covers it.",
+        "hints": [
+          "Even perfectly spread, 51 ants can't fit ≤2 per region: 25 × 2 = 50 < 51. Some region is forced to 3.",
+          "Use the formula: ⌈51/25⌉ = ceiling(51 ÷ 25) = ceiling(2.04) = 3. Some region must hold at least 3.",
+          "51 ants, 25 regions → ⌈51/25⌉ = 3. A radius-1/7 glass covers a side-1/5 square. Yes, always."
+        ]
+      }
+    },
+    {
+      "beatId": "l5-recap",
+      "required": true,
+      "prompt": "Reveal the recap — and the bridge to counting probabilities (L6).",
+      "interaction": { "type": "recap" },
+      "feedback": {
+        "correct": "Pigeons + holes + ⌈N/H⌉ — guarantee existence without listing a single arrangement. Next: turn counts into odds → Counting Probabilities (L6).",
+        "hints": [
+          "N > H → forcesCollision = true → some hole holds ≥2.",
+          "In general, some hole holds ≥⌈N/H⌉ — ceiling of N ÷ H.",
+          "Bridge: L6 — now that we can count guaranteed outcomes, we can compute exact probabilities."
+        ]
+      }
+    }
+  ]
+}
