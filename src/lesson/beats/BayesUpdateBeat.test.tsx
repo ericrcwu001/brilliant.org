@@ -228,7 +228,9 @@ describe('BarsDisplay direct path — Monty Hall (n=3)', () => {
   })
 
   it('direct predicate fires for n=2 with interactive:false', () => {
-    const direct = 2 > 2 || false === false
+    const hypothesesLength = 2
+    const interactive = false
+    const direct = hypothesesLength > 2 || interactive === false
     expect(direct).toBe(true)
   })
 
