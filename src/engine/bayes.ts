@@ -52,6 +52,25 @@ export function sequentialPosterior(
   return ratDiv(num, ratAdd(num, other))
 }
 
+// Fold likelihood ratios in odds space, return the posterior probability.
+// posteriorOdds = priorOdds × ∏ LRs; then convert to probability via oddsToProb.
+export function oddsUpdateProb(priorOdds: Rational, likelihoodRatios: Rational[]): Rational {
+  const finalOdds = likelihoodRatios.reduce((odds, lr) => posteriorOdds(odds, lr), priorOdds)
+  return oddsToProb(finalOdds)
+}
+
+// Smallest integer k ≥ 1 at which sequentialPosterior(prior,…,k) ≥ threshold.
+// Returns { n: k, d: 1 } so formatRational gives the integer string.
+export function smallestKCross(
+  prior: Rational, pEgivenH: Rational, pEgivenNotH: Rational, threshold: Rational,
+): Rational {
+  for (let k = 1; k <= 100_000; k++) {
+    const p = sequentialPosterior(prior, pEgivenH, pEgivenNotH, k)
+    if (p.n * threshold.d >= threshold.n * p.d) return { n: k, d: 1 }
+  }
+  throw new Error('smallestKCross: no crossing found within 100,000 iterations')
+}
+
 // Natural frequencies over a population. Returns exact counts + PPV.
 //   sick = prior·pop; healthy = (1-prior)·pop
 //   tp = sick·sens; fn = sick·(1-sens); tn = healthy·spec; fp = healthy·(1-spec)

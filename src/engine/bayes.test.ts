@@ -6,6 +6,8 @@ import {
   sequentialPosterior,
   naturalFrequencies,
   oddsToProb,
+  oddsUpdateProb,
+  smallestKCross,
   formatRational,
 } from './bayes'
 import type { Rational } from './types'
@@ -125,6 +127,36 @@ describe('naturalFrequencies', () => {
     expect(fp).toEqual({ n: 99, d: 1 })
     expect(fn).toEqual({ n: 1, d: 1 })
     expect(tn).toEqual({ n: 9801, d: 1 })
+  })
+})
+
+describe('oddsUpdateProb — golden rows', () => {
+  it('1% disease, LR=99 once → 1/2', () => {
+    expect(formatRational(oddsUpdateProb(R(1, 99), [R(99, 1)]))).toBe('1/2')
+  })
+  it('1% disease, LR=99 twice → 99/100', () => {
+    expect(formatRational(oddsUpdateProb(R(1, 99), [R(99, 1), R(99, 1)]))).toBe('99/100')
+  })
+  it('1% disease, LR=99 three times → 9801/9802', () => {
+    expect(formatRational(oddsUpdateProb(R(1, 99), [R(99, 1), R(99, 1), R(99, 1)]))).toBe('9801/9802')
+  })
+  it('1% disease, LR+ then LR− → back to base rate 1/100', () => {
+    expect(formatRational(oddsUpdateProb(R(1, 99), [R(99, 1), R(1, 99)]))).toBe('1/100')
+  })
+  it('2% disease, LR=99 twice → 9801/9850', () => {
+    expect(formatRational(oddsUpdateProb(R(1, 49), [R(99, 1), R(99, 1)]))).toBe('9801/9850')
+  })
+  it('10% condition, LR=9/2 twice → 9/13', () => {
+    expect(formatRational(oddsUpdateProb(R(1, 9), [R(9, 2), R(9, 2)]))).toBe('9/13')
+  })
+})
+
+describe('smallestKCross — golden rows', () => {
+  it('1000 coins, crosses 1/2 at k=10', () => {
+    expect(formatRational(smallestKCross(R(1, 1000), R(1), R(1, 2), R(1, 2)))).toBe('10')
+  })
+  it('1000 coins, crosses 99/100 at k=17', () => {
+    expect(formatRational(smallestKCross(R(1, 1000), R(1), R(1, 2), R(99, 100)))).toBe('17')
   })
 })
 
