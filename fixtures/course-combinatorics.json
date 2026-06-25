@@ -1,17 +1,92 @@
 {
   "courseId": "course-combinatorics",
   "title": "Combinatorics",
-  "description": "Master the art of counting without listing: permutations, combinations, the pigeonhole principle, inclusion-exclusion, and generating functions. From password security to the birthday paradox, discover why combinatorial thinking is the key to problem solving.",
-  "persona": "For puzzle lovers and competition-math enthusiasts. No prerequisites beyond comfort with multiplication; each technique is built from scratch through interactive examples.",
+  "description": "Master the art of counting without listing: the multiplication rule, permutations and combinations, the binomial theorem, inclusion-exclusion, the pigeonhole principle, and turning counts into probabilities. From the birthday paradox to poker odds, discover why combinatorial thinking is the key to sizing sets too large to ever enumerate.",
+  "persona": "For puzzle lovers and quant-interview preppers. No prerequisites beyond comfort with multiplication; each technique is built from scratch through interactive examples.",
+  "lessons": [
+    {
+      "lessonId": "lesson-combinatorics-1",
+      "title": "The Counting Principle",
+      "summary": "Multiply independent choices to count outcomes — and arrange a full set with factorials — without ever listing them.",
+      "milestoneId": "combinatorics-counting-mastered",
+      "built": true,
+      "glyphKey": "×",
+      "vizKey": "dice"
+    },
+    {
+      "lessonId": "lesson-combinatorics-2",
+      "title": "Permutations & Combinations",
+      "summary": "Tell ordered selection (nPk) from unordered selection (nCk), and know when order matters.",
+      "milestoneId": "combinatorics-perms-mastered",
+      "built": true,
+      "glyphKey": "(n k)",
+      "vizKey": "dice"
+    },
+    {
+      "lessonId": "lesson-combinatorics-3",
+      "title": "The Binomial Theorem",
+      "summary": "See that the nCk ARE the coefficients of (a+b)ⁿ: Pascal symmetry, and each row sums to 2ⁿ.",
+      "milestoneId": "binomial-theorem-mastered",
+      "built": true,
+      "glyphKey": "(a+b)ⁿ",
+      "vizKey": "sum"
+    },
+    {
+      "lessonId": "lesson-combinatorics-4",
+      "title": "Inclusion–Exclusion",
+      "summary": "Count overlapping sets via |A∪B| = |A| + |B| − |A∩B|, then count poker hands.",
+      "milestoneId": "inclusion-exclusion-mastered",
+      "built": true,
+      "glyphKey": "∪",
+      "vizKey": "sum"
+    },
+    {
+      "lessonId": "lesson-combinatorics-5",
+      "title": "The Pigeon Hole Principle",
+      "summary": "When items outnumber containers, some container must repeat — guarantee existence with ⌈N/H⌉.",
+      "milestoneId": "pigeonhole-mastered",
+      "built": true,
+      "glyphKey": "n+1",
+      "vizKey": "dice"
+    },
+    {
+      "lessonId": "lesson-combinatorics-6",
+      "title": "Counting Probabilities",
+      "summary": "Turn counts into odds — P(event) = favorable ÷ total — and rank poker hands by probability.",
+      "milestoneId": "combinatorics-mastered",
+      "built": true,
+      "glyphKey": "k/N",
+      "vizKey": "dice"
+    }
+  ],
+  "roadmap": [],
   "completionMilestoneId": "combinatorics-complete",
   "schemaVersion": 1,
   "domain": "Combinatorics & Games",
   "domainOrder": 1,
   "order": 0,
-  "status": "coming_soon",
+  "status": "live",
   "tagline": "Count cleverly to avoid counting everything.",
   "accent": "ch5",
   "vizKey": "dice",
-  "lessons": [],
-  "roadmap": []
+  "chapters": [
+    {
+      "id": "ch-combinatorics-1",
+      "label": "Counting Foundations",
+      "accent": "ch5",
+      "lessonIds": ["lesson-combinatorics-1", "lesson-combinatorics-2"]
+    },
+    {
+      "id": "ch-combinatorics-2",
+      "label": "Structure & Overlap",
+      "accent": "ch1",
+      "lessonIds": ["lesson-combinatorics-3", "lesson-combinatorics-4"]
+    },
+    {
+      "id": "ch-combinatorics-3",
+      "label": "Existence & Probability",
+      "accent": "ch3",
+      "lessonIds": ["lesson-combinatorics-5", "lesson-combinatorics-6"]
+    }
+  ]
 }

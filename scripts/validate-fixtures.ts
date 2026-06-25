@@ -14,7 +14,7 @@ import {
   LessonSchema,
   SnapshotSchema,
 } from '../src/content/schema'
-import type { Beat, Lesson } from '../src/content/schema'
+import type { Beat, Course, Lesson } from '../src/content/schema'
 import { buildAutomaton } from '../src/engine/automaton'
 import {
   nCk,
@@ -61,7 +61,7 @@ const lessons = lessonFiles.map((f) => validate(f, LessonSchema) as Lesson)
 const courseFiles = readdirSync(fixturesDir)
   .filter((f) => /^course-.*\.json$/.test(f))
   .sort()
-courseFiles.forEach((f) => validate(f, CourseSchema))
+const courses = courseFiles.map((f) => validate(f, CourseSchema) as Course)
 
 validate('example-snapshot.json', SnapshotSchema)
 validate('canonical.example.json', CanonicalRecurrenceSchema)
@@ -339,5 +339,79 @@ for (const lesson of lessons) {
   ok('reduce(44,120)=11/30', r.n === 11n && r.d === 30n)
   console.log('✓ combinatorics engine self-check (Stage-2 anchor)')
 }
+
+// ── 7. Chapters-coverage gate (live-concept hard requirement, ADR-0004). The
+// per-concept journey renders lessons ONLY inside course.chapters[], so for every
+// course that declares chapters: each chapter lessonId must be a real lesson node,
+// appear in exactly one chapter, and (if built) have a fixture on disk; and every
+// built lesson node must be covered by some chapter (else it renders invisible).
+const fixtureLessonIds = new Set(lessons.map((l) => l.lessonId))
+for (const course of courses) {
+  if (!course.chapters || course.chapters.length === 0) continue
+  const nodeById = new Map(course.lessons.map((n) => [n.lessonId, n]))
+  const seen = new Map<string, number>()
+  for (const ch of course.chapters) {
+    for (const id of ch.lessonIds) {
+      seen.set(id, (seen.get(id) ?? 0) + 1)
+      const node = nodeById.get(id)
+      if (!node) {
+        fail(`${course.courseId}: chapter "${ch.id}" lists ${id}, not a course.lessons[] node`)
+      }
+      if (node.built && !fixtureLessonIds.has(id)) {
+        fail(`${course.courseId}: chapter lessonId ${id} is built but has no lesson fixture on disk`)
+      }
+    }
+  }
+  for (const [id, count] of seen) {
+    if (count > 1) fail(`${course.courseId}: lessonId ${id} appears in ${count} chapters (must be exactly one)`)
+  }
+  for (const node of course.lessons) {
+    if (node.built && !seen.has(node.lessonId)) {
+      fail(`${course.courseId}: built lesson ${node.lessonId} is in no chapter (would render invisible)`)
+    }
+  }
+  console.log(`✓ chapters cover all built lessons: ${course.courseId}`)
+}
+
+// ── 8. Combinatorics per-fixture engine cross-check (two-stage fact-check,
+// Stage 2). For course-combinatorics beats whose engine inputs live in the
+// fixture, recompute from src/engine/combinatorics.ts and compare. Problem-
+// specific answerEntry/masteryChallenge accepts are cross-checked per lesson in
+// src/content/lesson-combinatorics-*.factcheck.test.ts.
+const stripNum = (s: string) => s.replace(/[,\s]/g, '')
+let comboChecked = 0
+for (const lesson of lessons) {
+  if (lesson.courseId !== 'course-combinatorics') continue
+  for (const beat of lesson.beats) {
+    const it = beat.interaction
+    const where = `${lesson.lessonId}/${beat.beatId}`
+    if (it.type === 'countingTree' && it.accept) {
+      const got = product(it.levels.map((l) => l.options)).toString()
+      if (!it.accept.map(stripNum).includes(got)) {
+        fail(`${where}: countingTree accept ${JSON.stringify(it.accept)} != product=${got}`)
+      }
+      comboChecked++
+    } else if (it.type === 'selectionGrid' && it.accept) {
+      const got = (it.order === 'off' ? nCk(it.n, it.k) : nPk(it.n, it.k)).toString()
+      if (!it.accept.map(stripNum).includes(got)) {
+        fail(`${where}: selectionGrid(${it.order}) accept ${JSON.stringify(it.accept)} != ${got}`)
+      }
+      comboChecked++
+    } else if (it.type === 'pigeonholeBoard') {
+      if (!forcesCollision(it.items, it.holes)) {
+        fail(`${where}: pigeonholeBoard items=${it.items} holes=${it.holes} must force a collision (N>H)`)
+      }
+      comboChecked++
+    } else if (it.type === 'probabilityCounter' && it.accept) {
+      const fav = Number(product(it.factors.map((f) => f.value)))
+      const r = probabilityFromCounts(fav, it.total)
+      if (!it.accept.includes(`${r.n}/${r.d}`)) {
+        fail(`${where}: probabilityCounter accept ${JSON.stringify(it.accept)} != ${r.n}/${r.d}`)
+      }
+      comboChecked++
+    }
+  }
+}
+console.log(`✓ combinatorics per-fixture engine cross-check (${comboChecked} beats)`)
 
 console.log('\nAll fixtures valid.')

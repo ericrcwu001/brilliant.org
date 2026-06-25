@@ -8,12 +8,24 @@ import type { Beat } from '../content/schema'
 
 // Beat types that grade an answer through the hint ladder. `retrievalGrid` (the
 // matching-grid recall variant, build-brief §4.4) is graded like the other check beats.
-const GRADED_BEAT_TYPES = new Set(['stateTap', 'equationTiles', 'answerEntry', 'masteryChallenge', 'retrievalGrid'])
+const GRADED_BEAT_TYPES = new Set(['stateTap', 'equationTiles', 'answerEntry', 'masteryChallenge', 'retrievalGrid', 'handRanker'])
+// countingTree/selectionGrid grade an answer only when they carry an `accept`
+// list — the combinatorics explore variants (no `accept`) are ungraded even when
+// `required`, so they count toward the mastery signal only when graded.
+const ACCEPT_GATED_BEAT_TYPES = new Set(['countingTree', 'selectionGrid'])
+
+function isGradedBeat(beat: Beat): boolean {
+  const type = beat.interaction.type
+  if (GRADED_BEAT_TYPES.has(type)) return true
+  if (ACCEPT_GATED_BEAT_TYPES.has(type)) {
+    const accept = (beat.interaction as { accept?: unknown }).accept
+    return Array.isArray(accept) && accept.length > 0
+  }
+  return false
+}
 
 export function gradedRequiredBeatIds(beats: Beat[]): string[] {
-  return beats
-    .filter((b) => b.required && GRADED_BEAT_TYPES.has(b.interaction.type))
-    .map((b) => b.beatId)
+  return beats.filter((b) => b.required && isGradedBeat(b)).map((b) => b.beatId)
 }
 
 export function computeMastered(
