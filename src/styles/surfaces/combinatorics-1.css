@@ -1,0 +1,199 @@
+/* ── CountingTreeBeat — product-rule tree (lesson-combinatorics-1) ──────────
+   Tokens only; no raw hex. Chapter accent resolves through var(--accent)
+   which the lesson shell injects as var(--ch5) for course-combinatorics. */
+
+.counting-tree {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s3);
+}
+
+/* ── Live running-product badge ─────────────────────────────────────────── */
+
+.counting-tree__product-live {
+  margin: 0;
+  min-height: 32px;
+  display: flex;
+  align-items: center;
+}
+
+.counting-tree__product-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: var(--s1) var(--s3);
+  border-radius: var(--r-pill);
+  background: var(--accent-tint);
+  font-family: var(--font-mono);
+  font-size: calc(20px * var(--fs));
+  font-weight: 700;
+  color: var(--accent);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .counting-tree__product-badge {
+    animation: ctr-product-pulse var(--dur-base) var(--ease-out);
+  }
+}
+
+@keyframes ctr-product-pulse {
+  0% { transform: scale(1.05); }
+  100% { transform: scale(1); }
+}
+
+/* ── Level rows ─────────────────────────────────────────────────────────── */
+
+.counting-tree__levels {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s2);
+}
+
+.counting-tree__level-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s1);
+}
+
+.counting-tree__level {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s2);
+}
+
+/* ── Expand button ──────────────────────────────────────────────────────── */
+
+.counting-tree__expand-btn {
+  align-self: flex-start;
+  min-width: 44px;
+  min-height: 44px;
+  padding: var(--s2) var(--s4);
+  border: 1.5px solid var(--rule);
+  border-radius: var(--r-sm);
+  background: var(--ergo-surface);
+  font-family: var(--font-mono);
+  font-size: calc(15px * var(--fs));
+  color: var(--ink);
+  cursor: pointer;
+  text-align: left;
+}
+
+.counting-tree__expand-btn:not(:disabled):hover {
+  border-color: var(--accent);
+  background: var(--accent-tint);
+}
+
+.counting-tree__expand-btn:focus-visible {
+  box-shadow: var(--ring-focus);
+  outline: none;
+}
+
+.counting-tree__expand-btn:disabled {
+  cursor: default;
+  opacity: 0.55;
+}
+
+.counting-tree__expand-btn--on {
+  border-color: var(--accent);
+  background: var(--accent-tint);
+  color: var(--accent);
+  cursor: default;
+}
+
+/* ── Node pills ─────────────────────────────────────────────────────────── */
+
+.counting-tree__nodes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s2);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .counting-tree__nodes {
+    animation: ctr-nodes-in var(--dur-slow) var(--ease-out);
+  }
+}
+
+@keyframes ctr-nodes-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.counting-tree__node {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 28px;
+  min-height: 28px;
+  border: 1px solid var(--rule);
+  border-radius: var(--r-sm);
+  background: var(--ergo-surface);
+  box-shadow: var(--ergo-shadow-sm);
+}
+
+/* ── SVG connector lines ────────────────────────────────────────────────── */
+
+.counting-tree__connector {
+  display: block;
+  width: 100%;
+  height: 24px;
+}
+
+/* ── Notation badge (= n!) ──────────────────────────────────────────────── */
+
+.counting-tree__notation-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: var(--s1) var(--s3);
+  border-radius: var(--r-sm);
+  background: var(--accent-tint);
+  font-family: var(--font-mono);
+  font-size: calc(16px * var(--fs));
+  font-weight: 600;
+  color: var(--accent);
+  align-self: flex-start;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .counting-tree__notation-badge {
+    animation: ctr-badge-in var(--dur-slow) var(--ease-out);
+  }
+}
+
+@keyframes ctr-badge-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* ── Answer input (graded mode) ─────────────────────────────────────────── */
+
+.counting-tree__answer {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s2);
+}
+
+.counting-tree__answer-label {
+  font-family: var(--font-mono);
+  font-size: calc(14px * var(--fs));
+  color: var(--graphite);
+}
+
+.counting-tree__input {
+  max-width: 200px;
+}
+
+/* ── Reduced-motion overrides ───────────────────────────────────────────── */
+
+@media (prefers-reduced-motion: reduce) {
+  .counting-tree__product-badge,
+  .counting-tree__nodes,
+  .counting-tree__notation-badge {
+    animation: none;
+  }
+}

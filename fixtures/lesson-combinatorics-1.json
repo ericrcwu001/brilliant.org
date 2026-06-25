@@ -1,0 +1,236 @@
+{
+  "lessonId": "lesson-combinatorics-1",
+  "courseId": "course-combinatorics",
+  "title": "The Counting Principle",
+  "patternOptions": ["H"],
+  "milestoneId": "combinatorics-counting-mastered",
+  "unlocks": "lesson-combinatorics-2",
+  "schemaVersion": 1,
+  "beats": [
+    {
+      "beatId": "l1-recall",
+      "required": true,
+      "prompt": "Tap to match the number of coin flips to the number of distinct H/T strings.",
+      "interaction": {
+        "type": "retrievalGrid",
+        "pairs": [
+          { "left": "1 flip", "right": "2" },
+          { "left": "2 flips", "right": "4" },
+          { "left": "3 flips", "right": "8" }
+        ]
+      },
+      "feedback": {
+        "correct": "2, 4, 8 — the count doubles every flip. Let's find out why.",
+        "hints": [
+          "Count all distinct strings — HH, HT, TH, TT for 2 flips.",
+          "1 flip → H or T = 2. 2 flips → HH,HT,TH,TT = 4. Pattern?",
+          "Match: 1 flip→2, 2 flips→4, 3 flips→8."
+        ]
+      }
+    },
+    {
+      "beatId": "l1-bet",
+      "required": true,
+      "prompt": "You flip a coin 10 times and write down the H/T string. How many different strings could come out?",
+      "interaction": {
+        "type": "prediction",
+        "options": ["About 10", "About 100", "About 1,024"]
+      },
+      "feedback": {
+        "byOption": {
+          "About 10": {
+            "note": "That's counting flips, not strings — each of the 10 flips doubles the possibilities, so they explode past 10."
+          },
+          "About 100": {
+            "note": "Bigger is right, but not 10×10 — ten independent doublings compound to 2¹⁰. Let's count it."
+          },
+          "About 1,024": {
+            "note": "Yes — ten 2-way choices multiply: 2×2×…=2¹⁰=1,024, too big to ever list.",
+            "correct": true
+          }
+        }
+      }
+    },
+    {
+      "beatId": "l1-primer",
+      "required": false,
+      "prompt": "A quick principle before the tree.",
+      "interaction": {
+        "type": "primer",
+        "variant": "custom",
+        "title": "Independent choices multiply",
+        "body": "Two choices are independent if picking one doesn't change the options for the other — like flipping a coin twice. When you have a sequence of independent choices, the total count is their product: 2 options then 2 options = 2×2 = 4 total strings. Add a third: 4×2 = 8. And so on — you never add.",
+        "collapsible": true
+      },
+      "feedback": {
+        "correct": "Keep that in mind — every level of the tree below is one independent choice.",
+        "hints": [
+          "Independent means one choice doesn't shrink the next menu.",
+          "Two 2-way choices: 2×2=4, not 2+2=4 (same number here, but wait for 3 levels).",
+          "Read and tap Continue."
+        ]
+      }
+    },
+    {
+      "beatId": "l1-win",
+      "required": true,
+      "prompt": "Tap each level to expand the flip tree and watch the count multiply. What's the final count for 3 flips?",
+      "interaction": {
+        "type": "countingTree",
+        "levels": [
+          { "label": "Flip 1", "options": 2 },
+          { "label": "Flip 2", "options": 2 },
+          { "label": "Flip 3", "options": 2 }
+        ],
+        "accept": ["8"]
+      },
+      "feedback": {
+        "correct": "Right — 2×2×2 = 8; each flip multiplies the running count.",
+        "hints": [
+          "Tap Level 1 — 2 branches appear (H, T). Running product reads 2.",
+          "Tap Level 2 — each branch forks: 2×2 = 4 total paths.",
+          "Tap Level 3 — doubles again: 4×2 = 8. Type 8."
+        ]
+      },
+      "hero": {
+        "slowFirst": true,
+        "structuralReadout": "Each tap doubles the running count — 2 → 4 → 8.",
+        "reducedMotionFinalFrame": true
+      }
+    },
+    {
+      "beatId": "l1-scaffold",
+      "required": false,
+      "track": "A",
+      "prompt": "Add a fourth flip. Tap all 4 levels to see 2⁴ = 16.",
+      "interaction": {
+        "type": "countingTree",
+        "levels": [
+          { "label": "Flip 1", "options": 2 },
+          { "label": "Flip 2", "options": 2 },
+          { "label": "Flip 3", "options": 2 },
+          { "label": "Flip 4", "options": 2 }
+        ]
+      },
+      "feedback": {
+        "correct": "2⁴ = 16 — one more flip, twice the count. The doubling every step IS the 2ⁿ law.",
+        "hints": [
+          "Tap Levels 1–3 first: you'll get 8, same as before.",
+          "Now tap Level 4: 8 doubles to 16.",
+          "2¹=2, 2²=4, 2³=8, 2⁴=16 — each step multiplies by 2."
+        ]
+      }
+    },
+    {
+      "beatId": "l1-explore",
+      "required": true,
+      "prompt": "Tap each level of the outfit tree: 2 shirt colors × 3 pant styles × 2 shoe types. How many distinct outfits are there?",
+      "interaction": {
+        "type": "countingTree",
+        "levels": [
+          { "label": "Shirt color", "options": 2 },
+          { "label": "Pant style", "options": 3 },
+          { "label": "Shoe type", "options": 2 }
+        ]
+      },
+      "feedback": {
+        "correct": "2×3×2 = 12 — different options at each step, still multiply them all.",
+        "hints": [
+          "Tap Level 1 (shirts): 2 branches — running product = 2.",
+          "Tap Level 2 (pants): each splits 3 ways — 2×3 = 6.",
+          "Tap Level 3 (shoes): 6×2 = 12. Multiplication rule, mixed fan-out."
+        ]
+      }
+    },
+    {
+      "beatId": "l1-multadd",
+      "required": true,
+      "comparison": true,
+      "interviewNote": "The multiply-vs-add distinction is the single most common combinatorics error in quant interviews: chain independent choices with ×; mutually-exclusive either/or cases get +. The counterfeit-coin base-3 encoding (Green Book p.12) is the canonical real-world example — 3 bags × 3 weights each = 3³ = 27 combinations, not 9.",
+      "prompt": "Three bags each contain a coin that can weigh −1, 0, or +1 gram. The bags are chosen independently. How many distinct weight combinations are possible?",
+      "interaction": {
+        "type": "answerEntry",
+        "fields": [
+          {
+            "id": "ans",
+            "label": "Distinct weight combinations",
+            "accept": ["27"],
+            "placeholder": "your answer"
+          }
+        ]
+      },
+      "feedback": {
+        "correct": "Right — 3³ = 27; three independent bags, 3 weights each, multiply.",
+        "hints": [
+          "Each bag's weight is chosen independently — picking one bag's weight doesn't restrict the others, so multiply, not add.",
+          "3+3+3=9 counts only one-bag choices. Three independent 3-way choices: 3×3×3.",
+          "3×3×3 = 27."
+        ]
+      }
+    },
+    {
+      "beatId": "l1-model",
+      "required": true,
+      "introducesSymbol": "n!",
+      "groundedBy": ["l1-win", "l1-explore"],
+      "prompt": "Three people pick seats one at a time from 3, then 2, then 1 remaining spot. Tap each level to count the full arrangements.",
+      "interaction": {
+        "type": "countingTree",
+        "levels": [
+          { "label": "Person 1 (3 spots)", "options": 3 },
+          { "label": "Person 2 (2 spots)", "options": 2 },
+          { "label": "Person 3 (1 spot)", "options": 1 }
+        ]
+      },
+      "feedback": {
+        "correct": "3×2×1 = 6 = 3! — same multiplication rule, option count shrinks as each person uses up a spot. Every full arrangement of n things = n!",
+        "hints": [
+          "Person 1 picks from 3 spots. Person 2 has 2 left. Person 3 has 1.",
+          "3×2×1 — multiplication rule still, fan-out shrinks each level.",
+          "That's 6. Mathematicians write it 3! ('3 factorial'). n! = n×(n−1)×…×1."
+        ]
+      }
+    },
+    {
+      "beatId": "l1-prove",
+      "required": true,
+      "prompt": "Three students each have a birthday drawn from 365 days. How many birthday sequences have no two students sharing a day?",
+      "interaction": {
+        "type": "masteryChallenge",
+        "scenario": "365 days in the year; 3 students; each student's birthday is drawn independently. Count only sequences where no two students share the same day.",
+        "fields": [
+          {
+            "id": "ans",
+            "label": "No-repeat birthday sequences for 3 students",
+            "accept": ["48228180", "48,228,180"],
+            "placeholder": "your answer"
+          }
+        ]
+      },
+      "feedback": {
+        "correct": "Exactly — 365·364·363; same rule, each next person has one fewer day.",
+        "hints": [
+          "Same shrinking-product rule as the n! tree: each next person has one fewer available day.",
+          "Student 1: 365 days. Student 2: 364 (one day taken). Student 3: 363.",
+          "365×364×363 = 48,228,180."
+        ]
+      }
+    },
+    {
+      "beatId": "l1-recap",
+      "required": true,
+      "prompt": "Let's close with what you've built.",
+      "interaction": {
+        "type": "recap"
+      },
+      "feedback": {
+        "correct": "Multiply the options at each step — if choices shrink, you get n!. Next: when does order matter? → Permutations (L2).",
+        "hints": [
+          "The rule: independent choices chain with ×.",
+          "Shrinking options (n, n−1, …) give n! = total arrangements.",
+          "Bridge: L2 — when does order stop mattering? That's combinations."
+        ]
+      }
+    }
+  ]
+}

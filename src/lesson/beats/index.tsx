@@ -28,6 +28,7 @@ import { DominanceWheelBeat } from './DominanceWheelBeat'
 import { WalkBoardBeat } from './WalkBoardBeat'
 import { GamblerLedgerBeat } from './GamblerLedgerBeat'
 import { BalanceSolveBeat } from './BalanceSolveBeat'
+import { CountingTreeBeat } from './CountingTreeBeat'
 
 function ContinueStub({ beat, isLast, onAdvance }: BeatProps) {
   return (
@@ -98,9 +99,10 @@ export function BeatView(props: BeatProps) {
       return <WalkBoardBeat {...props} />
     case 'gamblerLedger':
       return <GamblerLedgerBeat {...props} />
-    // Combinatorics concept (Wave-0 contract — stub slots routed to ContinueStub;
-    // real renderers land per-lesson in the build wave, replacing each case body).
+    // Combinatorics concept (build wave — real renderers replace Wave-0 stubs).
     case 'countingTree':
+      return <CountingTreeBeat {...props} />
+    // Wave-0 stub slots; real renderers land per-lesson in later build waves.
     case 'selectionGrid':
     case 'pascalTriangle':
     case 'vennCounter':
