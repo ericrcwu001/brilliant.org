@@ -30,6 +30,7 @@ import { GamblerLedgerBeat } from './GamblerLedgerBeat'
 import { BalanceSolveBeat } from './BalanceSolveBeat'
 import { CountingTreeBeat } from './CountingTreeBeat'
 import { SelectionGridBeat } from './SelectionGridBeat'
+import { PascalTriangleBeat } from './PascalTriangleBeat'
 
 function ContinueStub({ beat, isLast, onAdvance }: BeatProps) {
   return (
@@ -103,10 +104,11 @@ export function BeatView(props: BeatProps) {
     // Combinatorics concept (build wave — real renderers replace Wave-0 stubs).
     case 'countingTree':
       return <CountingTreeBeat {...props} />
-    // Wave-0 stub slots; real renderers land per-lesson in later build waves.
     case 'selectionGrid':
       return <SelectionGridBeat {...props} />
     case 'pascalTriangle':
+      return <PascalTriangleBeat {...props} />
+    // Wave-0 stub slots; real renderers land per-lesson in later build waves.
     case 'vennCounter':
     case 'pigeonholeBoard':
     case 'probabilityCounter':

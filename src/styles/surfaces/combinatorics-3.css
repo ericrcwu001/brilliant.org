@@ -1,0 +1,181 @@
+/* === PascalTriangleBeat (lesson-combinatorics-3) ============================
+   Tap-to-reveal Pascal's triangle. Centered pyramid; ≥44px tap targets;
+   revealed cells with --ch1-tint fill + opacity/scale reveal; row-sum labels
+   in the right margin; symmetry pair ring highlight. Compositor-only motion;
+   reduced-motion branch is instant. Tokens only — no raw hex values. */
+
+/* ── Container ────────────────────────────────────────────────────────────── */
+
+.pascal-triangle {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--s3);
+  padding: var(--s3) 0;
+}
+
+/* ── Grid (all rows) ─────────────────────────────────────────────────────── */
+
+.pascal-triangle__grid {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s2);
+  align-items: center;
+  width: 100%;
+}
+
+/* ── Row ─────────────────────────────────────────────────────────────────── */
+
+.pascal-triangle__row {
+  display: flex;
+  align-items: center;
+  position: relative;
+  gap: var(--s1);
+  justify-content: center;
+  width: 100%;
+}
+
+.pascal-triangle__row-cells {
+  display: flex;
+  gap: var(--s1);
+  justify-content: center;
+}
+
+/* ── Row-sum label (right margin, appears after full row is revealed) ─────── */
+
+.pascal-triangle__row-sum {
+  position: absolute;
+  right: var(--s2);
+  font-family: var(--font-mono);
+  font-size: calc(13px * var(--fs));
+  font-variant-numeric: tabular-nums;
+  color: var(--accent-strong);
+  white-space: nowrap;
+  opacity: 0;
+  animation: pascal-rowsum-in var(--dur-slow, 400ms) var(--ease-out, ease-out) forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pascal-triangle__row-sum {
+    opacity: 1;
+    animation: none;
+  }
+}
+
+@keyframes pascal-rowsum-in {
+  from {
+    opacity: 0;
+    transform: translateX(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* ── Cell (unrevealed and revealed states) ───────────────────────────────── */
+
+.pascal-triangle__cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  min-height: 44px;
+  border-radius: var(--r-md);
+  font-family: var(--font-mono);
+  font-size: calc(15px * var(--fs));
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  cursor: pointer;
+  user-select: none;
+  position: relative;
+  /* Transparent overlay for hit-target expansion (::before). */
+  overflow: visible;
+}
+
+/* Unrevealed state: dashed border, surface-2 fill. */
+.pascal-triangle__cell:not(.pascal-triangle__cell--revealed) {
+  background: var(--paper-1);
+  border: 2px dashed var(--rule);
+  color: transparent;
+}
+
+.pascal-triangle__cell:not(.pascal-triangle__cell--revealed):focus-visible {
+  box-shadow: var(--ring-focus);
+  outline: none;
+}
+
+/* Revealed state: accent-tint fill, accent ink, shadow. */
+.pascal-triangle__cell--revealed {
+  background: var(--accent-tint);
+  border: 1px solid var(--accent);
+  color: var(--accent-strong);
+  box-shadow: var(--shadow-sm);
+  cursor: default;
+  opacity: 0;
+  animation: pascal-cell-reveal var(--dur-slow, 400ms) var(--ease-out, ease-out) forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pascal-triangle__cell--revealed {
+    opacity: 1;
+    animation: none;
+  }
+}
+
+@keyframes pascal-cell-reveal {
+  0% {
+    opacity: 0;
+    transform: scale(1.05);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Symmetry highlight ring — added to both C(n,k) and C(n,n-k) on focus/hover. */
+.pascal-triangle__cell.sym-hi {
+  box-shadow: 0 0 0 2px var(--accent), var(--shadow-sm);
+  transition: box-shadow var(--dur-base, 200ms) ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pascal-triangle__cell.sym-hi {
+    transition: none;
+  }
+}
+
+/* ── Narrow mobile: shrink cells to 38px + expand hit target via ::before ─── */
+
+@media (max-width: 374px) {
+  .pascal-triangle__cell {
+    min-width: 38px;
+    min-height: 38px;
+    font-size: calc(13px * var(--fs));
+  }
+
+  .pascal-triangle__cell:not(.pascal-triangle__cell--revealed)::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    min-width: 44px;
+    min-height: 44px;
+  }
+}
+
+/* ── Visually-hidden live region (sr-only utility) ─────────────────────────── */
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}

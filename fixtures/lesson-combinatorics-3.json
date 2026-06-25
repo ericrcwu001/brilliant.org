@@ -1,0 +1,226 @@
+{
+  "lessonId": "lesson-combinatorics-3",
+  "courseId": "course-combinatorics",
+  "title": "The Binomial Theorem",
+  "patternOptions": ["H"],
+  "milestoneId": "binomial-theorem-mastered",
+  "unlocks": "lesson-combinatorics-4",
+  "schemaVersion": 1,
+  "beats": [
+    {
+      "beatId": "l3-primer",
+      "required": false,
+      "prompt": "Quick primer — what 2ⁿ and Σ mean before we build Pascal's triangle.",
+      "interaction": {
+        "type": "primer",
+        "variant": "exponent",
+        "title": "Exponents and Σ",
+        "body": "2³ means 2 × 2 × 2 = 8 — the exponent counts how many times you multiply. Σ (sigma) means 'sum over all the values below.' We'll use both in the binomial theorem.",
+        "collapsible": true
+      },
+      "feedback": {
+        "correct": "Good — 2ⁿ doubles each step; Σ sums them all.",
+        "hints": [
+          "2¹=2, 2²=4, 2³=8 — each is double the one before.",
+          "Σₖ f(k) means add f(k) for every k in the range.",
+          "Continue."
+        ]
+      }
+    },
+    {
+      "beatId": "l3-recall",
+      "required": true,
+      "prompt": "Before we continue: match each expression to its value. These come from L1 and L2.",
+      "interaction": {
+        "type": "retrievalGrid",
+        "pairs": [
+          { "left": "2⁰+2¹+2²+2³", "right": "15" },
+          { "left": "Sum of row n of Pascal's triangle", "right": "2ⁿ" },
+          { "left": "C(n,k) counts", "right": "size-k subsets of n objects" }
+        ]
+      },
+      "maxHintLevel": 2,
+      "feedback": {
+        "correct": "Exactly — powers of two from L1 are Pascal's row sums in disguise.",
+        "hints": [
+          "Tap a left item then its matching right item.",
+          "2⁰+2¹+2²+2³ = 1+2+4+8 = 15; each Pascal row doubles; C(n,k) = unordered-selection count.",
+          "Match all three pairs."
+        ]
+      }
+    },
+    {
+      "beatId": "l3-bet",
+      "required": false,
+      "prompt": "Here's row 4 of Pascal's triangle:  1  4  6  4  1. Add it up — and guess the next row's total without building it.",
+      "interaction": {
+        "type": "prediction",
+        "options": ["25 — it's 5²", "32 — it doubles", "Can't tell without building it"]
+      },
+      "feedback": {
+        "byOption": {
+          "25 — it's 5²":                     { "note": "That's n² thinking. Row totals double each step (1,2,4,8,16…) → next is 2⁵=32." },
+          "32 — it doubles":                  { "note": "Yes — each row doubles: 16→32=2⁵. Setting a=b=1 makes every row sum 2ⁿ.", "correct": true },
+          "Can't tell without building it":   { "note": "It's not random — every row sums to 2ⁿ, so 16 doubles to 32." }
+        }
+      }
+    },
+    {
+      "beatId": "l3-win",
+      "required": true,
+      "prompt": "Expand (a+b)². What is the coefficient of the ab term?",
+      "interaction": {
+        "type": "answerEntry",
+        "fields": [
+          { "id": "coeff-ab", "label": "Coefficient of ab in (a+b)²", "accept": ["2"], "placeholder": "?" }
+        ]
+      },
+      "maxHintLevel": 3,
+      "feedback": {
+        "correct": "Right — 2 = C(2,1); the cross term shows up twice, ab+ba.",
+        "hints": [
+          "Expand (a+b)(a+b) term by term.",
+          "Freshman's dream says a²+b², but it misses two middle terms: a·b and b·a.",
+          "a·b + b·a = 2ab → coefficient 2 = C(2,1)."
+        ]
+      }
+    },
+    {
+      "beatId": "l3-scaffold-a",
+      "required": false,
+      "track": "A",
+      "prompt": "Track A: here's the full (a+b)² expansion — see how the coefficients come from C(2,k) before building the full triangle.",
+      "interaction": {
+        "type": "primer",
+        "variant": "custom",
+        "title": "Why the coefficients are 1, 2, 1",
+        "body": "(a+b)² = (a+b)(a+b)\n         = a·a + a·b + b·a + b·b\n         = a²  +  2ab  +  b²\n\nCoefficients: 1, 2, 1 = C(2,0), C(2,1), C(2,2).\nThese are row 2 of Pascal's triangle.\n\nIn general: the coefficient of aⁿ⁻ᵏbᵏ in (a+b)ⁿ is C(n,k) — the number of ways to pick which k of the n factors contribute the b.",
+        "collapsible": false
+      },
+      "feedback": {
+        "correct": "The cross terms are the key — they give C(n,k) counts.",
+        "hints": [
+          "Notice 2 = C(2,1): two ways to pick one 'b' from two factors.",
+          "In (a+b)³ there are C(3,1)=3 ways to pick one b from three factors.",
+          "That's why the a²b coefficient is always C(n,1)."
+        ]
+      }
+    },
+    {
+      "beatId": "l3-explore",
+      "required": false,
+      "prompt": "Tap each cell to build Pascal's triangle row by row. Each cell is the sum of the two directly above it — watch the running total in the right margin.",
+      "interaction": {
+        "type": "pascalTriangle",
+        "rows": 5,
+        "reveal": "tap",
+        "showRowSums": true,
+        "showSymmetry": true
+      },
+      "hero": {
+        "slowFirst": true,
+        "structuralReadout": "Row 4 = 1+4+6+4+1 = 16 = 2⁴. Row 5 = 1+5+10+10+5+1 = 32 = 2⁵.",
+        "reducedMotionFinalFrame": true
+      },
+      "feedback": {
+        "correct": "Every row doubles the last — the same 2ⁿ powers from L1, reappearing as Pascal's row sums.",
+        "hints": [
+          "Tap any blank cell to reveal its value.",
+          "Each cell = sum of the two cells directly above it.",
+          "After a whole row is revealed the right margin shows its total as a power of 2."
+        ]
+      }
+    },
+    {
+      "beatId": "l3-model",
+      "required": false,
+      "introducesSymbol": "(a+b)ⁿ/Σ",
+      "groundedBy": ["l3-explore", "l3-primer"],
+      "comparison": true,
+      "prompt": "Three ways to read the same identity — tap each card to reveal.",
+      "interaction": {
+        "type": "tripletReveal",
+        "value": "C(n,k)",
+        "lenses": [
+          {
+            "label": "Pascal's triangle cell (n,k)",
+            "body": "Every cell = C(n,k), the same combination count from L2. Row 4's entries 1, 4, 6, 4, 1 are C(4,0) through C(4,4)."
+          },
+          {
+            "label": "Binomial theorem at a=b=1",
+            "body": "(a+b)ⁿ = Σₖ C(n,k) aⁿ⁻ᵏ bᵏ. Set a=b=1: Σₖ C(n,k) = 2ⁿ. That's exactly the row sum you just built."
+          },
+          {
+            "label": "Symmetry C(n,k) = C(n,n−k)",
+            "body": "Choosing k objects in = choosing n−k objects out. The row mirrors: C(5,2) = C(5,3) = 10."
+          }
+        ],
+        "display": "cards"
+      },
+      "feedback": {
+        "correct": "Three routes, one identity: C(n,k) is Pascal's cell, the binomial coefficient, and the combination count.",
+        "hints": [
+          "Reveal all three lens cards.",
+          "Setting a=b=1 in (a+b)ⁿ=ΣC(n,k)aⁿ⁻ᵏbᵏ gives ΣC(n,k)=2ⁿ — the row sum you built in l3-explore.",
+          "C(n,n−k)=C(n,k): choosing k items in is the same as choosing n−k items out."
+        ]
+      }
+    },
+    {
+      "beatId": "l3-applied",
+      "required": true,
+      "prompt": "Is (1+√2)ⁿ + (1−√2)ⁿ always an integer? Type yes or no.",
+      "interaction": {
+        "type": "answerEntry",
+        "fields": [
+          { "id": "integer-check", "label": "Always an integer?", "accept": ["yes", "Yes", "YES"], "placeholder": "yes or no" }
+        ]
+      },
+      "maxHintLevel": 3,
+      "interviewNote": "GB p.36–37: (1+√2)¹⁰⁰+(1−√2)¹⁰⁰ is a positive integer I; since (1−√2)¹⁰⁰∈(0,1), floor((1+√2)¹⁰⁰) = I−1, so the 100th digit of (1+√2)¹⁰⁰ is 9.",
+      "feedback": {
+        "correct": "Right — the odd-power √2 terms pair off and cancel, leaving twice the even terms: an integer.",
+        "hints": [
+          "Expand each binomial with the theorem and add the two expansions together.",
+          "k odd: C(n,k)(√2)ᵏ + C(n,k)(−√2)ᵏ = 0. The irrational pieces cancel in pairs.",
+          "k even: 2·C(n,k)·2^(k/2) ∈ ℤ. Sum of integers is an integer → yes."
+        ]
+      }
+    },
+    {
+      "beatId": "l3-prove",
+      "required": true,
+      "prompt": "Mastery challenge: expand (a+10b)³ using the binomial theorem. What is the coefficient of the a²b term?",
+      "interaction": {
+        "type": "masteryChallenge",
+        "scenario": "Any integer x can be written as a + 10b where a is its ones digit (0–9). Expanding (a+10b)³ via the binomial theorem lets you control the last digits of x³. Use row 3 of Pascal's triangle: 1, 3, 3, 1.",
+        "fields": [
+          { "id": "coeff-a2b", "label": "Coefficient of a²b in (a+10b)³", "accept": ["30"], "placeholder": "?" }
+        ]
+      },
+      "maxHintLevel": 3,
+      "feedback": {
+        "correct": "Exactly — 30; row 3 is 1,3,3,1 and the b carries a 10: C(3,1)·a²·(10b) = 3·a²·10b = 30a²b.",
+        "hints": [
+          "Write out four terms: Σ C(3,k) a^(3−k) (10b)^k for k=0,1,2,3.",
+          "The a²b term is k=1: C(3,1)·a²·(10b)¹ = 3·a²·10b.",
+          "3 × 10 = 30."
+        ]
+      }
+    },
+    {
+      "beatId": "l3-recap",
+      "required": true,
+      "prompt": "Reveal the recap — and the bridge to what comes next.",
+      "interaction": { "type": "recap" },
+      "feedback": {
+        "correct": "Binomial theorem: (a+b)ⁿ = ΣC(n,k)aⁿ⁻ᵏbᵏ. Each row sums to 2ⁿ. The triangle is symmetric. Next: when sets overlap, subtraction enters — Inclusion–Exclusion (L4).",
+        "hints": [
+          "(a+b)ⁿ = ΣC(n,k)aⁿ⁻ᵏbᵏ.",
+          "Row n sums to 2ⁿ (set a=b=1).",
+          "Next: |A∪B| = |A|+|B|−|A∩B|."
+        ]
+      }
+    }
+  ]
+}
