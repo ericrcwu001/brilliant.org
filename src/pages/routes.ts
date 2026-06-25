@@ -4,6 +4,7 @@
 
 export interface NavigateOptions {
   replace?: boolean
+  viewTransition?: string
 }
 
 export type NavigateFn = (to: string, options?: NavigateOptions) => void
@@ -43,4 +44,15 @@ export function parseDevLessonId(pathname: string): string | null {
 
 export function devLessonPath(lessonId: string): string {
   return `/dev/lesson/${lessonId}`
+}
+
+/** Returns the path for a concept page: `/concept/:conceptId`. */
+export function conceptPath(conceptId: string): string {
+  return `/concept/${conceptId}`
+}
+
+/** Returns the conceptId for a `/concept/:conceptId` path, else null. */
+export function parseConceptId(pathname: string): string | null {
+  const match = pathname.match(/^\/concept\/([^/]+)$/)
+  return match ? decodeURIComponent(match[1]) : null
 }

@@ -12,8 +12,8 @@ on approval.
 
 > **Repo command gotchas (from `HANDOFF.md` — obey):**
 > - **No `npm run`** — call `./node_modules/.bin/{tsx,vitest,tsc,vite,eslint,playwright}` directly.
-> - **`firebase` CLI = the v24.3.0 shell alias** (not `npx firebase`). Pick the project with
->   `--project brilliant-org-dev` or `--project brilliant-org`.
+> - **Use the `firebase` shell alias** (it pins Node to **v24.3.0**, which firebase-tools needs; not
+>   `npx firebase`/global). Pick the project with `--project brilliant-org-dev` or `--project brilliant-org`.
 > - **No Java locally** → emulator/rules tests are user-run. The dev/prod **Admin-SDK seed** and the
 >   **hosting deploys** need no Java; the factory runs them.
 
@@ -66,7 +66,7 @@ as missing:
 
 ```
 *Lesson Factory — one-time credential setup needed*
-Run these in your terminal (use your `firebase` v24.3.0 alias), then reply *done* and I'll continue:
+Run these in your terminal (use your `firebase` alias), then reply *done* and I'll continue:
 
 ```bash
 firebase login                                   # authorizes deploys (only if not logged in)
@@ -90,8 +90,9 @@ The Green Book lives gitignored at `references/`.
 
 ```bash
 git switch -c concept/<slug>            # one branch per concept
-git worktree add ../lf-<slug>-<lesson> concept/<slug>   # isolated per-lesson build
-# ... build ...
+# Per-lesson worktree on its OWN branch (you can't check out concept/<slug> twice; use -b):
+git worktree add -b lesson/<slug>-<lesson> ../lf-<slug>-<lesson> concept/<slug>
+# ... build ... then the Integrator merges lesson/<slug>-<lesson> back into concept/<slug>, then:
 git worktree remove ../lf-<slug>-<lesson>
 ```
 
@@ -104,7 +105,7 @@ domain (the real lesson-loading path, plus `/dev/lesson/:id` for quick no-auth c
 
 ```bash
 ./node_modules/.bin/tsc -b && ./node_modules/.bin/vite build --mode dev      # uses .env.dev
-# Seed the concept's lessons + course doc into the DEV Firestore (Admin SDK + ADC):
+# Seed ALL fixtures/course-*.json (+ each course's built:true lessons) into the DEV Firestore:
 SEED_TARGET=prod GOOGLE_CLOUD_PROJECT=brilliant-org-dev \
   ./node_modules/.bin/tsx scripts/seed-firestore.ts
 firebase deploy --only hosting,firestore,functions --project brilliant-org-dev
@@ -116,9 +117,10 @@ factory may also push work-in-progress here anytime for incremental testing.
 > `SEED_TARGET=prod` just means "real project via Admin SDK" (vs the local emulator); the **project is
 > chosen by `GOOGLE_CLOUD_PROJECT`**. Dev = `brilliant-org-dev`, prod = `brilliant-org`.
 
-> **Seed-script generalization (required infra, first concept's Wave 0).** `scripts/seed-firestore.ts`
-> hardcodes `course-pattern-hitting-times.json`. Generalize it to seed **all** `fixtures/course-*.json`
-> (and each course's `built:true` lessons), or accept a `COURSE_ID` arg.
+> **Seed-script scope.** `scripts/seed-firestore.ts` seeds **all** `fixtures/course-*.json` and each
+> course's `built:true` lessons in one pass. Coming-soon stubs are course docs with `status:
+> 'coming_soon'` and no lessons — the script seeds the course doc only and skips the lessons step for
+> them. No `COURSE_ID` filtering is needed; running the script after adding a new fixture is sufficient.
 
 ## Slack alert — concept ready to test (Manager → user)
 
@@ -137,6 +139,7 @@ Lessons (all 9/9 gates green):
 Fact-check: every answer cited AND reproduced by the engine. validate/test/build/lint/e2e green.
 TEST IT (dev, not prod): <resolved dev URL>   (e.g. https://brilliant-org-dev.web.app)
 Scorecards: concepts/<slug>/*/scorecard.md
+Interview Pack (future feature, not deployed): interviews/<courseId>.md  (<N> engine-verified hard Qs)
 
 Reply *approve* to ship the whole concept to PRODUCTION (brilliant-org), or send change requests.
 ```
@@ -161,13 +164,20 @@ firebase deploy --only hosting,firestore,functions --project brilliant-org
 
 Confirm in Slack with the production link once deployed.
 
-## Reachability now (macro browse deferred)
+## Reachability
 
-Each approved concept = its own **`fixtures/course-<slug>.json`** (macro) doc seeded to
-`courses/{courseId}` with `built:true` lesson nodes — reachable via a direct course/lesson deep link
-on both dev and prod. The cross-concept **browse** UI is the macro layer the user builds later. If the
-SPA router has no public deep link to a non-default course yet, add a minimal `/<courseId>` (or
-`?course=`) entry when shipping the first new concept.
+Each approved concept = its own **`fixtures/course-<slug>.json`** seeded to `courses/{courseId}`.
+Once seeded, the concept **appears automatically in the Concept Catalog** (the signed-in macro home at
+`/`) — no UI code change required. Live concepts are clickable; coming-soon stubs (course docs with
+`status: 'coming_soon'` and no lessons) appear as muted, non-enterable cards. The concept is
+reachable directly at `/concept/<courseId>` on both dev and prod.
+
+> ⚠️ **Live-concept hard requirement (verify before alerting):** the course doc's `chapters[]` must
+> cover **every** built `lessonId`. The per-concept journey renders lessons **only inside chapters**; a
+> missing/incomplete `chapters[]` silently falls back to Pattern-Hitting-Times' chapters → the new
+> concept's lessons render **invisible**. The catalog also `safeParse`s each course doc and **silently
+> skips** any that fail `CourseSchema`. So always confirm the concept actually renders on the dev
+> catalog (`/`) + `/concept/<courseId>` — a silent skip or empty journey won't error.
 
 ## Environment / config
 

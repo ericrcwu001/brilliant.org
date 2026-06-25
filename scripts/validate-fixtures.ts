@@ -39,12 +39,17 @@ function validate(file: string, schema: z.ZodType): unknown {
   return result.data
 }
 
-// ── 1. Schema validation: every lesson-*.json, plus the fixed support fixtures.
+// ── 1. Schema validation: every lesson-*.json, all course-*.json, plus support fixtures.
 const lessonFiles = readdirSync(fixturesDir)
   .filter((f) => /^lesson-.*\.json$/.test(f))
   .sort()
 const lessons = lessonFiles.map((f) => validate(f, LessonSchema) as Lesson)
-validate('course-pattern-hitting-times.json', CourseSchema)
+
+const courseFiles = readdirSync(fixturesDir)
+  .filter((f) => /^course-.*\.json$/.test(f))
+  .sort()
+courseFiles.forEach((f) => validate(f, CourseSchema))
+
 validate('example-snapshot.json', SnapshotSchema)
 validate('canonical.example.json', CanonicalRecurrenceSchema)
 

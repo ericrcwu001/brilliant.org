@@ -14,3 +14,4 @@
 @import './surfaces/utilities.css' layer(utilities);
 @import './surfaces/ergo-home.css' layer(components);
 @import './surfaces/ergo-journey.css' layer(components);
+@import './surfaces/ergo-catalog.css' layer(components);

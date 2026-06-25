@@ -85,4 +85,6 @@ export const analytics = {
     track('streak_incremented', p),
   reviewRecommendedShown: (p: { lessonId: string }) =>
     track('review_recommended_shown', p),
+  catalogViewed: () => track('catalog_viewed', {}),
+  conceptSelected: (p: { conceptId: string }) => track('concept_selected', p),
 }

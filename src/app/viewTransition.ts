@@ -15,6 +15,15 @@
 // and Chrome's "old" snapshot capture, erasing data-vt too early. The generation
 // counter ensures only the most-recently-started VT owns the cleanup.
 
+// ── Concept-open transition contract (Wave-0 freeze) ──────────────────────────
+// Wave 2 will implement the actual animation; these names are the stable
+// identifiers that Stream B (card) and Stream C (concept header) both reference.
+
+/** view-transition name used when opening a concept from the catalog. */
+export const CONCEPT_OPEN_TRANSITION = 'concept-open'
+
+// ─────────────────────────────────────────────────────────────────────────────
+
 let _vtGen = 0
 
 export function withViewTransition(fn: () => void, vtType?: string): void {

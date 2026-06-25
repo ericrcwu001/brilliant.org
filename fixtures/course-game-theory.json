@@ -1,0 +1,17 @@
+{
+  "courseId": "course-game-theory",
+  "title": "Game Theory",
+  "description": "Model strategic interaction: prisoner's dilemma, Nash equilibria, mixed strategies, and auctions. Understand why rational players sometimes trap themselves in bad outcomes — and how mechanism design, repeated play, and commitments can break the trap.",
+  "persona": "For anyone who negotiates, competes, or cooperates. No prerequisites beyond basic probability; every concept is grounded in concrete two-player games before generalizing.",
+  "completionMilestoneId": "game-theory-complete",
+  "schemaVersion": 1,
+  "domain": "Combinatorics & Games",
+  "domainOrder": 1,
+  "order": 2,
+  "status": "coming_soon",
+  "tagline": "Find equilibria where no one wants to deviate.",
+  "accent": "ch2",
+  "vizKey": "coin",
+  "lessons": [],
+  "roadmap": []
+}

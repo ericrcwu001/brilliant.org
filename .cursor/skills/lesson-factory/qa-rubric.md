@@ -50,6 +50,17 @@ Call binaries directly — **`npm run` is broken in this repo** (npm 11 + bash 3
 Plus an explicit **engine-vs-source** assertion in the engine's golden test: each answer from the
 Lesson Brief problem table is reproduced by the engine at exact rational values.
 
+> ⚠️ **Gates 6 & 9 pass *vacuously* for a new concept unless you wire its lessons in.**
+> `scripts/validate-fixtures.ts` hardcodes its gate sets (`GATED`, `MASTERY_LESSONS`, …) to the
+> Pattern-Hitting-Times lessonIds, so a new concept's lessons are silently skipped and a 9/9 Scorecard
+> can be meaningless. Wave-0 / Dept-3 **must add the new lessonIds to those sets** (or generalize the
+> gate) so the inclusivity + mastery-challenge gates actually run.
+> Also **mechanize the chapters-coverage check** (currently manual): add an assertion to
+> `validate-fixtures.ts` that every built `lessonId` appears in exactly one `course.chapters[].lessonIds`
+> (and every chapter lessonId exists), so the "invisible lessons" trap fails CI instead of shipping.
+> **e2e caveat:** `playwright.config.ts`'s `webServer` uses `npm run dev` (forbidden here), so `e2e`
+> isn't autonomously runnable as-is — run it against a built + previewed server, or flag for the user.
+
 ## When a gate is red
 
 - Route the failure to the **owning department**, re-run that stage, re-score.
@@ -58,6 +69,17 @@ Lesson Brief problem table is reproduced by the engine at exact rational values.
 
 ## Concept-level readiness
 
-A **concept** is ready to alert the user only when **every** lesson's Scorecard reads READY. The
-Manager assembles a one-screen concept summary (lesson list + each lesson's 9/9 + the headline
-citations + the engine cross-check) for the Slack DM.
+A **concept** is ready to alert the user only when **every** lesson's Scorecard reads READY, the
+concept's **Interview Pack Scorecard** is green (`interview-packs.md`), **and the concept registers
+correctly in the Concept Catalog** — its course doc passes `CourseSchema`, emits the catalog card
+(domain/order/status/tagline/accent/vizKey) and **`chapters[]` covering every built lessonId**, and was
+verified rendering in the dev catalog (`/`) + per-concept journey (`/concept/<courseId>`). The Manager
+assembles a one-screen concept summary (catalog card + lesson list + each lesson's 9/9 + headline
+citations + engine cross-check + the Interview Pack: N engine-verified questions) for the Slack DM.
+
+## Interview Pack Scorecard (concept-level)
+
+The capstone AI-interview pack has its own gates — every pooled question anchor-and-source +
+engine-verified, pool de-duplicated, interviewer/generator prompts reviewed (no-leak / grounding /
+engine-verify-before-serve / avoid-list), difficulty tiers + follow-ups present, and the asset validates
+and is committed-not-deployed. Full gate table in **`interview-packs.md`**.

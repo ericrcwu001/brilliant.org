@@ -15,6 +15,7 @@ import { LessonSchema, type Lesson } from './schema'
 export {
   loadLessonFromFirestore,
   loadCourseFromFirestore,
+  loadCoursesFromFirestore,
 } from './firestoreLoader'
 
 // Canonical course id (mirrors docs/mvp_prd.md Data Contracts).

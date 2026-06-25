@@ -14,9 +14,9 @@ import type { NavigateFn } from './routes'
 import { lessonPath } from './routes'
 import {
   resolveNodes,
+  resolveChapters,
   recommendedAction,
   nodeCtaLabel,
-  ERGO_CHAPTERS,
   chapterForLesson,
   vizForLesson,
   type DeskNode,
@@ -34,6 +34,7 @@ export function CourseJourney(props: {
   const { course, progressById, navigate, reducedMotion } = props
 
   const nodes = resolveNodes(course, progressById)
+  const chapters = resolveChapters(course)
   const action = recommendedAction(nodes, progressById)
   // The side card follows the learner's selection; it defaults to the
   // recommended lesson so the Home loads exactly as before. Clicking a card
@@ -43,9 +44,9 @@ export function CourseJourney(props: {
   const activeId = selectedId ?? action.lessonId
 
   const activeNode = nodes.find((n) => n.lessonId === activeId) ?? null
-  const activeChapter = activeNode ? (chapterForLesson(activeNode.lessonId) ?? null) : null
+  const activeChapter = activeNode ? (chapterForLesson(activeNode.lessonId, chapters) ?? null) : null
   const activeChapterIndex = activeChapter
-    ? ERGO_CHAPTERS.findIndex((c) => c.id === activeChapter.id)
+    ? chapters.findIndex((c) => c.id === activeChapter.id)
     : -1
 
   // Build ordered list of navigable node IDs for keyboard navigation refs.
@@ -73,7 +74,7 @@ export function CourseJourney(props: {
     >
       {/* ── Left: lesson journey ─────────────────────────────── */}
       <div className="ergo-journey" aria-label="Course lessons">
-        {ERGO_CHAPTERS.map((chapter) => {
+        {chapters.map((chapter) => {
           const chNodes = nodes.filter((n) =>
             chapter.lessonIds.includes(n.lessonId),
           )
@@ -297,7 +298,7 @@ function CardContent({
             node.state === 'locked' ? 'var(--ergo-surface-2)' : vizTint,
         }}
       >
-        <MathViz kind={vizForLesson(node.lessonId)} className="ergo-mathviz" />
+        <MathViz kind={vizForLesson(node.lessonId, node.vizKey)} className="ergo-mathviz" />
       </div>
 
       <div className="ergo-card__meta">

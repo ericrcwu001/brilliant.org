@@ -401,6 +401,15 @@
   view-transition-name: lesson-hero;
 }
 
+/* Catalog↔concept hero: tag the clicked catalog card and the concept page header
+   with the same name so they morph together. */
+:root[data-vt='concept-open'] .concept-hero-source {
+  view-transition-name: concept-hero;
+}
+:root[data-vt='concept-open'] .concept-hero-target {
+  view-transition-name: concept-hero;
+}
+
 /* --- Transition animation overrides --- */
 
 /* Home↔lesson hero morph: flip-beat-paced FLIP using ease-inout. */
@@ -410,6 +419,17 @@
 }
 :root[data-vt='home-lesson']::view-transition-old(lesson-hero),
 :root[data-vt='home-lesson']::view-transition-new(lesson-hero) {
+  animation-duration: var(--flip-beat);
+  animation-timing-function: var(--ease-inout);
+}
+
+/* Catalog↔concept hero morph: flip-beat-paced FLIP using ease-inout. */
+:root[data-vt='concept-open']::view-transition-group(concept-hero) {
+  animation-duration: var(--flip-beat);
+  animation-timing-function: var(--ease-inout);
+}
+:root[data-vt='concept-open']::view-transition-old(concept-hero),
+:root[data-vt='concept-open']::view-transition-new(concept-hero) {
   animation-duration: var(--flip-beat);
   animation-timing-function: var(--ease-inout);
 }

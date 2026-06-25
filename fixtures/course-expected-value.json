@@ -1,0 +1,17 @@
+{
+  "courseId": "course-expected-value",
+  "title": "Expected Value",
+  "description": "Build intuition for weighted averages of outcomes: from simple coin bets to the St. Petersburg paradox. Learn why a small positive edge compounds into certainty over time, and when expected value misleads — variance, Kelly sizing, and risk of ruin.",
+  "persona": "For anyone who bets, invests, or makes decisions under uncertainty. No prior probability assumed; pattern-hitting times helpful but not required.",
+  "completionMilestoneId": "expected-value-complete",
+  "schemaVersion": 1,
+  "domain": "Probability",
+  "domainOrder": 0,
+  "order": 1,
+  "status": "coming_soon",
+  "tagline": "What do you gain, on average, each play?",
+  "accent": "ch4",
+  "vizKey": "sum",
+  "lessons": [],
+  "roadmap": []
+}

@@ -28,6 +28,11 @@ export interface StudyDeskProps {
   newlyEarned?: Set<string>
   displayName: string
   navigate: NavigateFn
+  /** When provided, renders a back button instead of the wordmark and sets the
+   *  concept-hero-target class so the header morphs from the catalog card. */
+  onBack?: () => void
+  /** Title to display beside the back button (concept name). */
+  conceptTitle?: string
 }
 
 // Milestone id → Ergo chapter hue variable name (without '--' prefix).
@@ -62,22 +67,46 @@ export function StudyDesk({
   newlyEarned,
   displayName,
   navigate,
+  onBack,
+  conceptTitle,
 }: StudyDeskProps) {
   const reducedMotion = useReducedMotion()
 
   return (
     <div className="ergo-home">
-      <header className="ergo-topbar" aria-label="Ergo navigation">
-        <span className="ergo-wordmark">Ergo</span>
-        <button
-          type="button"
-          className="ergo-avatar"
-          onClick={() => navigate(ROUTES.profile)}
-          aria-label={`Profile: ${displayName}`}
-        >
-          {displayName.charAt(0).toUpperCase()}
-        </button>
-      </header>
+      {onBack ? (
+        <header className="ergo-topbar concept-hero-target" aria-label={conceptTitle ?? 'Concept'}>
+          <button
+            type="button"
+            className="ergo-avatar"
+            onClick={onBack}
+            aria-label="Back to catalog"
+          >
+            ‹
+          </button>
+          <span className="ergo-wordmark">{conceptTitle}</span>
+          <button
+            type="button"
+            className="ergo-avatar"
+            onClick={() => navigate(ROUTES.profile)}
+            aria-label={`Profile: ${displayName}`}
+          >
+            {displayName.charAt(0).toUpperCase()}
+          </button>
+        </header>
+      ) : (
+        <header className="ergo-topbar" aria-label="Ergo navigation">
+          <span className="ergo-wordmark">Ergo</span>
+          <button
+            type="button"
+            className="ergo-avatar"
+            onClick={() => navigate(ROUTES.profile)}
+            aria-label={`Profile: ${displayName}`}
+          >
+            {displayName.charAt(0).toUpperCase()}
+          </button>
+        </header>
+      )}
 
       <main aria-label="Home">
         {!course ? (

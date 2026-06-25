@@ -1,0 +1,17 @@
+{
+  "courseId": "course-combinatorics",
+  "title": "Combinatorics",
+  "description": "Master the art of counting without listing: permutations, combinations, the pigeonhole principle, inclusion-exclusion, and generating functions. From password security to the birthday paradox, discover why combinatorial thinking is the key to problem solving.",
+  "persona": "For puzzle lovers and competition-math enthusiasts. No prerequisites beyond comfort with multiplication; each technique is built from scratch through interactive examples.",
+  "completionMilestoneId": "combinatorics-complete",
+  "schemaVersion": 1,
+  "domain": "Combinatorics & Games",
+  "domainOrder": 1,
+  "order": 0,
+  "status": "coming_soon",
+  "tagline": "Count cleverly to avoid counting everything.",
+  "accent": "ch5",
+  "vizKey": "dice",
+  "lessons": [],
+  "roadmap": []
+}

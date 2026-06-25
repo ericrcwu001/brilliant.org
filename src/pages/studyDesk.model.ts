@@ -19,6 +19,8 @@ export interface DeskNode {
   title: string
   hook: string
   glyph: string
+  /** Per-lesson viz kind from data; undefined means use the LESSON_VIZ fallback. */
+  vizKey?: string
   built: boolean
   optional: boolean
   index: number
@@ -81,7 +83,9 @@ export function resolveNodes(
       lessonId: lesson.lessonId,
       title: lesson.title,
       hook: lesson.summary,
-      glyph: glyphFor(lesson.lessonId),
+      // Prefer the per-lesson data key; fall back to the static LESSON_GLYPHS map.
+      glyph: lesson.glyphKey ?? glyphFor(lesson.lessonId),
+      vizKey: lesson.vizKey,
       built: lesson.built,
       optional: lesson.optional ?? false,
       index,
@@ -209,8 +213,32 @@ export const ERGO_CHAPTERS: Chapter[] = [
   },
 ]
 
-export function chapterForLesson(lessonId: string): Chapter | undefined {
-  return ERGO_CHAPTERS.find((ch) => ch.lessonIds.includes(lessonId))
+/**
+ * Returns the chapter that contains lessonId.
+ *
+ * Back-compat: callers that pass no chapters (e.g. CourseJourney) still
+ * receive the ERGO_CHAPTERS fallback. Pass the result of resolveChapters(course)
+ * to use data-driven chapters when available.
+ */
+export function chapterForLesson(lessonId: string, chapters?: Chapter[]): Chapter | undefined {
+  return (chapters ?? ERGO_CHAPTERS).find((ch) => ch.lessonIds.includes(lessonId))
+}
+
+/**
+ * Returns chapter groupings from the course doc when present and non-empty;
+ * otherwise falls back to ERGO_CHAPTERS. Maps CourseChapter.accent directly
+ * to Chapter.hueVar (both use the 'ch1'/'ch2'/... token format).
+ */
+export function resolveChapters(course: Course): Chapter[] {
+  if (course.chapters && course.chapters.length > 0) {
+    return course.chapters.map((ch) => ({
+      id: ch.id,
+      label: ch.label,
+      hueVar: ch.accent,
+      lessonIds: ch.lessonIds,
+    }))
+  }
+  return ERGO_CHAPTERS
 }
 
 export type MathVizKind =
@@ -233,6 +261,18 @@ export const LESSON_VIZ: Record<string, MathVizKind> = {
   'lesson-overlap-shortcut': 'sum',
 }
 
-export function vizForLesson(lessonId: string): MathVizKind {
+// Set of valid MathVizKind strings for safe narrowing of data-authored vizKey values.
+const MATH_VIZ_KINDS = new Set<string>([
+  'coin', 'stateMachine', 'raceLanes', 'randomWalk', 'twoNode', 'fourNode', 'sum', 'dice',
+])
+
+/**
+ * Returns the MathVizKind for a lesson, preferring the per-lesson data key
+ * (from the course doc or DeskNode.vizKey) over the static LESSON_VIZ lookup.
+ *
+ * Back-compat: existing callers that pass only lessonId continue to work.
+ */
+export function vizForLesson(lessonId: string, vizKey?: string): MathVizKind {
+  if (vizKey && MATH_VIZ_KINDS.has(vizKey)) return vizKey as MathVizKind
   return LESSON_VIZ[lessonId] ?? 'coin'
 }

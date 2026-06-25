@@ -22,7 +22,7 @@ import { analytics } from '../analytics/events'
 import { StudyDesk } from './StudyDesk'
 import { DiagnosticGate } from './DiagnosticGate'
 import { WelcomeScreen } from './WelcomeScreen'
-import { lessonPath, INTRO_LESSON_ID, type NavigateFn } from './routes'
+import { lessonPath, INTRO_LESSON_ID, ROUTES, type NavigateFn } from './routes'
 
 const seenKey = (uid: string) => `phht:seenSeals:${uid}`
 
@@ -42,9 +42,18 @@ function writeSeen(key: string, ids: Iterable<string>): void {
   }
 }
 
-export function CoursePathPage({ navigate }: { navigate: NavigateFn }) {
+export function CoursePathPage({
+  navigate,
+  conceptId,
+}: {
+  navigate: NavigateFn
+  /** Which concept to load. Defaults to the flagship course (back-compat). */
+  conceptId?: string
+}) {
   const { user, userDoc } = useAuth()
   const displayName = userDoc?.displayName ?? user?.displayName ?? 'there'
+  // Resolved concept id used for Firestore loading and the view-transition morph target.
+  const effectiveConceptId = conceptId ?? COURSE_ID
 
   const [course, setCourse] = useState<Course | null>(null)
   const [progressById, setProgressById] = useState<Record<string, Progress>>({})
@@ -79,7 +88,7 @@ export function CoursePathPage({ navigate }: { navigate: NavigateFn }) {
 
   useEffect(() => {
     let cancelled = false
-    void loadCourseFromFirestore(COURSE_ID)
+    void loadCourseFromFirestore(conceptId ?? COURSE_ID)
       .then((c) => {
         if (!cancelled) setCourse(c)
       })
@@ -87,7 +96,7 @@ export function CoursePathPage({ navigate }: { navigate: NavigateFn }) {
     return () => {
       cancelled = true
     }
-  }, [])
+  }, [conceptId])
 
   useEffect(() => {
     if (!user) return
@@ -178,6 +187,8 @@ export function CoursePathPage({ navigate }: { navigate: NavigateFn }) {
       newlyEarned={newlyEarned}
       displayName={displayName}
       navigate={navigate}
+      onBack={() => navigate(ROUTES.landing)}
+      conceptTitle={course?.title ?? effectiveConceptId}
     />
   )
 }

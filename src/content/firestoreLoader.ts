@@ -6,7 +6,7 @@
 // The local `/dev` route keeps using the committed fixture via
 // `loadFlagshipLesson()` in `./loader`; this module is the authed-route path.
 
-import { doc, getDoc } from 'firebase/firestore'
+import { collection, doc, getDocs, getDoc } from 'firebase/firestore'
 import { getDb } from '../firebase/app'
 import { CourseSchema, LessonSchema, type Course, type Lesson } from './schema'
 
@@ -30,4 +30,17 @@ export async function loadCourseFromFirestore(courseId: string): Promise<Course>
     )
   }
   return CourseSchema.parse(snap.data())
+}
+
+/** Load all course docs from Firestore. Docs that fail schema validation are
+ *  silently skipped so a malformed stub never breaks the catalog render. */
+export async function loadCoursesFromFirestore(): Promise<Course[]> {
+  const db = await getDb()
+  const snap = await getDocs(collection(db, 'courses'))
+  const courses: Course[] = []
+  for (const d of snap.docs) {
+    const result = CourseSchema.safeParse(d.data())
+    if (result.success) courses.push(result.data)
+  }
+  return courses
 }

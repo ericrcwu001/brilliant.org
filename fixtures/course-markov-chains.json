@@ -1,0 +1,17 @@
+{
+  "courseId": "course-markov-chains",
+  "title": "Markov Chains",
+  "description": "Model systems with no memory: from weather prediction to PageRank. Build transition matrices, find stationary distributions, and discover why almost every Markov chain forgets its starting point — with concrete simulations at every step.",
+  "persona": "For curious learners who finished Pattern Hitting Times and want to see the state-machine machinery in its full generality. Linear algebra intuition helpful but not required.",
+  "completionMilestoneId": "markov-chains-complete",
+  "schemaVersion": 1,
+  "domain": "Probability",
+  "domainOrder": 0,
+  "order": 2,
+  "status": "coming_soon",
+  "tagline": "Where does a memoryless process settle?",
+  "accent": "ch1",
+  "vizKey": "fourNode",
+  "lessons": [],
+  "roadmap": []
+}

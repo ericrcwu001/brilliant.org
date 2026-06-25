@@ -1,0 +1,471 @@
+/* ergo-catalog.css — Concept Catalog macro-home surface (Stream B).
+   Hero, domain shelves, carousel + chevrons, concept cards, progress rings,
+   focus rings, skeleton, reduced-motion. Uses only --ergo-* / --chN tokens.
+   Imported via app.css; do not add @import here. */
+
+/* ── Page container ─────────────────────────────────────────────────────── */
+
+.ergo-catalog {
+  max-width: var(--page-max, 960px);
+  margin: 0 auto;
+  padding: 0 var(--s5);
+}
+
+@media (max-width: 767px) {
+  .ergo-catalog {
+    padding: 0 var(--s4);
+  }
+}
+
+/* ── Top bar right (streak + avatar inline) ─────────────────────────────── */
+
+.ergo-topbar__right {
+  display: flex;
+  align-items: center;
+  gap: var(--s3);
+}
+
+/* ── Main content area ──────────────────────────────────────────────────── */
+
+.ergo-catalog__main {
+  padding: var(--s5) 0 var(--s8);
+  display: flex;
+  flex-direction: column;
+  gap: var(--s6);
+}
+
+/* ── Resume hero ────────────────────────────────────────────────────────── */
+
+.ergo-resume-hero {
+  display: flex;
+  align-items: center;
+  gap: var(--s5);
+  padding: var(--s5);
+  border-radius: var(--r-xl);
+  box-shadow: var(--ergo-shadow-lg);
+  border: 1px solid var(--ergo-line);
+  /* background is set inline via tint */
+}
+
+.ergo-resume-hero__thumb-wrap {
+  flex-shrink: 0;
+}
+
+.ergo-resume-hero__body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--s2);
+}
+
+.ergo-resume-hero__eyebrow {
+  font-family: var(--font-sans);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ergo-ink-3);
+  margin: 0;
+}
+
+.ergo-resume-hero__title {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: clamp(1.25rem, 3vw, 1.75rem);
+  line-height: 1.2;
+  color: var(--ergo-ink);
+  margin: 0;
+  text-wrap: balance;
+}
+
+.ergo-resume-hero__tagline {
+  font-family: var(--font-sans);
+  font-size: 14px;
+  color: var(--ergo-ink-2);
+  margin: 0;
+  line-height: 1.5;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ergo-resume-hero__footer {
+  display: flex;
+  align-items: center;
+  gap: var(--s3);
+  margin-top: var(--s2);
+}
+
+.ergo-resume-hero__cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px var(--s5);
+  min-height: 44px;
+  border: none;
+  border-radius: var(--r-pill);
+  font-family: var(--font-sans);
+  font-weight: 600;
+  font-size: 15px;
+  color: #fff;
+  cursor: pointer;
+  transition: filter var(--dur-micro) var(--ease-out),
+    transform var(--dur-micro) var(--ease-out);
+}
+
+.ergo-resume-hero__cta:hover {
+  filter: brightness(0.9);
+}
+
+.ergo-resume-hero__cta:active {
+  transform: scale(0.98);
+}
+
+.ergo-resume-hero__cta:focus-visible {
+  outline: none;
+  box-shadow: var(--ring-focus);
+}
+
+@media (max-width: 540px) {
+  .ergo-resume-hero {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
+/* ── Domain shelves container ───────────────────────────────────────────── */
+
+.ergo-catalog__shelves {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s6);
+}
+
+/* ── Single domain shelf ────────────────────────────────────────────────── */
+
+.ergo-shelf {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s3);
+}
+
+.ergo-shelf__header {
+  padding: 0 var(--s1);
+  border-bottom: 1px solid var(--ergo-line);
+  padding-bottom: var(--s3);
+}
+
+.ergo-shelf__label {
+  font-family: var(--font-sans);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin: 0;
+  /* color set inline per domain accent */
+}
+
+/* ── Carousel track wrapper ─────────────────────────────────────────────── */
+
+.ergo-shelf__track-wrap {
+  position: relative;
+  display: flex;
+  align-items: stretch;
+}
+
+/* ── Scrollable track ───────────────────────────────────────────────────── */
+
+.ergo-shelf__track {
+  display: flex;
+  gap: var(--s4);
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scroll-padding: 0 var(--s4);
+  scrollbar-width: none;        /* Firefox */
+  -webkit-overflow-scrolling: touch;
+  flex: 1;
+  /* Peeking next card on mobile: last card visible at ~70% */
+  padding-right: var(--s7);
+}
+
+.ergo-shelf__track::-webkit-scrollbar {
+  display: none;
+}
+
+@media (min-width: 768px) {
+  .ergo-shelf__track {
+    padding-right: 0;
+  }
+}
+
+/* ── Chevron buttons (desktop only) ─────────────────────────────────────── */
+
+.ergo-shelf__chevron {
+  display: none;               /* hidden on mobile */
+  flex-shrink: 0;
+  width: 36px;
+  align-items: center;
+  justify-content: center;
+  background: var(--ergo-surface);
+  border: 1px solid var(--ergo-line-2);
+  border-radius: var(--r-sm);
+  font-size: 20px;
+  color: var(--ergo-ink-2);
+  cursor: pointer;
+  transition: background var(--dur-micro) var(--ease-out),
+    color var(--dur-micro) var(--ease-out);
+  z-index: 2;
+}
+
+@media (min-width: 768px) {
+  .ergo-shelf__chevron {
+    display: flex;
+  }
+  .ergo-shelf__chevron--prev {
+    margin-right: var(--s2);
+  }
+  .ergo-shelf__chevron--next {
+    margin-left: var(--s2);
+  }
+}
+
+.ergo-shelf__chevron:hover:not(:disabled) {
+  background: var(--ergo-surface-2);
+  color: var(--ergo-ink);
+}
+
+.ergo-shelf__chevron:focus-visible {
+  outline: none;
+  box-shadow: var(--ring-focus);
+}
+
+.ergo-shelf__chevron:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+
+/* ── Concept card ───────────────────────────────────────────────────────── */
+
+.ergo-concept-card {
+  flex-shrink: 0;
+  width: 220px;
+  scroll-snap-align: start;
+  background: var(--ergo-surface);
+  border: 1.5px solid var(--ergo-line);
+  border-radius: var(--r-lg);
+  box-shadow: var(--ergo-shadow-sm);
+  padding: var(--s4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--s3);
+  cursor: pointer;
+  text-align: left;
+  position: relative;
+  transition: box-shadow var(--dur-micro) var(--ease-out),
+    transform var(--dur-micro) var(--ease-out),
+    border-color var(--dur-micro) var(--ease-out);
+}
+
+@media (min-width: 768px) {
+  .ergo-concept-card {
+    width: 240px;
+  }
+}
+
+.ergo-concept-card:hover:not(.ergo-concept-card--coming-soon) {
+  box-shadow: var(--ergo-shadow-md);
+  transform: translateY(-2px);
+}
+
+.ergo-concept-card:focus-visible {
+  outline: none;
+  box-shadow: var(--ring-focus);
+}
+
+.ergo-concept-card:active:not(.ergo-concept-card--coming-soon) {
+  transform: scale(0.98);
+  transition: transform var(--dur-micro) var(--ease-out);
+}
+
+/* Active chapter-color left border on hover/focus */
+.ergo-concept-card[data-ch="ch1"]:hover:not(.ergo-concept-card--coming-soon),
+.ergo-concept-card[data-ch="ch1"]:focus-visible {
+  border-left: 2px solid var(--ch1);
+}
+.ergo-concept-card[data-ch="ch2"]:hover:not(.ergo-concept-card--coming-soon),
+.ergo-concept-card[data-ch="ch2"]:focus-visible {
+  border-left: 2px solid var(--ch2);
+}
+.ergo-concept-card[data-ch="ch3"]:hover:not(.ergo-concept-card--coming-soon),
+.ergo-concept-card[data-ch="ch3"]:focus-visible {
+  border-left: 2px solid var(--ch3);
+}
+.ergo-concept-card[data-ch="ch4"]:hover:not(.ergo-concept-card--coming-soon),
+.ergo-concept-card[data-ch="ch4"]:focus-visible {
+  border-left: 2px solid var(--ch4);
+}
+.ergo-concept-card[data-ch="ch5"]:hover:not(.ergo-concept-card--coming-soon),
+.ergo-concept-card[data-ch="ch5"]:focus-visible {
+  border-left: 2px solid var(--ch5);
+}
+
+/* Coming-soon: muted, non-interactive */
+.ergo-concept-card--coming-soon {
+  opacity: 0.6;
+  cursor: default;
+  pointer-events: none;
+}
+
+/* ── Card thumbnail ─────────────────────────────────────────────────────── */
+
+.ergo-concept-card__thumb-wrap {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
+/* ── Card body ──────────────────────────────────────────────────────────── */
+
+.ergo-concept-card__body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s1);
+  flex: 1;
+}
+
+.ergo-concept-card__title {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 15px;
+  color: var(--ergo-ink);
+  line-height: 1.3;
+  margin: 0;
+}
+
+.ergo-concept-card__tagline {
+  font-family: var(--font-sans);
+  font-size: 12px;
+  color: var(--ergo-ink-2);
+  line-height: 1.45;
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ergo-concept-card__footer {
+  display: flex;
+  align-items: center;
+  gap: var(--s2);
+  margin-top: var(--s1);
+}
+
+.ergo-concept-card__cta {
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 600;
+  /* color set inline per accent */
+}
+
+/* Coming-soon pill */
+.ergo-concept-card__pill {
+  display: inline-block;
+  padding: 2px var(--s2);
+  border-radius: var(--r-pill);
+  background: var(--ergo-surface-2);
+  border: 1px solid var(--ergo-line-2);
+  font-family: var(--font-sans);
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--ergo-ink-3);
+  margin-top: var(--s1);
+  letter-spacing: 0.02em;
+}
+
+/* ── Concept thumbnail box ──────────────────────────────────────────────── */
+
+.ergo-concept-thumb {
+  border-radius: var(--r-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.ergo-concept-thumb__fallback {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 2rem;
+  line-height: 1;
+  /* color inherits from parent (chapter hue) */
+}
+
+/* ── Progress ring ──────────────────────────────────────────────────────── */
+
+.ergo-catalog-ring {
+  display: block;
+  flex-shrink: 0;
+}
+
+/* ── Catalog loading skeleton ───────────────────────────────────────────── */
+
+.ergo-catalog-skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s5);
+  padding: var(--s5) 0;
+}
+
+@keyframes ergo-catalog-pulse {
+  0%, 100% { opacity: 0.5; }
+  50%       { opacity: 0.85; }
+}
+
+.ergo-catalog-skeleton__hero {
+  height: 140px;
+  border-radius: var(--r-xl);
+  background: var(--ergo-surface);
+  box-shadow: var(--ergo-shadow-sm);
+  animation: ergo-catalog-pulse 1.8s ease-in-out infinite;
+}
+
+.ergo-catalog-skeleton__shelf {
+  height: 200px;
+  border-radius: var(--r-lg);
+  background: var(--ergo-surface);
+  box-shadow: var(--ergo-shadow-sm);
+  animation: ergo-catalog-pulse 1.8s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ergo-catalog-skeleton__hero,
+  .ergo-catalog-skeleton__shelf {
+    animation: none;
+    opacity: 0.7;
+  }
+}
+
+/* ── Error / empty state ────────────────────────────────────────────────── */
+
+.ergo-catalog__state-msg {
+  margin-top: var(--s7);
+  text-align: center;
+  font-family: var(--font-sans);
+  font-size: 15px;
+  color: var(--ergo-ink-2);
+}
+
+/* ── Reduced-motion: disable smooth-scroll, arc transitions ─────────────── */
+
+@media (prefers-reduced-motion: reduce) {
+  .ergo-concept-card,
+  .ergo-resume-hero__cta {
+    transition: none;
+  }
+
+  .ergo-concept-card:hover:not(.ergo-concept-card--coming-soon) {
+    transform: none;
+  }
+}

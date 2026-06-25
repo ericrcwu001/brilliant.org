@@ -1,0 +1,17 @@
+{
+  "courseId": "course-bayes-rule",
+  "title": "Bayes' Rule",
+  "description": "Learn to invert conditional probabilities: turn P(positive | disease) into P(disease | positive). From medical screening to spam filters to scientific inference — Bayesian updating as a universal reasoning engine.",
+  "persona": "For anyone who reads statistics in the news and wants to think clearly about evidence. No prior probability assumed beyond basic fractions.",
+  "completionMilestoneId": "bayes-rule-complete",
+  "schemaVersion": 1,
+  "domain": "Probability",
+  "domainOrder": 0,
+  "order": 3,
+  "status": "coming_soon",
+  "tagline": "Update your beliefs when new evidence arrives.",
+  "accent": "ch2",
+  "vizKey": "twoNode",
+  "lessons": [],
+  "roadmap": []
+}

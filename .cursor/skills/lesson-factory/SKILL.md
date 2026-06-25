@@ -1,6 +1,6 @@
 ---
 name: lesson-factory
-description: Runs the on-demand multi-agent "software factory" that builds new interactive lessons for the Ergo learning app, grounded in the Green Book (references/green-book.txt). Use when the user asks to build or generate lessons or a new concept/course, to "launch the lesson factory / software factory", or runs /lesson-factory. Orchestrates a Manager (Opus) over three departments (curriculum/learning-science, interactive-game design, coding), fact-checks every problem against the Green Book, checks the existing corpus for overlap, stages each concept on its own branch, tests it on a separate dev Firebase project (brilliant-org-dev), and ships to production only after the user approves via Slack.
+description: Runs the on-demand multi-agent "software factory" that builds new interactive lessons for the Ergo learning app, grounded in the Green Book (references/green-book.txt). Use when the user asks to build or generate lessons or a new concept/course, to "launch the lesson factory / software factory", or runs /lesson-factory. Orchestrates a Manager (Opus) over three departments (curriculum/learning-science, interactive-game design, coding) plus an Interview Studio, fact-checks every problem against the Green Book, checks the existing corpus for overlap, stages each concept on its own branch, tests it on a separate dev Firebase project (brilliant-org-dev), and ships to production only after the user approves via Slack.
 disable-model-invocation: true
 ---
 
@@ -9,7 +9,8 @@ disable-model-invocation: true
 An on-demand assembly line that turns Green-Book quant concepts into fully-built, fact-checked,
 interactive **lessons** for the Ergo app — tested on a **dev Firebase project** and shipped to
 production **only after the user approves**. A top-level **Manager (Opus)** runs three departments of
-subagents in parallel.
+subagents in parallel. At the end of each concept it also prepares a capstone **Interview Pack** — a
+future-ready "interview an AI quant interviewer" asset (`interview-packs.md`).
 
 > Vocabulary (the product's three layers, authoritative):
 > - **Large concept / macro** = a `course` (`fixtures/course-*.json` → Firestore `courses/{id}`).
@@ -35,10 +36,12 @@ subagents in parallel.
    what is legitimate to teach. **Every concept must be anchored to a Green-Book concept** (cite it).
 2. **Anchor-and-source, never invent.** A problem is either a Green-Book problem **or** a similar
    quant-interview question found by searching, **with its source recorded**. No invented or
-   unsourced problems, ever.
+   unsourced problems, ever. (Runtime-generated interview questions are the one exception — allowed
+   only when **grounded in real quant-style interview questions** *and* **engine-verified before
+   serving**; see `interview-packs.md` and `docs/adr/0005-ai-interview-questions-grounded-and-engine-verified.md`.)
 3. **Two-stage fact-check on every number.** (1) the source states the answer; (2) the lesson's
    **engine independently reproduces it** and the `validate-fixtures` script cross-checks it. Both, or
-   it doesn't ship.
+   it doesn't ship. Interview-pack questions follow the same engine-verify rule.
 4. **Production is approval-gated.** The factory works only on a per-concept branch and tests on the
    **dev project `brilliant-org-dev`**; the user reviews on the **dev linked domain**. Nothing reaches
    **`brilliant-org` (prod)** without the user's explicit approval.
@@ -65,6 +68,7 @@ subagents in parallel.
    5 roles                 9 roles                 rich roster
         └─────────── self-resolving Dept1↔Dept2 loop ───────────┘
                  (escalations → Manager; human only if Manager is stuck)
+        + Interview Studio (per concept, after lessons) → the capstone Interview Pack
 ```
 
 Full rosters, responsibilities, and per-role model assignments: **`departments.md`**.
@@ -81,16 +85,20 @@ Full rosters, responsibilities, and per-role model assignments: **`departments.m
 4. **Build** — Dept 3 implements every lesson in parallel (isolated worktrees): engine + schema +
    renderer/widget + fixture + tests.
 5. **QA** — two-stage fact-check + the 9-gate **Scorecard** per lesson (`qa-rubric.md`).
-6. **Test + Alert** — when the whole concept is green, the Manager deploys it to **`brilliant-org-dev`**
+6. **Interview Pack** — the **Interview Studio** builds the concept's capstone AI-interview pack
+   (pre-loaded engine-verified question pool + interviewer & generator prompts), QA'd by its own
+   concept-level Scorecard (`interview-packs.md`).
+7. **Test + Alert** — when the whole concept is green, the Manager deploys it to **`brilliant-org-dev`**
    (+ seeds the dev Firestore) and **Slack-DMs the user** the Scorecards + the **dev linked-domain URL**
-   (`deploy.md`).
-7. **Approve → Ship** — on approval: merge the concept branch → `main`, seed + deploy to **prod
-   (`brilliant-org`)**.
+   + the Interview Pack `.md` link (`deploy.md`).
+8. **Approve → Ship** — on approval: merge the concept branch → `main`, seed + deploy to **prod
+   (`brilliant-org`)**; the Interview Pack rides along committed but **not seeded/deployed**.
 
 Step-by-step orchestration (with parallelism and worktrees): **`pipeline.md`**.
 Artifact templates (Concept Brief, Continuity Report, Lesson Brief, Interaction Spec, Implementation
 Brief, Scorecard): **`artifacts.md`**. QA gates + Definition-of-Done: **`qa-rubric.md`**. Staging, dev
-deploy, seed, prod ship, Slack: **`deploy.md`**.
+deploy, seed, prod ship, Slack: **`deploy.md`**. Capstone AI-interview assets (future feature):
+**`interview-packs.md`**.
 
 ## Model routing (per `.cursor/rules/model-routing.mdc`)
 
@@ -101,6 +109,7 @@ deploy, seed, prod ship, Slack: **`deploy.md`**.
 | **Source Miner** (web + `references/`) & **Corpus Cartographer** (Firebase MCP + git) | Opus, **non-readonly** | readonly subagents have no internet/MCP |
 | Dept 3 coders, schema/types, test author, brief drafter | `claude-4.6-sonnet-high-thinking` | code writing/editing |
 | Dept 3 brief reviewer, verification, code reviewer | `claude-opus-4-8-thinking-max-fast` | review/reasoning |
+| Interview Studio (Question Author, Prompt Engineer) | `claude-opus-4-8-thinking-max-fast` | reuses Dept 3 for templates/engine-verify |
 | Integrator/push, `validate`/seed/deploy (dev+prod) runs | `composer-2.5-fast` | mechanical IO |
 
 The skill's main agent is a **thin dispatcher**: it spawns subagents and moves artifacts between
@@ -112,9 +121,15 @@ stages. The **Manager** makes the judgment calls.
 - **Firebase projects** — dev `brilliant-org-dev` (#836579828208, test/staging) and prod
   `brilliant-org` (#801582458333, approval-gated). Selected per command via `--project` /
   `GOOGLE_CLOUD_PROJECT` (`deploy.md`).
+- **Concept Catalog (macro home is LIVE — ADR-0004)** — a concept **auto-registers** when its
+  `course-<slug>.json` is seeded; deep links `/concept/<courseId>` + `/lesson/<lessonId>`. A **live**
+  concept MUST emit `chapters[]` covering every built lessonId (else its lessons render invisible) plus
+  the catalog card (domain/order/status/tagline/accent/vizKey). Emit-contract: `artifacts.md` / `deploy.md`.
 - **`.env.dev`** (gitignored) — dev build config (`VITE_USE_EMULATORS=false`, `VITE_INCLUDE_DEV_ROUTES=1`,
   `brilliant-org-dev` web config). **Auto-generated by the skill's first-run setup** (`deploy.md`) — not
   a manual step. Dev `/dev/lesson/:id` review is enabled; the dev URL is auto-resolved at deploy.
+- **`interviews/<courseId>.json` + `.md`** (committed, NOT seeded/deployed) — the per-concept Interview
+  Pack, a dormant future-feature asset (`interview-packs.md`).
 - **Slack** — alerts via the `user-slack` MCP, `slack_send_message` to `channel_id` = the user's
   `user_id` (`U0B9VC0TJBH`); chat echo as fallback.
 - **`.env.factory`** (gitignored) — optional factory config (e.g. Slack target override).
@@ -122,15 +137,18 @@ stages. The **Manager** makes the judgment calls.
   `docs/ui_design_system.md`, `docs/proposed-lessons.md`, `docs/interactive-mechanics-backlog.md`,
   and the research memos in `audits/ideation/inclusive-research-*.md`.
 - **Repo gotchas (`HANDOFF.md`) — obey:** do **not** use `npm run` (call `./node_modules/.bin/*`
-  binaries directly); the **`firebase` CLI uses the v24.3.0 alias**; **Java-dependent emulator/seed/
-  rules steps are user-run** (the factory uses the dev/prod Admin-SDK seed + hosting deploys, which
-  need no Java). Exact commands live in `qa-rubric.md` and `deploy.md`.
+  binaries directly); use the **`firebase` shell alias** (it pins Node to **v24.3.0**, which
+  firebase-tools needs); **Java-dependent emulator/seed/rules steps are user-run** (the factory uses
+  the dev/prod Admin-SDK seed + hosting deploys, which need no Java). Exact commands live in
+  `qa-rubric.md` and `deploy.md`.
 
 ## Guardrails
 
 - **Test on `brilliant-org-dev`; never touch prod `brilliant-org` until the user approves the concept.**
 - Never commit to `main` or deploy to prod without explicit user approval of the concept.
 - Never re-teach a concept the corpus already covers — turn the overlap into recall (rule 7).
+- The Interview Pack is **committed but never seeded/deployed** — it's a dormant asset until the live
+  interview feature exists (`interview-packs.md`).
 - Keep the KMP/probability engine and any new engine **pure, dependency-free, exact** (no floats).
 - If a concept can't be Green-Book-anchored, or a beat genuinely resists being made interactive
   after honest attempts, the Manager escalates to the user — it does not fabricate or ship.

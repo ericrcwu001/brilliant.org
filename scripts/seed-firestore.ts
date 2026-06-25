@@ -1,7 +1,8 @@
 // Manual seed script (Phase 14). Uploads version-controlled fixtures into
-// Firestore using the Admin SDK: the course doc to `courses/{courseId}` and each
-// built lesson to `lessons/{lessonId}`. Git is the source of truth; re-running
-// overwrites the docs to match the fixtures.
+// Firestore using the Admin SDK: each course doc to `courses/{courseId}` and
+// each built lesson (for non-coming-soon courses) to `lessons/{lessonId}`.
+// Git is the source of truth; re-running overwrites the docs to match the
+// fixtures (idempotent).
 //
 // Targets the local Firestore emulator by default (matches firebase.json and
 // src/firebase/app.ts). To seed a real project instead (e.g. the live Blaze
@@ -11,7 +12,7 @@
 //
 // Run with the emulator up:  npm run seed   (FIRESTORE_EMULATOR_HOST auto-set)
 
-import { readFileSync } from 'node:fs'
+import { readFileSync, readdirSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { dirname, join } from 'node:path'
 import {
@@ -54,24 +55,31 @@ async function main(): Promise<void> {
       : `project ${projectId}`
   console.log(`Seeding Firestore (${where})\n`)
 
-  // Course doc (validated before write).
-  const course = CourseSchema.parse(readJson('course-pattern-hitting-times.json'))
-  await db.collection('courses').doc(course.courseId).set(course)
-  console.log(`✓ courses/${course.courseId}`)
+  const courseFiles = readdirSync(fixturesDir)
+    .filter((f) => /^course-.*\.json$/.test(f))
+    .sort()
 
-  // Only the built lessons have authored fixtures; the rest are listed in the
-  // course as not-yet-built nodes and are skipped until their fixtures exist.
-  const builtLessons = course.lessons.filter((node) => node.built)
-  for (const node of builtLessons) {
-    const lesson = LessonSchema.parse(readJson(`${node.lessonId}.json`))
-    await db.collection('lessons').doc(lesson.lessonId).set(lesson)
-    console.log(`✓ lessons/${lesson.lessonId}`)
+  for (const file of courseFiles) {
+    const course = CourseSchema.parse(readJson(file))
+    await db.collection('courses').doc(course.courseId).set(course)
+    console.log(`✓ courses/${course.courseId}`)
+
+    // Coming-soon stubs have no lesson fixtures; skip lesson seeding.
+    if (course.status === 'coming_soon') continue
+
+    const builtLessons = course.lessons.filter((node) => node.built)
+    for (const node of builtLessons) {
+      const lesson = LessonSchema.parse(readJson(`${node.lessonId}.json`))
+      await db.collection('lessons').doc(lesson.lessonId).set(lesson)
+      console.log(`  ✓ lessons/${lesson.lessonId}`)
+    }
+
+    const skipped = course.lessons.filter((node) => !node.built).map((n) => n.lessonId)
+    if (skipped.length > 0) {
+      console.log(`  Skipped (no fixture yet): ${skipped.join(', ')}`)
+    }
   }
 
-  const skipped = course.lessons.filter((node) => !node.built).map((n) => n.lessonId)
-  if (skipped.length > 0) {
-    console.log(`\nSkipped (no fixture yet): ${skipped.join(', ')}`)
-  }
   console.log('\nSeed complete.')
 }
 

@@ -709,3 +709,114 @@ Hovering a lesson card opens its detail; clicking/tapping enters the lesson.
    streak-dot animation; View Transitions; ambient thumbnail breathing.
 4. **Polish + accessibility:** progress rings; Playwright visual-regression; all
    screen states (loading skeletons, error, offline, empty).
+
+---
+
+## Concept Catalog / Macro Home
+
+The **Concept Catalog** is the signed-in root screen (`/`). It replaced the old
+direct-to-journey entry and is the first thing a signed-in learner sees after onboarding.
+Two primary vertical regions:
+
+```text
+[top bar: "Ergo" wordmark / profile avatar]  ← same chrome as per-concept path
+[resume hero: "Continue learning" — active concept card, full-width]
+[domain shelves: one labeled horizontal carousel per domain, ordered by domainOrder]
+```
+
+Content max-width 960px, centered. Same top bar as the per-concept path (`--ergo-bg`,
+`1px --ergo-line` bottom border).
+
+### Resume hero
+
+A full-width feature card surfacing the most-recently-active in-progress concept. If nothing
+is in progress, shows the recommended first-to-start concept; if all are mastered, the most
+recently reviewed. Contains:
+
+- **Concept thumbnail** — `MathViz` component keyed by `vizKey`, or `ConceptMedallion` at
+  96px, on an `--chN-tint` wash background (accent field → chapter token).
+- **Title** — Space Grotesk 700, `--ergo-ink`.
+- **Tagline** — Inter 400, `--ergo-ink-2`, one line.
+- **Per-concept progress ring** — SVG arc, `--chN` stroke, `aria-valuenow`, bold percentage
+  numeral centered.
+- **Primary CTA** — "Continue →" / "Start →" / "Review →"; `--chN` fill, `--r-pill`.
+
+Base card: `.ergo-card` with `--shadow-lg` and `--r-xl`. Background tinted with
+`--chN-tint` as a subtle wash behind the content.
+
+### Domain shelves
+
+Each domain is a `<section aria-label="<Domain name>">` containing a labeled heading and a
+scrollable horizontal row of concept cards. Domains are ordered by their `domainOrder` value;
+concepts within each domain by their `order` value.
+
+**Carousel interaction:**
+
+- **Desktop** — visible left / right chevron buttons (`aria-label="Scroll left"` /
+  `"Scroll right"`); buttons hidden at scroll start / end via `IntersectionObserver`;
+  `--ring-focus` on focus.
+- **Mobile** — swipe + peeking next card (the last visible card is clipped at ~70% to signal
+  more content); no chevrons.
+- **Keyboard** — `ArrowLeft` / `ArrowRight` moves focus between cards within the carousel;
+  `Tab` exits to the next shelf.
+- **ARIA** — `role="region"` on the shelf; each card is `role="group"` with
+  `aria-label="<concept title>"`. Progress rings carry `aria-valuenow`, `aria-valuemin="0"`,
+  `aria-valuemax="100"`, `aria-label="<N>% complete"`.
+- **Scroll** — `scroll-snap-type: x mandatory`; `scroll-snap-align: start` on each card.
+- **Reduced motion** — `prefers-reduced-motion: reduce` disables smooth-scroll and
+  snap animations; chevron click jumps instantly.
+
+### Concept cards
+
+Each card in a domain carousel:
+
+- **Thumbnail** (square, `--r-md`, 96px): the concept's `vizKey` math visualization
+  (`MathViz`, lazy-loaded) or a `ConceptMedallion`; background is `--chN-tint` (from the
+  concept's `accent` field, defaulting to `--ch1`). Active concept thumbnail is gently
+  animated; others static.
+- **Title** — Space Grotesk 600, `--ergo-ink`.
+- **Tagline** — Inter 400, `--ergo-ink-2`, one line, truncated at overflow.
+- **Progress ring** — `aria-valuenow` SVG arc in accent color; shown only if the learner has
+  started the concept.
+- **Status CTA:**
+  - Live, not started → ghost button "Start →" (accent color).
+  - Live, in progress → progress ring + "Continue →".
+  - Live, mastered → "Review →".
+  - Coming soon → `"Coming soon"` label, `--ergo-ink-3`, no interaction; card at 0.6 opacity.
+- **Base style** — `.ergo-card`: `--ergo-surface`, `1px solid var(--ergo-line)`,
+  `--shadow-sm`, `--r-lg`, `--s4` padding. Hover: `--shadow-md` (skipped for coming-soon
+  cards). Active/tapped: `2px solid var(--chN)` left border + `--chN-tint` wash.
+
+### Tokens and components reused
+
+| Element | Reused from |
+|---------|-------------|
+| Concept thumbnail | `MathViz` (existing, keyed by `vizKey`) |
+| Medallion in hero / card | `ConceptMedallion` (48/56px; `--chN` / locked styling) |
+| Streak banner (optional) | `WeeklyStreak` (carried from per-concept path) |
+| Card base | `.ergo-card` (surface, border, radius, shadow tokens) |
+| Chapter accent | `--ch1` … `--ch5` / `--ch1-tint` … `--ch5-tint` |
+| Progress ring | SVG `stroke-dashoffset` arc; `aria-valuenow`; `--chN` stroke |
+| Typography | Space Grotesk 600/700 (titles), Inter 400 (tagline / captions) |
+| Spacing | `--s4` card padding, `--s5` shelf row gap, `--s6`–`--s7` section gap |
+| Shadows / radius | `--shadow-sm` / `--shadow-lg`, `--r-lg` / `--r-xl` |
+
+New surface CSS lives in `src/styles/surfaces/ergo-catalog.css` (hero, shelf rows, carousel +
+chevrons, snap, focus rings); uses **only** `--ergo-*` / `--chN` tokens — no `--paper-*` /
+legacy tokens.
+
+### Concept-open morph
+
+Selecting a live concept triggers the `concept-open` shared-element View Transition via
+`document.startViewTransition`:
+
+- The tapped card's thumbnail + title receive `view-transition-name: concept-hero-<conceptId>`.
+- The same name is applied to the concept page header on the per-concept path, so the
+  thumbnail + title morph in-place across the route boundary.
+- Other catalog cards fade out during the transition; the concept page fades in.
+- Chapter accent color (`data-ch` attribute on the transitioning element) carries through.
+- **Reduced motion** — `prefers-reduced-motion: reduce` → plain navigation; no morph; instant
+  cut (the `::view-transition-*` pseudo-elements are suppressed).
+- **Feature gate** — `if (document.startViewTransition)` wraps every invocation; unsupported
+  browsers fall back to direct navigation.
+- **Analytics** — `concept_selected` event fires on tap; `catalog_viewed` fires on mount.

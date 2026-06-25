@@ -13,9 +13,12 @@ about randomness." / "From hunch to proof." The visual identity is defined in
 
 ## Home
 
-The signed-in landing screen after onboarding. A single scrollable page — not a separate
-product area called "dashboard." Three regions top to bottom: top bar, momentum band, learning
-journey.
+_(Evolved term — see **Macro home / Concept catalog** and **Per-concept path**.)_
+
+Previously the sole signed-in landing screen; now split into two screens: the **Macro home /
+Concept catalog** (root, lists all concepts) and the **Per-concept path** (within a concept).
+The three-region layout — top bar, momentum band, learning journey — now lives on the
+per-concept path.
 
 ## Learning journey
 
@@ -34,9 +37,11 @@ border and opens a detail card (on laptop: sticky right panel; on mobile: bottom
 
 ## Chapter
 
-A grouping of related lessons, each with a dedicated **chapter color** (hue + tint). Chapters
-are marked in the learning journey by section dividers (ALL-CAPS label, chapter color) and
-in the connector rail by chapter-colored segments.
+A grouping of related lessons within a **concept**, each with a dedicated **chapter color**
+(hue + tint). Chapters are defined per-concept and marked in the per-concept path by section
+dividers (ALL-CAPS label, chapter color) and chapter-colored connector-rail segments.
+
+Chapters for the Pattern Hitting Times concept:
 
 | Chapter | Lessons | Hue |
 |---------|---------|-----|
@@ -81,12 +86,59 @@ and discover E[H] = 2. Signature viz: a single coin face (heads side). Never req
 a prerequisite, and never the recommended next action. Also called "the introduction" or "the
 intro." Part of Chapter 1.
 
+## Onboarding
+
+The mandatory first-run flow shown once to a new account, right after display-name capture and
+before the concept catalog. A short self-report survey capturing the learner's **learning goal**,
+**comfort level**, **focus area**, and **pace**; on completion it sets a **default track** and a
+starting recommendation. This is the first-run greeting — it replaces the retired **welcome
+screen**. Cannot be skipped or replayed.
+
+## Learning goal
+
+Why the learner came to Ergo (quant-interview prep, school/exams, sharpening intuition, or
+curiosity). Captured during **onboarding**; used for segmentation and reserved for later
+personalization (e.g. the AI quant interviewer).
+
+## Comfort level
+
+The learner's self-rated comfort with quant questions, on a four-step scale (new → very
+confident). Captured during **onboarding**; the two lower steps yield **default track** A, the
+two higher steps yield track B.
+
+## Focus area
+
+The domain a learner most wants to start with (e.g. Probability, Combinatorics & Games), chosen
+during **onboarding**. Drives the starting recommendation and floats that domain's shelf to the
+top of the catalog.
+
+## Pace
+
+The learner's intended time commitment, captured during **onboarding** (e.g. casual / steady /
+intense). Reserved to drive streak goals; not yet wired into the weekly streak tracker.
+
+## Track
+
+A learner-routing choice selecting which variant of a lesson renders: **Track A** is scaffolded
+(more support), **Track B** is lean. Never gates content — only its presentation. Set by the
+**default track**, optionally overridden per concept by **calibrate**.
+
+## Default track
+
+The track applied across all of a learner's concepts, derived from their onboarding **comfort
+level**. A per-concept **calibrate** result supersedes it for that concept only.
+
+## Calibrate
+
+The optional, graded ~4-question check offered (skippable) the first time a learner opens a
+concept; its score overrides the **default track** for that concept only. Shown in the UI as the
+"Quick check"; supersedes the old always-on "diagnostic" gate.
+
 ## Welcome screen
 
-The first-run greeting shown once to a brand-new account, right after account creation and
-display-name selection, before the learning journey. Welcomes the learner by name and offers
-the optional introduction (L0): they can start the intro or skip straight to the journey.
-Distinct from the pre-auth landing hero.
+_(Retired — superseded by **Onboarding**.)_ The old first-run greeting that welcomed the learner
+by name and offered the optional introduction (L0). The greeting role moves to onboarding; L0
+remains an optional lesson in the flagship path.
 
 ## Lesson order (L1–L6)
 
@@ -115,6 +167,46 @@ next unlocked lesson.
 
 A locked lesson listed under the roadmap section of the learning journey, below Chapter 3.
 Visible for direction-setting, not enterable until promoted into the path.
+
+## Beat
+
+The atomic unit of a lesson: a single prompt → interaction → feedback exchange. One entry in
+a lesson's `beats[]` list. A lesson contains an ordered sequence of beats; a concept contains
+an ordered sequence of lessons.
+
+## Concept
+
+The product and UI word for what the codebase and Firestore call a **course**. The terms are
+synonymous — no data migration or rename separates them. The vocabulary split exists to give
+the product a learner-facing identity ("explore a concept") while keeping the persistence
+layer stable. See *Macro home / Concept catalog* and *Per-concept path*.
+
+## Domain
+
+A thematic shelf grouping of concepts on the macro home (e.g. "Probability",
+"Combinatorics & Games"). Domains are not a separate data entity — they emerge from the
+concepts that declare them. Concepts within a domain are ordered by their declared position;
+each domain is rendered as a labeled horizontal carousel on the catalog.
+
+## Macro home / Concept catalog
+
+The signed-in root screen that lists all available concepts grouped into domain shelves.
+Contains a "Continue learning" resume hero (the learner's most-recently-active concept) and
+one horizontal carousel per domain. Replaces the old single-concept **Home** as the landing
+screen. Navigating here is the first thing a signed-in learner sees. See ADR-0004.
+
+## Per-concept path
+
+The within-concept learning screen: the lesson list, chapter structure, and active-lesson
+detail for a single concept. Previously called "Home" or "the learning journey" when the
+product had only one concept. Reached by selecting a concept from the macro home.
+
+## Coming-soon concept
+
+A concept that is listed in the macro catalog but not yet open for learning. Appears as a
+muted concept card with a "Coming soon" status label — visible for direction-setting, not
+enterable. Distinct from a **roadmap stub**, which is a locked lesson within an already-open
+concept.
 
 ---
 

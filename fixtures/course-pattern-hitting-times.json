@@ -5,6 +5,33 @@
   "persona": "For anyone curious about probability who likes to learn by doing — no prior probability, statistics, or algebra assumed. Quant-interview prep is a fully-served optional track, not a prerequisite to walk in.",
   "completionMilestoneId": "six-lessons-complete",
   "schemaVersion": 1,
+  "domain": "Probability",
+  "domainOrder": 0,
+  "order": 0,
+  "status": "live",
+  "tagline": "How long until a pattern first appears?",
+  "accent": "ch1",
+  "vizKey": "stateMachine",
+  "chapters": [
+    {
+      "id": "foundations",
+      "label": "Foundations",
+      "accent": "ch1",
+      "lessonIds": ["lesson-first-heads", "lesson-pattern-hitting-times"]
+    },
+    {
+      "id": "racing-walks",
+      "label": "Racing & Walks",
+      "accent": "ch2",
+      "lessonIds": ["lesson-penneys-game", "lesson-gamblers-ruin"]
+    },
+    {
+      "id": "mastery",
+      "label": "Mastery",
+      "accent": "ch3",
+      "lessonIds": ["lesson-states-streaks", "lesson-longer-patterns", "lesson-overlap-shortcut"]
+    }
+  ],
   "lessons": [
     {
       "lessonId": "lesson-first-heads",
@@ -12,49 +39,63 @@
       "summary": "Optional warm-up: flip until the first heads and see why E[H] = 2 — the gentle on-ramp to the flagship.",
       "milestoneId": "first-heads-found",
       "built": true,
-      "optional": true
+      "optional": true,
+      "glyphKey": "H?",
+      "vizKey": "coin"
     },
     {
       "lessonId": "lesson-pattern-hitting-times",
       "title": "Pattern Hitting Times",
       "summary": "The flagship: compare HH against HT and prove why E[HH] = 6 but E[HT] = 4.",
       "milestoneId": "hh-ht-mastered",
-      "built": true
+      "built": true,
+      "glyphKey": "HH",
+      "vizKey": "stateMachine"
     },
     {
       "lessonId": "lesson-penneys-game",
       "title": "Penney's Game",
       "summary": "Two patterns race on one stream — who appears first is decoupled from expected wait, and going second can win 7 to 1.",
       "milestoneId": "penneys-game-won",
-      "built": true
+      "built": true,
+      "glyphKey": "A≻B",
+      "vizKey": "raceLanes"
     },
     {
       "lessonId": "lesson-gamblers-ruin",
       "title": "Gambler's Ruin",
       "summary": "The same first-step machine on a number line: P(ruin) = i/N and E[duration] = i(N−i); a tiny edge is catastrophic.",
       "milestoneId": "gamblers-ruin-solved",
-      "built": true
+      "built": true,
+      "glyphKey": "i/N",
+      "vizKey": "randomWalk"
     },
     {
       "lessonId": "lesson-states-streaks",
       "title": "Mixed Review & Streaks",
       "summary": "An interleaved checkpoint: mix waiting, racing, and walking so you can tell the tools apart the way a real problem arrives — unlabeled.",
       "milestoneId": "first-pattern-cracked",
-      "built": true
+      "built": true,
+      "glyphKey": "H",
+      "vizKey": "twoNode"
     },
     {
       "lessonId": "lesson-longer-patterns",
       "title": "Longer Patterns & Overlap",
       "summary": "Transfer the method to the novel contrast THH vs HTH (E[THH] = 8, E[HTH] = 10) the long way, with faded hints.",
       "milestoneId": "state-machine-builder",
-      "built": true
+      "built": true,
+      "glyphKey": "THH",
+      "vizKey": "fourNode"
     },
     {
       "lessonId": "lesson-overlap-shortcut",
       "title": "The Overlap Shortcut",
       "summary": "Capstone: read E[wait] = Σ 2^(overlap length) straight off the pattern, proved by a fair-casino martingale — re-derives 6, 4, 8, 10 in one line.",
       "milestoneId": "martingale-mastered",
-      "built": true
+      "built": true,
+      "glyphKey": "Σ2ᴸ",
+      "vizKey": "sum"
     }
   ],
   "roadmap": [

@@ -1,7 +1,14 @@
 // App router + auth guard (Phase 13). A small hand-rolled SPA router (no
 // react-router dependency, consistent with the Group A dev router) drives the
 // auth-first flow: landing → sign-in/create → display-name capture (first
-// sign-in only) → course path.
+// sign-in only) → catalog home.
+//
+// Routing (Wave-0):
+//   signed-out  /            → LandingPage
+//   signed-in   /            → ConceptCatalogPage (macro home)
+//   signed-in   /concept/:id → CoursePathPage(conceptId)
+//   signed-in   /path        → redirect to / (back-compat)
+//   /lesson/:id              → LessonPage (unchanged)
 //
 // The dev-only /dev/lesson route renders the local fixture lesson and bypasses
 // auth entirely (preserves the Group A/e2e entry point); every other route is
@@ -14,6 +21,7 @@ import { useAuth } from './auth/authContext'
 import {
   ROUTES,
   parseLessonId,
+  parseConceptId,
   type NavigateFn,
   type NavigateOptions,
 } from './pages/routes'
@@ -30,6 +38,9 @@ const AuthPage = lazy(() =>
 )
 const DisplayNamePage = lazy(() =>
   import('./pages/DisplayNamePage').then(m => ({ default: m.DisplayNamePage })),
+)
+const ConceptCatalogPage = lazy(() =>
+  import('./pages/ConceptCatalogPage').then(m => ({ default: m.ConceptCatalogPage })),
 )
 const CoursePathPage = lazy(() =>
   import('./pages/CoursePathPage').then(m => ({ default: m.CoursePathPage })),
@@ -59,7 +70,7 @@ function useRouter() {
       }
       flushSync(() => setPath(window.location.pathname))
     }
-    withViewTransition(apply, 'home-lesson')
+    withViewTransition(apply, opts?.viewTransition ?? 'home-lesson')
   }, [])
 
   return { path, navigate }
@@ -79,19 +90,20 @@ function redirectTarget(
   if (!onboarded) {
     return path === ROUTES.onboardingName ? null : ROUTES.onboardingName
   }
-  // Signed in and onboarded: pre-auth screens bounce to the course path.
+  // Signed in and onboarded: pre-auth screens and /path bounce to catalog home.
   if (
-    path === ROUTES.landing ||
     path === ROUTES.auth ||
-    path === ROUTES.onboardingName
+    path === ROUTES.onboardingName ||
+    path === ROUTES.coursePath
   ) {
-    return ROUTES.coursePath
+    return ROUTES.landing
   }
   const known =
-    path === ROUTES.coursePath ||
+    path === ROUTES.landing ||
     path === ROUTES.profile ||
-    parseLessonId(path) !== null
-  return known ? null : ROUTES.coursePath
+    parseLessonId(path) !== null ||
+    parseConceptId(path) !== null
+  return known ? null : ROUTES.landing
 }
 
 function GuardedRoutes({
@@ -114,14 +126,21 @@ function GuardedRoutes({
 
   if (booting || target) return <BootScreen />
 
-  if (path === ROUTES.landing) return <LandingPage navigate={navigate} />
+  if (path === ROUTES.landing) {
+    // Signed-in+onboarded users land on the catalog; signed-out see marketing.
+    return user
+      ? <ConceptCatalogPage navigate={navigate} />
+      : <LandingPage navigate={navigate} />
+  }
   if (path === ROUTES.auth) return <AuthPage navigate={navigate} />
   if (path === ROUTES.onboardingName) return <DisplayNamePage />
-  if (path === ROUTES.coursePath) return <CoursePathPage navigate={navigate} />
   if (path === ROUTES.profile) return <ProfilePage navigate={navigate} />
 
   const lessonId = parseLessonId(path)
   if (lessonId) return <LessonPage navigate={navigate} lessonId={lessonId} />
+
+  const conceptId = parseConceptId(path)
+  if (conceptId) return <CoursePathPage navigate={navigate} conceptId={conceptId} />
 
   // Unreachable: the guard redirects unknown paths above.
   return <BootScreen />
@@ -160,7 +179,8 @@ function App() {
     }
     const run = () => {
       if (path === ROUTES.landing || path === ROUTES.auth) prefetchAuth()
-      if (path === ROUTES.coursePath) prefetchLesson()
+      // Pre-warm lesson chunk from the catalog home (signed-in landing).
+      if (path === ROUTES.landing) prefetchLesson()
     }
     const id = w.requestIdleCallback ? w.requestIdleCallback(run) : window.setTimeout(run, 300)
     return () => {

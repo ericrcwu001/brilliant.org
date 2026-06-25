@@ -37,8 +37,11 @@ into the Lesson Brief.
    **anchor-and-source gate**.
 2. **Curriculum Architect** — *Opus readonly*. Designs the concept theme + lesson list (order,
    prerequisites) and each lesson's objectives + **Bet→Explore→Model→Prove** skeleton. **Reads the
-   Continuity Report so it never re-teaches what the corpus already covers.** Leans on `docs/mvp_prd.md`,
-   `docs/core_instructions.md`, `docs/proposed-lessons.md`, `docs/beat-audit-rubric.md`.
+   Continuity Report so it never re-teaches what the corpus already covers.** Also specifies the
+   concept's **catalog card** (domain/order/status/tagline/accent/vizKey) and **`chapters[]` covering
+   every built lesson** so it auto-registers + renders in the Concept Catalog (ADR-0004; emit-contract
+   in `artifacts.md`). Leans on `docs/mvp_prd.md`, `docs/core_instructions.md`, `docs/proposed-lessons.md`,
+   `docs/beat-audit-rubric.md`.
 3. **Misconception Specialist** — *Opus readonly*. Inventories the specific wrong mental models to
    elicit + refute per beat; specifies per-option (refutational) feedback. Leans on
    `audits/ideation/inclusive-research-2-prerequisites-misconceptions.md`.
@@ -118,3 +121,21 @@ assembly line.
 
 > The two coders never edit the same shared file at once: the Schema/Types Specialist freezes the
 > contract in **Wave 0**, then Coder A owns the engine and Coder B owns the renderer/fixture.
+
+---
+
+## Interview Studio — per concept, after the lessons are built
+
+Produces the concept's **Interview Pack** (full spec in `interview-packs.md`): a large pre-loaded,
+engine-verified bank of HARD interview questions + an interviewer prompt + a generator prompt for
+non-overlapping runtime top-ups. Reuses the concept's freshly-built engines. Runs after Dept 3 finishes
+the lessons.
+
+1. **Interview Question Author** — *Opus, non-readonly*. Designs the tiered (`hard/harder/brutal`)
+   synthesis questions + engine-backed templates (anchored+sourced), each question's hidden record
+   (answer, approaches, wrong turns, hint ladder, rubric), and follow-up chains.
+2. **Interview Prompt Engineer** — *Opus*. Writes the per-concept interviewer system-prompt template and
+   the generator prompt (engine-verify-before-serve + avoid-list constraints).
+3. **Reuses Department 3** — a Coder builds the templates/parameterizer/fingerprinter (on the concept's
+   engine); the Verification Engineer engine-verifies the entire pre-loaded pool; the Integrator writes
+   `interviews/<courseId>.json` + `.md`.

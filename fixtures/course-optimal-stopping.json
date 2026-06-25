@@ -1,0 +1,17 @@
+{
+  "courseId": "course-optimal-stopping",
+  "title": "Optimal Stopping",
+  "description": "Solve the secretary problem and its relatives: when to stop searching and commit. The 37% rule, marriage problem, house-hunting, and parking — all instances of one clean threshold strategy derived from first principles.",
+  "persona": "For curious decision-makers. No prerequisites beyond arithmetic; we derive the threshold through simulation and simple algebra.",
+  "completionMilestoneId": "optimal-stopping-complete",
+  "schemaVersion": 1,
+  "domain": "Combinatorics & Games",
+  "domainOrder": 1,
+  "order": 1,
+  "status": "coming_soon",
+  "tagline": "Know when to commit for the best outcome.",
+  "accent": "ch3",
+  "vizKey": "raceLanes",
+  "lessons": [],
+  "roadmap": []
+}

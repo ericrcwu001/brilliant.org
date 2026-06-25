@@ -343,12 +343,23 @@ const CourseLessonNodeSchema = z.object({
   // Optional on-ramp (L1 §6): available + enterable, but ungated — it never
   // locks its successor and is skipped by the recommended-action chain.
   optional: z.boolean().optional(),
+  // Concept catalog display keys (Wave-0 contract; optional for back-compat).
+  glyphKey: z.string().optional(),
+  vizKey: z.string().optional(),
 })
 
 const CourseRoadmapNodeSchema = z.object({
   lessonId: z.string(),
   title: z.string(),
   summary: z.string(),
+})
+
+// Chapter grouping within a concept (Wave-0 contract; replaces ERGO_CHAPTERS).
+export const CourseChapterSchema = z.object({
+  id: z.string(),
+  label: z.string(),
+  accent: z.string(),
+  lessonIds: z.array(z.string()),
 })
 
 export const CourseSchema = z.object({
@@ -360,6 +371,15 @@ export const CourseSchema = z.object({
   roadmap: z.array(CourseRoadmapNodeSchema),
   completionMilestoneId: z.string(),
   schemaVersion: z.number(),
+  // --- Concept catalog fields (all optional for backward-compat with existing docs) ---
+  domain: z.string().optional(),
+  domainOrder: z.number().optional(),
+  order: z.number().optional(),
+  status: z.enum(['live', 'coming_soon']).optional(),
+  tagline: z.string().optional(),
+  accent: z.enum(['ch1', 'ch2', 'ch3', 'ch4', 'ch5']).optional(),
+  vizKey: z.string().optional(),
+  chapters: z.array(CourseChapterSchema).optional(),
 })
 
 // users/{uid}/snapshots/{lessonId} — client-written, authoritative for restore.
@@ -442,6 +462,8 @@ export type Feedback = z.infer<typeof FeedbackSchema>
 export type Beat = z.infer<typeof BeatSchema>
 export type Lesson = z.infer<typeof LessonSchema>
 export type Course = z.infer<typeof CourseSchema>
+export type CourseChapter = z.infer<typeof CourseChapterSchema>
+export type CourseLessonNode = z.infer<typeof CourseLessonNodeSchema>
 export type Snapshot = z.infer<typeof SnapshotSchema>
 export type Progress = z.infer<typeof ProgressSchema>
 export type ProgressDerived = z.infer<typeof ProgressDerivedSchema>

@@ -58,13 +58,15 @@ Wave 0 to the concept branch.
 
 ## 4. Build — PARALLEL across lessons, in isolated worktrees
 
-For each lesson, create an isolated worktree so parallel coders never touch the same working copy:
+For each lesson, create an isolated worktree **on its own branch** (you cannot check out
+`concept/<slug>` in two worktrees at once — use `-b` to fork a per-lesson branch):
 
 ```bash
-git worktree add ../lf-<slug>-<lesson> concept/<slug>
+git worktree add -b lesson/<slug>-<lesson> ../lf-<slug>-<lesson> concept/<slug>
 ```
 
-(Or launch a `best-of-n-runner` subagent per lesson, which provisions its own worktree + branch.)
+The Integrator later merges `lesson/<slug>-<lesson>` back into `concept/<slug>`. (Or launch a
+`best-of-n-runner` subagent per lesson, which provisions its own worktree + branch.)
 
 Inside each worktree, Dept 3 runs: Drafter → Brief Reviewer → **Coder A (engine+goldens) ∥ Coder B
 (renderer+widget+fixture) ∥ Test Author** → Verification → Code Reviewer → Integrator. Each lesson
@@ -80,19 +82,35 @@ Each lesson must pass the **two-stage fact-check** and all **9 Scorecard gates**
 Engineer runs the mechanized checks; Dept 1/Dept 2 critics confirm the judgment gates. Emit
 `concepts/<slug>/<lesson>/scorecard.md`. A red gate loops back to the owning department.
 
+## 5b. Interview Pack — Interview Studio — see `interview-packs.md`
+
+Once the concept's lessons are built (engines available), the **Interview Studio** builds the concept's
+capstone AI-interview pack, reusing those engines:
+
+- **Interview Question Author** designs the tiered (`hard/harder/brutal`) synthesis questions +
+  engine-backed templates; **Interview Prompt Engineer** writes the interviewer + generator prompts.
+- A **Dept 3 Coder** builds the templates/parameterizer/fingerprinter; the **Verification Engineer**
+  engine-verifies the **entire pre-loaded pool**; the **Integrator** writes `interviews/<courseId>.json`
+  + `interviews/<courseId>.md`.
+- Gate it with the **Interview Pack Scorecard** (`qa-rubric.md` / `interview-packs.md`). May run in
+  parallel with per-lesson QA once the engines are frozen.
+
 ## 6. Test on dev + sign-off (Manager)
 
-When **every** lesson's Scorecard is green, the Manager deploys the concept to the **dev project
-`brilliant-org-dev` (#836579828208)** and seeds its Firestore (see `deploy.md` → Test deploy), then
-**Slack-DMs the user** the Scorecards + the **dev linked-domain URL** to test. Production is untouched.
+When **every** lesson's Scorecard is green **and the Interview Pack Scorecard is green**, the Manager
+deploys the concept to the **dev project `brilliant-org-dev` (#836579828208)** and seeds its Firestore
+(see `deploy.md` → Test deploy), then **Slack-DMs the user** the Scorecards + the **dev linked-domain
+URL** + the **Interview Pack `.md`** to review. Production is untouched.
 
 ## 7. Approval → Ship (Manager) — see `deploy.md`
 
 - **Changes requested** → route notes to the owning department; re-run the affected stage; re-QA;
   redeploy to dev; re-alert.
-- **Approved** → merge `concept/<slug>` → `main`; seed the concept's lessons + course doc to **prod
-  (`brilliant-org`)** and `vite build` + `firebase deploy --project brilliant-org`. Confirm in Slack
-  with the production link.
+- **Approved** → merge `concept/<slug>` → `main`; seed the concept's course doc + lessons to **prod
+  (`brilliant-org`)** and `vite build` + `firebase deploy --project brilliant-org`. The concept
+  **auto-registers in the Concept Catalog** on seed (ADR-0004) — live at `/concept/<courseId>` (lessons
+  at `/lesson/<lessonId>`), zero UI code. The Interview Pack is merged too but **not seeded/deployed**.
+  Confirm in Slack with the production `/concept/<courseId>` link.
 
 ## Parallelism summary
 
@@ -107,6 +125,7 @@ When **every** lesson's Scorecard is green, the Manager deploys the concept to t
 ```
 concepts/<slug>/
 ├── concept-brief.md
+├── continuity-report.md
 ├── wave0-contracts.md
 ├── <lesson>/
 │   ├── brief.md              # Dept 1
@@ -118,4 +137,6 @@ fixtures/lesson-<lesson>.json # the actual lesson (one per lesson)
 fixtures/course-<slug>.json   # the concept (macro) doc
 src/engine/<topic>.ts         # new verifying engine(s)
 src/lesson/beats/<Beat>.tsx   # new renderer(s) / widget(s)
+interviews/<courseId>.json    # capstone Interview Pack (committed, NOT seeded/deployed)
+interviews/<courseId>.md      # human-readable mirror
 ```

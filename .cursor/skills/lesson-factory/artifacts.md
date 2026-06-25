@@ -18,16 +18,39 @@ prose on the existing exemplar `audits/ideation/agent-1-quant-canon.md`.
 ## One-line promise
 <the single transferable idea the whole concept builds>
 
+## Catalog fields  (required — auto-registers the concept in the macro home when seeded)
+- **domain:** <e.g. "Probability" | "Combinatorics & Games">
+- **domainOrder:** <integer — shelf position; coordinate with existing concepts>
+- **order:** <integer — position within the domain>
+- **status:** `live` | `coming_soon`
+- **tagline:** <one-sentence learner-facing hook, ≤60 chars>
+- **accent:** `ch1` | `ch2` | `ch3` | `ch4` | `ch5`  (drives card thumbnail background + CTA color)
+- **vizKey:** <math-viz / thumbnail id passed to MathViz for the catalog card>
+- **chapters:**
+
+| id | label | accent | lessonIds (ordered) |
+|----|-------|--------|---------------------|
+| ch-<slug>-1 | <Chapter Name> | ch1 | [lesson-<slug>-1, lesson-<slug>-2] |
+| ch-<slug>-2 | <Chapter Name> | ch2 | [lesson-<slug>-3] |
+
 ## Lessons (ordered)
-| # | lessonId | title | one-line objective | prereqs | source anchors |
-|---|----------|-------|--------------------|---------|----------------|
-| L1 | lesson-<slug>-1 | ... | ... | — | GB p.<n> |
-| L2 | ... | ... | ... | L1 | GB p.<n>, <web source> |
+| # | lessonId | title | one-line objective | prereqs | glyphKey | vizKey | source anchors |
+|---|----------|-------|--------------------|---------|----------|--------|----------------|
+| L1 | lesson-<slug>-1 | ... | ... | — | <glyph> | <viz> | GB p.<n> |
+| L2 | ... | ... | ... | L1 | <glyph> | <viz> | GB p.<n>, <web source> |
 
 ## New engine(s) / widget(s) anticipated (for Wave 0)
 - engine: src/engine/<topic>.ts — <what it computes>
 - interaction type(s): <name> — <one-liner>
 ```
+
+> ⚠️ **`chapters[]` is the catalog's hard requirement for a LIVE concept.** Every built `lessonId` must
+> appear in exactly one chapter's `lessonIds`. The per-concept journey renders lessons **only inside
+> chapters** — if `chapters[]` is missing/incomplete it silently falls back to Pattern-Hitting-Times'
+> chapters and the new concept's lessons render **invisible**. (Missing `glyphKey`/`vizKey` only degrade
+> to a dot / `coin` thumbnail; missing chapters breaks the whole journey.) `accent` is the strict enum
+> `ch1`–`ch5`; `vizKey` must be one of: `coin, stateMachine, raceLanes, randomWalk, twoNode, fourNode,
+> sum, dice` (else the card shows a text fallback).
 
 ---
 
@@ -70,6 +93,11 @@ sources: fixtures/lesson-*.json per branch; Firestore lessons/* + courses/* (dev
 
 ## Core promise (one idea)
 <one sentence>
+
+## Display fields  (populate the lesson node in the per-concept path; optional — sane fallbacks)
+- **glyphKey:** <short node-dot glyph; free-form string, falls back to `·` — e.g. `HH`, `$`, `Σ`>
+- **vizKey:** <card thumbnail; MUST be one of: coin, stateMachine, raceLanes, randomWalk, twoNode,
+  fourNode, sum, dice (else falls back to `coin`)>
 
 ## Verified problems & answers  (anchor-and-source — REQUIRED)
 | problem | answer | source | verified |
