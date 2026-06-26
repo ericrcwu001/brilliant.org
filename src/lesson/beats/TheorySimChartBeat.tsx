@@ -4,10 +4,15 @@
 // converges on the theory line. "Run 500 more" folds another batch into the same
 // running mean; "Run again" starts fresh. Only the summarized result
 // (empiricalMean + simRuns) is persisted — never per-trial data.
+//
+// Additive extension (lesson-expected-value-2): when mode === 'noodleLoops', the
+// beat renders a step-through partial-sum chart driven by noodleLoops(k) from
+// the expectation engine. The existing automaton path is completely unchanged.
 
-import { useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import type { BeatProps } from './types'
 import { flipsToAbsorption } from '../../engine/simulate'
+import { noodleLoops } from '../../engine/expectation'
 import { BeatShell, type PrimaryAction, type SecondaryAction } from '../BeatShell'
 import { resolveFeedback } from '../feedback'
 import type { FeedbackView } from '../FeedbackStrip'
@@ -37,6 +42,36 @@ export function TheorySimChartBeat(props: BeatProps) {
   // React state during canvas animation; batch to <=30fps".
   const pendingRef = useRef<number[]>([])
   const varianceShownRef = useRef(false)
+
+  // ── noodleLoops additive state (hooks called unconditionally, Rules of Hooks) ──
+  const nMax =
+    beat.interaction.type === 'theorySimChart' ? (beat.interaction.nMax ?? 100) : 100
+  const isNoodleLoops =
+    beat.interaction.type === 'theorySimChart' && beat.interaction.mode === 'noodleLoops'
+
+  const fullSeries = useMemo(
+    () => Array.from({ length: nMax }, (_, i) => noodleLoops(i + 1)),
+    [nMax],
+  )
+
+  const [step, setStep] = useState(
+    () =>
+      isNoodleLoops && props.reducedMotion && beat.hero?.reducedMotionFinalFrame === true
+        ? nMax
+        : 0,
+  )
+
+  useEffect(() => {
+    if (!isNoodleLoops) return
+    const onKey = (e: KeyboardEvent) => {
+      if (e.code === 'Space') {
+        e.preventDefault()
+        setStep((s) => Math.min(s + 1, nMax))
+      }
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [isNoodleLoops, nMax])
 
   // Compute theory before the hook (callbacks reference it) and before the
   // early return so the hook is called unconditionally (Rules of Hooks).
@@ -84,6 +119,119 @@ export function TheorySimChartBeat(props: BeatProps) {
   })
 
   if (beat.interaction.type !== 'theorySimChart') return null
+
+  // ── noodleLoops path: step-through partial-sum chart ────────────────────────
+  // When mode === 'noodleLoops', render a step-through chart whose series is
+  // noodleLoops(k) for k=1..nMax. The automaton path below is UNCHANGED.
+  if (beat.interaction.mode === 'noodleLoops') {
+    const cur = step > 0 ? fullSeries[step - 1] : null
+    const isComplete = step >= nMax
+    const finalRat = fullSeries[nMax - 1]
+    const finalApprox = (finalRat.n / finalRat.d).toFixed(2)
+
+    const liveText =
+      step === 0
+        ? 'Press Step to tie the first pair of ends.'
+        : isComplete
+          ? `All ${nMax} ties: E[loops] ≈ ${finalApprox}`
+          : `Tie ${step}: E[loops] = ${cur!.n}/${cur!.d}`
+
+    const fb: FeedbackView = isComplete
+      ? { kind: 'correct', text: resolveFeedback(beat.feedback, pattern).correct }
+      : { kind: 'idle' }
+
+    const stepPrimary: PrimaryAction = isComplete
+      ? { label: isLast ? 'Finish' : 'Continue', enabled: true, onClick: onAdvance }
+      : { label: 'Step', enabled: true, onClick: () => setStep((s) => Math.min(s + 1, nMax)) }
+
+    const resetSecondary: SecondaryAction | undefined =
+      step > 0 ? { label: 'Reset', onClick: () => setStep(0) } : undefined
+
+    // SVG chart: k on x-axis (1..nMax), E[loops] on y-axis (0..maxV).
+    const W = 280
+    const H = 160
+    const pad = { t: 10, r: 10, b: 24, l: 36 }
+    const cW = W - pad.l - pad.r
+    const cH = H - pad.t - pad.b
+    const maxV = finalRat.n / finalRat.d
+    const scX = (k: number) => pad.l + ((k - 1) / Math.max(nMax - 1, 1)) * cW
+    const scY = (v: number) => pad.t + cH - (v / (maxV * 1.1)) * cH
+    const polyPts =
+      step > 0
+        ? fullSeries
+            .slice(0, step)
+            .map((r, i) => `${scX(i + 1).toFixed(1)},${scY(r.n / r.d).toFixed(1)}`)
+            .join(' ')
+        : ''
+
+    return (
+      <BeatShell feedback={fb} primary={stepPrimary} secondary={resetSecondary}>
+        <div className="noodle-chart">
+          <svg
+            viewBox={`0 0 ${W} ${H}`}
+            aria-hidden="true"
+            className="noodle-chart__svg"
+          >
+            <line
+              x1={pad.l}
+              y1={pad.t + cH}
+              x2={W - pad.r}
+              y2={pad.t + cH}
+              className="noodle-chart__axis"
+            />
+            <line
+              x1={pad.l}
+              y1={pad.t}
+              x2={pad.l}
+              y2={pad.t + cH}
+              className="noodle-chart__axis"
+            />
+            <text
+              x={pad.l - 3}
+              y={pad.t + 4}
+              textAnchor="end"
+              className="noodle-chart__tick"
+            >
+              {maxV.toFixed(1)}
+            </text>
+            <text
+              x={pad.l - 3}
+              y={pad.t + cH + 4}
+              textAnchor="end"
+              className="noodle-chart__tick"
+            >
+              0
+            </text>
+            <text
+              x={pad.l}
+              y={H - 4}
+              textAnchor="start"
+              className="noodle-chart__tick"
+            >
+              1
+            </text>
+            <text
+              x={W - pad.r}
+              y={H - 4}
+              textAnchor="end"
+              className="noodle-chart__tick"
+            >
+              {nMax}
+            </text>
+            {polyPts && <polyline points={polyPts} className="noodle-chart__line" />}
+          </svg>
+          <p role="status" aria-live="polite" className="noodle-chart__readout mono">
+            {liveText}
+          </p>
+          {isComplete && beat.hero?.structuralReadout && (
+            <p className="noodle-chart__summary">{beat.hero.structuralReadout}</p>
+          )}
+        </div>
+      </BeatShell>
+    )
+  }
+
+  // ── Existing automaton path (mode absent or 'automaton') — byte-for-byte ────
 
   const count = points.length
   const mean = count > 0 ? points[count - 1] : 0

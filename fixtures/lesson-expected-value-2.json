@@ -1,0 +1,216 @@
+{
+  "lessonId": "lesson-expected-value-2",
+  "courseId": "course-expected-value",
+  "title": "Linearity of Expectation",
+  "patternOptions": ["H"],
+  "milestoneId": "linearity-mastered",
+  "unlocks": "lesson-expected-value-3",
+  "schemaVersion": 1,
+  "beats": [
+    {
+      "beatId": "ev2-recall",
+      "required": true,
+      "prompt": "You've seen a fair game's net gain before. Match each scenario to its expected net.",
+      "interaction": {
+        "type": "retrievalGrid",
+        "pairs": [
+          { "left": "E[net gain], one fair bet",        "right": "0" },
+          { "left": "E[total net], sum of fair bets",   "right": "0" }
+        ]
+      },
+      "feedback": {
+        "correct": "A sum of fair bets is still fair — that's linearity in disguise.",
+        "hints": [
+          "Tap a left card, then its match on the right.",
+          "A fair game has E[net] = 0 by definition.",
+          "Match: one fair bet → 0; sum of fair bets → 0."
+        ]
+      }
+    },
+    {
+      "beatId": "ev2-bet",
+      "required": false,
+      "prompt": "There are 100 noodles in a bowl. Blindfolded, you grab two loose ends at random and tie them, again and again. How many loops do you expect?",
+      "interaction": {
+        "type": "prediction",
+        "options": ["About 50", "About 10", "Just a handful"]
+      },
+      "feedback": {
+        "byOption": {
+          "About 50":       { "note": "Let's test it — that's near half the noodles; each tie rarely closes a loop, so loops stay few.", "correct": false },
+          "About 10":       { "note": "Let's test it — closer, but still high; the tiny per-tie chances add to about three loops.", "correct": false },
+          "Just a handful": { "note": "Good instinct — let's prove it by adding each tie's small chance of closing a loop.", "correct": true }
+        }
+      }
+    },
+    {
+      "beatId": "ev2-win",
+      "required": true,
+      "prompt": "In L1 you built the full {2…12} pmf to find E[two dice] = 7. Using linearity, get the same answer in one line. What is E[X + Y] when X and Y are fair dice?",
+      "interaction": {
+        "type": "answerEntry",
+        "fields": [
+          { "id": "two-dice", "label": "E[X + Y]", "accept": ["7"], "placeholder": "?", "suffix": "" }
+        ]
+      },
+      "feedback": {
+        "correct": "Exactly — linearity lets you add the dice averages without touching the joint distribution. E[X+Y] = 3.5 + 3.5 = 7.",
+        "hints": [
+          "No need to rebuild the sum's pmf. Add each die's average: 3.5 + 3.5 = 7.",
+          "Each fair die has E = 7/2 = 3.5. Linearity says E[X+Y] = E[X] + E[Y].",
+          "3.5 + 3.5 = 7."
+        ]
+      }
+    },
+    {
+      "beatId": "ev2-explore",
+      "required": false,
+      "prompt": "Press Step to tie a pair of ends. Watch the running E[loops] build up — one tiny bet at a time.",
+      "interaction": { "type": "theorySimChart", "mode": "noodleLoops", "nMax": 100 },
+      "hero": {
+        "slowFirst": true,
+        "structuralReadout": "E[100 noodles] ≈ 3.28 — a handful",
+        "reducedMotionFinalFrame": true
+      },
+      "feedback": {
+        "correct": "Each tie adds one tiny loop-closing chance — the running total stays shockingly small.",
+        "hints": [
+          "Press Step to tie one pair of ends.",
+          "Watch E[loops] after each tie.",
+          "After 100 noodles, the total is only ≈ 3.28."
+        ]
+      }
+    },
+    {
+      "beatId": "ev2-model",
+      "required": false,
+      "comparison": true,
+      "introducesSymbol": "E[X+Y]=E[X]+E[Y]",
+      "groundedBy": ["ev2-win"],
+      "interviewNote": "The product rule E[XY]=E[X]E[Y] fails for dependent variables. The sum rule E[X+Y]=E[X]+E[Y] never fails — it is a property of summation itself, not of independence. The first-ace decomposition (53/5) is a linearity sum only; why each piece=1/5 is the indicator argument, owned by L3.",
+      "prompt": "Tap each card to reveal three facets of linearity — the rule, a decomposition, and the #1 confusion.",
+      "interaction": {
+        "type": "tripletReveal",
+        "value": "E[X+Y]=E[X]+E[Y]",
+        "display": "cards",
+        "lenses": [
+          {
+            "label": "The Rule",
+            "body": "E[X+Y] = E[X]+E[Y] — the expectation of a sum is the sum of the expectations, whether or not X and Y are independent. (Green Book p.47)"
+          },
+          {
+            "label": "First Ace",
+            "body": "E[wait for first ace] = 1 + 48·(1/5) = 53/5 ≈ 10.6. Each card position contributes a tiny indicator expectation. Sum 49 tiny bets — no joint distribution needed. (Why each piece = 1/5 is L3's job.)"
+          },
+          {
+            "label": "⚠️ Product Rule",
+            "body": "E[XY] = E[X]·E[Y] ONLY when X and Y are independent. The SUM rule has no such restriction — this is the #1 confusion between the two rules."
+          }
+        ]
+      },
+      "feedback": {
+        "correct": "Linearity adds; the sum rule ignores dependence. The product rule is the one with the independence fine print.",
+        "hints": [
+          "Reveal each card in turn.",
+          "Card 3 holds the #1 confusion.",
+          "Sum rule: always adds. Product rule: needs independence."
+        ]
+      }
+    },
+    {
+      "beatId": "ev2-sum-primer",
+      "required": false,
+      "prompt": "Quick clarification before we use the sum rule on dependent noodle ties — read the card.",
+      "interaction": {
+        "type": "primer",
+        "variant": "custom",
+        "title": "Sum rule vs Product rule",
+        "body": "The SUM rule needs no independence; only the PRODUCT rule does.\n\n• E[X+Y] = E[X]+E[Y] — always true, dependent or not.\n• E[XY] = E[X]·E[Y] — only when X and Y are independent.\n\nThe noodle ties are dependent (each tie changes the pool), yet the sum rule still works.",
+        "collapsible": true
+      },
+      "feedback": {
+        "correct": "Got it — add expectations freely, regardless of dependence.",
+        "hints": [
+          "E[X+Y]=E[X]+E[Y] — unconditional.",
+          "E[XY]=E[X]E[Y] — independence required.",
+          "The noodle ties are dependent, yet the sum still works."
+        ]
+      }
+    },
+    {
+      "beatId": "ev2-tie-scaffold",
+      "required": false,
+      "track": "A",
+      "prompt": "Track A scaffold: walk through the per-tie probability for n=2 noodles.",
+      "interaction": {
+        "type": "primer",
+        "variant": "custom",
+        "title": "Per-tie loop probability (n = 2)",
+        "body": "With n noodles, after k−1 ties there are 2(n−k+1) loose ends.\n\nP(loop at k-th tie) = 1 / (2(n−k+1) − 1)\n\nFor n = 2:\n• k=1 (4 ends remain): P = 1/(4−1) = 1/3\n• k=2 (2 ends remain): P = 1/(2−1) = 1\n\nE[loops] = 1/3 + 1 = 4/3 — even though tie 2 depends on tie 1.",
+        "collapsible": true
+      },
+      "feedback": {
+        "correct": "The pool shrinks each tie — but linearity still adds each small chance.",
+        "hints": [
+          "n=2: 4 ends → P(loop, first tie) = 1/3.",
+          "After that tie, 2 ends remain → P(loop, second tie) = 1.",
+          "Sum: 1/3 + 1 = 4/3."
+        ]
+      }
+    },
+    {
+      "beatId": "ev2-noodles",
+      "required": true,
+      "prompt": "Two noodles, four loose ends. You make two random ties. What is E[loops]? (Enter a fraction like 4/3.)",
+      "interaction": {
+        "type": "answerEntry",
+        "fields": [
+          { "id": "noodles-2", "label": "E[loops], n = 2", "accept": ["4/3"], "placeholder": "?/?", "suffix": "" }
+        ]
+      },
+      "feedback": {
+        "correct": "Correct — even though tie 2 depends on tie 1, linearity adds them directly: 1/3 + 1 = 4/3.",
+        "hints": [
+          "Dependence doesn't block linearity. Add each tie's loop-closing chance: 1 + 1/3 = 4/3.",
+          "First tie: P(loop) = 1/(2·2−1) = 1/3. Second tie (2 ends remain): P(loop) = 1/(2·1−1) = 1.",
+          "E[loops] = 1/3 + 1 = 4/3."
+        ]
+      }
+    },
+    {
+      "beatId": "ev2-prove",
+      "required": true,
+      "interviewNote": "E[loops]=Σ_{k=1}^{n}1/(2k−1)≈½ln(2n) for large n — sub-logarithmic growth. For n=100: ≈3.28. Linearity holds because each 1/(2k−1) is the expectation of one indicator, regardless of what earlier ties did. Compare: E[loops,n=100]/100≈0.033 — not even 1 loop per 30 noodles.",
+      "prompt": "Mastery challenge: three noodles, six loose ends, three ties. Use E[loops] = Σ 1/(2k−1) to find E[loops] for n = 3. Enter your answer as a fraction.",
+      "interaction": {
+        "type": "masteryChallenge",
+        "scenario": "Each tie closes a loop with probability 1/(2(n−k+1)−1). For n=3 the three terms are 1/5, 1/3, 1. Sum them — and you'll see exactly why 100 noodles stays near 3.28.",
+        "fields": [
+          { "id": "noodles-3", "label": "E[loops], n = 3", "accept": ["23/15"], "placeholder": "?/??", "suffix": "" }
+        ]
+      },
+      "feedback": {
+        "correct": "n=3: 1 + 1/3 + 1/5 = 23/15. For 100 noodles ≈ 3.28 — logarithmic growth, not proportional.",
+        "hints": [
+          "Loops don't scale with noodles. Add the odd-denominator chances: 1 + 1/3 + 1/5 = 23/15.",
+          "Three ties: P = 1/(2·3−1), 1/(2·2−1), 1/(2·1−1) = 1/5, 1/3, 1.",
+          "1 + 1/3 + 1/5 = 15/15 + 5/15 + 3/15 = 23/15."
+        ]
+      }
+    },
+    {
+      "beatId": "ev2-recap",
+      "required": true,
+      "prompt": "Reveal the recap cards.",
+      "interaction": { "type": "recap" },
+      "feedback": {
+        "correct": "Break the tangle into a sum, add the easy pieces — dependence doesn't matter. Next: why does each piece equal 1/(2k−1)? That's the indicator variable trick in L3.",
+        "hints": [
+          "E[X+Y] = E[X]+E[Y] — always.",
+          "Dependence doesn't block the sum rule.",
+          "100 noodles ≈ 3.28 loops. The next lesson explains each piece."
+        ]
+      }
+    }
+  ]
+}
