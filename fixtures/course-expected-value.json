@@ -1,17 +1,92 @@
 {
   "courseId": "course-expected-value",
   "title": "Expected Value",
-  "description": "Build intuition for weighted averages of outcomes: from simple coin bets to the St. Petersburg paradox. Learn why a small positive edge compounds into certainty over time, and when expected value misleads — variance, Kelly sizing, and risk of ruin.",
+  "description": "Every 'what's it worth on average?' question is one move — list the outcomes, weight each by its probability, and add (E[X]=Σ x·P(x)) — then wield two superpowers: linearity (expectations of a sum always add, dependent or not) and conditioning (average the averages over the first step) to value bets far too tangled to ever simulate.",
   "persona": "For anyone who bets, invests, or makes decisions under uncertainty. No prior probability assumed; pattern-hitting times helpful but not required.",
+  "lessons": [
+    {
+      "lessonId": "lesson-expected-value-1",
+      "title": "What is Expected Value?",
+      "summary": "E[X]=Σ x·P(x) — the weighted average / fair price of a bet (a fair die is worth 7/2).",
+      "milestoneId": "ev-fundamentals",
+      "built": true,
+      "glyphKey": "E[X]",
+      "vizKey": "sum"
+    },
+    {
+      "lessonId": "lesson-expected-value-2",
+      "title": "Linearity of Expectation",
+      "summary": "E[X+Y]=E[X]+E[Y], dependent or not — sum a tangle of bets one at a time.",
+      "milestoneId": "linearity-mastered",
+      "built": true,
+      "glyphKey": "Σ",
+      "vizKey": "sum"
+    },
+    {
+      "lessonId": "lesson-expected-value-3",
+      "title": "Indicator Variables",
+      "summary": "E[1_A]=P(A); count an expectation as 1 + Σ E[I_i].",
+      "milestoneId": "indicator-mastered",
+      "built": true,
+      "glyphKey": "\ud835\udfd9\u2090",
+      "vizKey": "dice"
+    },
+    {
+      "lessonId": "lesson-expected-value-4",
+      "title": "Conditional & Total Expectation",
+      "summary": "E[X]=Σ E[X|case]P(case); condition on the first step.",
+      "milestoneId": "conditional-expectation-mastered",
+      "built": true,
+      "glyphKey": "E[X|Y]",
+      "vizKey": "twoNode"
+    },
+    {
+      "lessonId": "lesson-expected-value-5",
+      "title": "Coupon Collector",
+      "summary": "E[full set]=N·H_N from a sum of geometric waits (N=6 ⇒ 14.7).",
+      "milestoneId": "coupon-collector-mastered",
+      "built": true,
+      "glyphKey": "N·Hₙ",
+      "vizKey": "sum"
+    },
+    {
+      "lessonId": "lesson-expected-value-6",
+      "title": "Order Statistics & Extremes",
+      "summary": "E[max]=n/(n+1), E[min]=1/(n+1); ants-on-a-string collapses to the max.",
+      "milestoneId": "expected-value-mastered",
+      "built": true,
+      "glyphKey": "E[max]",
+      "vizKey": "raceLanes"
+    }
+  ],
+  "roadmap": [],
   "completionMilestoneId": "expected-value-complete",
   "schemaVersion": 1,
   "domain": "Probability",
   "domainOrder": 0,
   "order": 1,
-  "status": "coming_soon",
+  "status": "live",
   "tagline": "What do you gain, on average, each play?",
   "accent": "ch4",
   "vizKey": "sum",
-  "lessons": [],
-  "roadmap": []
+  "chapters": [
+    {
+      "id": "ch-expected-value-1",
+      "label": "The Weighted Average",
+      "accent": "ch4",
+      "lessonIds": ["lesson-expected-value-1", "lesson-expected-value-2"]
+    },
+    {
+      "id": "ch-expected-value-2",
+      "label": "The Expectation Toolkit",
+      "accent": "ch1",
+      "lessonIds": ["lesson-expected-value-3", "lesson-expected-value-4"]
+    },
+    {
+      "id": "ch-expected-value-3",
+      "label": "Expectation in Action",
+      "accent": "ch2",
+      "lessonIds": ["lesson-expected-value-5", "lesson-expected-value-6"]
+    }
+  ]
 }
