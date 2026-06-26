@@ -28,6 +28,7 @@ import { DominanceWheelBeat } from './DominanceWheelBeat'
 import { WalkBoardBeat } from './WalkBoardBeat'
 import { GamblerLedgerBeat } from './GamblerLedgerBeat'
 import { BalanceSolveBeat } from './BalanceSolveBeat'
+import { ExpectationScaleBeat } from './ExpectationScaleBeat'
 
 function ContinueStub({ beat, isLast, onAdvance }: BeatProps) {
   return (
@@ -101,6 +102,8 @@ export function BeatView(props: BeatProps) {
     // Expected Value concept (Wave-0 contract — stub slots routed to ContinueStub;
     // real renderers land per-lesson in the build wave, replacing each case body).
     case 'expectationScale':
+      return <ExpectationScaleBeat {...props} />
+    // Wave-0 stub slots; real renderers land per-lesson in later build waves.
     case 'conditionalTree':
     case 'couponCollectorSim':
       return <ContinueStub {...props} />
