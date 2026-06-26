@@ -32,20 +32,9 @@ test.describe('Interview flow (/dev/interview stub)', () => {
     await expect(page.locator('.iv-countdown')).toBeVisible()
   })
 
-  test('live state: typed fallback input and Send button are present', async ({ page }) => {
+  test('live state: captions region shows canned stub transcript content', async ({ page }) => {
     await page.getByRole('button', { name: /Start interview/ }).click()
-    await expect(page.locator('.iv-typed-input')).toBeVisible()
-    await expect(page.getByRole('button', { name: /Send/ })).toBeVisible()
-  })
-
-  test('typed fallback: text input echoes the submitted turn in the transcript', async ({
-    page,
-  }) => {
-    await page.getByRole('button', { name: /Start interview/ }).click()
-    const input = page.locator('.iv-typed-input')
-    await input.fill('My answer is 42.')
-    await page.getByRole('button', { name: /Send/ }).click()
-    await expect(page.locator('[aria-live="polite"]')).toContainText('My answer is 42.')
+    await expect(page.locator('[aria-live="polite"]')).toContainText('1/p', { timeout: 8_000 })
   })
 
   test('report state: all five dimension labels and hire signal render', async ({ page }) => {

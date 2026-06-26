@@ -61,7 +61,6 @@ export interface UseRealtimeInterviewReturn {
   attemptId:       string | null
   start:           () => void
   stop:            () => void
-  sendTypedAnswer: (text: string) => void
 }
 
 // ── Transcript helpers (exported for testability) ─────────────────────────────
@@ -96,7 +95,7 @@ export function useRealtimeInterview(
   const pcRef                = useRef<RTCPeerConnection | null>(null)
   const dcRef                = useRef<RTCDataChannel | null>(null)
   const transportCloseRef    = useRef<(() => void) | null>(null)
-  const sendRawRef           = useRef<((json: string) => void) | null>(null)
+  const audioElRef           = useRef<HTMLAudioElement | null>(null)
   const countdownRef         = useRef<ReturnType<typeof setInterval> | null>(null)
   // In-progress (non-final) partial text per role.
   const inProgressRef        = useRef<Record<string, string>>({})
@@ -104,6 +103,14 @@ export function useRealtimeInterview(
   function setStatusSafe(s: InterviewStatus) {
     statusRef.current = s
     setStatus(s)
+  }
+
+  function attachRemoteStream(stream: MediaStream | null) {
+    setRemoteStream(stream)
+    if (audioElRef.current && stream) {
+      audioElRef.current.srcObject = stream
+      audioElRef.current.play().catch(() => {})
+    }
   }
 
   // ── Transcript helpers ────────────────────────────────────────────────────
@@ -233,6 +240,20 @@ export function useRealtimeInterview(
     mintResultRef.current = mintResult
     setAttemptId(mintResult.attemptId)
 
+    // 2. Request mic access (real path only; skip when transport is injected).
+    setStatusSafe('awaitingMic')
+    let micStream: MediaStream | null = null
+    if (!_transport) {
+      try {
+        micStream = await navigator.mediaDevices.getUserMedia({ audio: true })
+      } catch (err) {
+        setError({ stage: 'awaitingMic', err })
+        setStatusSafe('error')
+        return
+      }
+    }
+    micStreamRef.current = micStream
+
     void analytics.interviewStarted({
       conceptId,
       questionId: mintResult.question.id,
@@ -240,18 +261,15 @@ export function useRealtimeInterview(
       mode:       'voice',
     })
 
-    // 2. Request mic access.
-    setStatusSafe('awaitingMic')
-    let micStream: MediaStream | null = null
-    try {
-      micStream = await navigator.mediaDevices.getUserMedia({ audio: true })
-    } catch {
-      // Mic denied → continue in text-only mode (micStream stays null).
-    }
-    micStreamRef.current = micStream
-
     // 3. Connect.
     setStatusSafe('connecting')
+
+    // Lazily create a detached audio element for remote stream playback.
+    if (typeof Audio !== 'undefined' && !audioElRef.current) {
+      const a = new Audio()
+      a.autoplay = true
+      audioElRef.current = a
+    }
 
     try {
       if (_transport) {
@@ -261,9 +279,9 @@ export function useRealtimeInterview(
           micStream,
           handleEvent,
         )
-        remoteStreamRef.current = result.remoteStream
-        sendRawRef.current      = result.sendRaw
+        remoteStreamRef.current   = result.remoteStream
         transportCloseRef.current = result.close
+        if (result.remoteStream) attachRemoteStream(result.remoteStream)
       } else {
         // Production path: real WebRTC.
         if (typeof RTCPeerConnection === 'undefined') {
@@ -274,6 +292,7 @@ export function useRealtimeInterview(
 
         pc.ontrack = (e) => {
           remoteStreamRef.current = e.streams[0]
+          attachRemoteStream(e.streams[0])
         }
 
         if (micStream) {
@@ -285,7 +304,6 @@ export function useRealtimeInterview(
         dc.onmessage = (e) => {
           handleEvent(JSON.parse(e.data as string) as Record<string, unknown>)
         }
-        sendRawRef.current = (json: string) => { dc.send(json) }
 
         const offer = await pc.createOffer()
         await pc.setLocalDescription(offer)
@@ -347,25 +365,6 @@ export function useRealtimeInterview(
     }
   }
 
-  // ── sendTypedAnswer() ────────────────────────────────────────────────────
-
-  function sendTypedAnswer(text: string) {
-    const send = sendRawRef.current
-    if (!send) return
-
-    send(JSON.stringify({
-      type: 'conversation.item.create',
-      item: {
-        type: 'message',
-        role: 'user',
-        content: [{ type: 'input_text', text }],
-      },
-    }))
-    send(JSON.stringify({ type: 'response.create' }))
-    void analytics.interviewFallbackUsed({ conceptId })
-    finalizeTurn('candidate', text)
-  }
-
   // ── Cleanup ───────────────────────────────────────────────────────────────
 
   function cleanup() {
@@ -377,6 +376,11 @@ export function useRealtimeInterview(
     micStreamRef.current = null
     pcRef.current?.close()
     pcRef.current = null
+    if (audioElRef.current) {
+      audioElRef.current.pause()
+      audioElRef.current.srcObject = null
+      audioElRef.current = null
+    }
   }
 
   useEffect(() => {
@@ -397,6 +401,5 @@ export function useRealtimeInterview(
     attemptId,
     start,
     stop,
-    sendTypedAnswer,
   }
 }
