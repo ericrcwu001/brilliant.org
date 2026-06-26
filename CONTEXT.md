@@ -208,6 +208,22 @@ muted concept card with a "Coming soon" status label — visible for direction-s
 enterable. Distinct from a **roadmap stub**, which is a locked lesson within an already-open
 concept.
 
+## Capstone interview
+
+A spoken AI mock-interview a learner takes **once per concept**, after completing all of that
+concept's lessons (not per lesson). An AI interviewer voices quant-style questions aloud
+(text-to-speech), the learner responds in a back-and-forth, and at the end the conversation is
+graded. Distinct from an **interview note** (the static "For the interview" micro-copy on a
+beat) and from the dormant **interview pack** (the authored question bank + interviewer prompt
+that feeds the capstone). _Avoid_: "mock interview", "AI interview" (ambiguous with interview note).
+
+## Interview pack
+
+The per-concept authored asset that feeds a **capstone interview**: an interviewer prompt, a
+bank of engine-verified quant-interview questions, and a hidden grading rubric. Specified in the
+lesson-factory skill and governed by ADR-0005; today it is a dormant design with no authored
+files yet.
+
 ---
 
 ## Retired terms (superseded by the Ergo reimagining — see ADR-0003)

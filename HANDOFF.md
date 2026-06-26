@@ -50,6 +50,106 @@
 ## Bayes-Rule Worktree (`concept/bayes-rule`) — CSS blocker fixed
 `src/styles/surfaces/beats-extended.css` in `.lf/bayes-rule/` now contains all `.bayes-bars*`, `.bayes-tree*`, `.bayes-icons*`, and `.bayes-seq*` rules (37 selectors). Token-only (no hex). Reduced-motion via `@media (prefers-reduced-motion: reduce)` on fill transitions. `vite build` + `tsc -b` green. Committed as `df331d8`.
 
+## Expected-Value Concept (`concept/expected-value`) — Wave-0 Contract FROZEN
+
+Schema/Types Specialist subagent completed the Wave-0 contract freeze on branch `concept/expected-value`. All 5 edits applied; all 3 gates green (`tsc -b`, `vitest run` 35 files / 269 tests, `validate-fixtures`). Summary of changes:
+- **`src/content/schema.ts`** — `theorySimChart` extended (`mode?`, `nMax?`); `coinSim` extended (`p?`); `raceSim` extended (`mode?`, `ants?`); 3 new discriminated-union variants added: `expectationScale`, `conditionalTree`, `couponCollectorSim` (all ungraded, no GRADED_TYPES entry).
+- **`src/lesson/beats/index.tsx`** — stacked Wave-0 stub slots for `expectationScale` / `conditionalTree` / `couponCollectorSim` → `ContinueStub`.
+- **`src/engine/expectation.ts`** (new) — pure exact-rational EV engine: `expectedValue`, `totalExpectation` (via `solveLinearSystem`), `indicatorExpectation`, `harmonic`, `couponCollector`, `distinctAfterDraws`, `orderStatUniform`, `noodleLoops`.
+- **`src/engine/expectation.test.ts`** (new) — 6 `describe`/`it` blocks, 269 tests total (all pass).
+- **`scripts/validate-fixtures.ts`** — `Course` type import; `reduce` + full expectation import; `courses` array; EV lessons in `GATED`+`MASTERY_LESSONS`; Sections 6 (engine self-check), 7 (chapters-coverage gate), 8 (per-fixture EV cross-check, 0 beats dormant).
+
+## Expected-Value Concept (`concept/expected-value`) — Stage 3 Dept-2 Interaction Spec: L6 COMPLETE (CONCEPT FINALE)
+
+`concepts/expected-value/lesson-expected-value-6/interaction-spec.md` written (READY verdict). 10-beat arc: ev6-primer(primer/custom,Track-A) · ev6-recall(retrievalGrid,first-graded) · ev6-bet(prediction/byOption) · ev6-win(answerEntry,2/3+1/3) · ev6-explore(raceSim/lanes+ants-mode,HERO,comparison) · ev6-model(slider,introducesSymbol E[max]=n/(n+1),interviewNote) · ev6-derive(primer/custom,Track-A,CDF proof) · ev6-min(answerEntry,1/5) · ev6-prove(masteryChallenge,required,500/501) · ev6-recap(recap,required,concept-finale+variance-teaser). **NO new interaction type.** `ev6-explore` reuses `raceSim` with minimal additive extension: `mode?:enum(['patterns','ants'])` + `ants?:{n:number}` (2 optional fields, fully back-compat). Engine fn to freeze: `orderStatUniform(n)→{max:{n,d:n+1},min:{n:1,d:n+1}}`. Goldens: `n=2→{2/3,1/3}`, `n=4→{4/5,1/5}`, `n=500→{500/501,1/501}`. Two Dept-3 kickbacks (renderer-only, non-blocking): `AntsLanesBeat.tsx` ants-mode Konva sim + DOM aria-live mirror; `SliderBeat` order-stat dual readout when `introducesSymbol='E[max]=n/(n+1)'`. `beat.pattern` UNSET everywhere; `ev6-prove` required:true penultimate; `ev6-recap` last.
+
+## Expected-Value Concept — Dept-3 Coder: lesson-expected-value-1 BUILT (worktree `ev-1`)
+
+Branch `lesson/expected-value-1` (worktree `.lf/ev-1`). All 4 gates green: `tsc -b --force` ✓ · `vitest run` 280 tests ✓ · `validate-fixtures` All fixtures valid (✓ inclusivity gate: lesson-expected-value-1, ✓ mastery-challenge gate: lesson-expected-value-1) · `eslint src` ✓.
+
+**6 new files created (no shared-file edits):**
+1. `fixtures/lesson-expected-value-1.json` — 10-beat fixture verbatim from interaction-spec (ev1-recall→ev1-recap), `patternOptions:["H"]`, `milestoneId:"ev-fundamentals"`, `unlocks:"lesson-expected-value-2"`, `beat.pattern` unset on every beat.
+2. `src/styles/surfaces/expected-value-1.css` — tokens-only (--ch4, --ergo-surface-2, --rule, --dur-slow, --ease-out, --font-mono, --s4, --r-md); reduced-motion `@media` block for `.escale__fulcrum-group`.
+3. `src/lesson/beats/ExpectationScaleBeat.tsx` — real DOM/SVG renderer; hooks before early return; imports `resolveFeedback` from `../feedbackResolve` (not `../feedback`) to avoid Firebase in tests; all weights placed → Continue enabled + correct feedback; hero slow-first pause (650ms); reduced-motion final frame; 44px outcome circles; aria-live readout; keyboard (Tab/Space/+/-/Arrow).
+4. `src/lesson/beats/ExpectationScaleBeat.test.tsx` — 6 smoke assertions via `react-dom/server renderToString` (Node env, no jsdom).
+5. `src/content/lesson-expected-value-1.factcheck.test.ts` — Stage-2 fact-check: ev1-win "7/2"=expectedValue(fairDie), ev1-pmf field-1 "1/9"=reduce(4,36), ev1-pmf field-2 "5"=expectedValue({3,5,7} pmf), ev1-prove "7"=expectedValue(twoDiceSum).
+6. `e2e/expected-value-1.spec.ts` — Playwright completion script (NOT run this wave; requires dispatcher wiring + app.css @import).
+
+**Lead actions required to go live:**
+- Dispatcher: in `src/lesson/beats/index.tsx`, replace `case 'expectationScale':` stub with: `case 'expectationScale': return <ExpectationScaleBeat {...props} />` and add `import { ExpectationScaleBeat } from './ExpectationScaleBeat'` to the imports block.
+- CSS: in `src/styles/app.css`, add: `@import './surfaces/expected-value-1.css';`
+
+## Expected-Value Concept (`concept/expected-value`) — Stage 3 Dept-2 Interaction Spec: L1 COMPLETE
+
+`concepts/expected-value/lesson-expected-value-1/interaction-spec.md` written (READY verdict, 1 minor non-blocking kickback). 10-beat arc: ev1-recall(retrievalGrid,first-graded,both) · ev1-bet(prediction/byOption,ungraded,both) · ev1-primer(primer/average,collapsible,both) · ev1-win(answerEntry,"7/2"/"21/6",guaranteed-early-win) · ev1-explore(expectationScale,NEW,hero,ungraded,both) · ev1-model(primer/custom,introducesSymbol,comparison,interviewNote,both) · ev1-deepen(theorySimChart,Track-A,required:false) · ev1-pmf(answerEntry,"1/9"+"5",graded-check,both) · ev1-prove(masteryChallenge,required,"7"/"252/36",penultimate,pattern-UNSET) · ev1-recap(recap,required,last). New type `expectationScale` fully frozen: DOM/SVG balance beam, `{ type, outcomes[{x,label?,weight?}], accept? }` — UNGRADED in L1 (accept omitted). Engine fn: `expectedValue(pmf):Rational` with goldens fair-die `{n:7,d:2}`, two-dice `{n:7,d:1}`, 3-outcome `{n:5,d:1}`. Hard gates: ev1-recall=first-graded ✓, ev1-prove required penultimate pattern-UNSET ✓, ev1-recap last ✓, ≥1 primer ✓, ≥1 Track-A(ev1-deepen) ✓, ≥2 interviewNotes(ev1-model+ev1-prove) ✓, every prediction byOption ✓, beat.pattern UNSET everywhere ✓. Wave-0 freeze: (1) `expectationScale` Zod → InteractionSchema union + ExpectationScaleBeat.tsx + BeatView dispatcher; (2) `expectation.ts` `expectedValue`; (3) validate-fixtures Stage-2 cross-check + GATED+MASTERY_LESSONS for lesson-expected-value-1..6. Minor kickback: Dept-1 sign-off on ev1-pmf field-2 specific pmf {$3,prob=1/4;$5,prob=1/2;$7,prob=1/4}→E=5 (non-blocking).
+
+## Expected-Value Concept (`concept/expected-value`) — Stage 3 Dept-2 Interaction Spec: L5 COMPLETE
+
+`concepts/expected-value/lesson-expected-value-5/interaction-spec.md` written (READY verdict). 10-beat arc: ev5-primer-geom(primer/custom,Track-A) · ev5-recall(retrievalGrid,first-graded) · ev5-bet(prediction/byOption) · ev5-win(answerEntry,"6") · ev5-explore(couponCollectorSim,NEW,hero) · ev5-model(primer/custom,introduces N·H_N,interviewNote) · ev5-stage-scaffold(primer/custom,Track-A) · ev5-stage(answerEntry,"3/2") · ev5-prove(masteryChallenge,required,"147/10") · ev5-recap(recap,required). New type `couponCollectorSim` frozen: `{ type, n, accept? }` — UNGRADED in L5 (no `accept`). Engine goldens: `harmonic(6)={n:49,d:20}`, `couponCollector(6)={n:147,d:10}`, `stageWait(6,2)={n:3,d:2}`, `stageWait(6,5)={n:6,d:1}`. `beat.pattern` UNSET everywhere. Two Dept-3 Wave-0 actions: (1) schema + `CouponCollectorSimBeat.tsx` + engine fns; (2) register `lesson-expected-value-1..6` in `GATED`+`MASTERY_LESSONS`. One Dept-3 confirm: `theorySimChart` skipped for ev5-model (primer used instead — no schema change).
+
+## Expected-Value Concept (`concept/expected-value`) — Stage 3 Dept-2 Interaction Spec: L4 COMPLETE
+
+`concepts/expected-value/lesson-expected-value-4/interaction-spec.md` written (READY verdict, 1 minor kickback). 9-beat arc: ev4-recall(retrievalGrid) · ev4-bet(prediction/byOption) · ev4-win(answerEntry,7/4) · ev4-explore(conditionalTree,HERO) · ev4-model(primer/custom,comparison) · ev4-firststep(answerEntry,5+E[X]) · ev4-isolate(primer/custom,Track-A) · ev4-prove(masteryChallenge,required) · ev4-recap(recap,required). New type `conditionalTree` (frozen Zod + renderer ConditionalTreeBeat.tsx + engine `totalExpectation`). `beat.pattern` UNSET everywhere — ev4-prove's E[X]=7 is a total-expectation fixed point, not an H/T recurrence. `solveLinearSystem` reuse from automaton.ts for the self-referential dice game. Engine goldens: coin-die `{n:7,d:4}`, dice game `{n:7,d:1}`. Kickback to Dept 1: confirm ev4-firststep accept list for symbolic "5+E[X]" vs numeric-only field.
+
+## Expected-Value Concept — Dept-3 Coder: lesson-expected-value-3 BUILT (worktree `ev-3`)
+
+Branch `lesson/expected-value-3` (worktree `.lf/ev-3`). All 4 gates green: `tsc -b --force` ✓ · `vitest run` 317 tests (41 files) ✓ · `validate-fixtures` All fixtures valid (✓ inclusivity gate: lesson-expected-value-3, ✓ mastery-challenge gate: lesson-expected-value-3) · `eslint src` ✓.
+
+**Files changed/created (5 new, 1 additive edit):**
+1. `src/lesson/beats/CoinSimBeat.tsx` — **ADDITIVE edit**: extracted existing PHT logic to `CoinSimPHT` function; added thin `CoinSimBeat` router (no hooks) + `IndicatorSim` component. When `coinSim.p` is defined and ≠ 0.5: renders biased 0/1 Bernoulli stream with running-average bar converging to `p`, theory line at `p`, `aria-live="polite"` readout, "Ace (1)"/"Not ace (0)" labels, gamblerNote after 20+ consecutive draws within 0.01 of `p`, reduced-motion via `transition:none`. All existing PHT behavior (CoinSimPHT) byte-for-byte unchanged.
+2. `fixtures/lesson-expected-value-3.json` — 10-beat fixture verbatim from interaction-spec (ev3-indicator-primer→ev3-recap), `patternOptions:["H"]`, `milestoneId:"indicator-mastered"`, `unlocks:"lesson-expected-value-4"`, `beat.pattern` unset on every beat. ev3-explore `coinSim.p = 0.07692307692307693` (1/13).
+3. `src/lesson/beats/CoinSimBeat.test.tsx` — 11 smoke tests via `react-dom/server renderToString`; mocks `konva/StateGraph` + `CoinStream`; covers p-branch (isim container, aria-live, theory-line, labels, Draw card button, Run 100, reduced-motion transition:none) AND fair-coin baseline (coinsim container, Flip button, no theory-line).
+4. `src/content/lesson-expected-value-3.factcheck.test.ts` — Stage-2 fact-check: ev3-win "1/13"=indicatorExpectation({n:4,d:52}), ev3-count "11/6"=distinctAfterDraws(6,2), ev3-prove "53/5"=ratAdd({n:1,d:1}, ratMul({n:48,d:1}, indicatorExpectation({n:1,d:5}))).
+5. `e2e/expected-value-3.spec.ts` — Playwright completion script for both tracks (NOT run this wave).
+6. `src/styles/surfaces/expected-value-3.css` — tokens-only styles for `.isim*` classes (--ch1 indigo accent, --ergo-surface-2, tabular-nums, `@media (prefers-reduced-motion: no-preference)` transition guard).
+
+**Lead actions required to go live:**
+- CSS: in `src/styles/app.css`, add: `@import './surfaces/expected-value-3.css';`
+- No dispatcher change needed (`coinSim` already wired in `beats/index.tsx`). PHT behavior confirmed preserved.
+
+## Expected-Value Concept (`concept/expected-value`) — Stage 3 Dept-2 Interaction Spec: L3 COMPLETE
+
+`concepts/expected-value/lesson-expected-value-3/interaction-spec.md` written (CONDITIONAL PASS). 10-beat arc: ev3-indicator-primer · ev3-recall · ev3-bet · ev3-win · ev3-explore · ev3-model · ev3-scaffold(Track-A) · ev3-count · ev3-prove · ev3-recap. No new interaction types; `coinSim {mode:'free'}` reused for `ev3-explore` with minor additive extension flagged (optional `p:number` for Bernoulli probability ≠ 0.5). Engine fns to freeze: `indicatorExpectation({n:4,d:52})→{n:1,d:13}`, `distinctAfterDraws(6,2)→{n:11,d:6}`, first-ace `1+48·(1/5)=53/5`. Hard gates: ev3-recall=retrievalGrid(first graded), ev3-prove=masteryChallenge required penultimate (NO pattern), ev3-recap last, ≥1 primer(custom), interviewNote on ev3-prove (5-equal-gaps), Track-A scaffold (ev3-scaffold), byOption on ev3-bet, hero+aria-live on ev3-explore, notation ladder ev3-model introducesSymbol groundedBy ev3-win. 3 low-risk kickbacks (D1: retrievalGrid string verification; D3: coinSim p-extension; D3: validate-fixtures pattern-absent handling).
+
+## Expected-Value Concept — Dept-3 Coder: lesson-expected-value-4 BUILT (worktree `ev-4`)
+
+Branch `lesson/expected-value-4` (worktree `.lf/ev-4`). All 4 gates green: `tsc -b --force` ✓ · `vitest run` 313 tests (41 files) ✓ · `validate-fixtures` All fixtures valid (✓ inclusivity gate: lesson-expected-value-4, ✓ mastery-challenge gate: lesson-expected-value-4) · `eslint src` ✓.
+
+**6 new files created (no shared-file edits):**
+1. `fixtures/lesson-expected-value-4.json` — 9-beat fixture verbatim from interaction-spec (ev4-recall→ev4-recap), `patternOptions:["H"]`, `milestoneId:"conditional-expectation-mastered"`, `unlocks:"lesson-expected-value-5"`, `beat.pattern` unset on every beat.
+2. `src/styles/surfaces/expected-value-4.css` — tokens-only (--ch1 indigo accent, --ergo-surface-2, --rule, --ch1-tint); loop-arc `@keyframes arc-draw`; reduced-motion `@media` block suppresses animation.
+3. `src/lesson/beats/ConditionalTreeBeat.tsx` — DOM/SVG renderer for `conditionalTree`; root "Roll die" node; tap-to-expand branch buttons (≥44px hit zone); SVG cubic Bézier loop-back arc for restart branches; post-all-expanded equation token animation (100ms/token); `totalExpectation` → `E[X]=7`; `aria-live="polite"` per branch + `aria-live="assertive"` for solve; reduced-motion final frame; calls `onAdvance` after solve.
+4. `src/lesson/beats/ConditionalTreeBeat.test.tsx` — 9 smoke assertions via `react-dom/server renderToString` (Node env, no jsdom).
+5. `src/content/lesson-expected-value-4.factcheck.test.ts` — Stage-2 fact-check: ev4-win "7/4"=totalExpectation(literal coin-die), ev4-prove "7"=totalExpectation(self-referential dice game), ev4-explore conditionalTree cases → 7.
+6. `e2e/expected-value-4.spec.ts` — Playwright completion script for both tracks (NOT run this wave).
+
+**Lead actions required to go live:**
+- Dispatcher: in `src/lesson/beats/index.tsx`, replace the `case 'conditionalTree':` stub (`ContinueStub`) with: `case 'conditionalTree': return <ConditionalTreeBeat {...props} />` and add `import { ConditionalTreeBeat } from './ConditionalTreeBeat'` to the imports block.
+- CSS: in `src/styles/app.css`, add: `@import './surfaces/expected-value-4.css';`
+
+## Expected-Value Concept — Dept-3 Coder: lesson-expected-value-2 BUILT (worktree `ev-2`)
+
+Branch `lesson/expected-value-2` (worktree `.lf/ev-2`). All 4 gates green: `tsc -b --force` ✓ · `vitest run` 285 tests (37 files) ✓ · `validate-fixtures` All fixtures valid (✓ inclusivity gate: lesson-expected-value-2, ✓ mastery-challenge gate: lesson-expected-value-2) · `eslint src` ✓.
+
+**Files changed/created (5 new, 1 additive edit):**
+1. `fixtures/lesson-expected-value-2.json` — 10-beat fixture verbatim from interaction-spec (ev2-recall→ev2-recap), `patternOptions:["H"]`, `milestoneId:"linearity-mastered"`, `unlocks:"lesson-expected-value-3"`, `beat.pattern` unset on every beat.
+2. `src/lesson/beats/TheorySimChartBeat.tsx` — **ADDITIVE edit only**: added `useEffect`/`useMemo`/`noodleLoops` imports + 3 unconditional hooks (`isNoodleLoops`, `fullSeries`, `step`, keyboard `useEffect`) + noodleLoops rendering branch (SVG step-through chart, aria-live readout, Step/Reset/Continue buttons, hero `reducedMotionFinalFrame` initial state). Existing automaton path is byte-for-byte unchanged.
+3. `src/lesson/beats/TheorySimChartBeat.test.tsx` — 10 smoke assertions via `react-dom/server renderToString` (Node env, no jsdom); mocks for `analytics/events`+`konva/SimChart`+`konva/useElementWidth`; covers both noodleLoops mode AND baseline automaton mode (PHT behavior protected).
+4. `src/content/lesson-expected-value-2.factcheck.test.ts` — Stage-2 fact-check: ev2-win "7"=expectedValue(twoDiceSum), ev2-noodles "4/3"=noodleLoops(2), ev2-prove "23/15"=noodleLoops(3).
+5. `e2e/expected-value-2.spec.ts` — Playwright completion script for both tracks (NOT run this wave).
+6. `src/styles/surfaces/expected-value-2.css` — tokens-only styles for `.noodle-chart*` classes (--ch4 line, --font-mono tick labels, tabular-nums, reduced-motion `no-preference` transition guard).
+
+**Lead actions required to go live:**
+- CSS: in `src/styles/app.css`, add: `@import './surfaces/expected-value-2.css';`
+- No dispatcher change needed (`theorySimChart` already wired in `beats/index.tsx`). PHT behavior confirmed preserved.
+
+## Expected-Value Concept (`concept/expected-value`) — Stage 3 Dept-2 Interaction Spec: L2 COMPLETE
+
+`concepts/expected-value/lesson-expected-value-2/interaction-spec.md` written (405 lines, READY verdict). 10-beat arc (ev2-recall → ev2-recap). No new interaction types; `theorySimChart` reused for `ev2-explore` with minor additive extension flagged (`mode:'noodleLoops'`, `nMax:number` optional fields). Engine fns to freeze: `noodleLoops` (n=2→4/3, n=3→23/15) + `expectedValue` (two-dice→7). All hard gates satisfied: ev2-recall=retrievalGrid, ev2-prove=masteryChallenge required penultimate, ev2-recap last, ≥1 primer, ≥1 interviewNote (ev2-model + ev2-prove), Track-A scaffold (ev2-tie-scaffold), every prediction byOption, pattern UNSET everywhere, hero on ev2-explore, aria-live on running E[loops].
+
+## Expected-Value Concept (`concept/expected-value`) — Stage 2 Lesson Briefs COMPLETE (6 lessons)
+Dept 1 produced full Lesson Briefs for all 6 EV lessons: `concepts/expected-value/lesson-expected-value-{1..6}/brief.md` (Architect skeleton → Misconception Specialist ∥ Assessment Designer → Lead synthesis). Each now fully fills Hook / Core promise / Display fields / Verified problems & answers / Beat-by-beat plan / **Misconceptions (inventory + per-option refutations)** / **Assessment + continuity (retrieval opener, early win, required mastery, spacing/interleaving, mastery signal, graded?-per-beat, gate/DoR notes)** — no TODO placeholders remain. Cross-dept handoffs for DoR: each `ev<n>-recall` = `retrievalGrid` (first graded), each `ev<n>-prove` = `masteryChallenge`+`required` with **`beat.pattern` unset** (verified by `src/engine/expectation.ts`, NOT `buildAutomaton`); Dept 2 still owes ≥1 `primer` + Track-A + `interviewNote` per lesson; Dept 3 must add `lesson-expected-value-1..6` to `MASTERY_LESSONS`+`GATED` in `scripts/validate-fixtures.ts`. 8-beat arc per lesson (`ev<n>-recall,bet,win,explore,model,<check>,prove,recap`); checks = `ev1-pmf,ev2-noodles,ev3-count,ev4-firststep,ev5-stage,ev6-min`. Every number re-verified against the Green Book on disk and is exact-rational reproducible by the planned `src/engine/expectation.ts`: fair die `7/2` + two-dice `7` (L1), noodles `4/3`/`23/15` + first-ace `53/5` (L2), `E[1_A]=P(A)` + first-ace `53/5` (L3), dice game `7` (L4), coupon `N=6→147/10` (L5), ants `500/501` (L6). No `⚠️ NEEDS-WEB-SOURCE` rows — L1's second rational toy (two-dice `E=7`) is cleanly GB-anchored (p.62 die + p.47 linearity).
+
 ## Lesson-Factory Skill Redesign (Living Departments) — DONE
 
 Implemented the nested "living departments" redesign end-to-end (see `docs/adr/0007-lesson-factory-nested-department-leads.md`). Each department is now a persistent, non-readonly Opus **department lead** subagent that spawns/manages its own ephemeral workers; the Manager stays the single root orchestrator and spawns the 4 leads (Dept 1/2/3 + Interview Studio). Coordination is Manager-mediated via on-disk `concepts/<slug>/` artifacts (no peer-to-peer); **all units are 3 layers** (Manager → lead → workers) — the Dept 3 Lead provisions a worktree per lesson and spawns that lesson's role chain directly (no per-lesson runner), batched as an assembly line; nesting is hard-required via a first-run preflight probe that verifies a lead can spawn a worker (no flat fallback). Files: `SKILL.md` (intro, org chart, model-routing table + Department Lead row, dispatcher paragraph, global-override + probe note), `departments.md` (Lead paragraph on all 4 units + intro reframe + Dept 3/Studio specifics), `pipeline.md` (§0 probe, §1–2 Manager-mediated loop via resumed leads, §3 Wave-0 via Dept 3 Lead, §4 Dept 3 Lead worktree-per-lesson build, §5b Studio Lead, parallelism summary), `deploy.md` (worktree note), light touch-ups to `qa-rubric.md` / `artifacts.md` / `interview-packs.md`, and `docs/adr/0007-...md` (incl. a dated Revision note recording the 4→3 layer reduction). The global `model-routing` skill/rule was intentionally left unchanged. Plans: `/Users/ericwu/.cursor/plans/living_departments_nested_leads_1f1050f5.plan.md` (initial), `/Users/ericwu/.cursor/plans/flatten_dept3_to_three_layers_a2c75585.plan.md` (depth fix).
