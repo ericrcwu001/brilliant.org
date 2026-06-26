@@ -98,7 +98,7 @@
       "beatId": "weight-by-source",
       "required": true,
       "track": "both",
-      "prompt": "Tap the endorsement that carries more rank — page 1's single focused out-link, or page 4's three split out-links.",
+      "prompt": "Which page ends up ranked #1? Weigh each link by how important its sender is — and how many other pages that sender also points to. Tap the top-ranked page.",
       "interaction": {
         "type": "chainBoard",
         "display": "diagram",

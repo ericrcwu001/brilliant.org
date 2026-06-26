@@ -283,7 +283,7 @@
         "hints": [
           "Two-day snow after rain is 3/8 — three paths of 1/8, not the single 1/8 story.",
           "Every Pⁿ entry is a row·column path-sum; the rows always sum to 1.",
-          "Next up: keep multiplying and Pⁿ settles — the rows converge to one stationary distribution."
+          "Next up: which states does a chain return to forever, and which does it leave for good? Classifying states (recurrent, transient, absorbing)."
         ]
       }
     }

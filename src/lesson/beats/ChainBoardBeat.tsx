@@ -21,6 +21,7 @@ import {
   formatVector,
 } from '../../engine/markov'
 import type { Rational } from '../../engine/types'
+import { ratAdd, ratMul } from '../../engine/automaton'
 import { ChainGraph } from '../konva/ChainGraph'
 import { chapterColor } from '../chapters'
 
@@ -30,7 +31,8 @@ const GRAPH_W = 320
 const GRAPH_H = 160
 
 // ── Utility: argmax over a Rational array (EXACT — no floats on a graded path) ─
-function argmax(v: Rational[]): number {
+// eslint-disable-next-line react-refresh/only-export-components
+export function argmax(v: Rational[]): number {
   let best = 0
   for (let i = 1; i < v.length; i++) {
     // v[i] > v[best]  ⇔  v[i].n·v[best].d > v[best].n·v[i].d  (exact cross-multiply)
@@ -42,6 +44,46 @@ function argmax(v: Rational[]): number {
 // ── Shared percent helper (bar widths only) ───────────────────────────────────
 function pct(r: Rational): number {
   return r.d === 0 ? 0 : Math.min(100, Math.round((r.n / r.d) * 100))
+}
+
+// ── Module-level helpers (exported for the interaction test) ──────────────────
+
+// Normalize a typed answer (mirrors AnswerEntryBeat).
+const normAns = (s: string) => s.trim().toLowerCase().replace(/\s+/g, '')
+
+// Return probability of `home` (a transient state): make `home` absorbing, then
+// f_home = Σ_j P[home][j]·P(reach home before a wall | start j). Composes the
+// engine's absorptionProbabilities — markov.ts is NOT modified.
+// eslint-disable-next-line react-refresh/only-export-components
+export function returnProbability(P: Rational[][], home: number, walls: number[]): Rational {
+  const n = P.length
+  const absorbing = [home, ...walls.filter((w) => w !== home)]
+  const Pmod = P.map((row, i) =>
+    i === home ? row.map((_, j) => ({ n: j === home ? 1 : 0, d: 1 })) : row,
+  )
+  const B = absorptionProbabilities(Pmod, absorbing)
+  const transient = P.map((_, i) => i).filter((i) => !absorbing.includes(i))
+  const rowOf = new Map(transient.map((s, idx) => [s, idx]))
+  let f: Rational = { n: 0, d: 1 }
+  for (let j = 0; j < n; j++) {
+    if (P[home][j].n === 0) continue
+    const g: Rational =
+      j === home
+        ? { n: 1, d: 1 }
+        : absorbing.includes(j)
+          ? { n: 0, d: 1 }
+          : B[rowOf.get(j)!][0]
+    f = ratAdd(f, ratMul(P[home][j], g))
+  }
+  return f
+}
+
+// Verdict for the periodic-trap classify task.
+// eslint-disable-next-line react-refresh/only-export-components
+export function periodicVerdict(P: Rational[][]): 'oscillates' | 'converges' {
+  const cls = classifyStates(P)
+  const recPeriod = (cls.find((c) => c.kind !== 'transient') ?? cls[0]).period
+  return recPeriod > 1 ? 'oscillates' : 'converges'
 }
 
 // ── DiagramDisplay ────────────────────────────────────────────────────────────
@@ -69,6 +111,7 @@ function DiagramDisplay({
   const [tappedEdge, setTappedEdge] = useState<{ from: number; to: number } | null>(null)
   const [nodeClass, setNodeClass] = useState<Record<number, string>>({})
   const [tappedNode, setTappedNode] = useState<number | null>(null)
+  const [absInput, setAbsInput] = useState('')
   const [solved, setSolved] = useState(false)
 
   const ladder = useHintLadder({
@@ -159,6 +202,9 @@ function DiagramDisplay({
     } else if (task === 'pagerank') {
       const pr = pagerank(ix.matrix, defaultDamping)
       correct = tappedNode !== null && tappedNode === argmax(pr)
+    } else if (task === 'absorption') {
+      const f = returnProbability(ix.matrix, cell?.row ?? 0, absorbingStates ?? [])
+      correct = normAns(absInput) === normAns(formatRational(f))
     }
     if (correct) {
       ladder.submitCorrect()
@@ -173,6 +219,7 @@ function DiagramDisplay({
     setTappedEdge(null)
     setNodeClass({})
     setTappedNode(null)
+    setAbsInput('')
     setSolved(false)
   }
 
@@ -180,7 +227,8 @@ function DiagramDisplay({
   const interacted =
     tappedEdge !== null ||
     tappedNode !== null ||
-    Object.keys(nodeClass).length > 0
+    Object.keys(nodeClass).length > 0 ||
+    absInput.trim() !== ''
 
   const primary = solved
     ? { label: isLast ? 'Finish' : 'Continue', enabled: true, onClick: onAdvance }
@@ -197,6 +245,8 @@ function DiagramDisplay({
     ariaStatus = `Selected edge ${ix.labels[tappedEdge.from]}→${ix.labels[tappedEdge.to]}: ${formatRational(val)}`
   } else if (task === 'pagerank' && tappedNode !== null) {
     ariaStatus = `Selected node ${ix.labels[tappedNode]}`
+  } else if (task === 'absorption') {
+    ariaStatus = 'Enter the probability of ever returning to the home state.'
   }
 
   // Render graded task controls
@@ -283,7 +333,6 @@ function DiagramDisplay({
       </div>
     )
   } else if (task === 'pagerank') {
-    const pr = pagerank(ix.matrix, defaultDamping)
     taskControls = (
       <div className="chainboard-nodes">
         <p className="chainboard-nodes__prompt">Tap the highest-ranked node:</p>
@@ -303,9 +352,32 @@ function DiagramDisplay({
             }}
             style={{ minHeight: '44px', minWidth: '44px' }}
           >
-            {lbl}: {formatRational(pr[i])}
+            {lbl}
           </button>
         ))}
+      </div>
+    )
+  } else if (task === 'absorption') {
+    const homeLabel = ix.labels[cell?.row ?? 0]
+    taskControls = (
+      <div className="chainboard-absorb">
+        <label className="chainboard-absorb__label">
+          <span>P(ever return to {homeLabel}) =</span>
+          <input
+            type="text"
+            className="chainboard-absorb__input"
+            value={absInput}
+            placeholder="e.g. 1/3"
+            disabled={solved || revealed}
+            autoComplete="off"
+            aria-label={`Probability of ever returning to ${homeLabel}`}
+            onChange={(e) => { setAbsInput(e.target.value); ladder.clear() }}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && !solved && absInput.trim() !== '') { e.preventDefault(); check() }
+            }}
+            style={{ minHeight: '44px' }}
+          />
+        </label>
       </div>
     )
   }
@@ -507,6 +579,7 @@ function PowersDisplay({
 }) {
   const [solved, setSolved] = useState(false)
   const [tappedCell, setTappedCell] = useState<{ row: number; col: number } | null>(null)
+  const [verdict, setVerdict] = useState<'oscillates' | 'converges' | null>(null)
 
   const ladder = useHintLadder({
     feedback: resolveFeedback(beat.feedback, props.pattern),
@@ -524,17 +597,16 @@ function PowersDisplay({
   const { cell } = ix
 
   function check() {
-    if (!tappedCell || !cell) return
-    const correct = tappedCell.row === cell.row && tappedCell.col === cell.col
-    if (correct) {
-      ladder.submitCorrect()
-      setSolved(true)
-    } else {
-      ladder.submitWrong()
+    if (ix.task === 'classify') {
+      const correct = verdict !== null && verdict === periodicVerdict(ix.matrix)
+      if (correct) { ladder.submitCorrect(); setSolved(true) } else { ladder.submitWrong() }
+    } else if (tappedCell && cell) {
+      const correct = tappedCell.row === cell.row && tappedCell.col === cell.col
+      if (correct) { ladder.submitCorrect(); setSolved(true) } else { ladder.submitWrong() }
     }
   }
 
-  const interacted = tappedCell !== null
+  const interacted = ix.task === 'classify' ? verdict !== null : tappedCell !== null
   const primary = solved
     ? { label: isLast ? 'Finish' : 'Continue', enabled: true, onClick: onAdvance }
     : beat.hero
@@ -558,6 +630,7 @@ function PowersDisplay({
               ladder.tryAgain()
               setSolved(false)
               setTappedCell(null)
+              setVerdict(null)
             }
           : undefined
       }
@@ -619,6 +692,24 @@ function PowersDisplay({
             </tbody>
           </table>
         </div>
+        {!beat.hero && ix.task === 'classify' && (
+          <div className="chainboard-chips" role="group" aria-label="Does Pⁿ converge or oscillate?">
+            <p className="chainboard-powers__verdict-prompt">As n grows, does Pⁿ settle to one matrix, or keep flipping?</p>
+            {(['converges', 'oscillates'] as const).map((v) => (
+              <button
+                key={v}
+                type="button"
+                className={'chainboard-chip' + (verdict === v ? ' chainboard-chip--active' : '')}
+                aria-pressed={verdict === v}
+                disabled={solved || revealed}
+                onClick={() => { setVerdict(v); ladder.clear() }}
+                style={{ minHeight: '44px', minWidth: '44px' }}
+              >
+                {v === 'converges' ? 'Converges to π' : 'Oscillates forever'}
+              </button>
+            ))}
+          </div>
+        )}
         <p role="status" aria-live="polite" className="sr-only">
           {ariaStatus}
         </p>
@@ -644,6 +735,7 @@ function DistributionDisplay({
   props: BeatProps
 }) {
   const [solved, setSolved] = useState(false)
+  const [shareInput, setShareInput] = useState('')
 
   const ladder = useHintLadder({
     feedback: resolveFeedback(beat.feedback, props.pattern),
@@ -656,50 +748,91 @@ function DistributionDisplay({
   })
 
   const revealed = ladder.view.kind === 'hint' && ladder.view.revealed
-  const startState = ix.start ?? 0
-  const step = ix.step ?? 4
-
-  // Row `startState` of Pⁿ is the distribution after `step` steps from that state.
-  const evolvedDist = reducedMotion
-    ? stationaryDistribution(ix.matrix)
-    : matrixPower(ix.matrix, step)[startState]
-
   const stationary = stationaryDistribution(ix.matrix)
+  const cellRow = ix.cell?.row ?? 0
 
-  const ariaStatus = `Distribution after ${step} steps: ${formatVector(evolvedDist)}`
+  // ── Hero path (ungraded — e.g. watch-it-settle) ───────────────────────────
+  if (beat.hero) {
+    const step = ix.step ?? 8
+    const Pn = reducedMotion ? null : matrixPower(ix.matrix, step)
 
-  // For graded 'stationary', just check = correct (read-only verify)
+    return (
+      <BeatShell
+        primary={{ label: isLast ? 'Finish' : 'Continue', enabled: true, onClick: onAdvance }}
+      >
+        <div className="chainboard-dist">
+          <p className="sr-only">{beat.hero.structuralReadout}</p>
+          {([0, 1] as const).map((startIdx) => {
+            if (startIdx >= ix.labels.length) return null
+            const rowDist = reducedMotion ? stationary : Pn![startIdx]
+            return (
+              <div key={startIdx}>
+                <p className="chainboard-dist__subtitle">Started {ix.labels[startIdx]}</p>
+                {rowDist.map((r, i) => (
+                  <div key={i} className="chainboard-dist__row">
+                    <span className="chainboard-dist__label">{ix.labels[i]}</span>
+                    <div className="chainboard-dist__track">
+                      <div
+                        className="chainboard-dist__fill"
+                        style={{
+                          width: `${pct(r)}%`,
+                          transition: reducedMotion ? 'none' : 'width 0.4s ease',
+                        }}
+                        aria-hidden="true"
+                      />
+                    </div>
+                    <span className="chainboard-dist__value">{formatRational(r)}</span>
+                  </div>
+                ))}
+              </div>
+            )
+          })}
+          <p className="chainboard-dist__subtitle chainboard-dist__subtitle--secondary">
+            Stationary: {formatVector(stationary)}
+          </p>
+          <p role="status" aria-live="polite" className="sr-only">
+            {`Both starts converge to: ${formatVector(stationary)}`}
+          </p>
+        </div>
+      </BeatShell>
+    )
+  }
+
+  // ── Graded path (e.g. read-the-share, approach-pi) ───────────────────────
+  const target = formatRational(stationary[cellRow])
+
   function check() {
-    ladder.submitCorrect()
-    setSolved(true)
+    const correct = normAns(shareInput) === normAns(target)
+    if (correct) { ladder.submitCorrect(); setSolved(true) } else { ladder.submitWrong() }
   }
 
   const primary = solved
     ? { label: isLast ? 'Finish' : 'Continue', enabled: true, onClick: onAdvance }
-    : beat.hero
-    ? { label: isLast ? 'Finish' : 'Continue', enabled: true, onClick: onAdvance }
-    : { label: 'Check', enabled: true, onClick: check }
+    : { label: 'Check', enabled: shareInput.trim() !== '', onClick: check }
+
+  const ariaStatus = solved
+    ? `${ix.labels[cellRow]} settles at ${target}`
+    : `Read the settled ${ix.labels[cellRow]} bar and enter its long-run share.`
 
   return (
     <BeatShell
       primary={primary}
-      feedback={!beat.hero ? ladder.view : undefined}
+      feedback={ladder.view}
       onTryAgain={
         revealed
           ? () => {
               ladder.tryAgain()
               setSolved(false)
+              setShareInput('')
             }
           : undefined
       }
     >
       <div className="chainboard-dist">
-        {beat.hero && <p className="sr-only">{beat.hero.structuralReadout}</p>}
         <p className="chainboard-dist__subtitle">
-          Distribution after {reducedMotion ? '∞' : step} steps (starting from{' '}
-          {ix.labels[startState]}):
+          The distribution has settled — read the {ix.labels[cellRow]} bar and enter its long-run share.
         </p>
-        {evolvedDist.map((r, i) => (
+        {stationary.map((r, i) => (
           <div key={i} className="chainboard-dist__row">
             <span className="chainboard-dist__label">{ix.labels[i]}</span>
             <div className="chainboard-dist__track">
@@ -712,12 +845,24 @@ function DistributionDisplay({
                 aria-hidden="true"
               />
             </div>
-            <span className="chainboard-dist__value">{formatRational(r)}</span>
           </div>
         ))}
-        <p className="chainboard-dist__subtitle chainboard-dist__subtitle--secondary">
-          Stationary: {formatVector(stationary)}
-        </p>
+        <label className="chainboard-dist__entry">
+          <span>Long-run share of {ix.labels[cellRow]} =</span>
+          <input
+            type="text"
+            value={shareInput}
+            placeholder="e.g. 1/2"
+            disabled={solved || revealed}
+            autoComplete="off"
+            aria-label={`Long-run share of ${ix.labels[cellRow]}`}
+            onChange={(e) => { setShareInput(e.target.value); ladder.clear() }}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && !solved && shareInput.trim() !== '') { e.preventDefault(); check() }
+            }}
+            style={{ minHeight: '44px' }}
+          />
+        </label>
         <p role="status" aria-live="polite" className="sr-only">
           {ariaStatus}
         </p>

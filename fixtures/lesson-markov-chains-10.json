@@ -31,7 +31,7 @@
     },
     {
       "beatId": "which-tool-bet",
-      "required": false,
+      "required": true,
       "track": "both",
       "prompt": "An unlabeled Ehrenfest urn: balls rattle between two boxes, bouncing forever. Before classifying — which tool does it call for?",
       "interaction": {
@@ -113,7 +113,7 @@
     },
     {
       "beatId": "walk-recall",
-      "required": false,
+      "required": true,
       "track": "both",
       "prompt": "Watch the absorbing drunkard slam into a wall — replay L5's tools.",
       "interaction": {
@@ -140,7 +140,7 @@
     },
     {
       "beatId": "explore-mixed",
-      "required": false,
+      "required": true,
       "track": "both",
       "prompt": "Watch the rubric at work: cycle through Ehrenfest, weather, and drunkard — classify each and see the right tool resolve.",
       "interaction": {
@@ -241,7 +241,7 @@
     },
     {
       "beatId": "recap",
-      "required": false,
+      "required": true,
       "track": "both",
       "prompt": "Reveal the recap — one fork, three tools, exact rationals.",
       "interaction": {

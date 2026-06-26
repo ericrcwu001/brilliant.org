@@ -32,7 +32,7 @@
     },
     {
       "beatId": "time-or-prob-bet",
-      "required": false,
+      "required": true,
       "track": "both",
       "prompt": "Same drunken stagger, two questions: (a) how many flips until you slam a wall, and (b) the chance you hit the right wall ($4). Which question carries a \"+1\" for every step taken — and which is just a split?",
       "interaction": {
@@ -88,7 +88,7 @@
     },
     {
       "beatId": "walk-recall",
-      "required": false,
+      "required": true,
       "track": "both",
       "prompt": "Watch one fair $0–$4 walk slam a wall, then run a batch to see the outcome split.",
       "interaction": {
@@ -136,7 +136,7 @@
     },
     {
       "beatId": "race-recall",
-      "required": false,
+      "required": true,
       "track": "both",
       "prompt": "Watch THH vs HHH race one coin stream — tally who lands first.",
       "interaction": {
@@ -161,7 +161,7 @@
     },
     {
       "beatId": "solve-matrix",
-      "required": false,
+      "required": true,
       "track": "both",
       "prompt": "Watch N = (I−Q)⁻¹ assemble from the asymmetric gambler's-ruin chain (up ⅔, down ⅓), then B = NR resolves to 4/7 and 6/7.",
       "interaction": {
@@ -196,7 +196,7 @@
     },
     {
       "beatId": "triplet-reveal",
-      "required": false,
+      "required": true,
       "track": "both",
       "prompt": "Three methods all converge on 4/7 — reveal each lens.",
       "interaction": {
@@ -264,7 +264,7 @@
     },
     {
       "beatId": "recap",
-      "required": false,
+      "required": true,
       "track": "both",
       "prompt": "Reveal the recap to review the core principle.",
       "interaction": { "type": "recap" },

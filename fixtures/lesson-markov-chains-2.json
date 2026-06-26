@@ -174,9 +174,9 @@
       "interaction": {
         "type": "retrievalGrid",
         "pairs": [
-          { "left": "Row [3/5, 2/5]", "right": "valid — sums to 1" },
-          { "left": "Row [3/10, 6/10]", "right": "invalid — sums to 9/10; fix 6/10 → 7/10" },
-          { "left": "Row [3/10, 7/10]", "right": "valid — sums to 1" }
+          { "left": "Row [3/5, 2/5]", "right": "valid — 3/5 + 2/5 = 1" },
+          { "left": "Row [3/10, 6/10]", "right": "invalid — 3/10 + 6/10 = 9/10 (fix 6/10 → 7/10)" },
+          { "left": "Row [3/10, 7/10]", "right": "valid — 3/10 + 7/10 = 1" }
         ]
       },
       "feedback": {

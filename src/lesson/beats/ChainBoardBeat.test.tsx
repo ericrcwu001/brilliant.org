@@ -229,9 +229,7 @@ describe('ChainBoardBeat smoke', () => {
   })
 
   describe('distribution display — stationary settling', () => {
-    it('renders bars with label names and stationary vector', () => {
-      const stationary = stationaryDistribution(WEATHER)
-      const expected = formatRational(stationary[0])
+    it('renders bars with label names and fraction input (graded — no auto-reveal)', () => {
       const beat = makeBeat({
         type: 'chainBoard',
         display: 'distribution',
@@ -239,12 +237,41 @@ describe('ChainBoardBeat smoke', () => {
         labels: WEATHER_LABELS,
         start: 0,
         step: 4,
+        cell: { row: 0, col: 0 },
       })
       const html = renderToString(React.createElement(ChainBoardBeat, { ...baseProps, beat }))
       expect(html).toContain('Clear')
       expect(html).toContain('Rainy')
-      // Stationary readout in sr-only paragraph
+      // Graded path: fraction input present, stationary value NOT auto-revealed
+      expect(html).toContain('<input')
+      expect(html).not.toContain('Stationary:')
+    })
+
+    it('renders hero distribution with stationary readout (both starts)', () => {
+      const stationary = stationaryDistribution(WEATHER)
+      const expected = formatRational(stationary[0])
+      const beat = makeBeat(
+        {
+          type: 'chainBoard',
+          display: 'distribution',
+          matrix: WEATHER,
+          labels: WEATHER_LABELS,
+        },
+        {
+          hero: {
+            slowFirst: true,
+            structuralReadout: 'Distribution hero readout.',
+            reducedMotionFinalFrame: true,
+          },
+        },
+      )
+      const html = renderToString(React.createElement(ChainBoardBeat, { ...baseProps, beat }))
+      expect(html).toContain('Clear')
+      expect(html).toContain('Rainy')
+      // Hero path: stationary readout IS shown (ungraded)
+      expect(html).toContain('Stationary:')
       expect(html).toContain(expected)
+      expect(html).toContain('Continue')
     })
   })
 

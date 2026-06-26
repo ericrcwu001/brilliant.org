@@ -32,7 +32,7 @@
     },
     {
       "beatId": "open-bet",
-      "required": false,
+      "required": true,
       "track": "both",
       "prompt": "Ana starts the 2-state weather chain on a **clear** day; Ben starts on a **rainy** day. They each run the chain for many weeks. What happens to their long-run fraction of clear days?",
       "interaction": {
@@ -116,7 +116,7 @@
     },
     {
       "beatId": "explore-collapse",
-      "required": false,
+      "required": true,
       "track": "both",
       "prompt": "Step n up to 8 and watch every row of Pⁿ collapse onto one identical row.",
       "interaction": {
@@ -147,7 +147,7 @@
     },
     {
       "beatId": "model-ergodic",
-      "required": false,
+      "required": true,
       "track": "both",
       "prompt": "Three lenses converge on one fact: Pⁿ→π. Reveal each one.",
       "interaction": {
@@ -274,7 +274,7 @@
     },
     {
       "beatId": "recap",
-      "required": false,
+      "required": true,
       "track": "both",
       "prompt": "Reveal the recap to review the core principle.",
       "interaction": { "type": "recap" },

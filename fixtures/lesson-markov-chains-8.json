@@ -32,7 +32,7 @@
     },
     {
       "beatId": "guess-pi-bet",
-      "required": false,
+      "required": true,
       "track": "both",
       "prompt": "Two urns, a handful of balls — can you find the long-run distribution π without solving the full πP=π system?",
       "interaction": {
@@ -177,7 +177,7 @@
     },
     {
       "beatId": "triplet-reveal",
-      "required": false,
+      "required": true,
       "track": "both",
       "prompt": "Three methods all converge on (1/4, 1/2, 1/4) — reveal each lens.",
       "interaction": {
