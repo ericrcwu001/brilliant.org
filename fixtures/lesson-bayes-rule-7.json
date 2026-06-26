@@ -1,0 +1,242 @@
+{
+  "lessonId": "lesson-bayes-rule-7",
+  "courseId": "course-bayes-rule",
+  "title": "Reading Evidence Backwards",
+  "patternOptions": ["H"],
+  "milestoneId": "bayes-rule-direction",
+  "unlocks": "lesson-bayes-rule-8",
+  "schemaVersion": 1,
+  "beats": [
+    {
+      "beatId": "recall-base-rate",
+      "required": true,
+      "track": "both",
+      "prompt": "Quick warm-up from L2 — match each conditional to which direction it points.",
+      "interaction": {
+        "type": "retrievalGrid",
+        "pairs": [
+          { "left": "P(positive | sick) = 99%", "right": "how good the test is (forward)" },
+          { "left": "P(sick | positive) = 50%", "right": "how likely you're sick (backward)" }
+        ]
+      },
+      "feedback": {
+        "correct": "P(positive | sick) is how good the test is; P(sick | positive) is what you actually want — and they're different. Same swap is the whole of today's lesson.",
+        "hints": [
+          "From L2: a 99% test on a 1% disease still left you at 50%.",
+          "One side describes the evidence (forward); one is the belief you want (backward).",
+          "Accuracy of the evidence ≠ probability of the hypothesis."
+        ]
+      }
+    },
+    {
+      "beatId": "open-bet",
+      "required": true,
+      "track": "both",
+      "prompt": "A DNA profile matches a suspect. The lab says the profile occurs in 1 in a million people. The suspect was found by searching a database of 10,000 others. What is the chance he's innocent?",
+      "interaction": {
+        "type": "prediction",
+        "options": [
+          "About 1 in a million — the match is that rare",
+          "You can't tell without the size of the suspect pool",
+          "Basically certain he's guilty"
+        ]
+      },
+      "feedback": {
+        "byOption": {
+          "About 1 in a million — the match is that rare": {
+            "note": "That's P(match | innocent) read backward. With 10,000 other innocents who could match by chance, the odds are 100:1 → he's the source 100/101, innocent only 1/101.",
+            "correct": false
+          },
+          "You can't tell without the size of the suspect pool": {
+            "note": "Exactly — the pool is the hidden prior. A pool of 10,001 possible sources puts him at 100/101, not 999,999/1,000,000.",
+            "correct": true
+          },
+          "Basically certain he's guilty": {
+            "note": "Strong, but not one-in-a-million-certain. The cold-hit pool leaves a real 1/101 chance he's innocent.",
+            "correct": false
+          }
+        },
+        "hints": [
+          "No wrong guess — we'll flip the conditional.",
+          "1-in-a-million is P(match | innocent), not P(innocent | match).",
+          "Pool of 10,001 → odds 100:1 → 100/101."
+        ]
+      }
+    },
+    {
+      "beatId": "name-the-direction",
+      "required": false,
+      "track": "A",
+      "prompt": "Read this just-in-time primer on forward vs backward conditionals — then continue.",
+      "interaction": {
+        "type": "primer",
+        "variant": "custom",
+        "title": "Forward vs backward",
+        "body": "P(evidence | hypothesis) is not P(hypothesis | evidence). 'One in a million innocents match' (forward) is not 'one in a million chance he's innocent' (backward). To flip the arrow you need Bayes — and the prior (here, the size of the suspect pool you searched).",
+        "collapsible": true
+      },
+      "feedback": {
+        "correct": "P(E|H) reads forward (evidence given a hypothesis); P(H|E) reads backward (hypothesis given the evidence). They are different numbers.",
+        "hints": [
+          "The conditional bar | has a direction.",
+          "'1 in a million innocents match' is forward; 'he's innocent with prob 1 in a million' is backward.",
+          "Bayes is the machine that flips forward into backward — using the prior."
+        ]
+      }
+    },
+    {
+      "beatId": "explore-pool",
+      "required": true,
+      "track": "both",
+      "prompt": "Watch P(source | match) settle at 100/101 — strong, but a thousandfold weaker than 'one in a million.'",
+      "interaction": {
+        "type": "bayesUpdate",
+        "display": "bars",
+        "hypotheses": ["Is the source", "Is not the source"],
+        "priors": [{ "n": 1, "d": 10001 }, { "n": 10000, "d": 10001 }],
+        "likelihoods": [{ "n": 1, "d": 1 }, { "n": 1, "d": 1000000 }],
+        "evidence": "the DNA matches",
+        "interactive": false,
+        "posterior": "100/101"
+      },
+      "hero": {
+        "slowFirst": true,
+        "structuralReadout": "1 true source vs ~1/100 expected false matches among 10,000 innocents → odds 100:1 → 100/101.",
+        "reducedMotionFinalFrame": true
+      },
+      "feedback": {
+        "correct": "One true source plus about one coincidental match among 10,000 innocents → odds 100:1 → P(source) = 100/101 ≈ 99%. Strong evidence — but a thousandfold weaker than 'one in a million.'",
+        "hints": [
+          "The match is near-certain for the true source and one-in-a-million for each innocent.",
+          "But there are ~10,000 innocents, so ~1/100 of a coincidental match is expected.",
+          "1 true vs 1/100 false → 100:1 → 100/101."
+        ]
+      }
+    },
+    {
+      "beatId": "flip-the-conditional",
+      "required": true,
+      "track": "both",
+      "prompt": "From the pool of 10,001 possible sources: compute P(innocent | match) and then P(he is the source | match).",
+      "interaction": {
+        "type": "answerEntry",
+        "fields": [
+          { "id": "innocent", "label": "P(innocent | match)", "accept": ["1/101"] },
+          { "id": "source", "label": "P(he is the source | match)", "accept": ["100/101"] }
+        ]
+      },
+      "feedback": {
+        "correct": "From the pool: P(innocent | match) = 1/101, so P(source | match) = 100/101. The 1-in-a-million was P(match | innocent) — the forward number; flipping it through the pool lands at 1/101 backward.",
+        "hints": [
+          "Among ~101 expected matches (1 true + ~100 coincidental over the whole pool), how many are innocent?",
+          "About 1 of every 101 matches is innocent → P(innocent | match) = 1/101.",
+          "1/101 and 100/101."
+        ]
+      }
+    },
+    {
+      "beatId": "cold-vs-cause",
+      "required": true,
+      "track": "both",
+      "prompt": "Same 1-in-a-million match, two different priors. Compute P(source | match) in each case.",
+      "interaction": {
+        "type": "answerEntry",
+        "fields": [
+          { "id": "cold", "label": "Cold hit (1 of 10,001): P(source | match)", "accept": ["100/101"] },
+          { "id": "cause", "label": "Probable cause (prior 1/2): P(source | match)", "accept": ["1000000/1000001"] }
+        ]
+      },
+      "interviewNote": "The prosecutor's fallacy / cold-hit DNA is a canonical quant/stats interview question (interview pack `showcase-prosecutors-fallacy`). The clean frame is odds: posterior odds = prior odds × likelihood ratio. The match's LR (1,000,000) never changes; the searched pool is the prior, and it alone decides whether the hit means 100/101 or 1/2.",
+      "feedback": {
+        "correct": "Same 1-in-a-million match, two priors: a cold hit (1 of 10,001) → 100/101; probable cause first (prior 1/2) → 1,000,000/1,000,001 ≈ 1. The match's probative value is set by the prior, not the match alone.",
+        "hints": [
+          "The likelihood ratio (1,000,000) is identical in both — only the prior odds differ.",
+          "Cold hit: prior odds 1:10,000 × 1,000,000 = 100:1. Probable cause: 1:1 × 1,000,000 = 1,000,000:1.",
+          "100/101 and 1,000,000/1,000,001."
+        ]
+      }
+    },
+    {
+      "beatId": "name-the-fallacy",
+      "required": true,
+      "track": "both",
+      "prompt": "Match each scenario to the backward read it hides.",
+      "interaction": {
+        "type": "retrievalGrid",
+        "pairs": [
+          { "left": "DNA: 1-in-a-million match", "right": "P(match | innocent), not P(innocent | match)" },
+          { "left": "Medical (L2): 99% test", "right": "P(positive | sick), not P(sick | positive)" },
+          { "left": "Weather: P(rain | clouds)", "right": "not the same as P(clouds | rain)" }
+        ]
+      },
+      "feedback": {
+        "correct": "Same backward read in three costumes — DNA, medicine, weather. Each confuses P(E|H) with P(H|E).",
+        "hints": [
+          "Each statement quotes a forward conditional as if it were the backward one.",
+          "Match by which arrow is given vs which is claimed.",
+          "DNA: P(match|innocent); medical: P(+|sick); weather: P(rain|clouds) — none is its flip."
+        ]
+      }
+    },
+    {
+      "beatId": "triangulate-100-101",
+      "required": true,
+      "track": "both",
+      "prompt": "Three methods all converge on 100/101 — reveal each lens.",
+      "interaction": {
+        "type": "tripletReveal",
+        "value": "100/101",
+        "lenses": [
+          { "label": "Formula", "body": "(1/10001·1) / (1/10001·1 + 10000/10001·1/1,000,000) = (1)/(1 + 1/100)" },
+          { "label": "Odds", "body": "prior odds 1:10,000 × likelihood ratio 1,000,000 = 100:1 → 100/101" },
+          { "label": "Pool ×100", "body": "Among ~101 expected matches in the pool, 100 are the (one) true source's vs ~1 innocent → 100/101" }
+        ],
+        "display": "cards"
+      },
+      "feedback": {
+        "correct": "The Bayes formula, the odds ratio, and the 'blow the pool up ×100' picture all give 100/101 — not a rounding of one-in-a-million.",
+        "hints": [
+          "Reveal each lens.",
+          "They are three roads to the same number.",
+          "All three say 100/101."
+        ]
+      }
+    },
+    {
+      "beatId": "mastery-challenge",
+      "required": true,
+      "track": "both",
+      "prompt": "Mastery challenge: a cold hit found by trawling a database of 1,000,001 people; the same 1-in-1,000,000 random-match profile. What is P(he is the source | match)?",
+      "interaction": {
+        "type": "masteryChallenge",
+        "scenario": "A cold hit found by trawling a database of 1,000,001 people; the same 1-in-1,000,000 random-match profile.",
+        "fields": [
+          { "id": "milliondb", "label": "P(he is the source | match)", "accept": ["1/2"] }
+        ]
+      },
+      "feedback": {
+        "correct": "Trawl a 1,000,001-person database with a 1/1,000,000 profile: about 1 true source vs ~1 coincidental match → odds 1:1 → 1/2. A bigger search makes a cold hit weaker, not stronger — more innocents means more chances to match.",
+        "hints": [
+          "More people searched = more expected coincidental matches.",
+          "Pool 1,000,001: prior odds 1:1,000,000 × LR 1,000,000 = 1:1.",
+          "1/2."
+        ]
+      }
+    },
+    {
+      "beatId": "recap",
+      "required": true,
+      "track": "both",
+      "prompt": "Reveal the recap to consolidate the directional lesson.",
+      "interaction": { "type": "recap" },
+      "feedback": {
+        "correct": "P(E|H) ≠ P(H|E): the conditional points one way. Flip it with Bayes — and restore the prior (the pool) you forgot.",
+        "hints": [
+          "'1 in a million innocents match' is not '1 in a million chance he's innocent' → 100/101.",
+          "The match's LR is fixed; the searched pool is the prior that sets its meaning.",
+          "Next up: spotting base-rate neglect in the wild — name the base rate, then update."
+        ]
+      }
+    }
+  ]
+}

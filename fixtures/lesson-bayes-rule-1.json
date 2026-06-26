@@ -1,0 +1,244 @@
+{
+  "lessonId": "lesson-bayes-rule-1",
+  "courseId": "course-bayes-rule",
+  "title": "The Update Rule",
+  "patternOptions": ["H"],
+  "milestoneId": "bayes-rule-update",
+  "unlocks": "lesson-bayes-rule-2",
+  "schemaVersion": 1,
+  "beats": [
+    {
+      "beatId": "recall-prob-split",
+      "required": true,
+      "track": "both",
+      "prompt": "Quick warm-up — match each quantity to how it behaves.",
+      "interaction": {
+        "type": "retrievalGrid",
+        "pairs": [
+          { "left": "A win-chance (probability)", "right": "A split between outcomes — no +1" },
+          { "left": "A wait-time (duration)", "right": "+1 on every flip" }
+        ]
+      },
+      "feedback": {
+        "correct": "A probability is a split, not a flip-count — and Bayes adds: that split can be re-weighed by evidence.",
+        "hints": [
+          "Warm-up from Penney's / Gambler's Ruin — no pressure.",
+          "One quantity counts flips (+1 each); the other only splits the chance.",
+          "Win-chance → a split (no +1); wait-time → +1 every flip."
+        ]
+      }
+    },
+    {
+      "beatId": "open-bet",
+      "required": true,
+      "track": "both",
+      "prompt": "I have two coins — one fair, one with heads on both sides. I pick one at random, flip it, and get heads. Is it more likely the two-headed coin?",
+      "interaction": {
+        "type": "prediction",
+        "options": [
+          "Still 50/50 — a head can't rule out either coin",
+          "More likely the two-headed coin",
+          "It's certain — it must be the two-headed coin"
+        ]
+      },
+      "feedback": {
+        "byOption": {
+          "Still 50/50 — a head can't rule out either coin": {
+            "note": "Both coins CAN show heads — but not equally often. The two-headed coin shows heads every time; the fair coin only half. Watch what 'how often' does.",
+            "correct": false
+          },
+          "More likely the two-headed coin": {
+            "note": "Good instinct — a head is better explained by the two-headed coin. Let's find exactly how much.",
+            "correct": true
+          },
+          "It's certain — it must be the two-headed coin": {
+            "note": "Strong — but a fair coin shows heads too (half the time). Evidence tilts the split; it rarely settles it.",
+            "correct": false
+          }
+        },
+        "hints": [
+          "No wrong guess yet — commit and we'll weigh it.",
+          "A head is twice as likely from the two-headed coin.",
+          "It moves you 1/2 → 2/3 — not to certainty."
+        ]
+      }
+    },
+    {
+      "beatId": "name-the-parts",
+      "required": false,
+      "track": "A",
+      "prompt": "Read this just-in-time primer on prior, likelihood, and posterior — then continue.",
+      "interaction": {
+        "type": "primer",
+        "variant": "custom",
+        "title": "Prior, likelihood, posterior",
+        "body": "Your belief before the flip is the prior. How well each coin predicts the flip you saw is the likelihood. Your updated belief after is the posterior. Bayes says: posterior ∝ prior × likelihood.",
+        "collapsible": true
+      },
+      "feedback": {
+        "correct": "Prior → likelihood → posterior. Keep those three words.",
+        "hints": [
+          "Before, during, after.",
+          "Likelihood = how well a hypothesis predicted what you saw.",
+          "posterior ∝ prior × likelihood."
+        ]
+      }
+    },
+    {
+      "beatId": "explore-update",
+      "required": true,
+      "track": "both",
+      "prompt": "Drag the prior split, pick the evidence (heads), and watch the posterior bar swing.",
+      "interaction": {
+        "type": "bayesUpdate",
+        "display": "bars",
+        "hypotheses": ["Two-headed coin", "Fair coin"],
+        "priors": [{ "n": 1, "d": 2 }, { "n": 1, "d": 2 }],
+        "likelihoods": [{ "n": 1, "d": 1 }, { "n": 1, "d": 2 }],
+        "evidence": "heads",
+        "interactive": true,
+        "posterior": "2/3"
+      },
+      "hero": {
+        "slowFirst": true,
+        "structuralReadout": "A head leaves 2 of 3 equally-likely heads on the two-headed coin → 2/3.",
+        "reducedMotionFinalFrame": true
+      },
+      "feedback": {
+        "correct": "Drag the prior and the posterior bar swings — one head moves 1/2 → 2/3, never to certainty.",
+        "hints": [
+          "Drag the prior split, then pick the evidence (heads).",
+          "Evidence tilts the split; it doesn't prove or erase a coin.",
+          "At a 1/2 prior, a single head lands you at 2/3."
+        ]
+      }
+    },
+    {
+      "beatId": "count-the-heads",
+      "required": true,
+      "track": "both",
+      "prompt": "Of the 3 equally-likely heads, tap the ones that sit on the two-headed coin.",
+      "interaction": {
+        "type": "bayesUpdate",
+        "display": "tree",
+        "hypotheses": ["Two-headed coin", "Fair coin"],
+        "priors": [{ "n": 1, "d": 2 }, { "n": 1, "d": 2 }],
+        "likelihoods": [{ "n": 1, "d": 1 }, { "n": 1, "d": 2 }],
+        "population": 3,
+        "evidence": "heads",
+        "interactive": true,
+        "posterior": "2/3"
+      },
+      "feedback": {
+        "correct": "Two of the three equally-likely heads sit on the two-headed coin → 2/3.",
+        "hints": [
+          "The two-headed coin offers two heads (one per face); the fair coin offers one.",
+          "Of the 3 equally-likely heads, tap the 2 that belong to the two-headed coin — the two H-sides are NOT 'the same' head.",
+          "2 of 3 heads are the two-headed coin's → P = 2/3."
+        ]
+      }
+    },
+    {
+      "beatId": "compute-posterior",
+      "required": true,
+      "track": "both",
+      "prompt": "Compute P(two-headed | heads) using prior × likelihood ÷ total. Give your answer as a fraction.",
+      "interaction": {
+        "type": "answerEntry",
+        "fields": [
+          { "id": "posterior", "label": "P(two-headed | heads)", "accept": ["2/3"], "placeholder": "e.g. 1/2" }
+        ]
+      },
+      "feedback": {
+        "correct": "(½·1)/(½·1 + ½·½) = (½)/(¾) = 2/3. The 100% likelihood is weighed by the prior and renormalized.",
+        "hints": [
+          "Don't stop at the likelihood (1). Weigh it by the prior, then divide by the total chance of a head.",
+          "Numerator ½·1; denominator ½·1 + ½·½ = ¾ (posterior = likelihood is the trap).",
+          "(½)/(¾) = 2/3."
+        ]
+      }
+    },
+    {
+      "beatId": "framing-flip",
+      "required": true,
+      "track": "both",
+      "prompt": "A family has two children. Compute P(both boys) under each clue.",
+      "interaction": {
+        "type": "answerEntry",
+        "fields": [
+          { "id": "atleast", "label": "P(both boys | at least one is a boy)", "accept": ["1/3"] },
+          { "id": "thischild", "label": "P(both boys | this child is a boy)", "accept": ["1/2"] }
+        ]
+      },
+      "feedback": {
+        "correct": "'At least one is a boy' removes only girl-girl → 1/3. 'This specific child is a boy' is stronger evidence → 1/2. The framing of the clue changes the update.",
+        "hints": [
+          "Same family, two different clues — list {bb, bg, gb, gg} and remove what each clue rules out.",
+          "'At least one boy' keeps {bb, bg, gb} → 1 of 3. 'This child is a boy' points at one child → 1 of 2.",
+          "At-least-one → 1/3; this-child → 1/2."
+        ]
+      }
+    },
+    {
+      "beatId": "triangulate-23",
+      "required": true,
+      "track": "both",
+      "prompt": "Three methods all converge on 2/3 — reveal each lens.",
+      "interaction": {
+        "type": "tripletReveal",
+        "value": "2/3",
+        "lenses": [
+          { "label": "Formula", "body": "(½·1)/(½·1+½·½) = (½)/(¾)" },
+          { "label": "Frequencies", "body": "3 equally-likely heads, 2 on the two-headed coin" },
+          { "label": "Odds", "body": "prior odds 1:1 × likelihood ratio 2:1 = 2:1" }
+        ],
+        "display": "cards"
+      },
+      "interviewNote": "The two-coin update is the cleanest Bayes warm-up: posterior odds = prior odds × likelihood ratio (1:1 × 2:1 = 2:1 → 2/3). Naming the likelihood ratio out loud is the answer.",
+      "feedback": {
+        "correct": "Formula, frequencies, and odds all land on 2/3 — not a trick of one method.",
+        "hints": [
+          "Reveal each lens.",
+          "They are three roads to the same number.",
+          "All three say 2/3."
+        ]
+      }
+    },
+    {
+      "beatId": "mastery-challenge",
+      "required": true,
+      "track": "both",
+      "prompt": "Mastery challenge: same two coins — you flip the chosen coin and see heads twice (HH). Give the exact posterior.",
+      "interaction": {
+        "type": "masteryChallenge",
+        "scenario": "Same two coins (one fair, one two-headed). You flip the chosen coin and see heads twice (HH).",
+        "fields": [
+          { "id": "hh", "label": "P(two-headed | HH)", "accept": ["4/5"] }
+        ]
+      },
+      "feedback": {
+        "correct": "The fair coin's likelihood is now (½)²=¼: (½·1)/(½·1 + ½·¼) = (½)/(⅝) = 4/5. A second head DOES move a settled belief.",
+        "hints": [
+          "A second head is more evidence — recompute, don't keep 2/3.",
+          "Fair-coin likelihood is ½·½=¼; numerator ½·1, denominator ½·1 + ½·¼ = ⅝.",
+          "(½)/(⅝) = 4/5."
+        ]
+      }
+    },
+    {
+      "beatId": "recap",
+      "required": true,
+      "track": "both",
+      "prompt": "Reveal the recap to review the core principle.",
+      "interaction": { "type": "recap" },
+      "feedback": {
+        "correct": "Evidence rescales belief in proportion to how well each hypothesis predicted it: posterior ∝ prior × likelihood, then renormalize.",
+        "hints": [
+          "A head moves 1/2 → 2/3 because 2 of 3 equally-likely heads are the two-headed coin's.",
+          "The prior never drops out — you weigh the likelihood by it and divide by the total.",
+          "Next up: when the prior is tiny, even strong evidence barely moves it."
+        ]
+      }
+    }
+  ]
+}

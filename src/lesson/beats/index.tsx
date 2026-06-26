@@ -35,6 +35,7 @@ import { VennCounterBeat } from './VennCounterBeat'
 import { PigeonholeBoardBeat } from './PigeonholeBoardBeat'
 import { ProbabilityCounterBeat } from './ProbabilityCounterBeat'
 import { HandRankerBeat } from './HandRankerBeat'
+import { BayesUpdateBeat } from './BayesUpdateBeat'
 
 function ContinueStub({ beat, isLast, onAdvance }: BeatProps) {
   return (
@@ -120,6 +121,8 @@ export function BeatView(props: BeatProps) {
       return <ProbabilityCounterBeat {...props} />
     case 'handRanker':
       return <HandRankerBeat {...props} />
+    case 'bayesUpdate':
+      return <BayesUpdateBeat {...props} />
     default:
       return <ContinueStub {...props} />
   }

@@ -1,0 +1,242 @@
+{
+  "lessonId": "lesson-bayes-rule-6",
+  "courseId": "course-bayes-rule",
+  "title": "The Question Behind the Clue",
+  "patternOptions": ["H"],
+  "milestoneId": "bayes-rule-condition",
+  "unlocks": "lesson-bayes-rule-7",
+  "schemaVersion": 1,
+  "beats": [
+    {
+      "beatId": "recall-monty",
+      "required": true,
+      "track": "both",
+      "prompt": "Quick warm-up — match each clue to what made it the evidence.",
+      "interaction": {
+        "type": "retrievalGrid",
+        "pairs": [
+          { "left": "The host's clue (L5)", "right": "his action, constrained by his rules, is the evidence" },
+          { "left": "'≥1 boy' vs 'the older is a boy' (L1)", "right": "different clues → different answers" }
+        ]
+      },
+      "feedback": {
+        "correct": "The host's choice was the clue in L5; here the clue's exact wording is the whole update. Same lesson: name what you actually observed.",
+        "hints": [
+          "From L5: the evidence was which door the host opened.",
+          "From L1: 'at least one boy' and 'the older is a boy' are different clues → different answers.",
+          "The exact event you condition on sets the number."
+        ]
+      }
+    },
+    {
+      "beatId": "open-bet",
+      "required": true,
+      "track": "both",
+      "prompt": "A family has two children. I tell you at least one is a boy. What is P(both boys)?",
+      "interaction": {
+        "type": "prediction",
+        "options": [
+          "1/2 — the other child is a 50/50 coin flip",
+          "1/3 — list the families the clue allows",
+          "1/4 — both boys is rare"
+        ]
+      },
+      "feedback": {
+        "byOption": {
+          "1/2 — the other child is a 50/50 coin flip": {
+            "note": "That secretly assumes you singled out one child. List {BB, BG, GB, GG}: '≥1 boy' keeps {BB, BG, GB} → BB is 1 of 3 → 1/3.",
+            "correct": false
+          },
+          "1/3 — list the families the clue allows": {
+            "note": "Right — '≥1 boy' keeps three equally-likely families and only one is both-boys → 1/3.",
+            "correct": true
+          },
+          "1/4 — both boys is rare": {
+            "note": "1/4 is the prior, before the clue. 'At least one boy' rules out girl-girl, lifting it to 1/3.",
+            "correct": false
+          }
+        },
+        "hints": [
+          "No wrong guess — we'll list the families.",
+          "The clue removes only girl-girl, not a whole child.",
+          "{BB, BG, GB} survive → 1 of 3 → 1/3."
+        ]
+      }
+    },
+    {
+      "beatId": "name-the-condition",
+      "required": false,
+      "track": "A",
+      "prompt": "Read this just-in-time primer on conditioning on an event — then continue.",
+      "interaction": {
+        "type": "primer",
+        "variant": "custom",
+        "title": "Condition on an event, not a vibe",
+        "body": "A clue is a subset of the sample space. Write the four equally-likely families {BB, BG, GB, GG}, then keep exactly the ones the clue allows. 'At least one boy' keeps {BB, BG, GB}; 'this specific child is a boy' keeps a different set. The answer is forced once you write the event down.",
+        "collapsible": true
+      },
+      "feedback": {
+        "correct": "You condition on an event — a written-down subset of outcomes — not a vibe about 'the other child.'",
+        "hints": [
+          "Write the clue as a set of families, not a feeling.",
+          "'≥1 boy' is the subset {BB, BG, GB}; 'the older is a boy' is {BB, BG}.",
+          "The posterior is just the focal outcome's share of the surviving subset."
+        ]
+      }
+    },
+    {
+      "beatId": "explore-children",
+      "required": true,
+      "track": "both",
+      "prompt": "Watch the prior split (1 of 4) become the conditioned posterior (1 of 3) — 'at least one boy' rules out girl-girl and lifts both-boys to 1/3.",
+      "interaction": {
+        "type": "bayesUpdate",
+        "display": "bars",
+        "hypotheses": ["Both boys", "Not both boys"],
+        "priors": [{ "n": 1, "d": 4 }, { "n": 3, "d": 4 }],
+        "likelihoods": [{ "n": 1, "d": 1 }, { "n": 2, "d": 3 }],
+        "evidence": "at least one is a boy",
+        "interactive": false,
+        "posterior": "1/3"
+      },
+      "hero": {
+        "slowFirst": true,
+        "structuralReadout": "Of 4 equally-likely families, 'at least one boy' keeps 3; only 1 is both-boys → 1/3.",
+        "reducedMotionFinalFrame": true
+      },
+      "feedback": {
+        "correct": "Of four equally-likely families, 'at least one boy' rules out only girl-girl — leaving three, of which one is both-boys. The bar settles at 1/3, not 1/2.",
+        "hints": [
+          "Watch the prior (1 of 4) become the conditioned posterior.",
+          "The clue removes girl-girl, not a whole child.",
+          "Both-boys is 1 of the 3 surviving families → 1/3."
+        ]
+      }
+    },
+    {
+      "beatId": "count-the-families",
+      "required": true,
+      "track": "both",
+      "prompt": "Same two-child family, two different clues. Compute both.",
+      "interaction": {
+        "type": "answerEntry",
+        "fields": [
+          { "id": "atleast", "label": "P(both boys | at least one is a boy)", "accept": ["1/3"] },
+          { "id": "thischild", "label": "P(both boys | this specific child is a boy)", "accept": ["1/2"] }
+        ]
+      },
+      "feedback": {
+        "correct": "'At least one is a boy' keeps {BB, BG, GB} → 1/3. 'This specific child is a boy' singles out one child → keeps {BB, BG} (or {BB, GB}) → 1/2. One word changes which outcomes survive.",
+        "hints": [
+          "List {BB, BG, GB, GG} and cross out what each clue forbids.",
+          "'≥1 boy' removes only GG (3 left). 'This child is a boy' fixes one slot to B (2 left).",
+          "1/3 and 1/2."
+        ]
+      }
+    },
+    {
+      "beatId": "bertrand",
+      "required": true,
+      "track": "both",
+      "prompt": "Three cards: black-black (BB), white-white (WW), black-white (BW). You draw one and see a random face — it's black. What is P(the other side is also black)?",
+      "interaction": {
+        "type": "answerEntry",
+        "fields": [
+          { "id": "bertrand", "label": "P(other side black | you see a black face)", "accept": ["2/3"] }
+        ]
+      },
+      "interviewNote": "Two-children and Bertrand's-box are classic conditioning traps (interview packs `two-children`, `showcase-bertrand-box`). The discipline that defeats both: enumerate the equally-likely atomic outcomes you actually observe (faces, not cards; ordered families, not 'the other child') before dividing.",
+      "feedback": {
+        "correct": "Count faces, not cards. Three equally-likely black faces (two on the black-black card, one on the mixed card); two of them have black on the back → 2/3. Seeing a face is stronger evidence for the all-black card.",
+        "hints": [
+          "Three cards: black-black, white-white, black-mixed. You saw a black face — which faces could it be?",
+          "There are 3 equally-likely black faces, not 2 cards. Two of those faces sit on the black-black card.",
+          "2 of 3 → 2/3."
+        ]
+      }
+    },
+    {
+      "beatId": "clue-match",
+      "required": true,
+      "track": "both",
+      "prompt": "Match each clue to its posterior — four costumes, one principle.",
+      "interaction": {
+        "type": "retrievalGrid",
+        "pairs": [
+          { "left": "At least one is a boy", "right": "1/3" },
+          { "left": "This specific child is a boy", "right": "1/2" },
+          { "left": "Bertrand: you see a black face", "right": "2/3" },
+          { "left": "Monty: the host opens a goat door", "right": "2/3" }
+        ]
+      },
+      "feedback": {
+        "correct": "Four costumes, one principle: the update is whatever the conditioning event forces. Even Monty (L5) is the same move.",
+        "hints": [
+          "Each clue is a different subset of outcomes.",
+          "Match by what the clue keeps: ≥1 boy → 3 families; this-child → 2; a black face → 3 faces; the host's forced door → 2 of 3.",
+          "≥1 boy → 1/3, this-child → 1/2, Bertrand → 2/3, Monty → 2/3."
+        ]
+      }
+    },
+    {
+      "beatId": "triangulate-13",
+      "required": true,
+      "track": "both",
+      "prompt": "Three methods all converge on 1/3 — reveal each lens.",
+      "interaction": {
+        "type": "tripletReveal",
+        "value": "1/3",
+        "lenses": [
+          { "label": "Enumerate", "body": "{BB, BG, GB, GG}; '≥1 boy' keeps {BB, BG, GB}; BB is 1 of 3" },
+          { "label": "Formula", "body": "P(BB | ≥1 boy) = P(BB)/P(≥1 boy) = (1/4)/(3/4) = 1/3" },
+          { "label": "Frequencies", "body": "Of 400 families: 100 BB, 100 BG, 100 GB, 100 GG; '≥1 boy' keeps 300; BB is 100 → 1/3" }
+        ],
+        "display": "cards"
+      },
+      "feedback": {
+        "correct": "Enumeration, the conditional formula, and a 400-family frequency count all give 1/3 — not a sophistry.",
+        "hints": [
+          "Reveal each lens.",
+          "They are three roads to the same number.",
+          "All three say 1/3."
+        ]
+      }
+    },
+    {
+      "beatId": "mastery-challenge",
+      "required": true,
+      "track": "both",
+      "prompt": "Mastery challenge: a family has three children. I tell you at least one is a boy. What is P(all three are boys)?",
+      "interaction": {
+        "type": "masteryChallenge",
+        "scenario": "A family has three children. I tell you at least one is a boy.",
+        "fields": [
+          { "id": "three", "label": "P(all three boys | at least one is a boy)", "accept": ["1/7"] }
+        ]
+      },
+      "feedback": {
+        "correct": "Re-enumerate the eight three-child families; '≥1 boy' removes only GGG, leaving 7; just BBB is all boys → 1/7. The clue's form is reused, but you must recount the new sample space.",
+        "hints": [
+          "Three children → 8 equally-likely families. Don't assume it's 1/3 again.",
+          "'≥1 boy' removes only all-girls (GGG), leaving 7. All-boys (BBB) is one of them.",
+          "1/7."
+        ]
+      }
+    },
+    {
+      "beatId": "recap",
+      "required": true,
+      "track": "both",
+      "prompt": "Reveal the recap to consolidate the conditioning principle.",
+      "interaction": { "type": "recap" },
+      "feedback": {
+        "correct": "The update is set by the exact event you condition on — write the clue as a subset of outcomes and the math is forced.",
+        "hints": [
+          "'At least one boy' → 1/3; 'this child is a boy' → 1/2. Same family, different clue, different answer.",
+          "Bertrand: count faces, not cards → 2/3. Monty: the forced door → 2/3.",
+          "Next up: which way does the conditional point — P(E|H) vs P(H|E)."
+        ]
+      }
+    }
+  ]
+}

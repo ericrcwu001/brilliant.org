@@ -1,0 +1,241 @@
+{
+  "lessonId": "lesson-bayes-rule-4",
+  "courseId": "course-bayes-rule",
+  "title": "Which Hypothesis?",
+  "patternOptions": ["H"],
+  "milestoneId": "bayes-rule-nway",
+  "unlocks": "lesson-bayes-rule-5",
+  "schemaVersion": 1,
+  "beats": [
+    {
+      "beatId": "recall-update-rule",
+      "required": true,
+      "track": "both",
+      "prompt": "Quick warm-up from L1 — match each term to what it does in the Bayes update.",
+      "interaction": {
+        "type": "retrievalGrid",
+        "pairs": [
+          { "left": "posterior ∝ prior × likelihood", "right": "rescale each hypothesis by how well it predicted the evidence" },
+          { "left": "renormalize", "right": "divide by the total over all hypotheses" }
+        ]
+      },
+      "feedback": {
+        "correct": "Rescale each hypothesis by how well it predicted the evidence, then renormalize. That move doesn't care whether there are two hypotheses or twenty.",
+        "hints": [
+          "Warm-up from L1 — no pressure.",
+          "Posterior isn't the likelihood; it's prior × likelihood, divided by the total.",
+          "Rescale each by its likelihood, then divide by the sum over all of them."
+        ]
+      }
+    },
+    {
+      "beatId": "open-bet",
+      "required": true,
+      "track": "both",
+      "prompt": "Machines M1 (50% of output, 1% defective), M2 (30%, 2%), M3 (20%, 3%). A part is defective. Which machine most likely made it?",
+      "interaction": {
+        "type": "prediction",
+        "options": [
+          "Machine 1 — it makes the most parts (half of all output)",
+          "Machine 3 — it has the highest defect rate (3%)",
+          "You can't say from share or rate alone — weigh share × rate"
+        ]
+      },
+      "feedback": {
+        "byOption": {
+          "Machine 1 — it makes the most parts (half of all output)": {
+            "note": "M1 makes half of everything but errs only 1% of the time → just 5/17, the smallest of the three. Most output ≠ most blame.",
+            "correct": false
+          },
+          "Machine 3 — it has the highest defect rate (3%)": {
+            "note": "Closer — M3 ties for most likely. But not because its rate is highest: M2 (2% × 30%) ties M3 (3% × 20%) at 6/17. It's share × rate, not rate alone.",
+            "correct": false
+          },
+          "You can't say from share or rate alone — weigh share × rate": {
+            "note": "Right instinct. Multiply each machine's share by its defect rate, then renormalize: M1 → 5/17, M2 = M3 → 6/17.",
+            "correct": true
+          }
+        },
+        "hints": [
+          "No wrong guess — we'll weigh share × rate.",
+          "Most output isn't most blame; highest rate isn't either.",
+          "Per 10,000 parts: 50 : 60 : 60 defects → renormalize over 170."
+        ]
+      }
+    },
+    {
+      "beatId": "name-n-hypotheses",
+      "required": false,
+      "track": "A",
+      "prompt": "Read this just-in-time primer on the N-hypothesis denominator — then continue.",
+      "interaction": {
+        "type": "primer",
+        "variant": "custom",
+        "title": "The denominator is a sum over all cases",
+        "body": "With more than two hypotheses, the rule doesn't change — only the bookkeeping. The chance of the evidence is the sum of priorᵢ × Lᵢ over every machine (the law of total probability). Each posterior is that machine's share of the sum: posteriorᵢ = priorᵢ·Lᵢ / Σⱼ priorⱼ·Lⱼ.",
+        "collapsible": true
+      },
+      "feedback": {
+        "correct": "The denominator is a sum over every hypothesis — the law of total probability for N.",
+        "hints": [
+          "Two hypotheses or ten — the rule is the same.",
+          "Each hypothesis contributes priorᵢ × Lᵢ to the total chance of the evidence.",
+          "posteriorᵢ = priorᵢ·Lᵢ / Σⱼ priorⱼ·Lⱼ."
+        ]
+      }
+    },
+    {
+      "beatId": "explore-sources",
+      "required": true,
+      "track": "both",
+      "prompt": "Watch three posterior bars renormalize from the share × rate products — Machine 1 starts with the biggest share, but ends up smallest.",
+      "interaction": {
+        "type": "bayesUpdate",
+        "display": "bars",
+        "hypotheses": ["Machine 1", "Machine 2", "Machine 3"],
+        "priors": [{ "n": 1, "d": 2 }, { "n": 3, "d": 10 }, { "n": 2, "d": 10 }],
+        "likelihoods": [{ "n": 1, "d": 100 }, { "n": 2, "d": 100 }, { "n": 3, "d": 100 }],
+        "evidence": "a defective part",
+        "interactive": false,
+        "posterior": "5/17"
+      },
+      "hero": {
+        "slowFirst": true,
+        "structuralReadout": "Per 10,000 parts: Machine 1 makes 50 defects, Machines 2 and 3 each make 60 → 50 of 170 → 5/17 for Machine 1.",
+        "reducedMotionFinalFrame": true
+      },
+      "feedback": {
+        "correct": "Machine 1 makes half the parts but only 5/17 of the defects; Machines 2 and 3 tie at 6/17. Share alone doesn't decide — share × rate does, after renormalizing.",
+        "hints": [
+          "Watch the prior bars (50 : 30 : 20) become posterior bars (5/17 : 6/17 : 6/17).",
+          "The biggest prior shrinks because its defect rate is the lowest.",
+          "Each bar = that machine's share of the 170 defects per 10,000 parts."
+        ]
+      }
+    },
+    {
+      "beatId": "count-the-defects",
+      "required": true,
+      "track": "both",
+      "prompt": "Per 10,000 parts: M1 runs 5,000 @ 1%, M2 runs 3,000 @ 2%, M3 runs 2,000 @ 3%. What fraction of defects came from Machine 1?",
+      "interaction": {
+        "type": "answerEntry",
+        "fields": [
+          { "id": "pm1", "label": "P(Machine 1 | defective)", "accept": ["5/17"], "placeholder": "e.g. 5/17" }
+        ]
+      },
+      "interviewNote": "Which-source / n-hypothesis defect is a standard Bayes interview question (interview pack `multi-source-defect`): weight each source's share by its defect rate, then renormalize by the law of total probability. The trap is comparing the raw products (50 : 60 : 60) without dividing by 170.",
+      "feedback": {
+        "correct": "Per 10,000 parts: 50 from M1, 60 from M2, 60 from M3 — total 170. P(M1 | defective) = 50/170 = 5/17.",
+        "hints": [
+          "Count defects per 10,000: M1 = 5000·1%, M2 = 3000·2%, M3 = 2000·3%.",
+          "That's 50 : 60 : 60. The products aren't probabilities until you divide by the total 170 (the law of total probability).",
+          "50/170 = 5/17."
+        ]
+      }
+    },
+    {
+      "beatId": "compute-twist",
+      "required": true,
+      "track": "both",
+      "prompt": "Same 170 total defects. Compute P(Machine 3 | defective) and P(Machine 2 | defective). Do they tie?",
+      "interaction": {
+        "type": "answerEntry",
+        "fields": [
+          { "id": "pm3", "label": "P(Machine 3 | defective)", "accept": ["6/17"] },
+          { "id": "pm2", "label": "P(Machine 2 | defective)", "accept": ["6/17"] }
+        ]
+      },
+      "feedback": {
+        "correct": "P(M3) = 60/170 = 6/17 — and P(M2) = 60/170 = 6/17 too. M2 and M3 tie even though M2 runs 30% and M3 only 20%: a higher rate exactly offsets a smaller share.",
+        "hints": [
+          "Same 170 total. M3 = 2000·3% = 60; M2 = 3000·2% = 60.",
+          "Both land on 60 of 170 — the products are equal, so the posteriors are equal.",
+          "P(M3) = P(M2) = 6/17."
+        ]
+      }
+    },
+    {
+      "beatId": "share-vs-rate",
+      "required": true,
+      "track": "both",
+      "prompt": "Match each machine's headline factor to why it loses — and what actually decides.",
+      "interaction": {
+        "type": "retrievalGrid",
+        "pairs": [
+          { "left": "Most output (Machine 1, 50%)", "right": "still only 5/17 — its defect rate is the lowest" },
+          { "left": "Highest defect rate (Machine 3, 3%)", "right": "only 6/17 — its share is the smallest" },
+          { "left": "What decides the culprit", "right": "share × rate, then renormalize over the total" }
+        ]
+      },
+      "feedback": {
+        "correct": "Neither the biggest share nor the highest rate wins alone — the product does. That's L2's base-rate lesson in a new costume.",
+        "hints": [
+          "Recall L2: a big prior can outweigh a strong likelihood — and vice versa.",
+          "M1 has the most share but the lowest rate; M3 has the highest rate but the least share.",
+          "Share × rate, then renormalize — that's the only thing that decides."
+        ]
+      }
+    },
+    {
+      "beatId": "triangulate-5-17",
+      "required": true,
+      "track": "both",
+      "prompt": "Three methods all converge on 5/17 — reveal each lens.",
+      "interaction": {
+        "type": "tripletReveal",
+        "value": "5/17",
+        "lenses": [
+          { "label": "Formula", "body": "(½·1/100) / (½·1/100 + 3/10·2/100 + 2/10·3/100) = (1/200)/(17/500)" },
+          { "label": "Frequencies", "body": "Per 10,000 parts: 50 : 60 : 60 defects; Machine 1 is 50 of 170" },
+          { "label": "Odds", "body": "Machine 1 vs the rest = 50 : 120 → 50/170 = 5/17" }
+        ],
+        "display": "cards"
+      },
+      "feedback": {
+        "correct": "Formula, the 170-defect count, and the odds ratio all land on 5/17 — not an artifact of one method.",
+        "hints": [
+          "Reveal each lens.",
+          "They are three roads to the same number.",
+          "All three say 5/17."
+        ]
+      }
+    },
+    {
+      "beatId": "mastery-challenge",
+      "required": true,
+      "track": "both",
+      "prompt": "Mastery challenge: three new suppliers — S1 makes 25% of parts at a 5% defect rate, S2 makes 20% at 3%, S3 makes 55% at 1%. A part arrives defective. What is P(Supplier 1 | defective)?",
+      "interaction": {
+        "type": "masteryChallenge",
+        "scenario": "Three suppliers: S1 makes 25% of parts at a 5% defect rate, S2 20% at 3%, S3 55% at 1%. A part arrives defective.",
+        "fields": [
+          { "id": "ps1", "label": "P(Supplier 1 | defective)", "accept": ["25/48"] }
+        ]
+      },
+      "feedback": {
+        "correct": "Per 10,000 parts: S1 = 2500·5% = 125, S2 = 2000·3% = 60, S3 = 5500·1% = 55 → total 240. P(S1) = 125/240 = 25/48 — the largest, even though S1 makes only a quarter of the parts. A high enough defect rate beats a bigger share.",
+        "hints": [
+          "New N, same move: weight each supplier's share by its defect rate.",
+          "125 : 60 : 55 per 10,000 → divide by 240.",
+          "125/240 = 25/48."
+        ]
+      }
+    },
+    {
+      "beatId": "recap",
+      "required": true,
+      "track": "both",
+      "prompt": "Reveal the recap to consolidate the N-way rule.",
+      "interaction": { "type": "recap" },
+      "feedback": {
+        "correct": "The two-hypothesis rule is the rule for N: posteriorᵢ = priorᵢ·Lᵢ / Σⱼ priorⱼ·Lⱼ. Rescale every hypothesis by how well it predicted the evidence, then renormalize by the total.",
+        "hints": [
+          "A defective part most likely came from neither the highest-output nor the highest-rate machine — it's the product that ranks them.",
+          "M2 and M3 tie at 6/17 because share × rate is equal even though shares differ.",
+          "Next up: Monty Hall — three doors, and the host's action is the evidence."
+        ]
+      }
+    }
+  ]
+}

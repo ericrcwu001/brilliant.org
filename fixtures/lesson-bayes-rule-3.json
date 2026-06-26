@@ -1,0 +1,248 @@
+{
+  "lessonId": "lesson-bayes-rule-3",
+  "courseId": "course-bayes-rule",
+  "title": "Stacking Evidence",
+  "patternOptions": ["H"],
+  "milestoneId": "bayes-rule-stacking",
+  "unlocks": "lesson-bayes-rule-4",
+  "schemaVersion": 1,
+  "beats": [
+    {
+      "beatId": "recall-base-rate",
+      "required": true,
+      "track": "both",
+      "prompt": "Quick warm-up from L2 — match each statement to what it describes.",
+      "interaction": {
+        "type": "retrievalGrid",
+        "pairs": [
+          { "left": "One 99% test, 1% disease", "right": "Only 50%" },
+          { "left": "The base rate", "right": "What evidence must overcome" }
+        ]
+      },
+      "feedback": {
+        "correct": "One positive left you at 50% because the base rate is the anchor. Now add a second clue.",
+        "hints": [
+          "From L2: a single 99% test on a 1% disease.",
+          "One row is the headline number; one is the role of the prior.",
+          "One test → 50%; base rate → the anchor evidence must overcome."
+        ]
+      }
+    },
+    {
+      "beatId": "open-bet",
+      "required": true,
+      "track": "both",
+      "prompt": "Same 1% disease, same 99% test. You test positive twice independently. What is P(disease | two positives)?",
+      "interaction": {
+        "type": "prediction",
+        "options": [
+          "Still about 50% — a re-test just confirms",
+          "Around 75%",
+          "Much higher — near 99%"
+        ]
+      },
+      "feedback": {
+        "byOption": {
+          "Still about 50% — a re-test just confirms": {
+            "note": "Independent evidence multiplies, it doesn't merely re-confirm.",
+            "correct": false
+          },
+          "Around 75%": {
+            "note": "That averages the two 50%s. Bayes multiplies the odds instead.",
+            "correct": false
+          },
+          "Much higher — near 99%": {
+            "note": "Right — each positive multiplies the odds by 99: 1 → 99 → 99%.",
+            "correct": true
+          }
+        },
+        "hints": [
+          "No wrong guess — we'll multiply it out.",
+          "Two 50%s don't average to 50%.",
+          "Odds 1:1 × 99 = 99:1 → 99%."
+        ]
+      }
+    },
+    {
+      "beatId": "posterior-is-prior",
+      "required": false,
+      "track": "A",
+      "prompt": "Read this just-in-time primer on chaining evidence — then continue.",
+      "interaction": {
+        "type": "primer",
+        "variant": "custom",
+        "title": "Today's posterior is tomorrow's prior",
+        "body": "After the first test, your 50% belief becomes the prior for the next test. If the tests are independent, their likelihood ratios multiply: posterior odds = prior odds × LR × LR.",
+        "collapsible": true
+      },
+      "feedback": {
+        "correct": "Chain it: today's posterior becomes tomorrow's prior; independent ⇒ multiply.",
+        "hints": [
+          "Carry yesterday's answer forward as today's prior.",
+          "Independent evidence ⇒ multiply the likelihood ratios.",
+          "posterior odds = prior odds × LR × LR."
+        ]
+      }
+    },
+    {
+      "beatId": "due-vs-evidence",
+      "required": false,
+      "track": "both",
+      "comparison": true,
+      "prompt": "Read this contrast between the gambler's fallacy and Bayesian updating — then continue.",
+      "interaction": {
+        "type": "primer",
+        "variant": "gamblersFallacy",
+        "title": "'Never due' vs 'each head is evidence'",
+        "body": "Two different objects. Given the coin, the next flip is independent — you are never 'due' for a head. But the heads you've already seen update which coin you're holding. Independence of outcomes is exactly why their likelihoods multiply.",
+        "collapsible": true
+      },
+      "feedback": {
+        "correct": "Never 'due' for the next flip; but the flips you've already seen still update which coin it is.",
+        "hints": [
+          "The gambler's fallacy is about the next outcome.",
+          "Bayes is about which hypothesis you hold.",
+          "Independent outcomes are exactly why their likelihoods multiply."
+        ]
+      }
+    },
+    {
+      "beatId": "explore-sequence",
+      "required": true,
+      "track": "both",
+      "prompt": "The 1-in-1000 double-headed coin — flip repeatedly and watch the posterior climb. How many heads to pass 50%?",
+      "interaction": {
+        "type": "bayesUpdate",
+        "display": "sequence",
+        "hypotheses": ["Double-headed coin", "Fair coin"],
+        "priors": [{ "n": 1, "d": 1000 }, { "n": 999, "d": 1000 }],
+        "likelihoods": [{ "n": 1, "d": 1 }, { "n": 1, "d": 2 }],
+        "evidence": "heads",
+        "steps": 10,
+        "interactive": true,
+        "posterior": "1024/2023"
+      },
+      "hero": {
+        "slowFirst": true,
+        "structuralReadout": "Each head doubles the odds; it takes 10 straight heads (1024 vs 999) for the 1-in-1000 coin to pass 50%.",
+        "reducedMotionFinalFrame": true
+      },
+      "feedback": {
+        "correct": "Flip by flip the posterior climbs 2/1001 → 32/1031 → … → 1024/2023: big early jumps, then it crawls past 50% at the 10th head.",
+        "hints": [
+          "Flip repeatedly; each head multiplies the odds by 2.",
+          "It's multiplicative in odds, not a fixed +amount in probability.",
+          "After 10 heads: 1024/2023 — just over half."
+        ]
+      }
+    },
+    {
+      "beatId": "two-tests",
+      "required": true,
+      "track": "both",
+      "prompt": "Same 1% disease, same 99% test. You test positive twice (independently). Compute P(disease | two positives).",
+      "interaction": {
+        "type": "answerEntry",
+        "fields": [
+          { "id": "p", "label": "P(disease | two positive tests)", "accept": ["99/100"] }
+        ]
+      },
+      "interviewNote": "Odds-form Bayes is the trader/quant mental model: stack independent evidence by multiplying likelihood ratios (equivalently, adding log-LRs). Two LR-99 positives on prior odds 1:99 give 99:1 → 99%.",
+      "feedback": {
+        "correct": "Odds 1:99 × 99 × 99 = 99:1 → 99/100. Two independent positives multiply; they don't average.",
+        "hints": [
+          "Start at prior odds 1:99; each positive multiplies by its likelihood ratio 99.",
+          "1/99 × 99 = 1 (=50%, the L2 anchor), then × 99 = 99.",
+          "Odds 99:1 → 99/100."
+        ]
+      }
+    },
+    {
+      "beatId": "coin-ladder",
+      "required": true,
+      "track": "both",
+      "prompt": "Two coins (one fair, one two-headed) — match each number of heads to its exact posterior.",
+      "interaction": {
+        "type": "retrievalGrid",
+        "pairs": [
+          { "left": "1 head", "right": "2/3" },
+          { "left": "2 heads", "right": "4/5" },
+          { "left": "3 heads", "right": "8/9" }
+        ]
+      },
+      "feedback": {
+        "correct": "The two-coin ladder is 2ᵏ/(2ᵏ+1): 2/3, 4/5, 8/9 — big early jumps, then diminishing (not a fixed +amount).",
+        "hints": [
+          "Two coins (fair + two-headed); each head doubles the odds.",
+          "k=1 → odds 2:1; k=2 → 4:1; k=3 → 8:1.",
+          "2/3, 4/5, 8/9."
+        ]
+      }
+    },
+    {
+      "beatId": "triangulate-k10",
+      "required": true,
+      "track": "both",
+      "prompt": "Three lenses converge on the same crossing point — reveal each and see which k is enough.",
+      "interaction": {
+        "type": "tripletReveal",
+        "value": "k = 10",
+        "lenses": [
+          { "label": "Odds doubling", "body": "each head ×2; need odds > 1 ⇒ 2^k > 999" },
+          { "label": "2^k vs 999", "body": "2^9 = 512 < 999 < 1024 = 2^10" },
+          { "label": "Formula", "body": "2^k/(2^k+999) > 1/2 ⟺ 2^k > 999" }
+        ],
+        "display": "cards"
+      },
+      "feedback": {
+        "correct": "All three lenses cross 1/2 at exactly the 10th head.",
+        "hints": [
+          "Reveal each lens.",
+          "2^9 = 512 is still under 999.",
+          "k = 10."
+        ]
+      }
+    },
+    {
+      "beatId": "mastery-challenge",
+      "required": true,
+      "track": "both",
+      "prompt": "Mastery challenge: the 1-in-1000 double-headed coin keeps landing heads. What is the smallest number of heads to make the double-headed coin more likely than not?",
+      "interaction": {
+        "type": "masteryChallenge",
+        "scenario": "The 1-in-1000 double-headed coin keeps landing heads.",
+        "fields": [
+          {
+            "id": "k",
+            "label": "Smallest number of heads to make it more likely than not",
+            "accept": ["10"],
+            "placeholder": "a whole number"
+          }
+        ]
+      },
+      "feedback": {
+        "correct": "Each head doubles the odds (×2), so you need 2ᵏ > 999 → k = 10. Strong evidence compounds fast.",
+        "hints": [
+          "You need the odds to pass 1:1, i.e. 2^k > 999.",
+          "2^9 = 512 (too few); 2^10 = 1024 (enough).",
+          "k = 10."
+        ]
+      }
+    },
+    {
+      "beatId": "recap",
+      "required": true,
+      "track": "both",
+      "prompt": "Reveal the capstone recap to consolidate what you've shown.",
+      "interaction": { "type": "recap" },
+      "feedback": {
+        "correct": "Independent evidence multiplies — today's posterior is tomorrow's prior — so posterior odds = prior odds × ∏ likelihood ratios.",
+        "hints": [
+          "Two independent positives: odds 1:99 → 1 → 99, i.e. 50% → 99%.",
+          "Each head doubles the 1-in-1000 coin's odds; 10 heads to cross 50%.",
+          "The whole concept in one line: posterior odds = prior odds × ∏ LRs."
+        ]
+      }
+    }
+  ]
+}

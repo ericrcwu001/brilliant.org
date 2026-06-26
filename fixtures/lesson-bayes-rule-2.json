@@ -1,0 +1,241 @@
+{
+  "lessonId": "lesson-bayes-rule-2",
+  "courseId": "course-bayes-rule",
+  "title": "The Base-Rate Trap",
+  "patternOptions": ["H"],
+  "milestoneId": "bayes-rule-base-rate",
+  "unlocks": "lesson-bayes-rule-3",
+  "schemaVersion": 1,
+  "beats": [
+    {
+      "beatId": "recall-update",
+      "required": true,
+      "track": "both",
+      "prompt": "Quick warm-up from L1 — match each statement to what it describes.",
+      "interaction": {
+        "type": "retrievalGrid",
+        "pairs": [
+          { "left": "Evidence updates your belief", "right": "Rescale the prior by the likelihood" },
+          { "left": "A rare hypothesis", "right": "Starts with a low prior" }
+        ]
+      },
+      "feedback": {
+        "correct": "Evidence rescales the prior — and a rare hypothesis starts low. Now watch a low prior fight back.",
+        "hints": [
+          "From L1: posterior ∝ prior × likelihood.",
+          "One row says how to update; one says where a rare hypothesis begins.",
+          "Evidence → rescale the prior; rare → low prior."
+        ]
+      }
+    },
+    {
+      "beatId": "open-bet",
+      "required": true,
+      "track": "both",
+      "prompt": "A test is 99% accurate. You test positive for a disease that strikes 1 in 100 people. What is P(disease | positive)?",
+      "interaction": {
+        "type": "prediction",
+        "options": [
+          "About 99% — the test is 99% accurate",
+          "Around 95%",
+          "Much lower — around 50%"
+        ]
+      },
+      "feedback": {
+        "byOption": {
+          "About 99% — the test is 99% accurate": {
+            "note": "That reads P(positive | sick) as if it were P(sick | positive). With only 1 in 100 sick, the false alarms catch up.",
+            "correct": false
+          },
+          "Around 95%": {
+            "note": "Still too high — the base rate hasn't entered your estimate yet.",
+            "correct": false
+          },
+          "Much lower — around 50%": {
+            "note": "Surprising but right — 99 true positives are matched by 99 false alarms.",
+            "correct": true
+          }
+        },
+        "hints": [
+          "No wrong guess — we'll count actual people.",
+          "99% is P(+|sick), not P(sick|+).",
+          "On 10,000 people it lands at 50%."
+        ]
+      }
+    },
+    {
+      "beatId": "name-base-rate",
+      "required": false,
+      "track": "A",
+      "prompt": "Read this just-in-time primer on the base rate — then continue.",
+      "interaction": {
+        "type": "primer",
+        "variant": "custom",
+        "title": "Base rate (the prior)",
+        "body": "The base rate is how common the hypothesis is before any test — the prior. A 99% test describes P(positive | sick); Bayes flips the arrow to P(sick | positive), and the base rate is the weight it must overcome.",
+        "collapsible": true
+      },
+      "feedback": {
+        "correct": "Base rate = the prior = how common it is before testing.",
+        "hints": [
+          "It's the prior, by another name.",
+          "The test gives P(+|sick); you want P(sick|+).",
+          "The base rate is the anchor the evidence must move."
+        ]
+      }
+    },
+    {
+      "beatId": "explore-frequencies",
+      "required": true,
+      "track": "both",
+      "prompt": "Drag the prevalence dial and watch the confusion grid fill — see how many are truly sick vs. false alarms.",
+      "interaction": {
+        "type": "bayesUpdate",
+        "display": "tree",
+        "hypotheses": ["Has the disease", "Healthy"],
+        "priors": [{ "n": 1, "d": 100 }, { "n": 99, "d": 100 }],
+        "likelihoods": [{ "n": 99, "d": 100 }, { "n": 1, "d": 100 }],
+        "population": 10000,
+        "evidence": "a positive test",
+        "interactive": true,
+        "posterior": "1/2"
+      },
+      "hero": {
+        "slowFirst": true,
+        "structuralReadout": "Of 10,000 people: 99 true positives and 99 false alarms → half of all positives are sick.",
+        "reducedMotionFinalFrame": true
+      },
+      "feedback": {
+        "correct": "Drag prevalence: at 1%, the 9,900 healthy produce 99 false alarms — as many as all 99 true positives. PPV = 99/(99+99) = 1/2.",
+        "hints": [
+          "Drag the prevalence and watch the false-positive column.",
+          "Rare per person (1%) × a huge healthy crowd (9,900) = 99 false alarms.",
+          "99 TP vs 99 FP → exactly half."
+        ]
+      }
+    },
+    {
+      "beatId": "compute-ppv",
+      "required": true,
+      "track": "both",
+      "prompt": "Using the counts from the grid, compute P(disease | positive) = TP / (TP + FP).",
+      "interaction": {
+        "type": "answerEntry",
+        "fields": [
+          { "id": "ppv", "label": "P(disease | positive) = TP / (TP + FP)", "accept": ["1/2"] }
+        ]
+      },
+      "interviewNote": "Base-rate neglect / PPV is the canonical screening-test (and ML class-imbalance) interview question: prior odds 1:99 × a likelihood ratio of 99 = 1:1, so precision is 50% no matter how 'accurate' the test sounds.",
+      "feedback": {
+        "correct": "99 TP / (99 TP + 99 FP) = 1/2. Among the positives, the sick and the false alarms are equal in number.",
+        "hints": [
+          "Count the people: 99 true positives, 99 false positives.",
+          "PPV = TP/(TP+FP) — not the test's accuracy; the false positives are NOT negligible.",
+          "99/(99+99) = 1/2."
+        ]
+      }
+    },
+    {
+      "beatId": "ten-heads",
+      "required": true,
+      "track": "both",
+      "prompt": "1000 coins: one double-headed, 999 fair. You pick a coin at random and flip 10 heads in a row. What is P(double-headed | 10 heads)?",
+      "interaction": {
+        "type": "answerEntry",
+        "fields": [
+          { "id": "p", "label": "P(double-headed | 10 heads in a row)", "accept": ["1024/2023"] }
+        ]
+      },
+      "feedback": {
+        "correct": "10 heads is 1024× better evidence for the trick coin — but it started 999× rarer. 1024 vs 999 → 1024/2023, barely past 50%.",
+        "hints": [
+          "The trick coin was 1 in 1000; 10 fair heads have chance (1/2)^10 = 1/1024.",
+          "Odds: 1 × 2^10 vs 999 → 1024 : 999 (the 10th head is what crosses even).",
+          "1024/(1024+999) = 1024/2023."
+        ]
+      }
+    },
+    {
+      "beatId": "base-rate-sweep",
+      "required": true,
+      "track": "both",
+      "prompt": "Same 99%/99% test — sweep the base rate and compute the posterior at each prevalence.",
+      "interaction": {
+        "type": "answerEntry",
+        "fields": [
+          { "id": "p1", "label": "1% prevalence", "accept": ["1/2"] },
+          { "id": "p10", "label": "10% prevalence", "accept": ["11/12"] },
+          { "id": "p25", "label": "25% prevalence", "accept": ["33/34"] }
+        ]
+      },
+      "feedback": {
+        "correct": "Hold the test at 99% and move only the base rate: 1% → 1/2, 10% → 11/12, 25% → 33/34. The prior is the dial.",
+        "hints": [
+          "Same 99%/99% test; only prevalence changes — recount TP vs FP at each.",
+          "At 10%: 990 TP vs 90 FP. At 25%: 2475 TP vs 75 FP.",
+          "1/2, 11/12, 33/34."
+        ]
+      }
+    },
+    {
+      "beatId": "triangulate-half",
+      "required": true,
+      "track": "both",
+      "prompt": "Three lenses, one answer — reveal each and see them converge on 1/2.",
+      "interaction": {
+        "type": "tripletReveal",
+        "value": "1/2",
+        "lenses": [
+          { "label": "Frequencies", "body": "99 true positives vs 99 false positives" },
+          { "label": "Odds", "body": "prior odds 1:99 × likelihood ratio 99 = 1:1" },
+          { "label": "Formula", "body": "(.01·.99)/(.01·.99 + .99·.01) = 99/198" }
+        ],
+        "display": "cards"
+      },
+      "feedback": {
+        "correct": "Frequencies, odds, and formula all give 1/2 — not a coincidence of the numbers.",
+        "hints": [
+          "Reveal each lens.",
+          "1:99 × 99 = 1:1 is the cleanest one.",
+          "All three say 1/2."
+        ]
+      }
+    },
+    {
+      "beatId": "mastery-challenge",
+      "required": true,
+      "track": "both",
+      "prompt": "Mastery challenge: a weaker test — 95% sensitive, 95% specific, same 1% disease. Compute P(disease | positive).",
+      "interaction": {
+        "type": "masteryChallenge",
+        "scenario": "A weaker test: 95% sensitive, 95% specific, same 1% disease, positive result.",
+        "fields": [
+          { "id": "p", "label": "P(disease | positive)", "accept": ["19/118"] }
+        ]
+      },
+      "feedback": {
+        "correct": "95 TP vs 495 FP → 95/590 = 19/118 ≈ 16%. A weaker test lowers PPV quantitatively; the base-rate trap is the same shape.",
+        "hints": [
+          "10,000 people: 100 sick → 95 TP; 9,900 healthy × 5% → 495 FP.",
+          "PPV = 95/(95+495) = 95/590.",
+          "19/118."
+        ]
+      }
+    },
+    {
+      "beatId": "recap",
+      "required": true,
+      "track": "both",
+      "prompt": "Reveal the recap to review the core principle.",
+      "interaction": { "type": "recap" },
+      "feedback": {
+        "correct": "When a hypothesis is rare, even strong evidence can leave it improbable: posterior odds = prior odds × likelihood ratio, and a tiny prior odds cancels a huge likelihood ratio.",
+        "hints": [
+          "1-in-100 disease + 99% test → 50%, because 99 false alarms match 99 true positives.",
+          "Hold the test fixed and the base rate alone moves the answer 1/2 → 11/12 → 33/34.",
+          "Next: stack a second independent test and the odds multiply."
+        ]
+      }
+    }
+  ]
+}
