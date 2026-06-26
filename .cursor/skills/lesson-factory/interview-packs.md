@@ -120,7 +120,7 @@ The **Interview Studio Lead** *(Opus, non-readonly, persistent/resumable — spa
 ## Lifecycle
 
 Built at the **end of the concept** (after lessons, reusing their engines). Its Scorecard is part of the
-**concept sign-off**; the **Slack alert** notes the pack (question count + a link to the `.md`). On
-concept **approval** it is **merged to `main`** with the concept but **never seeded or deployed** —
+**concept sign-off**; the **Slack FYI** notes the pack (question count + a link to the `.md`). When the
+concept **auto-ships** it is **merged to `main`** with the concept but **never seeded or deployed** —
 dormant until you build the live feature, at which point you add a loader, a Zod schema, and the
 verify-before-serve + per-student seen-set seam.

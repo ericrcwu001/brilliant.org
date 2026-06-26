@@ -69,13 +69,13 @@ Lesson Brief problem table is reproduced by the engine at exact rational values.
 
 ## Concept-level readiness
 
-A **concept** is ready to alert the user only when **every** lesson's Scorecard reads READY, the
+A **concept** is ready to ship only when **every** lesson's Scorecard reads READY, the
 concept's **Interview Pack Scorecard** is green (`interview-packs.md`), **and the concept registers
 correctly in the Concept Catalog** — its course doc passes `CourseSchema`, emits the catalog card
 (domain/order/status/tagline/accent/vizKey) and **`chapters[]` covering every built lessonId**, and was
 verified rendering in the dev catalog (`/`) + per-concept journey (`/concept/<courseId>`). The Manager
 assembles a one-screen concept summary (catalog card + lesson list + each lesson's 9/9 + headline
-citations + engine cross-check + the Interview Pack: N engine-verified questions) for the Slack DM.
+citations + engine cross-check + the Interview Pack: N engine-verified questions) for the post-ship Slack FYI.
 
 ## Interview Pack Scorecard (concept-level)
 

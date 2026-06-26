@@ -18,7 +18,8 @@ The brain and the only role that talks to the user. Responsibilities:
 - **Arbitrate escalations** the departments can't self-resolve. Escalate to the **user only** if the
   Manager itself cannot resolve a genuine scope/product call.
 - Own the **Scorecard sign-off** (`qa-rubric.md`): a concept is "ready" only when every lesson is green.
-- **Slack-DM the user** with Scorecards + preview URL; handle the approval reply; run the deploy.
+- Run the **dev smoke test**, then **auto-ship** the concept to prod (merge → `main`, push, seed,
+  deploy) with no approval step, and **Slack-DM the user a one-time FYI** once it's live.
 
 ---
 
@@ -136,8 +137,9 @@ parallel across the assembly line.
    back to the coders until green.
 8. **Code Reviewer** — *Opus*. Reviews the diff for correctness, surgical-ness (`AGENTS.md`), and
    style/design-system match.
-9. **Integrator / Pusher** — *composer (fast)*. Merges the worktree into the concept branch and
-   pushes the branch.
+9. **Integrator** — *composer (fast)*. Merges the lesson worktree back into the concept branch
+   (`concept/<slug>`) and removes the worktree. No remote push here — the single `git push origin main`
+   happens once, at ship.
 
 > The two coders never edit the same shared file at once: the Schema/Types Specialist freezes the
 > contract in **Wave 0**, then Coder A owns the engine and Coder B owns the renderer/fixture.

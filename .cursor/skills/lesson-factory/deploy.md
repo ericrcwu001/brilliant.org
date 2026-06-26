@@ -5,10 +5,11 @@ Two Firebase projects:
 | Role | Project | Number | When |
 |---|---|---|---|
 | **Dev / staging** | `brilliant-org-dev` | 836579828208 | factory deploys + seeds freely, for the user to **test** |
-| **Production** | `brilliant-org` | 801582458333 | **only** after the user approves a concept |
+| **Production** | `brilliant-org` | 801582458333 | **automatically**, once a concept passes QA + the dev smoke test |
 
-The factory only writes to a **per-concept branch** + the **dev project**. Production is touched only
-on approval.
+The factory builds on a **per-concept branch (in a worktree outside this repo; this checkout stays on
+`main`)** and smoke-tests on the **dev project**, then **automatically** merges to `main`, pushes, and
+ships to **production** — no approval step.
 
 > **Repo command gotchas (from `HANDOFF.md` — obey):**
 > - **No `npm run`** — call `./node_modules/.bin/{tsx,vitest,tsc,vite,eslint,playwright}` directly.
@@ -88,20 +89,28 @@ The Green Book lives gitignored at `references/`.
 
 ## Branch + worktrees
 
+**This repo always stays on `main`** — never `git switch` this checkout. The concept branch lives in a
+worktree *outside* the repo, and each lesson gets its own nested worktree:
+
 ```bash
-git switch -c concept/<slug>            # one branch per concept
-# Per-lesson worktree on its OWN branch (you can't check out concept/<slug> twice; use -b):
+# Concept branch in its OWN worktree (this repo stays on main):
+git worktree add -b concept/<slug> ../lf-<slug> main
+# Per-lesson worktree on its OWN branch, forked from the concept branch:
 git worktree add -b lesson/<slug>-<lesson> ../lf-<slug>-<lesson> concept/<slug>
 # ... build ... then the Integrator merges lesson/<slug>-<lesson> back into concept/<slug>, then:
 git worktree remove ../lf-<slug>-<lesson>
 ```
 
-The Dept 3 Lead provisions one worktree per lesson (using the commands above), spawns that lesson's workers directly inside it, then merges it back into `concept/<slug>` and removes it.
+All concept-level work (artifacts, builds, the dev smoke deploy) runs from `../lf-<slug>`. The Dept 3
+Lead provisions one worktree per lesson, spawns that lesson's workers directly inside it, then merges it
+back into `concept/<slug>` and removes it. The `../lf-<slug>` worktree is removed after the concept
+ships (see Ship).
 
-## Test deploy (on `brilliant-org-dev`)
+## Smoke-test deploy (on `brilliant-org-dev`)
 
-Deploy the concept to the dev project + seed the dev Firestore so the user tests on the dev linked
-domain (the real lesson-loading path, plus `/dev/lesson/:id` for quick no-auth checks):
+From the `../lf-<slug>` worktree, deploy the concept to the dev project + seed the dev Firestore as an
+automated pre-ship smoke test (the real lesson-loading path, plus `/dev/lesson/:id` for quick no-auth
+checks). The Manager confirms it renders, then ships — no human review:
 
 ```bash
 ./node_modules/.bin/tsc -b && ./node_modules/.bin/vite build --mode dev      # uses .env.dev
@@ -111,7 +120,8 @@ SEED_TARGET=prod GOOGLE_CLOUD_PROJECT=brilliant-org-dev \
 firebase deploy --only hosting,firestore,functions --project brilliant-org-dev
 ```
 
-Review URL = the dev URL resolved in first-run setup step 5. The dev project is non-prod, so the
+Smoke-test URL = the dev URL resolved in first-run setup step 5; the Manager verifies the concept
+renders there (catalog `/` + `/concept/<courseId>`) before shipping. The dev project is non-prod, so the
 factory may also push work-in-progress here anytime for incremental testing.
 
 > `SEED_TARGET=prod` just means "real project via Admin SDK" (vs the local emulator); the **project is
@@ -122,13 +132,35 @@ factory may also push work-in-progress here anytime for incremental testing.
 > 'coming_soon'` and no lessons — the script seeds the course doc only and skips the lessons step for
 > them. No `COURSE_ID` filtering is needed; running the script after adding a new fixture is sufficient.
 
-## Slack alert — concept ready to test (Manager → user)
+## Ship (automatic, on a green smoke test → `brilliant-org`)
 
-`user-slack` MCP → `slack_send_message`, `channel_id` = the user's `user_id` **`U0B9VC0TJBH`** (DM).
-Echo into chat as fallback. Template:
+No approval step. Once the dev smoke test is green, ship from **this repo** (which has stayed on
+`main` the whole run — no `git switch` needed):
+
+```bash
+git merge --no-ff concept/<slug>                             # promote the whole concept onto main
+./node_modules/.bin/tsx scripts/validate-fixtures.ts         # final gate on main
+git push origin main                                         # publish main to the remote
+./node_modules/.bin/tsc -b && ./node_modules/.bin/vite build # prod build (.env.production)
+# Seed the concept's lessons + course doc into PROD Firestore:
+SEED_TARGET=prod GOOGLE_CLOUD_PROJECT=brilliant-org \
+  ./node_modules/.bin/tsx scripts/seed-firestore.ts
+firebase deploy --only hosting,firestore,functions --project brilliant-org
+git worktree remove ../lf-<slug>                             # concept worktree no longer needed
+```
+
+If `validate-fixtures` (the final gate on `main`) fails, **abort the merge** (`git merge --abort`, or
+reset `main` to its pre-merge commit) and hard-stop instead of pushing or deploying — `main` must never
+carry a broken concept.
+
+## Slack FYI — concept shipped (Manager → user)
+
+After prod deploy succeeds, send **one** notification (`user-slack` MCP → `slack_send_message`,
+`channel_id` = the user's `user_id` **`U0B9VC0TJBH`**; echo into chat as fallback). This is an FYI,
+**not** a request — the concept is already live:
 
 ```
-*Lesson Factory — concept ready to test: <Concept Title>*
+*Lesson Factory — shipped to production: <Concept Title>*
 <one-line pitch>
 
 Lessons (all 9/9 gates green):
@@ -137,42 +169,22 @@ Lessons (all 9/9 gates green):
 ...
 
 Fact-check: every answer cited AND reproduced by the engine. validate/test/build/lint/e2e green.
-TEST IT (dev, not prod): <resolved dev URL>   (e.g. https://brilliant-org-dev.web.app)
+LIVE (prod): <prod URL>/concept/<courseId>
 Scorecards: concepts/<slug>/*/scorecard.md
 Interview Pack (future feature, not deployed): interviews/<courseId>.md  (<N> engine-verified hard Qs)
 
-Reply *approve* to ship the whole concept to PRODUCTION (brilliant-org), or send change requests.
+Shipped autonomously — no action needed. Reply with change requests if anything looks off.
 ```
-
-## Approval handling
-
-- **Change requests** → route to the owning department, re-run that stage, re-QA, redeploy to dev,
-  re-alert.
-- **Approved** → ship (next section). Never seed/deploy **prod** without this.
-
-## Ship (on approval → `brilliant-org`)
-
-```bash
-git switch main && git merge --no-ff concept/<slug>          # promote the whole concept
-./node_modules/.bin/tsx scripts/validate-fixtures.ts         # final gate on main
-./node_modules/.bin/tsc -b && ./node_modules/.bin/vite build # prod build (.env.production)
-# Seed the concept's lessons + course doc into PROD Firestore:
-SEED_TARGET=prod GOOGLE_CLOUD_PROJECT=brilliant-org \
-  ./node_modules/.bin/tsx scripts/seed-firestore.ts
-firebase deploy --only hosting,firestore,functions --project brilliant-org
-```
-
-Confirm in Slack with the production link once deployed.
 
 ## Reachability
 
-Each approved concept = its own **`fixtures/course-<slug>.json`** seeded to `courses/{courseId}`.
+Each shipped concept = its own **`fixtures/course-<slug>.json`** seeded to `courses/{courseId}`.
 Once seeded, the concept **appears automatically in the Concept Catalog** (the signed-in macro home at
 `/`) — no UI code change required. Live concepts are clickable; coming-soon stubs (course docs with
 `status: 'coming_soon'` and no lessons) appear as muted, non-enterable cards. The concept is
 reachable directly at `/concept/<courseId>` on both dev and prod.
 
-> ⚠️ **Live-concept hard requirement (verify before alerting):** the course doc's `chapters[]` must
+> ⚠️ **Live-concept hard requirement (verify before shipping):** the course doc's `chapters[]` must
 > cover **every** built `lessonId`. The per-concept journey renders lessons **only inside chapters**; a
 > missing/incomplete `chapters[]` silently falls back to Pattern-Hitting-Times' chapters → the new
 > concept's lessons render **invisible**. The catalog also `safeParse`s each course doc and **silently

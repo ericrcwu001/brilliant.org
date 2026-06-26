@@ -1,14 +1,15 @@
 ---
 name: lesson-factory
-description: Runs the on-demand multi-agent "software factory" that builds new interactive lessons for the Ergo learning app, grounded in the Green Book (references/green-book.txt). Use when the user asks to build or generate lessons or a new concept/course, to "launch the lesson factory / software factory", or runs /lesson-factory. Orchestrates a Manager (Opus) over three departments (curriculum/learning-science, interactive-game design, coding) plus an Interview Studio, fact-checks every problem against the Green Book, checks the existing corpus for overlap, stages each concept on its own branch, tests it on a separate dev Firebase project (brilliant-org-dev), and ships to production only after the user approves via Slack.
+description: Runs the on-demand multi-agent "software factory" that builds new interactive lessons for the Ergo learning app, grounded in the Green Book (references/green-book.txt). Use when the user asks to build or generate lessons or a new concept/course, to "launch the lesson factory / software factory", or runs /lesson-factory. Orchestrates a Manager (Opus) over three departments (curriculum/learning-science, interactive-game design, coding) plus an Interview Studio, fact-checks every problem against the Green Book, checks the existing corpus for overlap, stages each concept on its own branch in a separate git worktree (this repo stays on `main`), smoke-tests it on a separate dev Firebase project (brilliant-org-dev), then automatically ships to production (merges to `main`, pushes, seeds + deploys) and Slack-DMs a one-time notification — a fully autonomous, hands-off process.
 disable-model-invocation: true
 ---
 
 # Lesson Factory
 
 An on-demand assembly line that turns Green-Book quant concepts into fully-built, fact-checked,
-interactive **lessons** for the Ergo app — tested on a **dev Firebase project** and shipped to
-production **only after the user approves**. A top-level **Manager (Opus)** spawns four persistent
+interactive **lessons** for the Ergo app — smoke-tested on a **dev Firebase project** and then
+**automatically shipped to production**, end-to-end with no human approval step. A top-level
+**Manager (Opus)** spawns four persistent
 **department leads**; each lead in turn spawns and manages its own worker subagents — a real nested
 hierarchy, not a flat fan-out. At the end of each concept it also prepares a capstone **Interview Pack** — a
 future-ready "interview an AI quant interviewer" asset (`interview-packs.md`).
@@ -18,12 +19,12 @@ future-ready "interview an AI quant interviewer" asset (`interview-packs.md`).
 > - **Lesson** = `fixtures/lesson-<slug>.json` → Firestore `lessons/{id}`; an ordered list of beats.
 > - **Beat** = one entry in `lesson.beats[]` — a single prompt → interaction → feedback.
 >
-> A **run builds one whole concept** (many lessons). The human approves and deploys **per concept**.
+> A **run builds one whole concept** (many lessons), then ships it **per concept** autonomously.
 
 > Firebase projects:
 > - **Dev / staging = `brilliant-org-dev` (#836579828208)** + its linked domain — the factory deploys
->   and seeds here freely so the user can **test** before approving. Not production.
-> - **Production = `brilliant-org` (#801582458333)** — touched **only** after the user approves a concept.
+>   and seeds here freely as an automated **smoke test** before shipping. Not production.
+> - **Production = `brilliant-org` (#801582458333)** — shipped to **automatically** once a concept passes QA + the dev smoke test.
 
 ## Invocation
 
@@ -43,9 +44,12 @@ future-ready "interview an AI quant interviewer" asset (`interview-packs.md`).
 3. **Two-stage fact-check on every number.** (1) the source states the answer; (2) the lesson's
    **engine independently reproduces it** and the `validate-fixtures` script cross-checks it. Both, or
    it doesn't ship. Interview-pack questions follow the same engine-verify rule.
-4. **Production is approval-gated.** The factory works only on a per-concept branch and tests on the
-   **dev project `brilliant-org-dev`**; the user reviews on the **dev linked domain**. Nothing reaches
-   **`brilliant-org` (prod)** without the user's explicit approval.
+4. **Autonomous end-to-end ship.** The factory builds each concept on a per-concept branch **in a
+   worktree outside this repo** (this checkout stays on `main`), runs an automated smoke test on the
+   **dev project `brilliant-org-dev`**, then — with **no approval step** — merges to `main`, pushes
+   `origin/main`, and seeds + deploys **`brilliant-org` (prod)**, finishing with a one-time Slack FYI.
+   It still **hard-stops** (does not ship) on a genuine failure: a red QA gate, a broken dev smoke
+   test, or a concept that can't be Green-Book-anchored (see Guardrails).
 5. **Build by doing.** Every beat must be genuine direct-manipulation. Ambition is encouraged — cost
    is **not** a reason to reject a mechanic (the user said "get it done").
 6. **Maximize parallelism** everywhere, made safe by a concept-level **Wave-0 contract freeze** +
@@ -61,7 +65,7 @@ future-ready "interview an AI quant interviewer" asset (`interview-packs.md`).
 
 ```
                       Manager / Director  (Opus)  [root · only agent the user talks to]
-            plans concept · Wave-0 · arbitrates · Scorecard · deploys dev · Slack · ships
+            plans concept · Wave-0 · arbitrates · Scorecard · dev smoke test · auto-ships prod · Slack FYI
    ┌───────────────────┬────────────────────┬──────────────────────────┬───────────────────┐
 Dept 1 Lead         Dept 2 Lead          Dept 3 Lead               Interview Studio Lead
 Curriculum          Interactive Exp.     Coding [worktree per lesson]  (per concept)
@@ -93,11 +97,13 @@ Full rosters, responsibilities, and per-role model assignments: **`departments.m
 6. **Interview Pack** — the **Interview Studio** builds the concept's capstone AI-interview pack
    (pre-loaded engine-verified question pool + interviewer & generator prompts), QA'd by its own
    concept-level Scorecard (`interview-packs.md`).
-7. **Test + Alert** — when the whole concept is green, the Manager deploys it to **`brilliant-org-dev`**
-   (+ seeds the dev Firestore) and **Slack-DMs the user** the Scorecards + the **dev linked-domain URL**
-   + the Interview Pack `.md` link (`deploy.md`).
-8. **Approve → Ship** — on approval: merge the concept branch → `main`, seed + deploy to **prod
-   (`brilliant-org`)**; the Interview Pack rides along committed but **not seeded/deployed**.
+7. **Smoke-test on dev** — when the whole concept is green, the Manager deploys it to
+   **`brilliant-org-dev`** (+ seeds the dev Firestore) from the `../lf-<slug>` worktree as an automated
+   smoke test and verifies it renders (`deploy.md`).
+8. **Auto-ship** — on a green smoke test the Manager **automatically** merges the concept branch →
+   `main`, pushes `origin/main`, and seeds + deploys to **prod (`brilliant-org`)**, then **Slack-DMs the
+   user a one-time FYI** with the prod link + Scorecards + Interview Pack `.md` link. The Interview Pack
+   rides along committed but **not seeded/deployed**.
 
 Step-by-step orchestration (with parallelism and worktrees): **`pipeline.md`**.
 Artifact templates (Concept Brief, Continuity Report, Lesson Brief, Interaction Spec, Implementation
@@ -131,7 +137,7 @@ spawn its child, the skill **hard-stops** and tells the user it cannot run in th
 
 - **`references/green-book.txt`** — the grep-searchable Green Book (gitignored). Required ground truth.
 - **Firebase projects** — dev `brilliant-org-dev` (#836579828208, test/staging) and prod
-  `brilliant-org` (#801582458333, approval-gated). Selected per command via `--project` /
+  `brilliant-org` (#801582458333, auto-shipped after the dev smoke test). Selected per command via `--project` /
   `GOOGLE_CLOUD_PROJECT` (`deploy.md`).
 - **Concept Catalog (macro home is LIVE — ADR-0004)** — a concept **auto-registers** when its
   `course-<slug>.json` is seeded; deep links `/concept/<courseId>` + `/lesson/<lessonId>`. A **live**
@@ -156,8 +162,12 @@ spawn its child, the skill **hard-stops** and tells the user it cannot run in th
 
 ## Guardrails
 
-- **Test on `brilliant-org-dev`; never touch prod `brilliant-org` until the user approves the concept.**
-- Never commit to `main` or deploy to prod without explicit user approval of the concept.
+- **This repo stays on `main`.** Never `git switch` this checkout; create the concept branch and all
+  per-lesson branches in **worktrees outside the repo** (`../lf-<slug>…`). Ship by merging the concept
+  branch into `main` from this always-on-`main` checkout.
+- **Smoke-test on `brilliant-org-dev` first; only ship to prod `brilliant-org` after that smoke test passes.**
+- Ship autonomously, but **never ship broken work**: a red QA gate, a failed dev smoke test, or an
+  unanchored concept hard-stops the run and is escalated to the user instead of shipped.
 - Never re-teach a concept the corpus already covers — turn the overlap into recall (rule 7).
 - The Interview Pack is **committed but never seeded/deployed** — it's a dormant asset until the live
   interview feature exists (`interview-packs.md`).

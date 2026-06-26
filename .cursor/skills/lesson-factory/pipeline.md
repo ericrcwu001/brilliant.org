@@ -1,7 +1,8 @@
 # Pipeline & Orchestration
 
 The Manager runs this for **one concept per run**. Maximize parallelism at every stage; the only
-serialization points are the **Wave-0 contract freeze** and the **human approval gate**.
+serialization point is the **Wave-0 contract freeze** (there is no human approval gate — the run
+ships autonomously).
 
 ## 0. Preflight (Manager)
 
@@ -14,8 +15,10 @@ serialization points are the **Wave-0 contract freeze** and the **human approval
   `firebase` auth, auto-generate `.env.dev`, dev-routes flag, seed credentials (ADC), and resolve the
   dev URL. Idempotent; if any **credential login is missing, the Manager Slack-DMs the user the exact
   terminal commands** and pauses until they reply.
-- Confirm the repo is clean and on `main` (or ask). Create the concept branch:
-  `git switch -c concept/<slug>`. Set it active.
+- Confirm this repo is clean and on `main`. **Keep it on `main` for the entire run** — never
+  `git switch` this checkout. Create the concept branch in a **worktree outside the repo** and work
+  there: `git worktree add -b concept/<slug> ../lf-<slug> main`. All concept-level artifacts, builds,
+  and the dev smoke deploy run from `../lf-<slug>`.
 - Read `docs/mvp_prd.md`, `docs/beat-audit-rubric.md`, `docs/ui_design_system.md`, and skim
   `fixtures/lesson-*.json` + `src/content/schema.ts` so plans reuse what exists.
 
@@ -120,22 +123,25 @@ the concept's capstone AI-interview pack reusing those engines:
 - Gate it with the **Interview Pack Scorecard** (`qa-rubric.md` / `interview-packs.md`). May run in
   parallel with per-lesson QA once the engines are frozen.
 
-## 6. Test on dev + sign-off (Manager)
+## 6. Dev smoke test (Manager)
 
 When **every** lesson's Scorecard is green **and the Interview Pack Scorecard is green**, the Manager
-deploys the concept to the **dev project `brilliant-org-dev` (#836579828208)** and seeds its Firestore
-(see `deploy.md` → Test deploy), then **Slack-DMs the user** the Scorecards + the **dev linked-domain
-URL** + the **Interview Pack `.md`** to review. Production is untouched.
+deploys the concept (from the `../lf-<slug>` worktree) to the **dev project `brilliant-org-dev`
+(#836579828208)**, seeds its Firestore, and **verifies it renders** (see `deploy.md` → Smoke-test
+deploy) as an automated pre-ship smoke test. If the smoke test fails it hard-stops and escalates;
+otherwise it proceeds straight to Ship.
 
-## 7. Approval → Ship (Manager) — see `deploy.md`
+## 7. Auto-ship (Manager) — see `deploy.md`
 
-- **Changes requested** → route notes to the owning department; re-run the affected stage; re-QA;
-  redeploy to dev; re-alert.
-- **Approved** → merge `concept/<slug>` → `main`; seed the concept's course doc + lessons to **prod
-  (`brilliant-org`)** and `vite build` + `firebase deploy --project brilliant-org`. The concept
-  **auto-registers in the Concept Catalog** on seed (ADR-0004) — live at `/concept/<courseId>` (lessons
-  at `/lesson/<lessonId>`), zero UI code. The Interview Pack is merged too but **not seeded/deployed**.
-  Confirm in Slack with the production `/concept/<courseId>` link.
+- **Green smoke test → ship automatically** (no approval): from this repo (already on `main`),
+  `git merge --no-ff concept/<slug>` then `git push origin main`; seed the concept's course doc +
+  lessons to **prod (`brilliant-org`)** and `vite build` + `firebase deploy --project brilliant-org`;
+  then `git worktree remove ../lf-<slug>`. The concept **auto-registers in the Concept Catalog** on
+  seed (ADR-0004) — live at `/concept/<courseId>` (lessons at `/lesson/<lessonId>`), zero UI code. The
+  Interview Pack is merged too but **not seeded/deployed**. **Slack-DM a one-time FYI** with the
+  production `/concept/<courseId>` link.
+- **Only on failure** (red QA gate, broken dev smoke test, or unanchored concept) → hard-stop, do
+  **not** ship, and escalate to the user (route fixable notes to the owning department, re-run, re-QA).
 
 ## Parallelism summary
 
@@ -148,7 +154,7 @@ URL** + the **Interview Pack `.md`** to review. Production is untouched.
   each in its own worktree, batched as an assembly line.
 - **Across lessons:** the concept's lessons flow as an assembly line — design lesson N+1 while
   lesson N is being coded; independent lessons fully parallel.
-- **Serialization only at:** Wave-0 freeze, worktree merges, and the human approval gate.
+- **Serialization only at:** Wave-0 freeze and worktree merges (no human approval gate — the run ships autonomously).
 
 ## Artifacts on the concept branch
 
