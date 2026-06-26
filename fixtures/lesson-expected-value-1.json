@@ -1,0 +1,240 @@
+{
+  "lessonId": "lesson-expected-value-1",
+  "courseId": "course-expected-value",
+  "title": "What is Expected Value?",
+  "patternOptions": ["H"],
+  "milestoneId": "ev-fundamentals",
+  "unlocks": "lesson-expected-value-2",
+  "schemaVersion": 1,
+  "beats": [
+    {
+      "beatId": "ev1-recall",
+      "required": true,
+      "prompt": "Back in Watch the First Heads you found that a fair coin takes 2 flips on average until the first Heads. Match each statement to its value.",
+      "interaction": {
+        "type": "retrievalGrid",
+        "pairs": [
+          { "left": "Average flips until first Heads", "right": "E[H] = 2" },
+          { "left": "P(H) on any single flip", "right": "1/2" }
+        ]
+      },
+      "feedback": {
+        "correct": "Exactly — E[H] = 2 was an expected value all along. Now we name the move.",
+        "hints": [
+          "Tap a phrase, then its matching value.",
+          "The geometric wait is 1/p; with p = 1/2 that gives E = 2.",
+          "Match: 'Average flips until first H' → E[H] = 2; 'P(H) on any flip' → 1/2."
+        ]
+      }
+    },
+    {
+      "beatId": "ev1-bet",
+      "required": false,
+      "prompt": "A casino offers you one roll of a fair die, paid that many dollars. A ticket costs $3. Before computing: is a $3 ticket a good deal, a bad deal, or exactly fair?",
+      "interaction": {
+        "type": "prediction",
+        "options": ["A good deal", "A bad deal", "Exactly fair"]
+      },
+      "feedback": {
+        "byOption": {
+          "A good deal": {
+            "note": "Good instinct — let's prove it: compute the average payoff and check it beats the $3 ticket.",
+            "correct": true
+          },
+          "A bad deal": {
+            "note": "Let's test it — if the average payoff tops $3, the ticket's a bargain. Let's compute it.",
+            "correct": false
+          },
+          "Exactly fair": {
+            "note": "Let's test it — '$3 is the middle of 1–6' skips the weighting; the balance point sits a half-dollar higher.",
+            "correct": false
+          }
+        }
+      }
+    },
+    {
+      "beatId": "ev1-primer",
+      "required": false,
+      "prompt": "Quick reminder before we calculate — read the card, then continue.",
+      "interaction": {
+        "type": "primer",
+        "variant": "average",
+        "title": "Weighted averages",
+        "body": "A plain average treats every value equally — that is a special case where each weight is 1/n. A weighted average scales each value by how likely it is: multiply each value by its weight, then sum. When the weights are probabilities, you get the expected value.",
+        "collapsible": true
+      },
+      "feedback": {
+        "correct": "Weighted average: each value scaled by its probability.",
+        "hints": [
+          "Read the card.",
+          "Weight = probability = how often that value occurs.",
+          "Continue when ready."
+        ]
+      }
+    },
+    {
+      "beatId": "ev1-win",
+      "required": true,
+      "prompt": "One roll of a fair die — you are paid the face value. What is the expected payoff? Enter as a fraction (e.g. 3/2).",
+      "interaction": {
+        "type": "answerEntry",
+        "fields": [
+          {
+            "id": "ev",
+            "label": "Expected payoff",
+            "accept": ["7/2", "21/6"],
+            "placeholder": "?/?",
+            "suffix": "$"
+          }
+        ]
+      },
+      "feedback": {
+        "correct": "E = (1+2+3+4+5+6)/6 = 21/6 = 7/2 = $3.50 — a half-dollar above the $3 ticket. The ticket is a steal.",
+        "hints": [
+          "The average needn't be rollable. Sum 1+…+6 = 21, divide by 6 → 3.5.",
+          "Each face shows with probability 1/6. E = 1·(1/6)+2·(1/6)+⋯+6·(1/6) = (1+2+3+4+5+6)/6.",
+          "21/6 = 7/2. Type 7/2."
+        ]
+      }
+    },
+    {
+      "beatId": "ev1-explore",
+      "required": false,
+      "prompt": "Tap each face value to place its probability weight on the beam. Watch the fulcrum slide to the balance point.",
+      "interaction": {
+        "type": "expectationScale",
+        "outcomes": [
+          { "x": 1, "label": "1" },
+          { "x": 2, "label": "2" },
+          { "x": 3, "label": "3" },
+          { "x": 4, "label": "4" },
+          { "x": 5, "label": "5" },
+          { "x": 6, "label": "6" }
+        ]
+      },
+      "hero": {
+        "slowFirst": true,
+        "structuralReadout": "E[X] = 7/2 — the fair die's balance point.",
+        "reducedMotionFinalFrame": true
+      },
+      "feedback": {
+        "correct": "The die balances at E[X] = 7/2 — that is the fair price, not the visual midpoint of the labels.",
+        "hints": [
+          "Tap each number to place its weight (1/6 for a fair die).",
+          "Each of the six faces is equally likely: P(x) = 1/6.",
+          "Place all six weights and watch the beam settle."
+        ]
+      }
+    },
+    {
+      "beatId": "ev1-model",
+      "required": false,
+      "introducesSymbol": "E[X]=Σx·P(x)",
+      "groundedBy": ["ev1-win", "ev1-explore"],
+      "comparison": true,
+      "interviewNote": "Interview framing: E[X|X>0] = √(2/π) ≈ 0.798 for X∼N(0,1) shows EV can be irrational; the clean rationals here (7/2, 7) are a feature of these toy distributions, not a general rule. The 'fair price' of any bet equals its expected value — casinos profit on the delta between the ticket price and E[X].",
+      "prompt": "You just saw it on the beam. Now name it.",
+      "interaction": {
+        "type": "primer",
+        "variant": "custom",
+        "title": "E[X] = Σ x · P(x)",
+        "body": "The expected value of a discrete random variable X is the probability-weighted sum of all its outcomes — list each possible value x, multiply by its probability P(x), and add.\n\nFor a continuous variable (e.g. X∼N(0,1) truncated to X > 0), the sum becomes an integral: E[X] = ∫ x f(x) dx. For that distribution, E[X|X>0] = √(2/π) ≈ 0.798 — irrational. The clean fractions 7/2 and 7 in this lesson are a feature of these particular toy distributions, not a general rule.",
+        "collapsible": false
+      },
+      "feedback": {
+        "correct": "E[X] = Σ x·P(x) — the balance point of the distribution, not the midpoint of its labels.",
+        "hints": [
+          "Read the formula card.",
+          "The balance point of the distribution, not the midpoint of the label range.",
+          "Tap the continuous-analogue disclosure to see why EV can be irrational."
+        ]
+      }
+    },
+    {
+      "beatId": "ev1-deepen",
+      "required": false,
+      "track": "A",
+      "prompt": "Watch many die rolls. Does the running average settle where the balance beam predicted?",
+      "interaction": { "type": "theorySimChart" },
+      "feedback": {
+        "correct": "The empirical mean converges to E[X] = 3.5 — the balance point is the long-run average. This is the Law of Large Numbers.",
+        "hints": [
+          "Watch the running mean (jagged line) drift toward the theory line at 3.5.",
+          "Run more trials — the convergence tightens.",
+          "Long-run frequency = theoretical expected value."
+        ]
+      }
+    },
+    {
+      "beatId": "ev1-pmf",
+      "required": true,
+      "prompt": "Roll two fair dice. (1) How many ordered pairs (d₁, d₂) sum to 5? Express as P(sum = 5). (2) A separate game pays $3 with probability 1/4, $5 with probability 1/2, $7 with probability 1/4. What is E[payout]?",
+      "interaction": {
+        "type": "answerEntry",
+        "fields": [
+          {
+            "id": "prob5",
+            "label": "P(sum = 5)",
+            "accept": ["1/9", "4/36"],
+            "placeholder": "?/?"
+          },
+          {
+            "id": "ev-short",
+            "label": "E[payout] — 3-outcome game",
+            "accept": ["5"],
+            "placeholder": "?",
+            "suffix": "$"
+          }
+        ]
+      },
+      "feedback": {
+        "correct": "P(sum=5)=4/36=1/9 — four ordered pairs (1+4, 2+3, 3+2, 4+1). E[payout]=3·(1/4)+5·(1/2)+7·(1/4)=20/4=5. The 11 two-dice sums are NOT equally likely — their counts differ.",
+        "hints": [
+          "The eleven sums aren't equally likely. Count the ways each sum happens, then weight by those counts.",
+          "For sum=5: (1,4),(2,3),(3,2),(4,1) — that is 4 ordered pairs out of 36. For E: multiply each payout by its probability and add.",
+          "P(sum=5)=4/36=1/9. E=3·(1/4)+5·(1/2)+7·(1/4)=3/4+10/4+7/4=20/4=5."
+        ]
+      }
+    },
+    {
+      "beatId": "ev1-prove",
+      "required": true,
+      "interviewNote": "Shortcut check: by linearity of expectation (next lesson), E[sum of two dice] = E[die₁]+E[die₂] = 7/2+7/2 = 7. The triangular-pmf Σ x·P(x) certifies the same answer the hard way — these two routes agreeing is the sanity check.",
+      "prompt": "Mastery challenge — the sum of two fair dice, the hard way. The table shows all 11 outcomes (sums 2 through 12) with their triangular weights (1, 2, 3, 4, 5, 6, 5, 4, 3, 2, 1)/36. Compute E[X] = Σ x·P(x). Enter a whole number or simplified fraction.",
+      "interaction": {
+        "type": "masteryChallenge",
+        "scenario": "Two fair dice — sum the full non-uniform pmf. Weights peak at P(7)=6/36. The midpoint of 2–12 is 7 by symmetry. Is E[X] always the midpoint? Compute to find out.",
+        "fields": [
+          {
+            "id": "ev-two-dice",
+            "label": "E[sum of two dice]",
+            "accept": ["7", "252/36"],
+            "placeholder": "?"
+          }
+        ]
+      },
+      "feedback": {
+        "correct": "E=252/36=7. Triangular weights peak at 7 and pull the balance point there. The midpoint of 2–12 is also 7 — a coincidence of symmetry (the pmf is symmetric around 7). An asymmetric pmf won't be so tidy.",
+        "hints": [
+          "Eyeballing the middle gives 6, but the weights peak at 7. Sum x·P(x) over the triangular pmf.",
+          "Group by symmetry: P(k)=P(14−k). Pairs (2,12),(3,11),(4,10),(5,9),(6,8) each contribute k·P(k)+(14−k)·P(k)=14·P(k). P(7)=6/36 contributes alone.",
+          "Σ x·P(x)=(2·1+3·2+4·3+5·4+6·5+7·6+8·5+9·4+10·3+11·2+12·1)/36=252/36=7."
+        ]
+      }
+    },
+    {
+      "beatId": "ev1-recap",
+      "required": true,
+      "prompt": "The move that ran through this whole lesson.",
+      "interaction": { "type": "recap" },
+      "feedback": {
+        "correct": "List → weight → add: E[X]=Σ x·P(x). The balance point of the distribution, not the midpoint of its labels. Next: how expectations add — even when things are tangled.",
+        "hints": [
+          "Read each recap card.",
+          "The three-step move (list → weight → add) runs every expected-value question.",
+          "Tap to continue."
+        ]
+      }
+    }
+  ]
+}

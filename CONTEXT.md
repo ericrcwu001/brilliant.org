@@ -208,6 +208,36 @@ muted concept card with a "Coming soon" status label — visible for direction-s
 enterable. Distinct from a **roadmap stub**, which is a locked lesson within an already-open
 concept.
 
+## Capstone interview
+
+A spoken AI mock-interview a learner takes **once per concept**, after completing all of that
+concept's lessons (not per lesson). An AI interviewer voices quant-style questions aloud and the
+learner answers back by **speaking** (with a typed fallback); at the end the conversation is
+graded into an **interview report**. It is **optional** — it does not gate the concept-mastered
+medallion or the next-concept unlock — but earns its own recognition. Distinct from an **interview
+note** (the static "For the interview" micro-copy on a beat) and from the **interview pack** (the
+authored question bank + interviewer prompt that feeds it). _Avoid_: "mock interview", "AI
+interview" (ambiguous with interview note).
+
+## Interview pack
+
+The per-concept authored asset that feeds a **capstone interview**: an interviewer prompt, a
+bank of engine-verified quant-interview questions, and a hidden grading rubric. Specified in the
+lesson-factory skill and governed by ADR-0005; injected into the interview as hidden ground truth
+so the AI never voices unverified math.
+
+## Interview report
+
+The graded result of a **capstone interview**: per-dimension rubric scores (correctness, approach,
+rigor, communication, speed) with quoted evidence, an overall **hire signal**, and concrete
+strengths and fixes. Produced by a server-side grading pass over the transcript and stored per
+attempt (latest + best surfaced); raw audio is never stored.
+
+## Hire signal
+
+A **capstone interview**'s overall verdict, expressed in desk language on a scale from Strong No
+to Strong Yes. Summarizes the **interview report**; does not gate concept mastery.
+
 ---
 
 ## Retired terms (superseded by the Ergo reimagining — see ADR-0003)

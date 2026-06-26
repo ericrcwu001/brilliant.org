@@ -15,7 +15,7 @@ import {
   SnapshotSchema,
 } from '../src/content/schema'
 import type { Beat, Course, Lesson } from '../src/content/schema'
-import { buildAutomaton } from '../src/engine/automaton'
+import { buildAutomaton, reduce as reduceRational } from '../src/engine/automaton'
 import {
   nCk,
   nPk,
@@ -34,6 +34,16 @@ import {
   posteriorOdds, oddsToProb, bayesUpdate, formatRational,
 } from '../src/engine/bayes'
 import type { Rational } from '../src/engine/types'
+import {
+  expectedValue,
+  totalExpectation,
+  indicatorExpectation,
+  harmonic,
+  couponCollector,
+  distinctAfterDraws,
+  orderStatUniform,
+  noodleLoops,
+} from '../src/engine/expectation'
 
 const fixturesDir = join(dirname(fileURLToPath(import.meta.url)), '..', 'fixtures')
 
@@ -189,6 +199,13 @@ const GATED = new Set([
   'lesson-bayes-rule-1', 'lesson-bayes-rule-2', 'lesson-bayes-rule-3', // Bayes concept L1–L3
   'lesson-bayes-rule-4', 'lesson-bayes-rule-5', 'lesson-bayes-rule-6',
   'lesson-bayes-rule-7', 'lesson-bayes-rule-8',                         // Bayes concept L4–L8
+  // Expected Value concept (Wave-0 contract).
+  'lesson-expected-value-1',
+  'lesson-expected-value-2',
+  'lesson-expected-value-3',
+  'lesson-expected-value-4',
+  'lesson-expected-value-5',
+  'lesson-expected-value-6',
 ])
 // L5 transfer lesson is the logged exception to the retrieval-opener rule.
 const NO_RETRIEVAL_OPENER = new Set(['lesson-longer-patterns'])
@@ -345,6 +362,13 @@ const MASTERY_LESSONS = new Set([
   'lesson-bayes-rule-1', 'lesson-bayes-rule-2', 'lesson-bayes-rule-3', // Bayes concept L1–L3
   'lesson-bayes-rule-4', 'lesson-bayes-rule-5', 'lesson-bayes-rule-6',
   'lesson-bayes-rule-7', 'lesson-bayes-rule-8',                         // Bayes concept L4–L8
+  // Expected Value concept (Wave-0 contract).
+  'lesson-expected-value-1',
+  'lesson-expected-value-2',
+  'lesson-expected-value-3',
+  'lesson-expected-value-4',
+  'lesson-expected-value-5',
+  'lesson-expected-value-6',
 ])
 for (const lesson of lessons) {
   if (!MASTERY_LESSONS.has(lesson.lessonId)) continue
@@ -409,6 +433,37 @@ for (const lesson of lessons) {
   const r = reduce(44n, 120n)
   ok('reduce(44,120)=11/30', r.n === 11n && r.d === 30n)
   console.log('✓ combinatorics engine self-check (Stage-2 anchor)')
+}
+
+// ── 6b. Expected-value engine self-check (Stage-2 math anchor for
+// course-expected-value). Asserts the frozen engine reproduces every Green-Book
+// headline number so the interface can't silently drift before the EV fixtures
+// land (per-fixture accept cross-checks land with the lessons in the build wave).
+{
+  const R = (n: number, d: number) => ({ n, d })
+  const eq = (a: { n: number; d: number }, b: { n: number; d: number }) =>
+    a.n === b.n && a.d === b.d
+  const ok = (label: string, cond: boolean) => {
+    if (!cond) fail(`expectation engine self-check failed: ${label}`)
+  }
+  const die = [1, 2, 3, 4, 5, 6].map((x) => ({ x: R(x, 1), p: R(1, 6) }))
+  ok('expectedValue(fairDie)=7/2', eq(expectedValue(die), R(7, 2)))
+  ok(
+    'totalExpectation(coin-die)=7/4',
+    eq(totalExpectation([{ p: R(1, 2), value: R(7, 2) }, { p: R(1, 2), value: R(0, 1) }]), R(7, 4)),
+  )
+  ok(
+    'totalExpectation(dice-game)=7',
+    eq(totalExpectation([{ p: R(1, 2), value: R(2, 1) }, { p: R(1, 2), restart: { add: R(5, 1) } }]), R(7, 1)),
+  )
+  ok('indicatorExpectation(1/13)=1/13', eq(indicatorExpectation(R(1, 13)), R(1, 13)))
+  ok('harmonic(6)=49/20', eq(harmonic(6), R(49, 20)))
+  ok('couponCollector(6)=147/10', eq(couponCollector(6), R(147, 10)))
+  ok('distinctAfterDraws(6,2)=11/6', eq(distinctAfterDraws(6, 2), R(11, 6)))
+  ok('orderStatUniform(500).max=500/501', eq(orderStatUniform(500).max, R(500, 501)))
+  ok('orderStatUniform(2).min=1/3', eq(orderStatUniform(2).min, R(1, 3)))
+  ok('noodleLoops(3)=23/15', eq(noodleLoops(3), R(23, 15)))
+  console.log('✓ expectation engine self-check (Stage-2 anchor)')
 }
 
 // ── 7. Chapters-coverage gate (live-concept hard requirement, ADR-0004). The
@@ -484,5 +539,41 @@ for (const lesson of lessons) {
   }
 }
 console.log(`✓ combinatorics per-fixture engine cross-check (${comboChecked} beats)`)
+
+// ── 8b. Expected-value per-fixture engine cross-check (two-stage fact-check,
+// Stage 2; dormant until the EV fixtures land). For course-expected-value beats
+// whose engine inputs live in the fixture (conditionalTree cases, couponCollectorSim
+// n), recompute and compare any graded `accept`. Problem-specific answerEntry/
+// masteryChallenge accepts are cross-checked per lesson in the build wave.
+const reduceFrac = (s: string): string => {
+  const m = /^(-?\d+)\s*\/\s*(\d+)$/.exec(s.trim())
+  if (!m) return s.trim()
+  const r = reduceRational(Number(m[1]), Number(m[2]))
+  return `${r.n}/${r.d}`
+}
+let evChecked = 0
+for (const lesson of lessons) {
+  if (lesson.courseId !== 'course-expected-value') continue
+  for (const beat of lesson.beats) {
+    const it = beat.interaction
+    const where = `${lesson.lessonId}/${beat.beatId}`
+    if (it.type === 'conditionalTree' && it.accept) {
+      const r = totalExpectation(it.cases)
+      const want = `${r.n}/${r.d}`
+      if (!it.accept.map(reduceFrac).includes(want) && !it.accept.includes(String(r.n))) {
+        fail(`${where}: conditionalTree accept ${JSON.stringify(it.accept)} != totalExpectation=${want}`)
+      }
+      evChecked++
+    } else if (it.type === 'couponCollectorSim' && it.accept) {
+      const r = couponCollector(it.n)
+      const want = `${r.n}/${r.d}`
+      if (!it.accept.map(reduceFrac).includes(want) && !it.accept.includes(String(r.n))) {
+        fail(`${where}: couponCollectorSim accept ${JSON.stringify(it.accept)} != couponCollector(${it.n})=${want}`)
+      }
+      evChecked++
+    }
+  }
+}
+console.log(`✓ expectation per-fixture engine cross-check (${evChecked} beats)`)
 
 console.log('\nAll fixtures valid.')

@@ -1,0 +1,138 @@
+/* Styles for AntsLanesBeat (ev6-explore) and the SliderBeat order-stat dual
+   readout (ev6-model). Uses design-system tokens only; no raw hex colours.
+   The Lead wires `@import './surfaces/expected-value-6.css'` in app.css. */
+
+/* ── Ants simulation (AntsLanesBeat) ─────────────────────────────────────── */
+
+.ants-beat {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 0.75rem 0;
+}
+
+.ants-beat__toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1.25rem;
+  min-height: 44px;
+  min-width: 44px;
+  border: 1.5px solid var(--ch2, #0d9488);
+  border-radius: 22px;
+  background: transparent;
+  color: var(--ch2, #0d9488);
+  font: inherit;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 120ms ease;
+}
+
+.ants-beat__toggle[aria-checked='true'] {
+  background: var(--ch2-tint, #ccfbf1);
+}
+
+.ants-beat__toggle:focus-visible {
+  outline: 2px solid var(--ch2, #0d9488);
+  outline-offset: 2px;
+}
+
+.ants-beat__canvas-wrap {
+  width: 320px;
+  max-width: 100%;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.ants-beat__canvas-placeholder {
+  width: 320px;
+  height: 80px;
+  background: var(--paper-1, #f5f6f8);
+}
+
+.ants-mirror {
+  font-size: 0.8125rem;
+  color: var(--graphite-soft, #6b7280);
+  min-height: 1.5em;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── Order-stat dual readout (SliderBeat ev6-model path) ─────────────────── */
+
+.orderstat-readout {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: 0.875rem;
+  padding: 0.875rem 1rem;
+  background: var(--ch2-tint, #ccfbf1);
+  border-radius: 8px;
+  border-left: 3px solid var(--ch2, #0d9488);
+}
+
+.orderstat-readout__formulas {
+  display: flex;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.orderstat-readout__formula {
+  font-family: var(--font-mono, 'JetBrains Mono', monospace);
+  font-size: 1rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--ch2, #0d9488);
+}
+
+.orderstat-readout__frac {
+  font-weight: 700;
+}
+
+.orderstat-axis-wrap {
+  position: relative;
+  padding-bottom: 1.25rem;
+}
+
+.orderstat-axis {
+  position: relative;
+  height: 4px;
+  background: var(--rule-faint, #e5e7eb);
+  border-radius: 2px;
+  margin-top: 0.25rem;
+}
+
+.orderstat-axis__label {
+  position: absolute;
+  bottom: -1.25rem;
+  font-size: 0.6875rem;
+  color: var(--quill-soft, #9ca3af);
+  font-variant-numeric: tabular-nums;
+}
+
+.orderstat-axis__label--left { left: 0; }
+.orderstat-axis__label--right { right: 0; }
+
+.orderstat-axis__dot {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.orderstat-axis__dot--max {
+  background: var(--ch2, #0d9488);
+}
+
+.orderstat-axis__dot--min {
+  background: transparent;
+  border: 2px solid var(--ch2, #0d9488);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ants-beat__toggle {
+    transition: none;
+  }
+}

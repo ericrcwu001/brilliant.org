@@ -1,0 +1,95 @@
+/* ExpectationScaleBeat — weighted-average balance beam.
+   Tokens only; no raw hex. Reads --ch4 for the EV concept accent. */
+
+.escale {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s4);
+  padding: var(--s3) 0;
+}
+
+.escale__svg {
+  width: 100%;
+  overflow: visible;
+}
+
+.escale__beam {
+  stroke: var(--rule);
+  stroke-width: 2;
+}
+
+.escale__circle {
+  fill: var(--ergo-surface-2);
+  stroke: var(--rule);
+  stroke-width: 1.5;
+  cursor: pointer;
+}
+
+.escale__circle--placed {
+  fill: var(--ch4-tint);
+  stroke: var(--ch4);
+  stroke-width: 2;
+}
+
+.escale__circle:focus-visible {
+  outline: none;
+  stroke: var(--ring-focus);
+  stroke-width: 3;
+}
+
+.escale__label {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-size: 12px;
+  fill: var(--ergo-ink-2);
+  pointer-events: none;
+  user-select: none;
+}
+
+.escale__weight-chip {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-size: 10px;
+  fill: var(--ch4);
+  pointer-events: none;
+  user-select: none;
+}
+
+.escale__ev-label {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-size: 13px;
+  fill: var(--ch4);
+  font-weight: 600;
+  pointer-events: none;
+  user-select: none;
+}
+
+.escale__fulcrum-group {
+  transition: transform var(--dur-slow) var(--ease-out);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .escale__fulcrum-group {
+    transition: none;
+  }
+}
+
+.escale__fulcrum {
+  fill: var(--ch4);
+}
+
+.escale__readout {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-size: calc(14px * var(--fs));
+  color: var(--ergo-ink-1);
+  text-align: center;
+  min-height: 1.5em;
+}
+
+.escale__hint {
+  font-size: calc(13px * var(--fs));
+  color: var(--ergo-ink-3);
+  text-align: center;
+}

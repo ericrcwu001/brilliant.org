@@ -109,6 +109,8 @@ export const InteractionSchema = z.discriminatedUnion('type', [
     // Track-A gambler's-fallacy refutation, surfaced once a run of >=3 same-face
     // flips appears (L1 §4.3). Fixture-authored; falls back to a default line.
     gamblerNote: z.string().optional(),
+    // EV back-compat extension (additive/optional): bias p for non-fair coins.
+    p: z.number().optional(),
   }),
   z.object({
     type: z.literal('stateTap'),
@@ -143,7 +145,12 @@ export const InteractionSchema = z.discriminatedUnion('type', [
     type: z.literal('overlap'),
     highlight: z.array(TransitionRefSchema),
   }),
-  z.object({ type: z.literal('theorySimChart') }),
+  z.object({
+    type: z.literal('theorySimChart'),
+    // EV back-compat extension (additive/optional): which sim model to render.
+    mode: z.enum(['automaton', 'noodleLoops']).optional(),
+    nMax: z.number().optional(),
+  }),
   z.object({ type: z.literal('recap') }),
   // JIT primer: a tiny tap micro-interaction that names a prerequisite before it
   // bites (L1 §3.2). Never graded, never required; collapsible on Track B.
@@ -209,6 +216,9 @@ export const InteractionSchema = z.discriminatedUnion('type', [
     patterns: z.tuple([z.string(), z.string()]).optional(),
     trials: z.number().optional(),
     display: z.enum(['lanes', 'oddsDial', 'heatmap']).optional(),
+    // EV back-compat extension (additive/optional): ants-on-a-string mode (L6).
+    mode: z.enum(['patterns', 'ants']).optional(),
+    ants: z.object({ n: z.number().int().positive() }).optional(),
   }),
   // L2 non-transitive cycle (the "every pattern has a beater" radial).
   z.object({
@@ -363,6 +373,46 @@ export const InteractionSchema = z.discriminatedUnion('type', [
     interactive: z.boolean().optional(),
     // Engine-reproducible headline posterior as a reduced "n/d" (or integer) string — the validation anchor.
     posterior: z.string().optional(),
+  }),
+  // ── Expected Value concept (Wave-0 contract freeze). Three new interaction
+  // types for lesson-expected-value-1..6; each maps 1:1 to a beat view in
+  // beats/index.tsx (stub-routed in Wave 0). Engine dep: src/engine/expectation.ts
+  // (pure, exact-rational). All three are UNGRADED (no GRADED_TYPES entries).
+  //
+  // L1 weighted-average BALANCE BEAM: place P(x) on each outcome; the fulcrum
+  // slides to E[X]=Σ x·P(x).
+  z.object({
+    type: z.literal('expectationScale'),
+    outcomes: z.array(
+      z.object({
+        x: z.number(),
+        label: z.string().optional(),
+        weight: RationalSchema.optional(),
+      }),
+    ),
+    accept: z.array(z.string()).optional(),
+  }),
+  // L4 one-step CASE tree: each branch carries P(case) and a literal E[X|case]
+  // (`value`) or a self-referential `restart` (worth add + E[X]); the root
+  // recombines Σ P·value and solves for E[X] when any case restarts.
+  z.object({
+    type: z.literal('conditionalTree'),
+    cases: z.array(
+      z.object({
+        label: z.string(),
+        p: RationalSchema,
+        value: RationalSchema.optional(),
+        restart: z.object({ add: RationalSchema }).optional(),
+      }),
+    ),
+    accept: z.array(z.string()).optional(),
+  }),
+  // L5 coupon-collector sim: draw boxes until all N types collected; the running
+  // Σ N/(N−i+1) climbs toward N·H_N as the per-stage hit-prob shrinks.
+  z.object({
+    type: z.literal('couponCollectorSim'),
+    n: z.number().int().positive(),
+    accept: z.array(z.string()).optional(),
   }),
 ])
 

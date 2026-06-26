@@ -36,6 +36,9 @@ import { PigeonholeBoardBeat } from './PigeonholeBoardBeat'
 import { ProbabilityCounterBeat } from './ProbabilityCounterBeat'
 import { HandRankerBeat } from './HandRankerBeat'
 import { BayesUpdateBeat } from './BayesUpdateBeat'
+import { ExpectationScaleBeat } from './ExpectationScaleBeat'
+import { ConditionalTreeBeat } from './ConditionalTreeBeat'
+import { CouponCollectorSimBeat } from './CouponCollectorSimBeat'
 
 function ContinueStub({ beat, isLast, onAdvance }: BeatProps) {
   return (
@@ -123,6 +126,14 @@ export function BeatView(props: BeatProps) {
       return <HandRankerBeat {...props} />
     case 'bayesUpdate':
       return <BayesUpdateBeat {...props} />
+    // Expected Value concept (Wave-0 contract — stub slots routed to ContinueStub;
+    // real renderers land per-lesson in the build wave, replacing each case body).
+    case 'expectationScale':
+      return <ExpectationScaleBeat {...props} />
+    case 'conditionalTree':
+      return <ConditionalTreeBeat {...props} />
+    case 'couponCollectorSim':
+      return <CouponCollectorSimBeat {...props} />
     default:
       return <ContinueStub {...props} />
   }

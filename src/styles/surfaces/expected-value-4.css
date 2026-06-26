@@ -1,0 +1,190 @@
+/* ConditionalTreeBeat — L4 tap-to-expand conditional expectation case tree.
+   Tokens only; no raw hex. Reads --ch1 for the indigo EV-4 concept accent.
+   The Lead wires `@import './surfaces/expected-value-4.css'` in app.css. */
+
+.ctree {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s4);
+  padding: var(--s3) 0;
+}
+
+.ctree__svg {
+  width: 100%;
+  overflow: visible;
+}
+
+.ctree__branch-line {
+  stroke: var(--rule);
+  stroke-width: 1.5;
+}
+
+/* Loop-back arc: dashed --ch1 stroke; animates stroke-dashoffset on expand */
+.ctree__loop-arc {
+  fill: none;
+  stroke: var(--ch1);
+  stroke-width: 2;
+  stroke-dasharray: 5 4;
+  stroke-linecap: round;
+}
+
+.ctree__loop-arc--animate {
+  stroke-dashoffset: 120;
+  animation: ctree-draw-arc 600ms ease-out forwards;
+}
+
+@keyframes ctree-draw-arc {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ctree__loop-arc--animate {
+    animation: none;
+    stroke-dashoffset: 0;
+  }
+}
+
+.ctree__root-circle {
+  fill: var(--ergo-surface-2);
+  stroke: var(--ch1);
+  stroke-width: 2;
+}
+
+.ctree__root-label {
+  font-family: var(--font-sans);
+  font-size: 11px;
+  font-weight: 600;
+  fill: var(--ergo-ink-1);
+  pointer-events: none;
+  user-select: none;
+}
+
+.ctree__branch-anchor {
+  fill: var(--ergo-surface-2);
+  stroke: var(--rule);
+  stroke-width: 1.5;
+}
+
+.ctree__branch-anchor--expanded {
+  fill: var(--ch1-tint);
+  stroke: var(--ch1);
+  stroke-width: 2;
+}
+
+/* Branch buttons: ≥44px hit zone, flex-column for label + expanded detail */
+.ctree__branches {
+  display: flex;
+  gap: var(--s3);
+  justify-content: space-around;
+}
+
+.ctree__branch-btn {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--s2);
+  min-height: 44px;
+  padding: var(--s2) var(--s3);
+  border: 1.5px solid var(--rule);
+  border-radius: var(--radius-md);
+  background: var(--ergo-surface-1);
+  cursor: pointer;
+  transition: border-color 120ms ease, background 120ms ease;
+  text-align: center;
+}
+
+.ctree__branch-btn:hover:not(:disabled) {
+  border-color: var(--ch1);
+  background: var(--ch1-tint);
+}
+
+.ctree__branch-btn:focus-visible {
+  outline: 2px solid var(--ring-focus);
+  outline-offset: 2px;
+}
+
+.ctree__branch-btn--expanded,
+.ctree__branch-btn:disabled {
+  cursor: default;
+  border-color: var(--ch1);
+  background: var(--ch1-tint);
+}
+
+.ctree__branch-name {
+  font-family: var(--font-sans);
+  font-size: calc(13px * var(--fs));
+  font-weight: 600;
+  color: var(--ergo-ink-1);
+}
+
+.ctree__branch-detail {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-size: calc(12px * var(--fs));
+  color: var(--ch1);
+}
+
+/* Aria-live regions: visually hidden, read by screen readers */
+.ctree__announce-polite,
+.ctree__announce-assertive {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Equation solve: token-by-token reveal */
+.ctree__equation {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-size: calc(14px * var(--fs));
+  color: var(--ergo-ink-1);
+  text-align: center;
+  padding: var(--s3);
+  border-radius: var(--radius-md);
+  background: var(--ergo-surface-2);
+  min-height: 2.5em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 0;
+}
+
+/* Final token: E[X]=result — highlighted with --ch1-tint background */
+.ctree__eq-final {
+  background: var(--ch1-tint);
+  color: var(--ch1);
+  font-weight: 700;
+  border-radius: 3px;
+  padding: 0 4px;
+  animation: ctree-highlight 400ms ease forwards;
+}
+
+@keyframes ctree-highlight {
+  from {
+    background: var(--ergo-surface-2);
+    color: var(--ergo-ink-1);
+  }
+  to {
+    background: var(--ch1-tint);
+    color: var(--ch1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ctree__branch-btn {
+    transition: none;
+  }
+
+  .ctree__eq-final {
+    animation: none;
+  }
+}

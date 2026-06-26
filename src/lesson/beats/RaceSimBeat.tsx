@@ -16,6 +16,7 @@ import type { RaceTrace } from '../../engine/race'
 import { mulberry32 } from '../../engine/simulate'
 import { C } from '../konva/theme'
 import { useProgressiveRuns } from './useProgressiveRuns'
+import { AntsLanesBeat } from '../konva/AntsLanesBeat'
 
 const TRIALS = 200
 
@@ -43,6 +44,14 @@ export function RaceSimBeat(props: BeatProps) {
     },
     onFlush: () => setTally({ a: tallyRef.current.a, b: tallyRef.current.b }),
   })
+
+  if (
+    beat.interaction.type === 'raceSim' &&
+    beat.interaction.mode === 'ants' &&
+    beat.interaction.display === 'lanes'
+  ) {
+    return <AntsLanesBeat {...props} />
+  }
 
   if (beat.interaction.type !== 'raceSim') return null
   const { display } = beat.interaction
