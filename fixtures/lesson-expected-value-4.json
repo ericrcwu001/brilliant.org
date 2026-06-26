@@ -1,0 +1,224 @@
+{
+  "lessonId": "lesson-expected-value-4",
+  "courseId": "course-expected-value",
+  "title": "Conditional & Total Expectation",
+  "patternOptions": ["H"],
+  "milestoneId": "conditional-expectation-mastered",
+  "unlocks": "lesson-expected-value-5",
+  "schemaVersion": 1,
+  "beats": [
+    {
+      "beatId": "ev4-recall",
+      "required": true,
+      "prompt": "By now you know PHT's answer. Match the pattern to the expected wait it produces via first-step conditioning.",
+      "interaction": {
+        "type": "retrievalGrid",
+        "pairs": [
+          { "left": "Expected flips until HH", "right": "6" },
+          { "left": "Method used", "right": "condition on first flip" }
+        ]
+      },
+      "feedback": {
+        "correct": "Right — conditioning on the first flip is the law of total expectation. PHT's E[HH]=6 was its first instance.",
+        "hints": [
+          "Tap a label, then tap its matching value.",
+          "PHT's first-step gave E[HH]=6 by conditioning on whether the first flip was H or T.",
+          "Match: E[HH] → 6."
+        ]
+      }
+    },
+    {
+      "beatId": "ev4-bet",
+      "required": false,
+      "prompt": "Roll a die. Get {1,2,3}: collect the face and stop. Get {4,5,6}: collect the face and roll again, adding to your total. What is a single play worth?",
+      "interaction": {
+        "type": "prediction",
+        "options": ["A little over $3.50", "About $5", "About $7", "Unbounded"]
+      },
+      "feedback": {
+        "byOption": {
+          "A little over $3.50": {
+            "note": "Let's test it — re-rolling on 4–6 adds value beyond one roll, so it climbs past $3.50."
+          },
+          "About $5": {
+            "note": "Let's test it — warmer, but the re-roll bonus pushes higher. Condition on the first roll and solve."
+          },
+          "About $7": {
+            "note": "Good instinct — let's prove it by conditioning on the first roll and solving the self-referential equation.",
+            "correct": true
+          },
+          "Unbounded": {
+            "note": "Let's test it — re-rolls get geometrically rarer, so the value converges to a finite number."
+          }
+        }
+      }
+    },
+    {
+      "beatId": "ev4-win",
+      "required": true,
+      "prompt": "Simpler first. Flip a fair coin: heads → roll a die and keep it; tails → get $0. What is this bet worth? (Give your answer as a fraction, e.g. 3/4.)",
+      "interaction": {
+        "type": "answerEntry",
+        "fields": [
+          {
+            "id": "coin-die",
+            "label": "Value of the bet",
+            "accept": ["7/4", "1.75", "1 3/4"],
+            "placeholder": "?/?",
+            "suffix": "dollars"
+          }
+        ]
+      },
+      "feedback": {
+        "correct": "Correct — ½·(7/2) + ½·0 = 7/4. Heads case pays the die's average; tails case pays nothing. Weight each by its probability.",
+        "hints": [
+          "Heads pays the die only half the time. Weight by P(case): ½·3.5 + ½·0 = 7/4.",
+          "E[die] = 7/2 = 3.5. Apply total expectation: ½·3.5 + ½·0 = ?",
+          "½ × 3.5 = 1.75 = 7/4."
+        ]
+      }
+    },
+    {
+      "beatId": "ev4-explore",
+      "required": false,
+      "prompt": "Back to the dice game. Tap each branch to expand the case tree — then watch the root recombine. One branch loops back.",
+      "interaction": {
+        "type": "conditionalTree",
+        "cases": [
+          {
+            "label": "Roll {1, 2, 3}",
+            "p": { "n": 1, "d": 2 },
+            "value": { "n": 2, "d": 1 }
+          },
+          {
+            "label": "Roll {4, 5, 6}",
+            "p": { "n": 1, "d": 2 },
+            "restart": { "add": { "n": 5, "d": 1 } }
+          }
+        ]
+      },
+      "hero": {
+        "slowFirst": true,
+        "structuralReadout": "E[X] = 7 (½·2 + ½·(5+E[X]) = E[X] solved by isolating E[X]).",
+        "reducedMotionFinalFrame": true
+      },
+      "feedback": {
+        "correct": "The {4,5,6} branch loops back to the same game — E[X] appears on both sides. The equation ½·2 + ½·(5+E[X]) = E[X] solves to 7.",
+        "hints": [
+          "Tap each branch to see its probability and expected value.",
+          "The {4,5,6} branch restarts the game — its value contains E[X] itself.",
+          "Once all branches are expanded, the root adds them up. The loop forces you to solve for E[X]."
+        ]
+      }
+    },
+    {
+      "beatId": "ev4-model",
+      "required": false,
+      "introducesSymbol": "E[X]=Σ E[X|case]P(case)",
+      "groundedBy": ["ev4-win", "ev4-explore"],
+      "comparison": true,
+      "prompt": "Those two examples used the same move. Read the law — then tap to confirm you see why averaging is not the same as belief-updating.",
+      "interaction": {
+        "type": "primer",
+        "variant": "custom",
+        "title": "Law of Total Expectation",
+        "body": "E[X] = Σ E[X|case]·P(case). Split the game into cases → average the value within each case → weight by how likely each case is. If a case restarts the game, E[X] appears on both sides → solve for it. PHT's E[HH]=6 came from the same move (condition on the first flip). Note: conditioning here means averaging over known cases — revising a probability when you see evidence is Bayes, a different machine (coming later).",
+        "collapsible": false
+      },
+      "feedback": {
+        "correct": "Averaging over cases ≠ updating from evidence. Conditioning here: split → average within → weight by P(case). Belief-updating from new evidence is Bayes — a different machine, coming later.",
+        "hints": [
+          "Read the card once more.",
+          "Key distinction: here P(case) is known in advance and we average. Bayes revises a probability given evidence.",
+          "Continue when you see the difference."
+        ]
+      }
+    },
+    {
+      "beatId": "ev4-firststep",
+      "required": true,
+      "prompt": "Set up the dice game equation. The {4,5,6} case: you bank the expected face for that set, then the game restarts. What is that case worth? (Type the full expression, e.g. 5+E[X].)",
+      "interaction": {
+        "type": "answerEntry",
+        "fields": [
+          {
+            "id": "highcase",
+            "label": "Value of the {4, 5, 6} case",
+            "accept": ["5+E[X]", "E[X]+5", "5+E", "E+5", "5 + E[X]", "E[X] + 5"],
+            "placeholder": "? + E[X]"
+          }
+        ]
+      },
+      "feedback": {
+        "correct": "Exactly — rolling {4,5,6} banks the expected face (5) and the game replays. That branch is worth 5 + E[X].",
+        "hints": [
+          "Rolling 4–6 banks 5 and restarts the game, so that case is worth 5 + E[X], not just 5.",
+          "E[face | {4,5,6}] = (4+5+6)/3 = 5. But the game continues for another full turn.",
+          "Write it: case value = 5 + E[X]."
+        ]
+      }
+    },
+    {
+      "beatId": "ev4-isolate",
+      "required": false,
+      "track": "A",
+      "prompt": "See how E[X] on both sides becomes a clean solve — read each step.",
+      "interaction": {
+        "type": "primer",
+        "variant": "custom",
+        "title": "Isolating E[X]",
+        "body": "Start: E = ½·2 + ½·(5+E). Expand: E = 1 + 5/2 + E/2. Subtract E/2 from both sides: E − E/2 = 7/2, so ½·E = 7/2. Multiply both sides by 2: E = 7.",
+        "collapsible": true
+      },
+      "feedback": {
+        "correct": "Collect E on one side — it falls out cleanly at 7.",
+        "hints": [
+          "Expand the right side: 1 + 5/2 + E/2.",
+          "Subtract E/2 from both sides: E/2 = 7/2.",
+          "Multiply by 2: E = 7."
+        ]
+      }
+    },
+    {
+      "beatId": "ev4-prove",
+      "required": true,
+      "interviewNote": "E[X] on both sides → isolate and solve (treat E[X] as the unknown: ½·2 + ½·(5+E[X]) = E[X] → E[X] = 7); conditioning ≠ Bayes (here we average over cases, not update from evidence).",
+      "prompt": "Mastery challenge: set up and solve the self-referential dice game equation. What is a single play worth?",
+      "interaction": {
+        "type": "masteryChallenge",
+        "scenario": "Roll a die. Get {1,2,3}: collect the face and stop. Get {4,5,6}: collect the face and roll again, adding to your total. Set up E[X] = ½·2 + ½·(5+E[X]) and solve.",
+        "fields": [
+          {
+            "id": "ev",
+            "label": "E[X] =",
+            "accept": ["7"],
+            "placeholder": "?",
+            "suffix": "dollars"
+          }
+        ]
+      },
+      "feedback": {
+        "correct": "E[X] = 7. Treat E[X] as the unknown: expand ½·2 + ½·(5+E[X]) = E[X] → 1 + 5/2 + E[X]/2 = E[X] → ½·E[X] = 7/2 → E[X] = 7.",
+        "hints": [
+          "E[X] on both sides isn't a dead end; treat it as the unknown and solve: ½·2 + ½·(5+E[X]) = 7.",
+          "Expand: 1 + 5/2 + E[X]/2 = E[X]. Collect E[X] terms on one side.",
+          "E[X] − E[X]/2 = 7/2 → ½·E[X] = 7/2 → E[X] = 7."
+        ]
+      }
+    },
+    {
+      "beatId": "ev4-recap",
+      "required": true,
+      "prompt": "Tap to reveal the lesson's core moves.",
+      "interaction": { "type": "recap" },
+      "feedback": {
+        "correct": "Split the game into cases → average within each → weight by P(case). When a case restarts, E[X] appears on both sides — solve for it. Belief-updating from evidence is Bayes, coming later.",
+        "hints": [
+          "Reveal the cards.",
+          "Split → average within → weight by P(case).",
+          "If the game loops, solve for E[X]."
+        ]
+      }
+    }
+  ]
+}
