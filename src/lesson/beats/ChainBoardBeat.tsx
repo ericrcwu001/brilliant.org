@@ -21,7 +21,7 @@ import {
   formatVector,
 } from '../../engine/markov'
 import type { Rational } from '../../engine/types'
-import { ratAdd, ratMul } from '../../engine/automaton'
+import { reduce, ratAdd, ratMul } from '../../engine/automaton'
 import { ChainGraph } from '../konva/ChainGraph'
 import { chapterColor } from '../chapters'
 
@@ -85,6 +85,17 @@ export function periodicVerdict(P: Rational[][]): 'oscillates' | 'converges' {
   const recPeriod = (cls.find((c) => c.kind !== 'transient') ?? cls[0]).period
   return recPeriod > 1 ? 'oscillates' : 'converges'
 }
+
+// Parse a typed fraction "a/b" (or integer "a") → reduced Rational; null if unparseable. EXPORTED for the test.
+// eslint-disable-next-line react-refresh/only-export-components
+export function parseFrac(s: string): Rational | null {
+  const t = s.trim()
+  const m = /^(-?\d+)\s*\/\s*(\d+)$/.exec(t)
+  if (m) { const d = Number(m[2]); return d === 0 ? null : reduce(Number(m[1]), d) }
+  if (/^-?\d+$/.test(t)) return { n: Number(t), d: 1 }
+  return null
+}
+const eqRat = (a: Rational, b: Rational) => a.n * b.d === b.n * a.d
 
 // ── DiagramDisplay ────────────────────────────────────────────────────────────
 function DiagramDisplay({
@@ -423,6 +434,7 @@ function MatrixDisplay({
   props: BeatProps
 }) {
   const [solved, setSolved] = useState(false)
+  const [cells, setCells] = useState<Record<string, string>>({})
 
   const ladder = useHintLadder({
     feedback: resolveFeedback(beat.feedback, props.pattern),
@@ -433,46 +445,109 @@ function MatrixDisplay({
     onLevelChange: props.onHintLevelChange,
     event: { lessonId: props.lessonId, beatId: beat.beatId },
   })
-
   const revealed = ladder.view.kind === 'hint' && ladder.view.revealed
   const absorbingStates = ix.absorbing ?? []
-  const hasAbsorption = ix.task === 'absorption' && absorbingStates.length > 0
+  const n = ix.labels.length
 
-  // Compute absorption if relevant
-  const absProbs = hasAbsorption
-    ? absorptionProbabilities(ix.matrix, absorbingStates)
-    : null
-  const absTime = hasAbsorption
-    ? expectedAbsorptionTime(ix.matrix, absorbingStates)
-    : null
+  // ── Graded BUILD: empty editable cells; Check enabled only when every cell is
+  //    filled AND each row sums to 1; grade against the intended P (exact). The
+  //    target values are NEVER pre-rendered (cells start empty).
+  if (!beat.hero && ix.task === 'build') {
+    const parsed: (Rational | null)[][] = ix.matrix.map((row, i) =>
+      row.map((_, j) => {
+        const s = cells[`${i}-${j}`]
+        return s != null && s.trim() !== '' ? parseFrac(s) : null
+      }),
+    )
+    const rowSums = parsed.map((row) =>
+      row.every((c) => c !== null)
+        ? row.reduce<Rational>((acc, c) => ratAdd(acc, c as Rational), { n: 0, d: 1 })
+        : null,
+    )
+    const allFilled = parsed.every((row) => row.every((c) => c !== null))
+    const allRowsOne = rowSums.every((s) => s !== null && eqRat(s, { n: 1, d: 1 }))
+    const canCheck = allFilled && allRowsOne
 
-  // For graded absorption, we just auto-check (read-only display; grading is
-  // implicit — learner reads the computed value and presses Check).
-  const [checked, setChecked] = useState(false)
+    const check = () => {
+      const correct = parsed.every((row, i) =>
+        row.every((c, j) => c !== null && eqRat(c as Rational, ix.matrix[i][j])),
+      )
+      if (correct) { ladder.submitCorrect(); setSolved(true) } else { ladder.submitWrong() }
+    }
 
-  function check() {
-    setChecked(true)
-    // Absorption display is a read/verify task — learner sees the solution
-    // computed by the engine and confirms understanding.
-    ladder.submitCorrect()
-    setSolved(true)
+    const primary = solved
+      ? { label: isLast ? 'Finish' : 'Continue', enabled: true, onClick: onAdvance }
+      : { label: 'Check', enabled: canCheck, onClick: check }
+
+    const ariaStatus = solved
+      ? 'Matrix built correctly.'
+      : allFilled
+        ? allRowsOne ? 'Every row sums to 1 — ready to check.' : 'Each row must sum to 1.'
+        : 'Fill each cell so every row sums to 1.'
+
+    return (
+      <BeatShell
+        primary={primary}
+        feedback={ladder.view}
+        onTryAgain={revealed ? () => { ladder.tryAgain(); setSolved(false); setCells({}) } : undefined}
+      >
+        <div className="chainboard-matrix">
+          <div className="chainboard-matrix__wrap" role="region" aria-label="Build the transition matrix P">
+            <table className="chainboard-matrix__table">
+              <thead>
+                <tr>
+                  <th />
+                  {ix.labels.map((lbl) => <th key={lbl} className="chainboard-matrix__hdr">{lbl}</th>)}
+                  <th className="chainboard-matrix__hdr">Σ</th>
+                </tr>
+              </thead>
+              <tbody>
+                {ix.matrix.map((row, i) => (
+                  <tr key={i}>
+                    <th scope="row" className="chainboard-matrix__hdr">{ix.labels[i]}</th>
+                    {row.map((_, j) => (
+                      <td key={j} className="chainboard-matrix__cell">
+                        <input
+                          type="text"
+                          className="chainboard-build__input"
+                          value={revealed ? formatRational(ix.matrix[i][j]) : (cells[`${i}-${j}`] ?? '')}
+                          placeholder="n/d"
+                          disabled={solved || revealed}
+                          autoComplete="off"
+                          aria-label={`P from ${ix.labels[i]} to ${ix.labels[j]}`}
+                          onChange={(e) => { setCells((p) => ({ ...p, [`${i}-${j}`]: e.target.value })); ladder.clear() }}
+                          style={{ minHeight: '44px', minWidth: '56px' }}
+                        />
+                      </td>
+                    ))}
+                    <td
+                      className={
+                        'chainboard-build__rowsum' +
+                        (rowSums[i] && eqRat(rowSums[i] as Rational, { n: 1, d: 1 }) ? ' chainboard-build__rowsum--ok' : '')
+                      }
+                    >
+                      {rowSums[i] ? formatRational(rowSums[i] as Rational) : '—'}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <p role="status" aria-live="polite" className="sr-only">{ariaStatus}</p>
+        </div>
+      </BeatShell>
+    )
   }
 
-  const primary = solved
-    ? { label: isLast ? 'Finish' : 'Continue', enabled: true, onClick: onAdvance }
-    : beat.hero
-    ? { label: isLast ? 'Finish' : 'Continue', enabled: true, onClick: onAdvance }
-    : { label: 'Check', enabled: !checked, onClick: check }
-
-  const n = ix.labels.length
+  // ── Hero / read-only (e.g. L5 solve-matrix: watch Q/R → N → B resolve). Ungraded
+  //    "watch it resolve" — primary Continue, NO grading (no auto-pass).
+  const hasAbsorption = ix.task === 'absorption' && absorbingStates.length > 0
+  const absProbs = hasAbsorption ? absorptionProbabilities(ix.matrix, absorbingStates) : null
+  const absTime = hasAbsorption ? expectedAbsorptionTime(ix.matrix, absorbingStates) : null
   const ariaStatus = `Transition matrix for ${ix.labels.join(', ')}`
 
   return (
-    <BeatShell
-      primary={primary}
-      feedback={!beat.hero ? ladder.view : undefined}
-      onTryAgain={revealed ? () => { ladder.tryAgain(); setSolved(false); setChecked(false) } : undefined}
-    >
+    <BeatShell primary={{ label: isLast ? 'Finish' : 'Continue', enabled: true, onClick: onAdvance }}>
       <div className="chainboard-matrix">
         {beat.hero && <p className="sr-only">{beat.hero.structuralReadout}</p>}
         <div className="chainboard-matrix__wrap" role="region" aria-label="Transition matrix P">
@@ -523,15 +598,12 @@ function MatrixDisplay({
               </thead>
               <tbody>
                 {absProbs.map((row, ti) => {
-                  const transientIdx = Array.from(
-                    { length: n },
-                    (_, k) => k,
-                  ).filter((k) => !absorbingStates.includes(k))[ti]
+                  const transientIdx = Array.from({ length: n }, (_, k) => k).filter(
+                    (k) => !absorbingStates.includes(k),
+                  )[ti]
                   return (
                     <tr key={ti}>
-                      <th scope="row" className="chainboard-matrix__hdr">
-                        {ix.labels[transientIdx]}
-                      </th>
+                      <th scope="row" className="chainboard-matrix__hdr">{ix.labels[transientIdx]}</th>
                       {row.map((cell, j) => (
                         <td key={j} className="chainboard-matrix__cell" style={{ minHeight: '44px', minWidth: '44px' }}>
                           {formatRational(cell)}
@@ -545,19 +617,16 @@ function MatrixDisplay({
             <p className="chainboard-absorption__times">
               Expected absorption time:{' '}
               {absTime.map((t, ti) => {
-                const transientIdx = Array.from(
-                  { length: n },
-                  (_, k) => k,
-                ).filter((k) => !absorbingStates.includes(k))[ti]
+                const transientIdx = Array.from({ length: n }, (_, k) => k).filter(
+                  (k) => !absorbingStates.includes(k),
+                )[ti]
                 return `${ix.labels[transientIdx]}: ${formatRational(t)}`
               }).join(' · ')}
             </p>
           </div>
         )}
 
-        <p role="status" aria-live="polite" className="sr-only">
-          {ariaStatus}
-        </p>
+        <p role="status" aria-live="polite" className="sr-only">{ariaStatus}</p>
       </div>
     </BeatShell>
   )
@@ -888,11 +957,10 @@ function StationaryDisplay({
   props: BeatProps
 }) {
   const defaultDamping: Rational = ix.damping ?? { n: 85, d: 100 }
-  const [dampingPct, setDampingPct] = useState(
-    Math.round((defaultDamping.n / defaultDamping.d) * 100),
-  )
+  const [dampingPct, setDampingPct] = useState(Math.round((defaultDamping.n / defaultDamping.d) * 100))
   const [solved, setSolved] = useState(false)
-  const [tappedUnique, setTappedUnique] = useState<boolean | null>(null)
+  const [tappedChoice, setTappedChoice] = useState<boolean | null>(null)
+  const [piInput, setPiInput] = useState('')
 
   const ladder = useHintLadder({
     feedback: resolveFeedback(beat.feedback, props.pattern),
@@ -903,141 +971,200 @@ function StationaryDisplay({
     onLevelChange: props.onHintLevelChange,
     event: { lessonId: props.lessonId, beatId: beat.beatId },
   })
-
   const revealed = ladder.view.kind === 'hint' && ladder.view.revealed
-
-  const liveDamping: Rational = { n: dampingPct, d: 100 }
   const isPageRank = ix.task === 'pagerank'
-  const isBalance = ix.task === 'balance'
+  const liveDamping: Rational = { n: dampingPct, d: 100 }
 
-  const bars = isPageRank
-    ? pagerank(ix.matrix, liveDamping)
-    : stationaryDistribution(ix.matrix)
-
-  // Only meaningful for the balance task; skip on PageRank link matrices (which
-  // may be sub-stochastic/dangling, where stationaryDistribution is undefined).
-  const balance = isBalance ? detailedBalance(ix.matrix) : null
-  const reversible = balance?.reversible ?? false
-  const pi = balance?.pi ?? []
-  const ariaStatus = isPageRank
-    ? `PageRank (d=${dampingPct}%): ${formatVector(bars)}`
-    : isBalance
-    ? `Stationary: ${formatVector(pi)}. Reversible: ${reversible}.`
-    : `Stationary distribution: ${formatVector(bars)}`
-
-  function check() {
-    const correct = isBalance
-      ? (tappedUnique !== null
-          ? tappedUnique === reversible
-          : ix.headline === 'unique' ? reversible : !reversible)
-      : isPageRank
-      ? (tappedUnique !== null && tappedUnique === (ix.headline === 'unique'))
-      : true
-    if (correct) {
-      ladder.submitCorrect()
-      setSolved(true)
-    } else {
-      ladder.submitWrong()
-    }
+  // ── HERO (explore-damping): damping slider + live PageRank bars, Continue ──
+  if (beat.hero) {
+    const heroBars = isPageRank ? pagerank(ix.matrix, liveDamping) : stationaryDistribution(ix.matrix)
+    return (
+      <BeatShell primary={{ label: isLast ? 'Finish' : 'Continue', enabled: true, onClick: onAdvance }}>
+        <div className="chainboard-stationary">
+          <p className="sr-only">{beat.hero.structuralReadout}</p>
+          {isPageRank && (
+            <label className="chainboard-stationary__damping-label">
+              <span>Damping d = {dampingPct}%</span>
+              <input
+                type="range"
+                className="chainboard-stationary__range"
+                min={1}
+                max={99}
+                value={dampingPct}
+                onChange={(e) => setDampingPct(Number(e.target.value))}
+                aria-label={`Damping factor: ${dampingPct}%`}
+                style={{ minHeight: '44px' }}
+              />
+            </label>
+          )}
+          <p className="chainboard-stationary__subtitle">
+            {isPageRank ? `PageRank (d = ${dampingPct}%)` : 'Stationary distribution π'}
+          </p>
+          {heroBars.map((r, i) => (
+            <div key={i} className="chainboard-stationary__row">
+              <span className="chainboard-stationary__label">{ix.labels[i]}</span>
+              <div className="chainboard-stationary__track">
+                <div
+                  className="chainboard-stationary__fill"
+                  style={{ width: `${pct(r)}%`, transition: reducedMotion ? 'none' : 'width 0.4s ease' }}
+                  aria-hidden="true"
+                />
+              </div>
+              <span className="chainboard-stationary__value">{formatRational(r)}</span>
+            </div>
+          ))}
+          <p role="status" aria-live="polite" className="sr-only">
+            {`${isPageRank ? 'PageRank' : 'Stationary'}: ${formatVector(heroBars)}`}
+          </p>
+        </div>
+      </BeatShell>
+    )
   }
 
-  const interacted = tappedUnique !== null || (!isBalance && !isPageRank)
-  const primary = solved
-    ? { label: isLast ? 'Finish' : 'Continue', enabled: true, onClick: onAdvance }
-    : beat.hero
-    ? { label: isLast ? 'Finish' : 'Continue', enabled: true, onClick: onAdvance }
-    : { label: 'Check', enabled: interacted, onClick: check }
-
-  return (
-    <BeatShell
-      primary={primary}
-      feedback={!beat.hero ? ladder.view : undefined}
-      onTryAgain={
-        revealed
-          ? () => {
-              ladder.tryAgain()
-              setSolved(false)
-              setTappedUnique(null)
-            }
-          : undefined
-      }
-    >
-      <div className="chainboard-stationary">
-        {beat.hero && <p className="sr-only">{beat.hero.structuralReadout}</p>}
-
-        {isPageRank && beat.hero && (
-          <label className="chainboard-stationary__damping-label">
-            <span>Damping d = {dampingPct}%</span>
-            <input
-              type="range"
-              className="chainboard-stationary__range"
-              min={1}
-              max={99}
-              value={dampingPct}
-              onChange={(e) => setDampingPct(Number(e.target.value))}
-              aria-label={`Damping factor: ${dampingPct}%`}
-              style={{ minHeight: '44px' }}
-            />
-          </label>
-        )}
-
-        <p className="chainboard-stationary__subtitle">
-          {isPageRank ? `PageRank (d = ${dampingPct}%)` : 'Stationary distribution π'}
-        </p>
-
-        {bars.map((r, i) => (
-          <div key={i} className="chainboard-stationary__row">
-            <span className="chainboard-stationary__label">{ix.labels[i]}</span>
-            <div className="chainboard-stationary__track">
-              <div
-                className="chainboard-stationary__fill"
-                style={{
-                  width: `${pct(r)}%`,
-                  transition: reducedMotion ? 'none' : 'width 0.4s ease',
-                }}
-                aria-hidden="true"
-              />
+  // ── GRADED PageRank (damping-saves-sink): bars + unique/not-unique chips. The
+  //    graded value is the CATEGORICAL "unique"; the bars are the sink's PageRank
+  //    (not a graded value, not a later-required value) — safe to show. ──
+  if (isPageRank) {
+    const prBars = pagerank(ix.matrix, liveDamping)
+    const check = () => {
+      const correct = tappedChoice !== null && tappedChoice === (ix.headline === 'unique')
+      if (correct) { ladder.submitCorrect(); setSolved(true) } else { ladder.submitWrong() }
+    }
+    const primary = solved
+      ? { label: isLast ? 'Finish' : 'Continue', enabled: true, onClick: onAdvance }
+      : { label: 'Check', enabled: tappedChoice !== null, onClick: check }
+    return (
+      <BeatShell
+        primary={primary}
+        feedback={ladder.view}
+        onTryAgain={revealed ? () => { ladder.tryAgain(); setSolved(false); setTappedChoice(null) } : undefined}
+      >
+        <div className="chainboard-stationary">
+          <p className="chainboard-stationary__subtitle">PageRank (d = {dampingPct}%)</p>
+          {prBars.map((r, i) => (
+            <div key={i} className="chainboard-stationary__row">
+              <span className="chainboard-stationary__label">{ix.labels[i]}</span>
+              <div className="chainboard-stationary__track">
+                <div className="chainboard-stationary__fill" style={{ width: `${pct(r)}%`, transition: reducedMotion ? 'none' : 'width 0.4s ease' }} aria-hidden="true" />
+              </div>
+              <span className="chainboard-stationary__value">{formatRational(r)}</span>
             </div>
-            <span className="chainboard-stationary__value">{formatRational(r)}</span>
-          </div>
-        ))}
-
-        {isBalance && (
-          <div className="chainboard-balance">
-            <p className="chainboard-balance__result">
-              Detailed balance: <strong>{reversible ? 'holds' : 'fails'}</strong>
-              {' '}— chain is <strong>{reversible ? 'reversible' : 'irreversible'}</strong>
-            </p>
-          </div>
-        )}
-
-        {!beat.hero && (isBalance || isPageRank) && (
-          <div className="chainboard-chips" role="group" aria-label="Is the answer unique?">
+          ))}
+          <div className="chainboard-chips" role="group" aria-label="Does a unique PageRank exist?">
             {(['unique', 'not unique'] as const).map((choice) => (
               <button
                 key={choice}
                 type="button"
-                className={
-                  'chainboard-chip' +
-                  (tappedUnique === (choice === 'unique') ? ' chainboard-chip--active' : '')
-                }
-                aria-pressed={tappedUnique === (choice === 'unique')}
+                className={'chainboard-chip' + (tappedChoice === (choice === 'unique') ? ' chainboard-chip--active' : '')}
+                aria-pressed={tappedChoice === (choice === 'unique')}
                 disabled={solved || revealed}
-                onClick={() => {
-                  setTappedUnique(choice === 'unique')
-                  ladder.clear()
-                }}
+                onClick={() => { setTappedChoice(choice === 'unique'); ladder.clear() }}
                 style={{ minHeight: '44px', minWidth: '44px' }}
               >
                 {choice}
               </button>
             ))}
           </div>
+          <p role="status" aria-live="polite" className="sr-only">{`PageRank (d=${dampingPct}%): ${formatVector(prBars)}`}</p>
+        </div>
+      </BeatShell>
+    )
+  }
+
+  // ── GRADED balance: show the read-only P (the chain data) + a control; do NOT
+  //    render π or the reversibility verdict (that is the graded answer). Mode by
+  //    headline (mirrors validate-fixtures §3c): categorical / vector / scalar. ──
+  const db = detailedBalance(ix.matrix)
+  const reversibleChoice = ix.headline === 'not-reversible' || ix.headline === 'reversible'
+  const vectorMode = !reversibleChoice && !!ix.headline && ix.headline.includes(',')
+  const col = ix.cell?.col ?? 0
+
+  const check = () => {
+    const correct = reversibleChoice
+      ? (tappedChoice !== null && tappedChoice === db.reversible)
+      : vectorMode
+      ? normAns(piInput) === normAns(formatVector(db.pi))
+      : normAns(piInput) === normAns(formatRational(db.pi[col]))
+    if (correct) { ladder.submitCorrect(); setSolved(true) } else { ladder.submitWrong() }
+  }
+  const interacted = reversibleChoice ? tappedChoice !== null : piInput.trim() !== ''
+  const primary = solved
+    ? { label: isLast ? 'Finish' : 'Continue', enabled: true, onClick: onAdvance }
+    : { label: 'Check', enabled: interacted, onClick: check }
+
+  const revealVal = reversibleChoice
+    ? (db.reversible ? 'reversible' : 'not reversible')
+    : vectorMode ? formatVector(db.pi) : formatRational(db.pi[col])
+  const ariaStatus = solved ? `Answer: ${revealVal}` : 'Work it out from the chain, then check.'
+
+  return (
+    <BeatShell
+      primary={primary}
+      feedback={ladder.view}
+      onTryAgain={revealed ? () => { ladder.tryAgain(); setSolved(false); setTappedChoice(null); setPiInput('') } : undefined}
+    >
+      <div className="chainboard-stationary">
+        <div className="chainboard-matrix__wrap" role="region" aria-label="Transition matrix P">
+          <table className="chainboard-matrix__table">
+            <thead>
+              <tr>
+                <th />
+                {ix.labels.map((lbl) => <th key={lbl} className="chainboard-matrix__hdr">{lbl}</th>)}
+              </tr>
+            </thead>
+            <tbody>
+              {ix.matrix.map((row, i) => (
+                <tr key={i}>
+                  <th scope="row" className="chainboard-matrix__hdr">{ix.labels[i]}</th>
+                  {row.map((c, j) => (
+                    <td key={j} className="chainboard-matrix__cell" style={{ minHeight: '44px', minWidth: '44px' }}>
+                      {formatRational(c)}
+                    </td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        {reversibleChoice ? (
+          <div className="chainboard-chips" role="group" aria-label="Is the chain reversible?">
+            {(['Reversible', 'Not reversible'] as const).map((choice) => {
+              const choiceVal = choice === 'Reversible'
+              return (
+                <button
+                  key={choice}
+                  type="button"
+                  className={'chainboard-chip' + (tappedChoice === choiceVal ? ' chainboard-chip--active' : '')}
+                  aria-pressed={tappedChoice === choiceVal}
+                  disabled={solved || revealed}
+                  onClick={() => { setTappedChoice(choiceVal); ladder.clear() }}
+                  style={{ minHeight: '44px', minWidth: '44px' }}
+                >
+                  {choice}
+                </button>
+              )
+            })}
+          </div>
+        ) : (
+          <label className="chainboard-balance__entry">
+            <span>{vectorMode ? `π (shares of ${ix.labels.join(', ')}) =` : `π(${ix.labels[col]}) =`}</span>
+            <input
+              type="text"
+              className="chainboard-balance__input"
+              value={revealed ? revealVal : piInput}
+              placeholder={vectorMode ? 'e.g. a/b,c/d,e/f' : 'e.g. 1/3'}
+              disabled={solved || revealed}
+              autoComplete="off"
+              aria-label="Stationary probability"
+              onChange={(e) => { setPiInput(e.target.value); ladder.clear() }}
+              onKeyDown={(e) => { if (e.key === 'Enter' && !solved && piInput.trim() !== '') { e.preventDefault(); check() } }}
+              style={{ minHeight: '44px' }}
+            />
+          </label>
         )}
 
-        <p role="status" aria-live="polite" className="sr-only">
-          {ariaStatus}
-        </p>
+        <p role="status" aria-live="polite" className="sr-only">{ariaStatus}</p>
       </div>
     </BeatShell>
   )

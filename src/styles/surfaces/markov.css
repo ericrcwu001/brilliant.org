@@ -421,3 +421,66 @@
   color: var(--ink);
   margin: 0;
 }
+
+/* ── Graded text inputs (absorption / distribution / balance read-offs) ─────── */
+.chainboard-absorb,
+.chainboard-dist__entry,
+.chainboard-balance__entry {
+  display: flex;
+  align-items: center;
+  gap: var(--s2);
+  flex-wrap: wrap;
+  font-size: calc(14px * var(--fs));
+  color: var(--ink);
+  margin-top: var(--s2);
+}
+.chainboard-absorb__label { display: flex; align-items: center; gap: var(--s2); }
+.chainboard-absorb__input,
+.chainboard-balance__input,
+.chainboard-dist__entry input {
+  min-height: 44px;
+  padding: var(--s1) var(--s2);
+  border: 1.5px solid var(--rule);
+  border-radius: var(--r-md);
+  background: var(--paper1);
+  font-family: var(--font-mono);
+  font-size: calc(14px * var(--fs));
+  color: var(--ink);
+  width: 8ch;
+}
+.chainboard-absorb__input:focus-visible,
+.chainboard-balance__input:focus-visible,
+.chainboard-dist__entry input:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.chainboard-absorb__input:disabled,
+.chainboard-balance__input:disabled,
+.chainboard-dist__entry input:disabled { opacity: 0.6; }
+
+/* ── Build grid: editable cells + live row-sum column ───────────────────────── */
+.chainboard-build__input {
+  width: 6ch;
+  min-height: 44px;
+  padding: var(--s1);
+  border: 1.5px solid var(--rule);
+  border-radius: var(--r-md);
+  background: var(--paper1);
+  font-family: var(--font-mono);
+  font-size: calc(14px * var(--fs));
+  text-align: center;
+  color: var(--ink);
+}
+.chainboard-build__input:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.chainboard-build__rowsum {
+  padding: var(--s1) var(--s2);
+  text-align: center;
+  font-family: var(--font-mono);
+  font-size: calc(13px * var(--fs));
+  color: var(--graphite);
+}
+.chainboard-build__rowsum--ok { color: var(--correct); font-weight: 700; }
+
+/* ── Verdict prompt (powers periodic-trap) ─────────────────────────────────── */
+.chainboard-powers__verdict-prompt {
+  font-size: calc(14px * var(--fs));
+  color: var(--graphite);
+  margin: var(--s2) 0 0;
+}
