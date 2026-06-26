@@ -10,6 +10,7 @@ import { resolveFeedback } from '../feedback'
 import type { FeedbackView } from '../FeedbackStrip'
 import { analytics } from '../../analytics/events'
 import { useSliderControl } from '../../ui/useSliderControl'
+import { orderStatUniform } from '../../engine/expectation'
 
 export function SliderBeat(props: BeatProps) {
   const { beat, lessonId, pattern, automaton, reducedMotion, isLast, onAdvance, setLessonState } =
@@ -51,6 +52,9 @@ export function SliderBeat(props: BeatProps) {
   })
 
   if (interaction.type !== 'slider') return null
+
+  const isOrderStat = !!beat.introducesSymbol?.startsWith('E[max]')
+  const orderStat = isOrderStat ? orderStatUniform(value) : null
 
   const span = max - min || 1
   const frac = (v: number) => (v - min) / span
@@ -164,6 +168,46 @@ export function SliderBeat(props: BeatProps) {
           </div>
         </div>
       </div>
+      {isOrderStat && orderStat && (
+        <div
+          className="orderstat-readout"
+          aria-live="polite"
+          aria-atomic="true"
+        >
+          <div className="orderstat-readout__formulas">
+            <span className="orderstat-readout__formula">
+              E[max] ={' '}
+              <span className="orderstat-readout__frac">
+                {orderStat.max.n}/{orderStat.max.d}
+              </span>
+            </span>
+            <span className="orderstat-readout__formula">
+              E[min] ={' '}
+              <span className="orderstat-readout__frac">
+                {orderStat.min.n}/{orderStat.min.d}
+              </span>
+            </span>
+          </div>
+          <div className="orderstat-axis-wrap">
+            <div className="orderstat-axis" aria-hidden="true">
+              <span
+                className="orderstat-axis__dot orderstat-axis__dot--min"
+                style={{
+                  left: `${(orderStat.min.n / orderStat.min.d) * 100}%`,
+                }}
+              />
+              <span
+                className="orderstat-axis__dot orderstat-axis__dot--max"
+                style={{
+                  left: `${(orderStat.max.n / orderStat.max.d) * 100}%`,
+                }}
+              />
+            </div>
+            <span className="orderstat-axis__label orderstat-axis__label--left">0</span>
+            <span className="orderstat-axis__label orderstat-axis__label--right">1</span>
+          </div>
+        </div>
+      )}
     </BeatShell>
   )
 }

@@ -1,0 +1,241 @@
+{
+  "lessonId": "lesson-expected-value-6",
+  "courseId": "course-expected-value",
+  "title": "Order Statistics & Extremes",
+  "patternOptions": ["H"],
+  "milestoneId": "expected-value-mastered",
+  "unlocks": null,
+  "schemaVersion": 1,
+  "beats": [
+    {
+      "beatId": "ev6-primer",
+      "required": false,
+      "track": "A",
+      "prompt": "Order statistics: ranking draws to find extremes.",
+      "interaction": {
+        "type": "primer",
+        "variant": "custom",
+        "collapsible": true,
+        "title": "Order Statistics",
+        "body": "**Order statistics** rank n IID draws from smallest to largest. The **k-th order statistic** U_(k) is the k-th smallest of n draws. For n IID Uniform(0,1):\n\n- **E[max] = E[U_(n)] = n/(n+1)** — the largest draw sits above center, climbing toward 1 as n grows.\n- **E[min] = E[U_(1)] = 1/(n+1)** — the smallest sits below 1/n, sinking toward 0.\n\nTogether they always sum to 1: E[max] + E[min] = n/(n+1) + 1/(n+1) = 1."
+      },
+      "feedback": {
+        "correct": "Order statistics rank ordered draws — the max is the n-th, the min is the 1st.",
+        "hints": [
+          "The k-th order statistic U_(k) is the k-th smallest of n IID draws.",
+          "E[U_(n)] = n/(n+1) — the max draw sits above center and climbs toward 1.",
+          "Tap Continue to move on."
+        ]
+      }
+    },
+    {
+      "beatId": "ev6-recall",
+      "required": true,
+      "prompt": "You've seen these before. Match each counting idea to its formula.",
+      "interaction": {
+        "type": "retrievalGrid",
+        "pairs": [
+          { "left": "arrange n distinct items in order", "right": "n!" },
+          { "left": "ordered selection of k items from n", "right": "nPk = n!/(n\u2212k)!" }
+        ]
+      },
+      "feedback": {
+        "correct": "n! counts all orderings; nPk ordered-picks k of n. Both count ordered structure — the doorway to order statistics.",
+        "hints": [
+          "n! is every way to arrange n distinct items.",
+          "nPk orders k items chosen from n: n \u00d7 (n\u22121) \u00d7 \u2026 \u00d7 (n\u2212k+1).",
+          "n! matches 'arrange n', nPk matches 'ordered selection of k'."
+        ]
+      }
+    },
+    {
+      "beatId": "ev6-bet",
+      "required": false,
+      "prompt": "500 ants stand at random spots on a 1-foot stick. Each marches at 1 ft/min; when two meet head-on they instantly reverse. How long until every ant has fallen off?",
+      "interaction": {
+        "type": "prediction",
+        "options": ["About 1 minute", "Many minutes", "Hours / intractable"]
+      },
+      "feedback": {
+        "byOption": {
+          "About 1 minute": {
+            "note": "Good instinct — let's prove it: relabeling collisions as pass-throughs turns this into the max of 500 positions.",
+            "correct": true
+          },
+          "Many minutes": {
+            "note": "Let's test it — collisions look slow, but relabeling erases them; the last ant just walks straight off."
+          },
+          "Hours / intractable": {
+            "note": "Let's test it — the chaos is an illusion; swapping labels reveals a barely-over-a-minute answer."
+          }
+        }
+      }
+    },
+    {
+      "beatId": "ev6-win",
+      "required": true,
+      "prompt": "Two IID Uniform(0,1) draws. What is the expected value of the larger? The smaller?",
+      "interaction": {
+        "type": "answerEntry",
+        "fields": [
+          {
+            "id": "ev6-win-max",
+            "label": "E[max of 2 draws]",
+            "accept": ["2/3"],
+            "placeholder": "?",
+            "suffix": ""
+          },
+          {
+            "id": "ev6-win-min",
+            "label": "E[min of 2 draws]",
+            "accept": ["1/3"],
+            "placeholder": "?",
+            "suffix": ""
+          }
+        ]
+      },
+      "feedback": {
+        "correct": "E[max]=2/3 and E[min]=1/3 — symmetric around 1/2, summing to 1. The larger draw sits above center.",
+        "hints": [
+          "The larger of two draws beats the average. E[max]=n/(n+1)=2/3, and E[min]=1/3.",
+          "Plug n=2 into E[max]=n/(n+1).",
+          "2/3 and 1/3."
+        ]
+      }
+    },
+    {
+      "beatId": "ev6-explore",
+      "required": false,
+      "comparison": true,
+      "prompt": "Watch 500 ants march and bounce. Toggle 'Swap labels on collision' — does it change when ants fall off?",
+      "interaction": {
+        "type": "raceSim",
+        "display": "lanes",
+        "mode": "ants",
+        "ants": { "n": 500 }
+      },
+      "hero": {
+        "slowFirst": true,
+        "structuralReadout": "With 500 ants, the last one off falls at 500/501 \u2248 0.998 min \u2014 barely over a minute.",
+        "reducedMotionFinalFrame": true
+      },
+      "feedback": {
+        "correct": "The last-off ant is the one that started farthest from its exit — the maximum of 500 starting positions.",
+        "hints": [
+          "The set of fall-off times is identical whether ants bounce or pass through.",
+          "In pass-through mode each ant walks straight off; the last off simply started farthest.",
+          "The farthest start = max of 500 U(0,1) draws = E[max] = 500/501."
+        ]
+      }
+    },
+    {
+      "beatId": "ev6-model",
+      "required": false,
+      "introducesSymbol": "E[max]=n/(n+1)",
+      "groundedBy": ["ev6-win", "ev6-explore"],
+      "interviewNote": "E[max] = n/(n+1) < 1 for all finite n; it approaches 1 only asymptotically (n=9 \u2192 0.9; n=99 \u2192 ~0.99). The 'E[max] must reach 1 eventually' trap fires here \u2014 values are bounded at 1.",
+      "prompt": "Drag n from 2 to 20. Watch E[max]=n/(n+1) and E[min]=1/(n+1) update. Does E[max] ever reach 1?",
+      "interaction": {
+        "type": "slider",
+        "min": 2,
+        "max": 20,
+        "step": 1
+      },
+      "feedback": {
+        "correct": "E[max]=n/(n+1) creeps toward 1 but never reaches it — the values are bounded. E[min]=1/(n+1) sinks toward 0.",
+        "hints": [
+          "At n=2: E[max]=2/3. At n=9: E[max]=9/10.",
+          "The gap to 1 is always 1/(n+1), however large n grows.",
+          "E[max]+E[min] = n/(n+1)+1/(n+1) = 1."
+        ]
+      }
+    },
+    {
+      "beatId": "ev6-derive",
+      "required": false,
+      "track": "A",
+      "prompt": "Why does E[max] = n/(n+1)? Tap to expand the derivation.",
+      "interaction": {
+        "type": "primer",
+        "variant": "custom",
+        "collapsible": true,
+        "title": "Deriving E[max] = n/(n+1)",
+        "body": "**Why E[max] = n/(n+1):** The max of n uniform draws \u2264 x iff every draw \u2264 x, so F_max(x) = x^n.\n\nUsing E[X] = \u222b\u2080\u00b9 P(X > t) dt for X \u2208 [0,1]:\n\n    E[max] = \u222b\u2080\u00b9 (1 \u2212 x^n) dx = [x \u2212 x^(n+1)/(n+1)]\u2080\u00b9 = 1 \u2212 1/(n+1) = n/(n+1)\n\nBy symmetry (replace each draw x with 1\u2212x): F_min(x) = 1\u2212(1\u2212x)^n, giving **E[min] = 1/(n+1)**."
+      },
+      "feedback": {
+        "correct": "F_max(x)=x^n \u2192 \u222b\u2080\u00b9(1\u2212x^n)dx = n/(n+1). By symmetry E[min]=1/(n+1).",
+        "hints": [
+          "F_max(x) = x^n because every draw must be \u2264 x.",
+          "The survival-integral formula: E[X] = \u222b\u2080\u00b9 P(X > t) dt for bounded X.",
+          "Integrate: \u222b\u2080\u00b9 (1\u2212x^n) dx = 1 \u2212 1/(n+1) = n/(n+1)."
+        ]
+      }
+    },
+    {
+      "beatId": "ev6-min",
+      "required": true,
+      "prompt": "Four IID Uniform(0,1) draws. What is the expected value of the minimum?",
+      "interaction": {
+        "type": "answerEntry",
+        "fields": [
+          {
+            "id": "ev6-min-f",
+            "label": "E[min of 4 draws]",
+            "accept": ["1/5"],
+            "placeholder": "?",
+            "suffix": ""
+          }
+        ]
+      },
+      "feedback": {
+        "correct": "E[min]=1/(n+1)=1/5. The minimum sits one slot below 1/4 — the formula always places it below 1/n.",
+        "hints": [
+          "The minimum sits a bit lower than 1/4. The clean formula gives E[min]=1/(n+1)=1/5.",
+          "Plug n=4 into E[min]=1/(n+1).",
+          "1/5."
+        ]
+      }
+    },
+    {
+      "beatId": "ev6-prove",
+      "required": true,
+      "interviewNote": "Ants on a string: 'n ants at random positions, bouncing on collision \u2014 expected clearing time?' Relabeling: collision \u2261 pass-through \u2192 last-off ant = ant with max starting position \u2192 E[T] = E[max of n U(0,1)] = n/(n+1). For n=500: 500/501 \u2248 1 min. E[max] \u2192 1 as n\u2192\u221e (values bounded at 1), so more ants barely changes the answer \u2014 the chaos collapses to a single-line expectation.",
+      "prompt": "Mastery challenge: use the relabeling trick to find the expected time for all 500 ants to fall off. Type an exact fraction.",
+      "interaction": {
+        "type": "masteryChallenge",
+        "scenario": "500 ants stand at random spots on a 1-foot stick and march at 1 ft/min. Collisions look like bounces — but relabeling shows each bounce is identical to passing through. The last ant off is simply the one that started farthest from its exit. What is E[time until all 500 have fallen off]?",
+        "fields": [
+          {
+            "id": "ev6-prove-f",
+            "label": "Expected time (minutes)",
+            "accept": ["500/501"],
+            "placeholder": "?",
+            "suffix": "min"
+          }
+        ]
+      },
+      "feedback": {
+        "correct": "E[T] = E[max of 500 U(0,1)] = 500/501 \u2248 0.998 min. More ants barely change it: E[max] saturates toward 1.",
+        "hints": [
+          "More ants don't mean more time. Relabeling gives the max: E=n/(n+1)=500/501, about one minute.",
+          "E[max of n U(0,1)] = n/(n+1). For n=500: 500/501.",
+          "500/501."
+        ]
+      }
+    },
+    {
+      "beatId": "ev6-recap",
+      "required": true,
+      "prompt": "Tap each card to close the Expected Value arc.",
+      "interaction": { "type": "recap" },
+      "feedback": {
+        "correct": "Four tools, one move: list\u2192weight\u2192add. Variance \u2014 the spread \u2014 is next.",
+        "hints": [
+          "The single move: list outcomes, weight by probability, add.",
+          "Two superpowers: linearity (sums always add) + conditioning (average the averages).",
+          "Order-stat extremes: E[max]=n/(n+1), E[min]=1/(n+1). Up next: how spread varies."
+        ]
+      }
+    }
+  ]
+}
