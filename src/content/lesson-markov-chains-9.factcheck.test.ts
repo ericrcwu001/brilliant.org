@@ -102,7 +102,7 @@ describe('lesson-markov-chains-9 fact-check', () => {
   it('damping-saves-sink has dangling row kept (all zeros) and damping present', () => {
     const beat = beatById('damping-saves-sink')
     if (beat.interaction.type !== 'chainBoard') throw new Error('wrong type')
-    const row2 = beat.interaction.matrix[2]
+    const row2 = beat.interaction.matrix[2].cells
     const isAllZero = row2.every((c) => c.n === 0)
     expect(isAllZero).toBe(true)
     expect(beat.interaction.damping).toBeDefined()

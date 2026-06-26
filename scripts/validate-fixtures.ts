@@ -85,6 +85,34 @@ const courses = courseFiles.map((f) => validate(f, CourseSchema) as Course)
 validate('example-snapshot.json', SnapshotSchema)
 validate('canonical.example.json', CanonicalRecurrenceSchema)
 
+// ── 1b. Firestore-safe gate: Firestore forbids directly-nested arrays (an array
+// element that is itself an array). Walk every raw fixture object and fail fast
+// if any such nested array is found. This would have caught the old matrix shape.
+function firstNestedArrayPath(v: unknown, path: string): string | null {
+  if (Array.isArray(v)) {
+    for (let i = 0; i < v.length; i++) {
+      if (Array.isArray(v[i])) return `${path}[${i}]`
+      const deeper = firstNestedArrayPath(v[i], `${path}[${i}]`)
+      if (deeper) return deeper
+    }
+  } else if (v && typeof v === 'object') {
+    for (const k of Object.keys(v as object)) {
+      const deeper = firstNestedArrayPath((v as Record<string, unknown>)[k], `${path}.${k}`)
+      if (deeper) return deeper
+    }
+  }
+  return null
+}
+{
+  const allFixtureFiles = [...lessonFiles, ...courseFiles]
+  for (const file of allFixtureFiles) {
+    const raw = readJson(file)
+    const bad = firstNestedArrayPath(raw, '')
+    if (bad) fail(`Firestore nested-array violation: ${file} ${bad}`)
+  }
+  console.log(`✓ Firestore-safe (no nested arrays): ${allFixtureFiles.length} fixtures`)
+}
+
 // ── 2. L0 on-ramp golden (L1 §5.7): the single-letter "H" automaton waits 2.
 const hAutomaton = buildAutomaton('H', 0.5)
 if (hAutomaton.expectedTimes.E0 !== 2) {
@@ -223,7 +251,7 @@ for (const lesson of lessons) {
   for (const beat of lesson.beats) {
     const it = beat.interaction
     if (it.type !== 'chainBoard' || !it.headline) continue
-    const P = it.matrix.map((row) => row.map(toR))
+    const P = it.matrix.map((r) => r.cells.map(toR))
     let got: string
     switch (it.task) {
       case 'entry': {

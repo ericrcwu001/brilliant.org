@@ -137,6 +137,7 @@ function DiagramDisplay({
 
   const accent = chapterColor(props.lessonId)
   const revealed = ladder.view.kind === 'hint' && ladder.view.revealed
+  const P = ix.matrix.map((r) => r.cells)
 
   // ── Hero path ──────────────────────────────────────────────────────────────
   if (beat.hero) {
@@ -148,7 +149,7 @@ function DiagramDisplay({
 
     function stepToken() {
       if (!started) {
-        const p = simulateChain(ix.matrix, ix.start ?? 0, 8)
+        const p = simulateChain(P, ix.start ?? 0, 8)
         setSimPath(p)
         setSimStep(0)
         setPulseKey((k) => k + 1)
@@ -181,7 +182,7 @@ function DiagramDisplay({
         <div className="chainboard-diagram">
           <p className="sr-only">{beat.hero.structuralReadout}</p>
           <ChainGraph
-            matrix={ix.matrix}
+            matrix={P}
             labels={ix.labels}
             width={GRAPH_W}
             height={GRAPH_H}
@@ -208,13 +209,13 @@ function DiagramDisplay({
     if (task === 'entry' && cell && tappedEdge) {
       correct = tappedEdge.from === cell.row && tappedEdge.to === cell.col
     } else if (task === 'classify') {
-      const classes = classifyStates(ix.matrix)
+      const classes = classifyStates(P)
       correct = classes.every((sc) => nodeClass[sc.index] === sc.kind)
     } else if (task === 'pagerank') {
-      const pr = pagerank(ix.matrix, defaultDamping)
+      const pr = pagerank(P, defaultDamping)
       correct = tappedNode !== null && tappedNode === argmax(pr)
     } else if (task === 'absorption') {
-      const f = returnProbability(ix.matrix, cell?.row ?? 0, absorbingStates ?? [])
+      const f = returnProbability(P, cell?.row ?? 0, absorbingStates ?? [])
       correct = normAns(absInput) === normAns(formatRational(f))
     }
     if (correct) {
@@ -252,7 +253,7 @@ function DiagramDisplay({
       .map((lbl, i) => `${lbl}: ${nodeClass[i] ?? 'unclassified'}`)
       .join(', ')
   } else if (task === 'entry' && tappedEdge) {
-    const val = matrixPower(ix.matrix, ix.step ?? 1)[tappedEdge.from][tappedEdge.to]
+    const val = matrixPower(P, ix.step ?? 1)[tappedEdge.from][tappedEdge.to]
     ariaStatus = `Selected edge ${ix.labels[tappedEdge.from]}→${ix.labels[tappedEdge.to]}: ${formatRational(val)}`
   } else if (task === 'pagerank' && tappedNode !== null) {
     ariaStatus = `Selected node ${ix.labels[tappedNode]}`
@@ -264,7 +265,7 @@ function DiagramDisplay({
   let taskControls: React.ReactNode = null
 
   if (task === 'classify') {
-    const classifyResult = classifyStates(ix.matrix)
+    const classifyResult = classifyStates(P)
     taskControls = (
       <div className="chainboard-classify">
         <p className="chainboard-classify__prompt">Classify each state:</p>
@@ -312,7 +313,7 @@ function DiagramDisplay({
     taskControls = (
       <div className="chainboard-edges">
         <p className="chainboard-edges__prompt">Tap the edge to read:</p>
-        {ix.matrix.flatMap((row, i) =>
+        {P.flatMap((row, i) =>
           row
             .map((cell_val, j) => {
               if (cell_val.n === 0) return null
@@ -335,7 +336,7 @@ function DiagramDisplay({
                   }}
                   style={{ minHeight: '44px' }}
                 >
-                  {lbl}: {formatRational(matrixPower(ix.matrix, ix.step ?? 1)[i][j])}
+                  {lbl}: {formatRational(matrixPower(P, ix.step ?? 1)[i][j])}
                 </button>
               )
             })
@@ -401,7 +402,7 @@ function DiagramDisplay({
     >
       <div className="chainboard-diagram">
         <ChainGraph
-          matrix={ix.matrix}
+          matrix={P}
           labels={ix.labels}
           width={GRAPH_W}
           height={GRAPH_H}
@@ -446,6 +447,7 @@ function MatrixDisplay({
     event: { lessonId: props.lessonId, beatId: beat.beatId },
   })
   const revealed = ladder.view.kind === 'hint' && ladder.view.revealed
+  const P = ix.matrix.map((r) => r.cells)
   const absorbingStates = ix.absorbing ?? []
   const n = ix.labels.length
 
@@ -453,7 +455,7 @@ function MatrixDisplay({
   //    filled AND each row sums to 1; grade against the intended P (exact). The
   //    target values are NEVER pre-rendered (cells start empty).
   if (!beat.hero && ix.task === 'build') {
-    const parsed: (Rational | null)[][] = ix.matrix.map((row, i) =>
+    const parsed: (Rational | null)[][] = P.map((row, i) =>
       row.map((_, j) => {
         const s = cells[`${i}-${j}`]
         return s != null && s.trim() !== '' ? parseFrac(s) : null
@@ -470,7 +472,7 @@ function MatrixDisplay({
 
     const check = () => {
       const correct = parsed.every((row, i) =>
-        row.every((c, j) => c !== null && eqRat(c as Rational, ix.matrix[i][j])),
+        row.every((c, j) => c !== null && eqRat(c as Rational, P[i][j])),
       )
       if (correct) { ladder.submitCorrect(); setSolved(true) } else { ladder.submitWrong() }
     }
@@ -502,7 +504,7 @@ function MatrixDisplay({
                 </tr>
               </thead>
               <tbody>
-                {ix.matrix.map((row, i) => (
+                {P.map((row, i) => (
                   <tr key={i}>
                     <th scope="row" className="chainboard-matrix__hdr">{ix.labels[i]}</th>
                     {row.map((_, j) => (
@@ -510,7 +512,7 @@ function MatrixDisplay({
                         <input
                           type="text"
                           className="chainboard-build__input"
-                          value={revealed ? formatRational(ix.matrix[i][j]) : (cells[`${i}-${j}`] ?? '')}
+                          value={revealed ? formatRational(P[i][j]) : (cells[`${i}-${j}`] ?? '')}
                           placeholder="n/d"
                           disabled={solved || revealed}
                           autoComplete="off"
@@ -542,8 +544,8 @@ function MatrixDisplay({
   // ── Hero / read-only (e.g. L5 solve-matrix: watch Q/R → N → B resolve). Ungraded
   //    "watch it resolve" — primary Continue, NO grading (no auto-pass).
   const hasAbsorption = ix.task === 'absorption' && absorbingStates.length > 0
-  const absProbs = hasAbsorption ? absorptionProbabilities(ix.matrix, absorbingStates) : null
-  const absTime = hasAbsorption ? expectedAbsorptionTime(ix.matrix, absorbingStates) : null
+  const absProbs = hasAbsorption ? absorptionProbabilities(P, absorbingStates) : null
+  const absTime = hasAbsorption ? expectedAbsorptionTime(P, absorbingStates) : null
   const ariaStatus = `Transition matrix for ${ix.labels.join(', ')}`
 
   return (
@@ -561,7 +563,7 @@ function MatrixDisplay({
               </tr>
             </thead>
             <tbody>
-              {ix.matrix.map((row, i) => (
+              {P.map((row, i) => (
                 <tr key={i}>
                   <th scope="row" className="chainboard-matrix__hdr">{ix.labels[i]}</th>
                   {row.map((cell, j) => (
@@ -661,13 +663,14 @@ function PowersDisplay({
   })
 
   const revealed = ladder.view.kind === 'hint' && ladder.view.revealed
+  const P = ix.matrix.map((r) => r.cells)
   const step = ix.step ?? 1
-  const Pn = matrixPower(ix.matrix, step)
+  const Pn = matrixPower(P, step)
   const { cell } = ix
 
   function check() {
     if (ix.task === 'classify') {
-      const correct = verdict !== null && verdict === periodicVerdict(ix.matrix)
+      const correct = verdict !== null && verdict === periodicVerdict(P)
       if (correct) { ladder.submitCorrect(); setSolved(true) } else { ladder.submitWrong() }
     } else if (tappedCell && cell) {
       const correct = tappedCell.row === cell.row && tappedCell.col === cell.col
@@ -817,13 +820,14 @@ function DistributionDisplay({
   })
 
   const revealed = ladder.view.kind === 'hint' && ladder.view.revealed
-  const stationary = stationaryDistribution(ix.matrix)
+  const P = ix.matrix.map((r) => r.cells)
+  const stationary = stationaryDistribution(P)
   const cellRow = ix.cell?.row ?? 0
 
   // ── Hero path (ungraded — e.g. watch-it-settle) ───────────────────────────
   if (beat.hero) {
     const step = ix.step ?? 8
-    const Pn = reducedMotion ? null : matrixPower(ix.matrix, step)
+    const Pn = reducedMotion ? null : matrixPower(P, step)
 
     return (
       <BeatShell
@@ -972,12 +976,13 @@ function StationaryDisplay({
     event: { lessonId: props.lessonId, beatId: beat.beatId },
   })
   const revealed = ladder.view.kind === 'hint' && ladder.view.revealed
+  const P = ix.matrix.map((r) => r.cells)
   const isPageRank = ix.task === 'pagerank'
   const liveDamping: Rational = { n: dampingPct, d: 100 }
 
   // ── HERO (explore-damping): damping slider + live PageRank bars, Continue ──
   if (beat.hero) {
-    const heroBars = isPageRank ? pagerank(ix.matrix, liveDamping) : stationaryDistribution(ix.matrix)
+    const heroBars = isPageRank ? pagerank(P, liveDamping) : stationaryDistribution(P)
     return (
       <BeatShell primary={{ label: isLast ? 'Finish' : 'Continue', enabled: true, onClick: onAdvance }}>
         <div className="chainboard-stationary">
@@ -1025,7 +1030,7 @@ function StationaryDisplay({
   //    graded value is the CATEGORICAL "unique"; the bars are the sink's PageRank
   //    (not a graded value, not a later-required value) — safe to show. ──
   if (isPageRank) {
-    const prBars = pagerank(ix.matrix, liveDamping)
+    const prBars = pagerank(P, liveDamping)
     const check = () => {
       const correct = tappedChoice !== null && tappedChoice === (ix.headline === 'unique')
       if (correct) { ladder.submitCorrect(); setSolved(true) } else { ladder.submitWrong() }
@@ -1074,7 +1079,7 @@ function StationaryDisplay({
   // ── GRADED balance: show the read-only P (the chain data) + a control; do NOT
   //    render π or the reversibility verdict (that is the graded answer). Mode by
   //    headline (mirrors validate-fixtures §3c): categorical / vector / scalar. ──
-  const db = detailedBalance(ix.matrix)
+  const db = detailedBalance(P)
   const reversibleChoice = ix.headline === 'not-reversible' || ix.headline === 'reversible'
   const vectorMode = !reversibleChoice && !!ix.headline && ix.headline.includes(',')
   const col = ix.cell?.col ?? 0
@@ -1113,7 +1118,7 @@ function StationaryDisplay({
               </tr>
             </thead>
             <tbody>
-              {ix.matrix.map((row, i) => (
+              {P.map((row, i) => (
                 <tr key={i}>
                   <th scope="row" className="chainboard-matrix__hdr">{ix.labels[i]}</th>
                   {row.map((c, j) => (

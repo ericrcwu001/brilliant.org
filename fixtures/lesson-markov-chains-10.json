@@ -95,8 +95,8 @@
         "display": "diagram",
         "task": "classify",
         "matrix": [
-          [{"n":3,"d":5},{"n":2,"d":5}],
-          [{"n":3,"d":10},{"n":7,"d":10}]
+          { "cells": [{"n":3,"d":5},{"n":2,"d":5}] },
+          { "cells": [{"n":3,"d":10},{"n":7,"d":10}] }
         ],
         "labels": ["Clear","Rainy"],
         "interactive": true,
@@ -148,8 +148,8 @@
         "display": "diagram",
         "task": "classify",
         "matrix": [
-          [{"n":3,"d":5},{"n":2,"d":5}],
-          [{"n":3,"d":10},{"n":7,"d":10}]
+          { "cells": [{"n":3,"d":5},{"n":2,"d":5}] },
+          { "cells": [{"n":3,"d":10},{"n":7,"d":10}] }
         ],
         "labels": ["Clear","Rainy"],
         "interactive": true,

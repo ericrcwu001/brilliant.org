@@ -120,8 +120,8 @@
         "display": "diagram",
         "task": "build",
         "matrix": [
-          [{ "n": 3, "d": 5 }, { "n": 2, "d": 5 }],
-          [{ "n": 3, "d": 10 }, { "n": 7, "d": 10 }]
+          { "cells": [{ "n": 3, "d": 5 }, { "n": 2, "d": 5 }] },
+          { "cells": [{ "n": 3, "d": 10 }, { "n": 7, "d": 10 }] }
         ],
         "labels": ["Clear", "Rainy"],
         "interactive": true,
@@ -198,8 +198,8 @@
         "display": "matrix",
         "task": "build",
         "matrix": [
-          [{ "n": 7, "d": 10 }, { "n": 3, "d": 10 }],
-          [{ "n": 4, "d": 10 }, { "n": 6, "d": 10 }]
+          { "cells": [{ "n": 7, "d": 10 }, { "n": 3, "d": 10 }] },
+          { "cells": [{ "n": 4, "d": 10 }, { "n": 6, "d": 10 }] }
         ],
         "labels": ["Sunny", "Rainy"],
         "interactive": true,

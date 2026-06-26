@@ -434,7 +434,7 @@ export const InteractionSchema = z.discriminatedUnion('type', [
     // For PageRank (`damping` present) this is the surfer's row-stochastic link
     // matrix; an all-zero (dangling) row is allowed ONLY in that case and is
     // handled by the teleport term (markov.ts pagerank()).
-    matrix: z.array(z.array(RationalSchema)),
+    matrix: z.array(z.object({ cells: z.array(RationalSchema) })),
     // State labels aligned to the matrix rows/cols, e.g. ["Clear","Rainy"],
     // ["Rain","Nice","Snow"]. Drives rendering + the aria-live mirror.
     labels: z.array(z.string()).min(2),

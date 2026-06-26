@@ -95,8 +95,8 @@
         "display": "distribution",
         "task": "stationary",
         "matrix": [
-          [{"n":7,"d":10},{"n":3,"d":10}],
-          [{"n":4,"d":10},{"n":6,"d":10}]
+          { "cells": [{"n":7,"d":10},{"n":3,"d":10}] },
+          { "cells": [{"n":4,"d":10},{"n":6,"d":10}] }
         ],
         "labels": ["Sunny","Rainy"],
         "cell": {"row":0,"col":0},
@@ -121,8 +121,8 @@
         "display": "distribution",
         "task": "stationary",
         "matrix": [
-          [{"n":3,"d":5},{"n":2,"d":5}],
-          [{"n":3,"d":10},{"n":7,"d":10}]
+          { "cells": [{"n":3,"d":5},{"n":2,"d":5}] },
+          { "cells": [{"n":3,"d":10},{"n":7,"d":10}] }
         ],
         "labels": ["Clear","Rainy"],
         "headline": "3/7,4/7"

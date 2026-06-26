@@ -52,6 +52,9 @@ const ABSORB: Rational[][] = [
 ]
 const ABSORB_LABELS = ['A', 'B', 'Done']
 
+// Convert Rational[][] to the Firestore-safe storage shape { cells: Rational[] }[]
+const rows = (m: Rational[][]) => m.map((cells) => ({ cells }))
+
 function makeBeat(
   interaction: Beat['interaction'],
   overrides: Partial<Beat> = {},
@@ -107,7 +110,7 @@ describe('ChainBoardBeat smoke', () => {
       const beat = makeBeat({
         type: 'chainBoard',
         display: 'diagram',
-        matrix: WEATHER,
+        matrix: rows(WEATHER),
         labels: WEATHER_LABELS,
         task: 'entry',
         cell: { row: 0, col: 1 },
@@ -124,7 +127,7 @@ describe('ChainBoardBeat smoke', () => {
       const beat = makeBeat({
         type: 'chainBoard',
         display: 'diagram',
-        matrix: WEATHER,
+        matrix: rows(WEATHER),
         labels: WEATHER_LABELS,
       })
       const html = renderToString(React.createElement(ChainBoardBeat, { ...baseProps, beat }))
@@ -136,7 +139,7 @@ describe('ChainBoardBeat smoke', () => {
         {
           type: 'chainBoard',
           display: 'diagram',
-          matrix: WEATHER,
+          matrix: rows(WEATHER),
           labels: WEATHER_LABELS,
           start: 0,
         },
@@ -158,7 +161,7 @@ describe('ChainBoardBeat smoke', () => {
       const beat = makeBeat({
         type: 'chainBoard',
         display: 'diagram',
-        matrix: WEATHER,
+        matrix: rows(WEATHER),
         labels: WEATHER_LABELS,
         task: 'classify',
       })
@@ -173,7 +176,7 @@ describe('ChainBoardBeat smoke', () => {
       const beat = makeBeat({
         type: 'chainBoard',
         display: 'matrix',
-        matrix: ABSORB,
+        matrix: rows(ABSORB),
         labels: ABSORB_LABELS,
         task: 'absorption',
         absorbing: [2],
@@ -191,7 +194,7 @@ describe('ChainBoardBeat smoke', () => {
         {
           type: 'chainBoard',
           display: 'matrix',
-          matrix: WEATHER,
+          matrix: rows(WEATHER),
           labels: WEATHER_LABELS,
         },
         {
@@ -215,7 +218,7 @@ describe('ChainBoardBeat smoke', () => {
       const beat = makeBeat({
         type: 'chainBoard',
         display: 'powers',
-        matrix: WEATHER,
+        matrix: rows(WEATHER),
         labels: WEATHER_LABELS,
         task: 'entry',
         step,
@@ -233,7 +236,7 @@ describe('ChainBoardBeat smoke', () => {
       const beat = makeBeat({
         type: 'chainBoard',
         display: 'distribution',
-        matrix: WEATHER,
+        matrix: rows(WEATHER),
         labels: WEATHER_LABELS,
         start: 0,
         step: 4,
@@ -254,7 +257,7 @@ describe('ChainBoardBeat smoke', () => {
         {
           type: 'chainBoard',
           display: 'distribution',
-          matrix: WEATHER,
+          matrix: rows(WEATHER),
           labels: WEATHER_LABELS,
         },
         {
@@ -283,7 +286,7 @@ describe('ChainBoardBeat smoke', () => {
       const beat = makeBeat({
         type: 'chainBoard',
         display: 'stationary',
-        matrix: WEATHER,
+        matrix: rows(WEATHER),
         labels: WEATHER_LABELS,
         task: 'pagerank',
         damping,
@@ -299,7 +302,7 @@ describe('ChainBoardBeat smoke', () => {
         {
           type: 'chainBoard',
           display: 'stationary',
-          matrix: WEATHER,
+          matrix: rows(WEATHER),
           labels: WEATHER_LABELS,
         },
         {
