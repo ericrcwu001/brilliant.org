@@ -218,7 +218,7 @@
       "beatId": "ehrenfest-period",
       "required": true,
       "track": "both",
-      "prompt": "In the Ehrenfest urn with 2 balls, trace returns to one state. What is the period?",
+      "prompt": "The 2-ball Ehrenfest urn alternates between states each step. Classify each state — recurrent, transient, or absorbing.",
       "interaction": {
         "type": "chainBoard",
         "display": "diagram",

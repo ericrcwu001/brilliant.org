@@ -222,7 +222,7 @@
       "beatId": "damping-saves-sink",
       "required": true,
       "track": "both",
-      "prompt": "Toggle damping off then on for this dangling-node graph. With damping on, does a unique π exist?",
+      "prompt": "This dangling-node (sink) graph traps the surfer. With damping on, does a unique long-run ranking π exist? Choose.",
       "interaction": {
         "type": "chainBoard",
         "display": "stationary",
