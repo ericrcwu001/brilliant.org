@@ -15,7 +15,7 @@ import {
   SnapshotSchema,
 } from '../src/content/schema'
 import type { Beat, Course, Lesson } from '../src/content/schema'
-import { buildAutomaton, reduce as reduceRational } from '../src/engine/automaton'
+import { buildAutomaton, reduce as reduceRational, ratAdd, ratMul } from '../src/engine/automaton'
 import {
   nCk,
   nPk,
@@ -44,6 +44,10 @@ import {
   orderStatUniform,
   noodleLoops,
 } from '../src/engine/expectation'
+import {
+  buildChain, matrixPower, classifyStates, absorptionProbabilities, expectedAbsorptionTime,
+  stationaryDistribution, kacReturnTime, detailedBalance, pagerank, formatVector,
+} from '../src/engine/markov'
 
 const fixturesDir = join(dirname(fileURLToPath(import.meta.url)), '..', 'fixtures')
 
@@ -80,6 +84,34 @@ const courses = courseFiles.map((f) => validate(f, CourseSchema) as Course)
 
 validate('example-snapshot.json', SnapshotSchema)
 validate('canonical.example.json', CanonicalRecurrenceSchema)
+
+// ── 1b. Firestore-safe gate: Firestore forbids directly-nested arrays (an array
+// element that is itself an array). Walk every raw fixture object and fail fast
+// if any such nested array is found. This would have caught the old matrix shape.
+function firstNestedArrayPath(v: unknown, path: string): string | null {
+  if (Array.isArray(v)) {
+    for (let i = 0; i < v.length; i++) {
+      if (Array.isArray(v[i])) return `${path}[${i}]`
+      const deeper = firstNestedArrayPath(v[i], `${path}[${i}]`)
+      if (deeper) return deeper
+    }
+  } else if (v && typeof v === 'object') {
+    for (const k of Object.keys(v as object)) {
+      const deeper = firstNestedArrayPath((v as Record<string, unknown>)[k], `${path}.${k}`)
+      if (deeper) return deeper
+    }
+  }
+  return null
+}
+{
+  const allFixtureFiles = [...lessonFiles, ...courseFiles]
+  for (const file of allFixtureFiles) {
+    const raw = readJson(file)
+    const bad = firstNestedArrayPath(raw, '')
+    if (bad) fail(`Firestore nested-array violation: ${file} ${bad}`)
+  }
+  console.log(`✓ Firestore-safe (no nested arrays): ${allFixtureFiles.length} fixtures`)
+}
 
 // ── 2. L0 on-ramp golden (L1 §5.7): the single-letter "H" automaton waits 2.
 const hAutomaton = buildAutomaton('H', 0.5)
@@ -119,6 +151,37 @@ console.log('✓ E[H] = 2 (L0 on-ramp)')
   if (!(lt(k9, half) && lt(half, k10))) fail('bayes golden: 1000-coin should cross 1/2 at k = 10')
 }
 console.log('✓ bayes.ts goldens (2/3, 1/2, 1024/2023, 99/100, k=10, …)')
+
+// ── 2c. Markov engine goldens — inline fact-check independent of fixtures;
+// mirrors the bayes goldens so markov.ts correctness fails CI directly.
+{
+  const r = (n: number, d = 1): Rational => ({ n, d })
+  const weather = [[r(3,5),r(2,5)],[r(3,10),r(7,10)]]
+  const oz = [[r(1,2),r(1,4),r(1,4)],[r(1,2),r(0),r(1,2)],[r(1,4),r(1,4),r(1,2)]]
+  const gr = [[r(1),r(0),r(0),r(0)],[r(1,3),r(0),r(2,3),r(0)],[r(0),r(1,3),r(0),r(2,3)],[r(0),r(0),r(0),r(1)]]
+  const sym5 = [[r(1),r(0),r(0),r(0),r(0)],[r(1,2),r(0),r(1,2),r(0),r(0)],[r(0),r(1,2),r(0),r(1,2),r(0)],[r(0),r(0),r(1,2),r(0),r(1,2)],[r(0),r(0),r(0),r(0),r(1)]]
+  const cloudy = [[r(0),r(1,2),r(1,2)],[r(1,4),r(1,2),r(1,4)],[r(1,4),r(1,4),r(1,2)]]
+  const ehr2 = [[r(0),r(1),r(0)],[r(1,2),r(0),r(1,2)],[r(0),r(1),r(0)]]
+  const cyc3 = [[r(0),r(1),r(0)],[r(0),r(0),r(1)],[r(1),r(0),r(0)]]
+  const link4 = [[r(0),r(1),r(0),r(0)],[r(1,2),r(0),r(0),r(1,2)],[r(1,2),r(0),r(0),r(1,2)],[r(1,3),r(1,3),r(1,3),r(0)]]
+  const okM = (label: string, got: string, want: string) => {
+    if (got !== want) fail(`markov golden ${label}: expected ${want}, got ${got}`)
+  }
+  okM('oz^2 Rain->Snow', formatRational(matrixPower(oz, 2)[0][2]), '3/8')
+  const Bgr = absorptionProbabilities(gr, [0, 3])
+  okM('gambler absorption', formatVector([Bgr[0][1], Bgr[1][1]]), '4/7,6/7')
+  okM('sym5 expected time', formatVector(expectedAbsorptionTime(sym5, [0, 4])), '3,4,3')
+  okM('weather stationary', formatVector(stationaryDistribution(weather)), '3/7,4/7')
+  okM('cloudy stationary', formatVector(stationaryDistribution(cloudy)), '1/5,2/5,2/5')
+  const dbEhr = detailedBalance(ehr2)
+  if (!dbEhr.reversible) fail('markov golden: ehr2 must be reversible')
+  okM('ehrenfest stationary', formatVector(dbEhr.pi), '1/4,1/2,1/4')
+  if (detailedBalance(cyc3).reversible) fail('markov golden: directed 3-cycle must NOT be reversible')
+  okM('pagerank link4', formatVector(pagerank(link4, { n: 1, d: 1 })), '4/13,5/13,1/13,3/13')
+  okM('pagerank cyc3', formatVector(pagerank(cyc3, { n: 85, d: 100 })), '1/3,1/3,1/3')
+  okM('kac cloudy sunny', formatRational(kacReturnTime(cloudy, 0)), '5')
+}
+console.log('✓ markov.ts goldens (3/8, 4/7,6/7, 3/7,4/7, 1/5,2/5,2/5, 4/13…, kac 5)')
 
 // ── 3. Engine cross-check (hitting-time recurrences only). A `equationTiles`
 // beat opts into the buildAutomaton cross-check by setting `beat.pattern` to its
@@ -179,6 +242,105 @@ for (const lesson of lessons) {
 }
 console.log(`✓ bayesUpdate posteriors match bayes.ts (${bayesChecked} beats)`)
 
+// ── 3c. chainBoard engine cross-check — recompute each declared `headline` via
+// markov.ts (switch on display/task/damping) and assert equality. chainBoard is
+// NOT in HERO_TYPES/GRADED_TYPES; this cross-check + the beat-level `hero` block
+// carry the hero/graded split (mirrors the bayes §3b cross-check).
+let chainChecked = 0
+for (const lesson of lessons) {
+  for (const beat of lesson.beats) {
+    const it = beat.interaction
+    if (it.type !== 'chainBoard' || !it.headline) continue
+    const P = it.matrix.map((r) => r.cells.map(toR))
+    let got: string
+    switch (it.task) {
+      case 'entry': {
+        const Pn = matrixPower(P, it.step ?? 1)
+        const { row = 0, col = 0 } = it.cell ?? {}
+        got = formatRational(Pn[row][col]); break
+      }
+      case 'build': { buildChain(P, it.labels); got = '1'; break }
+      case 'classify': {
+        const cls = classifyStates(P)
+        const hasAbsorbing = cls.some((c) => c.kind === 'absorbing')
+        const recPeriod = (cls.find((c) => c.kind !== 'transient') ?? cls[0]).period
+        if (/^\d+$/.test(it.headline)) got = String(recPeriod)
+        else if (it.headline === 'absorbing') got = hasAbsorbing ? 'absorbing' : 'ergodic'
+        else if (it.headline === 'ergodic') got = hasAbsorbing ? 'absorbing' : 'ergodic'
+        else if (it.headline === 'oscillates') got = recPeriod > 1 ? 'oscillates' : 'converges'
+        else got = cls.map((c) => c.kind).join(',')
+        break
+      }
+      case 'absorption': {
+        // Two reconciled reads (engine unchanged — both compose absorptionProbabilities):
+        //  • vector headline + `cell` → reach-a-target-wall COLUMN (L5 solve-matrix):
+        //    column `cell.col` of B = P(absorbed at that wall | each transient start).
+        //  • scalar headline + `cell` → RETURN probability of the home state `cell.row`
+        //    (L4 transient-vs-recurrent): make `home` absorbing, then
+        //    f_home = Σ_j P[home][j]·P(reach home before a wall | start j).
+        //  • no `cell` → generic flattened B (back-compat).
+        const walls = it.absorbing ?? []
+        if (it.cell && it.headline.includes(',')) {
+          const col = it.cell.col
+          const B = absorptionProbabilities(P, walls)
+          got = formatVector(B.map((bRow) => bRow[col]))
+        } else if (it.cell) {
+          const home = it.cell.row
+          const absorbing = [home, ...walls.filter((w) => w !== home)]
+          const Pmod = P.map((bRow, i) =>
+            i === home ? bRow.map((_, j) => ({ n: j === home ? 1 : 0, d: 1 })) : bRow,
+          )
+          const B = absorptionProbabilities(Pmod, absorbing)
+          const transient = P.map((_, i) => i).filter((i) => !absorbing.includes(i))
+          const rowOf = new Map(transient.map((s, idx) => [s, idx]))
+          let f: Rational = { n: 0, d: 1 }
+          for (let j = 0; j < P.length; j++) {
+            if (P[home][j].n === 0) continue
+            const g: Rational =
+              j === home ? { n: 1, d: 1 }
+              : absorbing.includes(j) ? { n: 0, d: 1 }
+              : B[rowOf.get(j)!][0]
+            f = ratAdd(f, ratMul(P[home][j], g))
+          }
+          got = formatRational(f)
+        } else {
+          const B = absorptionProbabilities(P, walls)
+          got = it.headline.includes(',') ? formatVector(B.flat()) : formatRational(B.flat()[0])
+        }
+        break
+      }
+      case 'stationary': {
+        const pi = stationaryDistribution(P)
+        got = it.cell ? formatRational(pi[it.cell.row]) : formatVector(pi); break
+      }
+      case 'balance': {
+        const db = detailedBalance(P)
+        got = !db.reversible ? 'not-reversible'
+          : it.cell ? formatRational(db.pi[it.cell.col])
+          : formatVector(db.pi); break
+      }
+      case 'pagerank': {
+        const d = it.damping
+        if (!d) fail(`${lesson.lessonId}/${beat.beatId}: pagerank needs damping`)
+        const pr = pagerank(P, toR(d))
+        if (it.headline === 'unique') got = 'unique'
+        else if (/^\d+$/.test(it.headline)) {
+          let best = 0
+          for (let i = 1; i < pr.length; i++) if (pr[i].n * pr[best].d > pr[best].n * pr[i].d) best = i
+          got = it.labels[best]
+        } else got = formatVector(pr)
+        break
+      }
+      default: continue
+    }
+    if (got !== it.headline) {
+      fail(`${lesson.lessonId}/${beat.beatId}: declared headline ${it.headline} ≠ engine ${got}`)
+    }
+    chainChecked++
+  }
+}
+console.log(`✓ chainBoard headlines match markov.ts (${chainChecked} beats)`)
+
 // ── 4. Inclusivity gate (build-brief §4.5 / §10). Mechanizable subset of the
 // per-lesson DoD, applied to the remaining lessons (L2–L6). L0/L1 predate the
 // gate (their own specs) and are exempt. The asserts are dormant until each
@@ -206,6 +368,10 @@ const GATED = new Set([
   'lesson-expected-value-4',
   'lesson-expected-value-5',
   'lesson-expected-value-6',
+  // concept-markov-chains
+  'lesson-markov-chains-1','lesson-markov-chains-2','lesson-markov-chains-3','lesson-markov-chains-4',
+  'lesson-markov-chains-5','lesson-markov-chains-6','lesson-markov-chains-7','lesson-markov-chains-8',
+  'lesson-markov-chains-9','lesson-markov-chains-10',
 ])
 // L5 transfer lesson is the logged exception to the retrieval-opener rule.
 const NO_RETRIEVAL_OPENER = new Set(['lesson-longer-patterns'])
@@ -369,6 +535,10 @@ const MASTERY_LESSONS = new Set([
   'lesson-expected-value-4',
   'lesson-expected-value-5',
   'lesson-expected-value-6',
+  // concept-markov-chains
+  'lesson-markov-chains-1','lesson-markov-chains-2','lesson-markov-chains-3','lesson-markov-chains-4',
+  'lesson-markov-chains-5','lesson-markov-chains-6','lesson-markov-chains-7','lesson-markov-chains-8',
+  'lesson-markov-chains-9','lesson-markov-chains-10',
 ])
 for (const lesson of lessons) {
   if (!MASTERY_LESSONS.has(lesson.lessonId)) continue

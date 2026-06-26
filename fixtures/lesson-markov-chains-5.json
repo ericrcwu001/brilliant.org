@@ -1,0 +1,281 @@
+{
+  "lessonId": "lesson-markov-chains-5",
+  "courseId": "course-markov-chains",
+  "title": "Hitting Times & Absorption",
+  "patternOptions": ["H"],
+  "milestoneId": "markov-chains-hitting",
+  "unlocks": "lesson-markov-chains-6",
+  "schemaVersion": 1,
+  "beats": [
+    {
+      "beatId": "recall-first-step",
+      "required": true,
+      "track": "both",
+      "prompt": "Quick warm-up — match each quantity to how it behaves.",
+      "interaction": {
+        "type": "retrievalGrid",
+        "pairs": [
+          { "left": "Win-chance recurrence  P₂ = ⅓P₁ + ⅔P₃", "right": "no +1 — just a split, ending at 0 or 1" },
+          { "left": "Duration recurrence  D₂ = 1 + ⅓D₁ + ⅔D₃", "right": "+1 on every step" },
+          { "left": "Symmetric walk, P(reach $4 | start $i)", "right": "i/4 — the start sets the split" },
+          { "left": "E[HH] by conditioning on the first flip", "right": "6 flips" }
+        ]
+      },
+      "feedback": {
+        "correct": "A probability recurrence is a *split* (no +1); only a *duration* recurrence pays +1 per step. Same chain, two different reads.",
+        "hints": [
+          "Warm-up — you wrote all of these in PHT, gambler's ruin, and EV. No new tool here.",
+          "Not every recurrence carries a +1: a win-chance just splits and ends at 1 (win) or 0 (broke). The +1 belongs only to duration.",
+          "Win-chance → a split (no +1); duration → +1 each step; symmetric reach → i/4; E[HH] → 6."
+        ]
+      }
+    },
+    {
+      "beatId": "time-or-prob-bet",
+      "required": true,
+      "track": "both",
+      "prompt": "Same drunken stagger, two questions: (a) how many flips until you slam a wall, and (b) the chance you hit the right wall ($4). Which question carries a \"+1\" for every step taken — and which is just a split?",
+      "interaction": {
+        "type": "prediction",
+        "options": [
+          "Both need a +1",
+          "Only the duration (time) carries the +1",
+          "Neither needs a +1"
+        ]
+      },
+      "feedback": {
+        "byOption": {
+          "Both need a +1": {
+            "note": "Only one does. A win-chance recurrence has no +1 — it just splits and ends at 1 (win) or 0 (broke). The +1 is the cost of taking a step, which only matters when you're counting steps.",
+            "correct": false
+          },
+          "Only the duration (time) carries the +1": {
+            "note": "Right — tᵢ = 1 + Σⱼ pᵢⱼtⱼ. That +1 is the step you just spent. In matrix form it's exactly the 1 on the right of (I−Q)t = 1; it's simply absent from B = (I−Q)⁻¹R.",
+            "correct": true
+          },
+          "Neither needs a +1": {
+            "note": "Duration does. Each step you take adds 1 to the count, so tᵢ = 1 + Σⱼ pᵢⱼtⱼ. Without the +1 you'd predict 0 steps to the wall.",
+            "correct": false
+          }
+        },
+        "hints": [
+          "No wrong guess yet — commit and we'll weigh it.",
+          "Counting steps means each step adds 1; a probability only splits.",
+          "Only the duration carries the +1; the win-chance is a pure split."
+        ]
+      }
+    },
+    {
+      "beatId": "lift-to-matrix",
+      "required": false,
+      "track": "A",
+      "prompt": "Read this just-in-time primer on Q, R, and the fundamental matrix — then continue.",
+      "interaction": {
+        "type": "primer",
+        "variant": "custom",
+        "title": "Q, R, and the fundamental matrix N = (I−Q)⁻¹",
+        "body": "Split the chain into its **transient** block **Q** (moves among not-yet-absorbed states) and its **absorbing** block **R** (jumps to a wall). The **fundamental matrix N = (I−Q)⁻¹** counts expected visits, and it prices *both* reads of the chain: absorption probabilities **B = (I−Q)⁻¹R** (no +1, just the split) and expected hitting times **t** solving **(I−Q)t = 1** (the +1 is the 1 on the right). Same Q, same N — two answers.",
+        "collapsible": true
+      },
+      "feedback": {
+        "correct": "Q and R split the chain; the single N = (I−Q)⁻¹ prices both the split (B = NR) and the time ((I−Q)t = 1).",
+        "hints": [
+          "Q = transient→transient moves; R = transient→wall jumps.",
+          "N = (I−Q)⁻¹ is the *same* matrix for both reads — it's not a new method.",
+          "B = NR is the split; (I−Q)t = 1 adds the +1."
+        ]
+      }
+    },
+    {
+      "beatId": "walk-recall",
+      "required": true,
+      "track": "both",
+      "prompt": "Watch one fair $0–$4 walk slam a wall, then run a batch to see the outcome split.",
+      "interaction": {
+        "type": "walkBoard",
+        "n": 4,
+        "p": 0.5,
+        "start": 2,
+        "display": "single"
+      },
+      "hero": {
+        "slowFirst": false,
+        "structuralReadout": "From $2 of $0–$4: reach $4 with probability 1/2; about 4 flips to a wall.",
+        "reducedMotionFinalFrame": true
+      },
+      "feedback": {
+        "correct": "A symmetric walk steps ½/½, but the *outcome* isn't ½ from everywhere — from $2 it's 1/2, from $1 it's 1/4. The start sets the split.",
+        "hints": [
+          "Watch one walk slam into a wall, then run a batch to see the split.",
+          "Symmetric = each *step* is ½/½; it does NOT mean the win-chance is ½ from every start.",
+          "From $2: reach $4 with probability 1/2 in ~4 flips; from $1, only 1/4."
+        ]
+      }
+    },
+    {
+      "beatId": "iN-early-win",
+      "required": true,
+      "track": "both",
+      "prompt": "Using B = (I−Q)⁻¹R on the symmetric $0–$4 walk, fill in the three reach-probabilities.",
+      "interaction": {
+        "type": "answerEntry",
+        "fields": [
+          { "id": "i1", "label": "P(reach $4 | start $1)", "accept": ["1/4"], "placeholder": "e.g. 1/4" },
+          { "id": "i2", "label": "P(reach $4 | start $2)", "accept": ["1/2"] },
+          { "id": "i3", "label": "P(reach $4 | start $3)", "accept": ["3/4"] }
+        ]
+      },
+      "feedback": {
+        "correct": "Symmetric ⇒ P(reach $4 | start i) = i/N = i/4: **1/4, 1/2, 3/4**. The start *is* the whole answer (no +1 — this is the split).",
+        "hints": [
+          "Symmetric walk: the reach-probability is linear in your starting money.",
+          "It's not ½ from everywhere — symmetric means each *step* is ½/½, not the *outcome*. From $1 you're one slip from broke.",
+          "i/4: start 1 → 1/4, start 2 → 1/2, start 3 → 3/4."
+        ]
+      }
+    },
+    {
+      "beatId": "race-recall",
+      "required": true,
+      "track": "both",
+      "prompt": "Watch THH vs HHH race one coin stream — tally who lands first.",
+      "interaction": {
+        "type": "raceSim",
+        "patterns": ["THH", "HHH"],
+        "display": "lanes",
+        "mode": "patterns"
+      },
+      "hero": {
+        "slowFirst": false,
+        "structuralReadout": "Two patterns race one coin stream: THH lands first 7 of 8 times — a who-first split (absorption probability), no +1.",
+        "reducedMotionFinalFrame": true
+      },
+      "feedback": {
+        "correct": "Penney's 'who reaches their pattern first' is an **absorption probability** — a who-first split (7/8 vs 1/8), the same B = (I−Q)⁻¹R you're about to build. No new tool.",
+        "hints": [
+          "Watch the two patterns race the same stream; tally who lands first.",
+          "Racing patterns isn't a brand-new tool — it's absorption on the pattern-prefix chain.",
+          "THH lands first 7/8 of the time; HHH only 1/8."
+        ]
+      }
+    },
+    {
+      "beatId": "solve-matrix",
+      "required": true,
+      "track": "both",
+      "prompt": "Watch N = (I−Q)⁻¹ assemble from the asymmetric gambler's-ruin chain (up ⅔, down ⅓), then B = NR resolves to 4/7 and 6/7.",
+      "interaction": {
+        "type": "chainBoard",
+        "display": "matrix",
+        "task": "absorption",
+        "matrix": [
+          { "cells": [{"n":1,"d":1}, {"n":0,"d":1}, {"n":0,"d":1}, {"n":0,"d":1}] },
+          { "cells": [{"n":1,"d":3}, {"n":0,"d":1}, {"n":2,"d":3}, {"n":0,"d":1}] },
+          { "cells": [{"n":0,"d":1}, {"n":1,"d":3}, {"n":0,"d":1}, {"n":2,"d":3}] },
+          { "cells": [{"n":0,"d":1}, {"n":0,"d":1}, {"n":0,"d":1}, {"n":1,"d":1}] }
+        ],
+        "labels": ["0","1","2","3"],
+        "absorbing": [0, 3],
+        "cell": {"row": 0, "col": 1},
+        "headline": "4/7,6/7"
+      },
+      "hero": {
+        "slowFirst": true,
+        "structuralReadout": "N = (I−Q)⁻¹ → B = NR",
+        "reducedMotionFinalFrame": true
+      },
+      "interviewNote": "(I−Q)⁻¹ — the fundamental matrix — prices BOTH absorption probability (B = NR) and expected hitting time ((I−Q)t = 1); interviewers check you know the only difference is the +1.",
+      "feedback": {
+        "correct": "Same N = (I−Q)⁻¹ as the fair walk — Q just holds ⅔ and ⅓. B = NR gives P(reach $3 | start $1) = **4/7** and P(reach $3 | start $2) = **6/7**. Asymmetry doesn't break the formula.",
+        "hints": [
+          "Split P into Q (states 1,2) and R (walls 0,3), then form N = (I−Q)⁻¹.",
+          "Asymmetric (up ⅔) doesn't break anything — Q just carries ⅔ and ⅓ instead of ½,½. The same N works.",
+          "B = NR = (4/7, 6/7): from $1 you reach $3 with probability 4/7; from $2, 6/7."
+        ]
+      }
+    },
+    {
+      "beatId": "triplet-reveal",
+      "required": true,
+      "track": "both",
+      "prompt": "Three methods all converge on 4/7 — reveal each lens.",
+      "interaction": {
+        "type": "tripletReveal",
+        "value": "4/7",
+        "lenses": [
+          { "label": "Recurrence", "body": "a₁ = ⅓·0 + ⅔a₂, a₂ = ⅓a₁ + ⅔·1 ⇒ a₁ = 4/7" },
+          { "label": "Matrix solve", "body": "B = (I−Q)⁻¹R; the start-$1 transient row = 4/7" },
+          { "label": "Simulation", "body": "Run the up-⅔ walk from $1 thousands of times → ≈ 0.571 reach $3" }
+        ],
+        "display": "cards"
+      },
+      "feedback": {
+        "correct": "Recurrence, matrix solve, and simulation all land on **4/7** — they're the same first-step bookkeeping, not three coincidences. (A martingale / optional-stopping argument gives it too — an aside, not a fourth method.)",
+        "hints": [
+          "Reveal each lens.",
+          "(I−Q)⁻¹R *is* your first-step equations written as a matrix — not a rival method that could disagree.",
+          "All three say 4/7."
+        ]
+      }
+    },
+    {
+      "beatId": "time-vs-prob",
+      "required": true,
+      "track": "both",
+      "prompt": "Same symmetric $0–$4 walk, two reads — match each quantity to its formula and its key feature.",
+      "interaction": {
+        "type": "retrievalGrid",
+        "pairs": [
+          { "left": "Win-chance from $1 (i/N)", "right": "1/4 — no +1" },
+          { "left": "Time-to-wall from $1, i(N−i)", "right": "3 — +1 each step" },
+          { "left": "Win-chance from $2 (i/N)", "right": "1/2 — no +1" },
+          { "left": "Time-to-wall from $2, i(N−i)", "right": "4 — +1 each step" }
+        ]
+      },
+      "feedback": {
+        "correct": "Same walk, two reads: the **probability** i/N carries no +1 (a split), the **time** i(N−i) carries +1 every step. Don't reuse one recurrence for the other.",
+        "hints": [
+          "Which read counts steps (so each step adds 1), and which only splits the chance?",
+          "Expected-time and absorption-probability do NOT share one recurrence — the time has a +1 per step, the probability doesn't.",
+          "Win-chance: 1/4, 1/2; time-to-wall: 3, 4."
+        ]
+      }
+    },
+    {
+      "beatId": "mastery-dice",
+      "required": true,
+      "track": "both",
+      "prompt": "Mastery challenge: build the 4-state absorption chain and find the exact probability.",
+      "interaction": {
+        "type": "masteryChallenge",
+        "scenario": "You roll two dice over and over. Two events race to happen first: a **single 12** appears, or **two 7s in a row** appear. Per roll, \\(P(7) = 6/36\\), \\(P(12) = 1/36\\), anything else \\(= 29/36\\). What is \\(P(\\text{a single 12 comes first})\\)?",
+        "fields": [
+          { "id": "dice", "label": "P(a single 12 before two consecutive 7s)", "accept": ["7/13"], "placeholder": "e.g. 7/13" }
+        ]
+      },
+      "feedback": {
+        "correct": "Build the 4-state chain \\(\\{S,\\, 7,\\, \\text{12-wins},\\, \\text{7·7-wins}\\}\\) and solve \\(B = (I-Q)^{-1}R\\): \\(P(\\text{single 12 first}) = \\mathbf{7/13}\\). The two-consecutive-7s event is its complement, \\(\\mathbf{6/13}\\) — name the absorbing state before you compute.",
+        "hints": [
+          "Build the absorbing chain: states are {start, just-saw-a-7, 12-wins, 7·7-wins}. Which absorbing state is '12 first'?",
+          "7/13 is P(a single 12 first), NOT the two-consecutive-7s probability — that's the complement, 6/13. Read the event.",
+          "7/13."
+        ]
+      }
+    },
+    {
+      "beatId": "recap",
+      "required": true,
+      "track": "both",
+      "prompt": "Reveal the recap to review the core principle.",
+      "interaction": { "type": "recap" },
+      "feedback": {
+        "correct": "One matrix prices everything: N = (I−Q)⁻¹ gives the **probability** B = NR (no +1) and the **time** (I−Q)t = 1 (the +1). Recurrence, matrix, and simulation are the same bookkeeping.",
+        "hints": [
+          "A win-chance is a split (no +1); a duration pays +1 every step — that +1 is the 1 in (I−Q)t = 1.",
+          "Asymmetry doesn't break the formula: Q just carries different probabilities. Scale it up — the drunk man on a 100-m bridge from step 17 reaches the far end with probability 17/100, in 17·83 = 1411 expected steps.",
+          "Next up: where does a memoryless process settle? The stationary distribution πP = π."
+        ]
+      }
+    }
+  ]
+}

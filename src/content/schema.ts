@@ -414,6 +414,65 @@ export const InteractionSchema = z.discriminatedUnion('type', [
     n: z.number().int().positive(),
     accept: z.array(z.string()).optional(),
   }),
+  // Markov chain board (concept-markov-chains, Wave 0). ONE new type, five
+  // presentation displays (the codebase convention where `raceSim` folds
+  // lanes/oddsDial/heatmap, `walkBoard` folds single/swarm/…, `bayesUpdate`
+  // folds bars/tree/sequence):
+  //   'diagram'      — the transition graph: read an edge, build/edit P (rows-sum-to-1 enforced),
+  //                    tap-to-classify states, or watch a token hop (simulateChain).
+  //   'matrix'       — the same chain as the grid P; also the fundamental-matrix solve (I−Q)⁻¹.
+  //   'powers'       — iterate Pⁿ; read a chosen entry (Chapman–Kolmogorov; convergence).
+  //   'distribution' — watch the state distribution evolve toward π.
+  //   'stationary'   — solve πP=π, check detailed balance, or run the damped random surfer (PageRank).
+  // All inputs are exact rationals (RationalSchema). The renderer computes every
+  // displayed/graded value via src/engine/markov.ts; `headline` is the
+  // engine-reproducible anchor cross-checked by scripts/validate-fixtures.ts.
+  z.object({
+    type: z.literal('chainBoard'),
+    display: z.enum(['diagram', 'matrix', 'powers', 'distribution', 'stationary']),
+    // Transition matrix P (row-stochastic), exact rationals, aligned to `labels`.
+    // For PageRank (`damping` present) this is the surfer's row-stochastic link
+    // matrix; an all-zero (dangling) row is allowed ONLY in that case and is
+    // handled by the teleport term (markov.ts pagerank()).
+    matrix: z.array(z.object({ cells: z.array(RationalSchema) })),
+    // State labels aligned to the matrix rows/cols, e.g. ["Clear","Rainy"],
+    // ["Rain","Nice","Snow"]. Drives rendering + the aria-live mirror.
+    labels: z.array(z.string()).min(2),
+    // The engine operation this beat reads/grades against (selects the markov.ts
+    // fn). Omit on a pure passive watch whose value needs no engine anchor.
+    task: z
+      .enum([
+        'entry',      // matrixPower(P, step ?? 1)[cell.row][cell.col]  (diagram edge = P¹; powers = Pⁿ)
+        'build',      // buildChain(matrix, labels): square + every row sums to 1
+        'classify',   // classifyStates(P) → per-state {kind, class, period}
+        'absorption', // absorptionProbabilities / expectedAbsorptionTime via (I−Q)⁻¹
+        'stationary', // stationaryDistribution(P) solving πP=π, Σπ=1
+        'balance',    // detailedBalance(P) / isReversible(P, π)
+        'pagerank',   // pagerank(matrix, damping) = stationary of d·P + (1−d)/n·J
+      ])
+      .optional(),
+    // diagram only: 'graph' (default free layout) vs 'line' (1-D birth–death
+    // lattice, e.g. the Ehrenfest urn — reflecting boundaries live in P).
+    layout: z.enum(['graph', 'line']).optional(),
+    // powers/distribution: the step n to display / animate to (Pⁿ or step-n dist).
+    step: z.number().int().nonnegative().optional(),
+    // distribution: starting state index whose row the bars evolve from.
+    start: z.number().int().nonnegative().optional(),
+    // absorption/classify: indices of the absorbing states (the gambler's-ruin walls).
+    absorbing: z.array(z.number().int().nonnegative()).optional(),
+    // entry/return: which matrix cell the beat reads/grades.
+    cell: z
+      .object({ row: z.number().int().nonnegative(), col: z.number().int().nonnegative() })
+      .optional(),
+    // pagerank: damping d (surfer follows a link w.p. d, teleports uniformly w.p. 1−d).
+    damping: RationalSchema.optional(),
+    // The learner manipulates (drag edges / step / drag damping / tap a class) vs a passive watch.
+    interactive: z.boolean().optional(),
+    // Engine-reproducible headline anchor — a reduced "n/d" scalar, a comma-joined
+    // vector "a/b,c/d,…" (distribution/stationary/pagerank/absorption vector), or a
+    // comma-joined kind list for `classify` ("transient,recurrent,…"). Validation anchor.
+    headline: z.string().optional(),
+  }),
 ])
 
 const HintTripleSchema = z.tuple([z.string(), z.string(), z.string()])

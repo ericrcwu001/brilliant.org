@@ -1,0 +1,260 @@
+{
+  "lessonId": "lesson-markov-chains-1",
+  "courseId": "course-markov-chains",
+  "title": "The Markov Property",
+  "patternOptions": ["H"],
+  "milestoneId": "markov-chains-property",
+  "unlocks": "lesson-markov-chains-2",
+  "schemaVersion": 1,
+  "beats": [
+    {
+      "beatId": "recall-no-memory",
+      "required": true,
+      "prompt": "Match each streak to the principle it illustrates.",
+      "interaction": {
+        "type": "retrievalGrid",
+        "pairs": [
+          { "left": "A fair coin after 9 heads", "right": "still 1/2 — the run isn't tracked" },
+          { "left": "Rain after 9 wet days", "right": "still 7/10 — only today's state matters" },
+          { "left": "\"We're due for a change\"", "right": "gambler's fallacy — no tally is kept" }
+        ]
+      },
+      "feedback": {
+        "correct": "Memorylessness travels: the coin ignored its run, and so does the weather — the next state reads only 'now', never the streak.",
+        "hints": [
+          "You met this with the coin — a long run of heads doesn't bend the next flip.",
+          "A Markov process keeps no tally of its run. P(rain tomorrow | rain today) = 7/10 whether it's rained one day or ten — the streak length is not part of the state. 'Due' is the gambler's fallacy.",
+          "Match each run to 'only now matters': 9 heads → still 1/2; 9 wet days → still 7/10; 'we're due' → gambler's fallacy."
+        ]
+      }
+    },
+    {
+      "beatId": "streak-bet",
+      "required": true,
+      "prompt": "It has rained nine days straight. A friend says 'we're due for clear skies.' What happens to tomorrow's rain probability?",
+      "interaction": {
+        "type": "prediction",
+        "options": [
+          "Lower — nine wet days, it's due to clear",
+          "The same 7/10 — only 'today is wet' matters",
+          "Higher — wet weather feeds on itself"
+        ]
+      },
+      "feedback": {
+        "byOption": {
+          "Lower — nine wet days, it's due to clear": {
+            "note": "That's the gambler's fallacy. A Markov process keeps no tally of its run — P(rain tomorrow | rain today) = 7/10 whether it rained one day or ten. The streak length is not part of the state.",
+            "correct": false
+          },
+          "The same 7/10 — only 'today is wet' matters": {
+            "note": "Exactly — the chain reads only today's state. Nine wet days or one, rainy-today is rainy-today: 7/10.",
+            "correct": true
+          },
+          "Higher — wet weather feeds on itself": {
+            "note": "Tempting, but the chain has no streak counter. Each step reads only the current state, so the run doesn't compound — it stays 7/10.",
+            "correct": false
+          }
+        },
+        "hints": [
+          "No wrong guess yet — commit and we'll test it on the chain.",
+          "The streak isn't part of the state; only today is.",
+          "It stays 7/10 — the run doesn't move it."
+        ]
+      }
+    },
+    {
+      "beatId": "name-markov",
+      "required": false,
+      "track": "A",
+      "prompt": "Read this just-in-time primer on the Markov property, then continue.",
+      "interaction": {
+        "type": "primer",
+        "variant": "custom",
+        "title": "Markov = memoryless",
+        "body": "A process is **Markov (memoryless)** when the next state depends only on **where you are now** — the *state* — not the path that got you there. Formally `P(Xₙ₊₁ | X₀…Xₙ) = P(Xₙ₊₁ | Xₙ)`: the whole past collapses into the single current state.",
+        "collapsible": true
+      },
+      "feedback": {
+        "correct": "State, memoryless, `P(next | now)` — keep those three words.",
+        "hints": [
+          "'Where you are now' is the state.",
+          "Memoryless: everything before the current state is discarded — not the current state itself.",
+          "P(Xₙ₊₁ | X₀…Xₙ) = P(Xₙ₊₁ | Xₙ)."
+        ]
+      }
+    },
+    {
+      "beatId": "read-the-edge",
+      "required": true,
+      "prompt": "Tap the Rainy node, then its out-edge to Rainy. What is P(rain tomorrow | rain today)?",
+      "interaction": {
+        "type": "chainBoard",
+        "display": "diagram",
+        "matrix": [
+          { "cells": [{ "n": 3, "d": 5 }, { "n": 2, "d": 5 }] },
+          { "cells": [{ "n": 3, "d": 10 }, { "n": 7, "d": 10 }] }
+        ],
+        "labels": ["Clear", "Rainy"],
+        "task": "entry",
+        "cell": { "row": 1, "col": 1 },
+        "interactive": true,
+        "headline": "7/10"
+      },
+      "feedback": {
+        "correct": "Condition on **today**, so read today's **row**. Rainy-today is row 2 `[3/10, 7/10]`; the rain-tomorrow edge is the 7/10 self-loop. **7/10**.",
+        "hints": [
+          "Start on the node you're given: 'rain today' → tap the Rainy node, then its out-edge to Rainy.",
+          "Condition on today, so read today's row. Rainy-today is the second row [3/10, 7/10]; the entry for rain-tomorrow is 7/10. Rows are 'where you are now,' columns are 'where you go.'",
+          "The Rainy → Rainy self-loop is 7/10."
+        ]
+      }
+    },
+    {
+      "beatId": "step-the-weather",
+      "required": true,
+      "prompt": "Press Step and watch the token hop — only the current row decides the next state.",
+      "interaction": {
+        "type": "chainBoard",
+        "display": "diagram",
+        "matrix": [
+          { "cells": [{ "n": 3, "d": 5 }, { "n": 2, "d": 5 }] },
+          { "cells": [{ "n": 3, "d": 10 }, { "n": 7, "d": 10 }] }
+        ],
+        "labels": ["Clear", "Rainy"],
+        "interactive": true,
+        "headline": "7/10"
+      },
+      "hero": {
+        "slowFirst": true,
+        "structuralReadout": "Only the current row fires: from Rainy the next draw is 7/10 rainy, 3/10 clear — the streak never enters the draw.",
+        "reducedMotionFinalFrame": true
+      },
+      "feedback": {
+        "correct": "Watch the token hop: each step the next state is drawn **only** from the current row — Clear fires `[3/5, 2/5]`, Rainy fires `[3/10, 7/10]`. The path of hops so far never enters the draw.",
+        "hints": [
+          "Press Step. The lit row is the only thing the next draw uses.",
+          "The history of hops doesn't bias the next one — only the node you're standing on.",
+          "Sit on Rainy and the next draw is 3/10 clear, 7/10 rainy — every time, regardless of the run."
+        ]
+      }
+    },
+    {
+      "beatId": "name-memoryless",
+      "required": true,
+      "prompt": "Reveal each lens — edge, row, and draw all point to the same law.",
+      "interaction": {
+        "type": "tripletReveal",
+        "value": "P(Xₙ₊₁ | Xₙ)",
+        "lenses": [
+          { "label": "Diagram edge", "body": "The edge out of Rainy reads 7/10 — it leaves the node you're on, nothing earlier." },
+          { "label": "Matrix row", "body": "Conditioning on today picks one row; that row alone is the next-step distribution." },
+          { "label": "Simulation draw", "body": "Each hop samples the current node's row — the chain of past hops never enters the draw." }
+        ],
+        "display": "cards"
+      },
+      "interviewNote": "Memorylessness — *the* defining property — is the first thing a quant interview probes about a chain. State it as `P(Xₙ₊₁ | X₀…Xₙ) = P(Xₙ₊₁ | Xₙ)`: the current state is a sufficient statistic for the future.",
+      "feedback": {
+        "correct": "Edge, row, and draw all read **only the current state** ⇒ `P(Xₙ₊₁ | X₀…Xₙ) = P(Xₙ₊₁ | Xₙ)`. That's the Markov property.",
+        "hints": [
+          "Reveal each lens — edge, row, draw.",
+          "Memoryless ≠ independent. Today matters a lot — 7/10 after rain vs 2/5 after clear. What's discarded is everything *before* today, not today itself.",
+          "All three keep only 'now': P(Xₙ₊₁ | past) = P(Xₙ₊₁ | Xₙ)."
+        ]
+      }
+    },
+    {
+      "beatId": "markov-or-not",
+      "required": true,
+      "prompt": "Match each story to Markov or Not Markov.",
+      "interaction": {
+        "type": "retrievalGrid",
+        "pairs": [
+          { "left": "Tomorrow's weather uses only today's", "right": "Markov" },
+          { "left": "Tomorrow's weather uses the last 3 days", "right": "Not Markov on {Clear, Rainy}" },
+          { "left": "Your score = the running max so far", "right": "Markov — the max is the state" }
+        ]
+      },
+      "feedback": {
+        "correct": "Markov isn't 'no past' — it's 'no past **beyond the current state**.' Only-today is Markov; last-3-days isn't (on the raw state); the running max is Markov because the max already **is** the state.",
+        "hints": [
+          "Ask: does the next step need anything other than the single current state?",
+          "Depending on the past is fine — depending on more than the current **state** is the problem. Fold the history you need into the state and it's Markov again.",
+          "Only-today → Markov; last-3-days → not Markov (raw state); running-max → Markov."
+        ]
+      }
+    },
+    {
+      "beatId": "remembers-vs-forgets",
+      "required": false,
+      "track": "B",
+      "prompt": "One chain eventually forgets its start. The other locks into a state forever. Which claim is true of absorbing chains?",
+      "interaction": {
+        "type": "prediction",
+        "options": [
+          "Both eventually forget where they started",
+          "The absorbing one never forgets — once stuck, it stays",
+          "Neither forgets — Markov means perfect memory"
+        ]
+      },
+      "feedback": {
+        "byOption": {
+          "Both eventually forget where they started": {
+            "note": "Half-right: the ergodic weather chain forgets its start (L7, Pⁿ→π). But a chain with an absorbing state never forgets — once it lands there it can't leave. Memoryless ≠ can't-get-stuck.",
+            "correct": false
+          },
+          "The absorbing one never forgets — once stuck, it stays": {
+            "note": "Right. A memoryless chain can still have a one-way trapdoor: an absorbing state (L4). 'Memoryless' constrains the next step, not whether the long run can lock in.",
+            "correct": true
+          },
+          "Neither forgets — Markov means perfect memory": {
+            "note": "Markov is the opposite of perfect memory — the next step reads only the current state. Some chains forget their start entirely (L7); others lock into an absorbing state (L4).",
+            "correct": false
+          }
+        },
+        "hints": [
+          "No wrong guess — this seeds L4 (getting stuck) and L7 (forgetting the start).",
+          "Memoryless constrains the next step, not whether the long run can lock in.",
+          "Absorbing → never leaves; ergodic → forgets the start."
+        ]
+      }
+    },
+    {
+      "beatId": "mastery-augment",
+      "required": true,
+      "prompt": "Mastery challenge: a two-day rule breaks the Markov property on {Clear, Rainy} — but the right state space fixes it. Compute P(rain tomorrow | state = RR).",
+      "interaction": {
+        "type": "masteryChallenge",
+        "scenario": "'Sticky weather': it rains tomorrow with probability \\(4/5\\) if it rained **both** today and yesterday, otherwise \\(1/5\\). On the raw state \\(\\{\\text{Clear}, \\text{Rainy}\\}\\) this isn't Markov — \\(P(\\text{rain tomorrow} \\mid \\text{rainy today})\\) is \\(4/5\\) after RR but \\(1/5\\) after CR. Redefine the state as the ordered pair **(yesterday, today)** to get a clean 4-state Markov chain.",
+        "fields": [
+          {
+            "id": "rr",
+            "label": "\\(P(\\text{rain tomorrow} \\mid \\text{state} = RR)\\)",
+            "accept": ["4/5"]
+          }
+        ]
+      },
+      "feedback": {
+        "correct": "On \\(\\{\\text{Clear}, \\text{Rainy}\\}\\) the rule is ill-defined (\\(4/5\\) after RR, \\(1/5\\) after CR) \\(\\Rightarrow\\) not Markov. Augment the state to **(yesterday, today)**: from **RR**, rain tomorrow is \\(\\mathbf{4/5}\\). Same process, clean 4-state chain.",
+        "hints": [
+          "The rule needs *two* days, so one day isn't enough state. What pair of days determines tomorrow?",
+          "Only on the raw \\(\\{\\text{Clear}, \\text{Rainy}\\}\\) state is it non-Markov — \\(P(\\text{rain} \\mid \\text{today rainy})\\) is ambiguous (\\(4/5\\) after RR, \\(1/5\\) after CR). Redefine the state as the ordered pair (yesterday, today) and the *same* process is a clean 4-state Markov chain. Augmentation is the fix.",
+          "State RR means it rained both days, so the rule fires at \\(4/5\\). \\(P(\\text{rain} \\mid RR) = 4/5\\)."
+        ]
+      }
+    },
+    {
+      "beatId": "recap-now",
+      "required": true,
+      "prompt": "Reveal the recap to review the core principle.",
+      "interaction": { "type": "recap" },
+      "feedback": {
+        "correct": "Only **now** matters: a Markov process reads the current state and discards the path. If the next step needs more history, **fold that history into the state** — then it's Markov again.",
+        "hints": [
+          "Nine wet days or one — rainy-today is rainy-today: 7/10. The streak isn't in the state.",
+          "Memoryless ≠ independent: today matters (7/10 vs 2/5); what's discarded is everything before today.",
+          "Next up: pack a whole chain into one transition matrix P — every row a 'where you are now'."
+        ]
+      }
+    }
+  ]
+}

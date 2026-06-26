@@ -1,0 +1,486 @@
+/* markov.css — Markov-chain board surface styles (concept markov-chains).
+   All classes prefixed `chainboard-` or `markov-`.
+   Mirror of beats.css bar/chip/grid patterns; tokens via CSS custom properties.
+   Wave 0: minimal but real. */
+
+/* ── Diagram display ──────────────────────────────────────────────────────── */
+
+.chainboard-diagram {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s3);
+  align-items: center;
+}
+
+/* ── Edge tap buttons ─────────────────────────────────────────────────────── */
+
+.chainboard-edges {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s2);
+  width: 100%;
+}
+
+.chainboard-edges__prompt {
+  font-size: calc(14px * var(--fs));
+  color: var(--graphite);
+  margin: 0;
+}
+
+.chainboard-edge-btn {
+  display: flex;
+  align-items: center;
+  gap: var(--s2);
+  padding: var(--s2) var(--s3);
+  border: 1.5px solid var(--rule);
+  border-radius: var(--r-md);
+  background: var(--paper1);
+  font-family: var(--font-mono);
+  font-size: calc(14px * var(--fs));
+  color: var(--ink);
+  cursor: pointer;
+  min-height: 44px;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.chainboard-edge-btn--active,
+.chainboard-edge-btn[aria-pressed='true'] {
+  border-color: var(--accent);
+  background: var(--accent-tint);
+  color: var(--accent);
+}
+
+.chainboard-edge-btn:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+/* ── Node tap buttons ─────────────────────────────────────────────────────── */
+
+.chainboard-nodes {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s2);
+  width: 100%;
+}
+
+.chainboard-nodes__prompt {
+  font-size: calc(14px * var(--fs));
+  color: var(--graphite);
+  margin: 0;
+}
+
+.chainboard-node-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--s2) var(--s3);
+  border: 1.5px solid var(--rule);
+  border-radius: var(--r-md);
+  background: var(--paper1);
+  font-family: var(--font-mono);
+  font-size: calc(14px * var(--fs));
+  color: var(--ink);
+  cursor: pointer;
+  min-height: 44px;
+  min-width: 44px;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.chainboard-node-btn--active,
+.chainboard-node-btn[aria-pressed='true'] {
+  border-color: var(--accent);
+  background: var(--accent-tint);
+  color: var(--accent);
+}
+
+.chainboard-node-btn:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+/* ── Classify display ─────────────────────────────────────────────────────── */
+
+.chainboard-classify {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s2);
+  width: 100%;
+}
+
+.chainboard-classify__prompt {
+  font-size: calc(14px * var(--fs));
+  color: var(--graphite);
+  margin: 0;
+}
+
+.chainboard-classify__row {
+  display: flex;
+  align-items: center;
+  gap: var(--s2);
+}
+
+.chainboard-classify__label {
+  min-width: 72px;
+  font-family: var(--font-mono);
+  font-size: calc(14px * var(--fs));
+  color: var(--ink);
+}
+
+/* ── Chip buttons (classify R/T/A, balance unique/not) ───────────────────── */
+
+.chainboard-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--s1) var(--s2);
+  border: 1.5px solid var(--rule);
+  border-radius: var(--r-pill);
+  background: var(--paper1);
+  font-size: calc(13px * var(--fs));
+  color: var(--ink);
+  cursor: pointer;
+  min-height: 44px;
+  min-width: 44px;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.chainboard-chip--active,
+.chainboard-chip[aria-pressed='true'] {
+  border-color: var(--accent);
+  background: var(--accent-tint);
+  color: var(--accent);
+}
+
+.chainboard-chip--correct {
+  border-color: var(--correct);
+  background: color-mix(in srgb, var(--correct) 12%, transparent);
+  color: var(--correct);
+}
+
+.chainboard-chip--wrong {
+  border-color: var(--wrong);
+  background: color-mix(in srgb, var(--wrong) 12%, transparent);
+  color: var(--wrong);
+}
+
+.chainboard-chip:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+.chainboard-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s2);
+  margin-top: var(--s2);
+}
+
+/* ── Matrix / powers grid ─────────────────────────────────────────────────── */
+
+.chainboard-matrix {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s3);
+}
+
+.chainboard-matrix__wrap {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.chainboard-matrix__table {
+  border-collapse: collapse;
+  font-family: var(--font-mono);
+  font-size: calc(14px * var(--fs));
+}
+
+.chainboard-matrix__hdr {
+  padding: var(--s1) var(--s2);
+  text-align: center;
+  color: var(--graphite);
+  font-weight: 600;
+  font-size: calc(12px * var(--fs));
+}
+
+.chainboard-matrix__cell {
+  padding: var(--s1) var(--s2);
+  text-align: center;
+  border: 1px solid var(--rule-faint);
+  min-height: 44px;
+  min-width: 44px;
+  color: var(--ink);
+}
+
+.chainboard-matrix__cell--absorbing {
+  background: color-mix(in srgb, var(--accent) 6%, transparent);
+}
+
+.chainboard-matrix__cell--highlighted {
+  background: var(--accent-tint);
+  color: var(--accent);
+  font-weight: 700;
+}
+
+.chainboard-matrix__cell--correct {
+  background: color-mix(in srgb, var(--correct) 12%, transparent);
+  color: var(--correct);
+}
+
+/* ── Cell tap buttons (powers graded entry) ───────────────────────────────── */
+
+.chainboard-cell-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  border: none;
+  background: none;
+  font-family: var(--font-mono);
+  font-size: inherit;
+  color: inherit;
+  cursor: pointer;
+  min-height: 44px;
+  min-width: 44px;
+  padding: 0;
+}
+
+.chainboard-cell-btn[aria-pressed='true'] {
+  color: var(--accent);
+  font-weight: 700;
+}
+
+.chainboard-cell-btn:disabled {
+  cursor: default;
+  opacity: 0.55;
+}
+
+/* ── Absorption readout ───────────────────────────────────────────────────── */
+
+.chainboard-absorption {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s2);
+  margin-top: var(--s2);
+}
+
+.chainboard-absorption__title {
+  font-size: calc(13px * var(--fs));
+  color: var(--graphite);
+  margin: 0;
+}
+
+.chainboard-absorption__times {
+  font-size: calc(13px * var(--fs));
+  font-family: var(--font-mono);
+  color: var(--ink);
+  margin: 0;
+}
+
+/* ── Powers step label ────────────────────────────────────────────────────── */
+
+.chainboard-powers {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s2);
+}
+
+.chainboard-powers__step {
+  font-family: var(--font-mono);
+  font-size: calc(16px * var(--fs));
+  font-weight: 700;
+  color: var(--ink);
+  margin: 0;
+}
+
+/* ── Distribution bars ────────────────────────────────────────────────────── */
+
+.chainboard-dist {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s2);
+}
+
+.chainboard-dist__subtitle {
+  font-size: calc(13px * var(--fs));
+  color: var(--graphite);
+  margin: 0;
+}
+
+.chainboard-dist__subtitle--secondary {
+  margin-top: var(--s2);
+  font-family: var(--font-mono);
+}
+
+.chainboard-dist__row {
+  display: flex;
+  align-items: center;
+  gap: var(--s2);
+}
+
+.chainboard-dist__label {
+  min-width: 72px;
+  font-size: calc(13px * var(--fs));
+  font-family: var(--font-mono);
+  color: var(--ink);
+}
+
+.chainboard-dist__track {
+  flex: 1;
+  height: 16px;
+  background: var(--paper2);
+  border-radius: var(--r-pill);
+  overflow: hidden;
+}
+
+.chainboard-dist__fill {
+  height: 100%;
+  background: var(--accent);
+  border-radius: var(--r-pill);
+}
+
+.chainboard-dist__value {
+  min-width: 48px;
+  text-align: right;
+  font-family: var(--font-mono);
+  font-size: calc(13px * var(--fs));
+  color: var(--ink);
+}
+
+/* ── Stationary bars ──────────────────────────────────────────────────────── */
+
+.chainboard-stationary {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s2);
+}
+
+.chainboard-stationary__subtitle {
+  font-size: calc(13px * var(--fs));
+  color: var(--graphite);
+  margin: 0;
+}
+
+.chainboard-stationary__row {
+  display: flex;
+  align-items: center;
+  gap: var(--s2);
+}
+
+.chainboard-stationary__label {
+  min-width: 72px;
+  font-size: calc(13px * var(--fs));
+  font-family: var(--font-mono);
+  color: var(--ink);
+}
+
+.chainboard-stationary__track {
+  flex: 1;
+  height: 16px;
+  background: var(--paper2);
+  border-radius: var(--r-pill);
+  overflow: hidden;
+}
+
+.chainboard-stationary__fill {
+  height: 100%;
+  background: var(--accent);
+  border-radius: var(--r-pill);
+}
+
+.chainboard-stationary__value {
+  min-width: 48px;
+  text-align: right;
+  font-family: var(--font-mono);
+  font-size: calc(13px * var(--fs));
+  color: var(--ink);
+}
+
+.chainboard-stationary__damping-label {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s1);
+  font-size: calc(13px * var(--fs));
+  color: var(--graphite);
+}
+
+.chainboard-stationary__range {
+  width: 100%;
+  min-height: 44px;
+}
+
+/* ── Detailed balance readout ─────────────────────────────────────────────── */
+
+.chainboard-balance {
+  margin-top: var(--s2);
+}
+
+.chainboard-balance__result {
+  font-size: calc(14px * var(--fs));
+  color: var(--ink);
+  margin: 0;
+}
+
+/* ── Graded text inputs (absorption / distribution / balance read-offs) ─────── */
+.chainboard-absorb,
+.chainboard-dist__entry,
+.chainboard-balance__entry {
+  display: flex;
+  align-items: center;
+  gap: var(--s2);
+  flex-wrap: wrap;
+  font-size: calc(14px * var(--fs));
+  color: var(--ink);
+  margin-top: var(--s2);
+}
+.chainboard-absorb__label { display: flex; align-items: center; gap: var(--s2); }
+.chainboard-absorb__input,
+.chainboard-balance__input,
+.chainboard-dist__entry input {
+  min-height: 44px;
+  padding: var(--s1) var(--s2);
+  border: 1.5px solid var(--rule);
+  border-radius: var(--r-md);
+  background: var(--paper1);
+  font-family: var(--font-mono);
+  font-size: calc(14px * var(--fs));
+  color: var(--ink);
+  width: 8ch;
+}
+.chainboard-absorb__input:focus-visible,
+.chainboard-balance__input:focus-visible,
+.chainboard-dist__entry input:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.chainboard-absorb__input:disabled,
+.chainboard-balance__input:disabled,
+.chainboard-dist__entry input:disabled { opacity: 0.6; }
+
+/* ── Build grid: editable cells + live row-sum column ───────────────────────── */
+.chainboard-build__input {
+  width: 6ch;
+  min-height: 44px;
+  padding: var(--s1);
+  border: 1.5px solid var(--rule);
+  border-radius: var(--r-md);
+  background: var(--paper1);
+  font-family: var(--font-mono);
+  font-size: calc(14px * var(--fs));
+  text-align: center;
+  color: var(--ink);
+}
+.chainboard-build__input:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.chainboard-build__rowsum {
+  padding: var(--s1) var(--s2);
+  text-align: center;
+  font-family: var(--font-mono);
+  font-size: calc(13px * var(--fs));
+  color: var(--graphite);
+}
+.chainboard-build__rowsum--ok { color: var(--correct); font-weight: 700; }
+
+/* ── Verdict prompt (powers periodic-trap) ─────────────────────────────────── */
+.chainboard-powers__verdict-prompt {
+  font-size: calc(14px * var(--fs));
+  color: var(--graphite);
+  margin: var(--s2) 0 0;
+}

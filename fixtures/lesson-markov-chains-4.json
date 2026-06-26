@@ -1,0 +1,324 @@
+{
+  "lessonId": "lesson-markov-chains-4",
+  "courseId": "course-markov-chains",
+  "title": "Classifying States",
+  "patternOptions": ["H"],
+  "milestoneId": "markov-chains-classify",
+  "unlocks": "lesson-markov-chains-5",
+  "schemaVersion": 1,
+  "beats": [
+    {
+      "beatId": "recall-absorbing",
+      "required": true,
+      "track": "both",
+      "prompt": "Warm-up — tap to match each absorbing state to why it can't be left.",
+      "interaction": {
+        "type": "retrievalGrid",
+        "pairs": [
+          {
+            "left": "Penney's matched pattern is reached",
+            "right": "absorbing — the run is over, you can't leave"
+          },
+          {
+            "left": "Gambler's ruin hits $0 or $N",
+            "right": "absorbing — the barrier holds you forever"
+          },
+          {
+            "left": "An absorbing state's self-loop",
+            "right": "probability 1 — every step stays put"
+          }
+        ]
+      },
+      "feedback": {
+        "correct": "An absorbing state isn't the *popular* one — it's the one you can't leave: a self-loop of probability 1. You already met it as Penney's matched pattern and gambler's-ruin's $0/$N walls.",
+        "hints": [
+          "Warm-up — you saw absorbing states as Penney's matched pattern and gambler's-ruin's $0 / $N barriers.",
+          "Visiting often isn't the test — *leaving* is. An absorbing state has a self-loop of probability 1: once you arrive, every future step stays put. It's the extreme recurrent state, not the most-visited one.",
+          "Match each to 'can't leave': matched pattern → run is over; $0 / $N → barrier holds forever; self-loop → probability 1."
+        ]
+      }
+    },
+    {
+      "beatId": "open-bet",
+      "required": true,
+      "track": "both",
+      "prompt": "You're standing on one state of a chain and walk forever. Will you ever return to your starting state?",
+      "interaction": {
+        "type": "prediction",
+        "options": [
+          "For sure — if you can reach it, you always return",
+          "Maybe never — you might wander off for good",
+          "Only if it's an absorbing state"
+        ]
+      },
+      "feedback": {
+        "byOption": {
+          "For sure — if you can reach it, you always return": {
+            "note": "Only for recurrent states. From a transient state there's a real chance you leak into another class (or get absorbed) before coming back — return probability < 1.",
+            "correct": false
+          },
+          "Maybe never — you might wander off for good": {
+            "note": "Right instinct. Some states (transient) let you slip away for good; others (recurrent) always pull you back. The dividing line is the chance you ever return. Let's name the kinds.",
+            "correct": true
+          },
+          "Only if it's an absorbing state": {
+            "note": "Absorbing is the extreme 'can't leave' case — but plenty of non-absorbing states still always bring you back (recurrent). What decides it is the return probability, not the self-loop.",
+            "correct": false
+          }
+        },
+        "hints": [
+          "No wrong guess yet — commit and we'll test it on a chain.",
+          "If the chain can leak elsewhere first, you may never return — reachable ≠ always-returns.",
+          "Recurrent ⇔ return prob 1; transient ⇔ return prob < 1; absorbing ⇔ you never leave at all."
+        ]
+      }
+    },
+    {
+      "beatId": "name-the-classes",
+      "required": false,
+      "track": "A",
+      "prompt": "Read this just-in-time primer on classifying states and communicating classes — then continue.",
+      "interaction": {
+        "type": "primer",
+        "variant": "custom",
+        "title": "Recurrent, transient, absorbing — and class & period",
+        "body": "A state is **recurrent** if you return for sure (return prob = 1), **transient** if you might never come back (return prob < 1), and **absorbing** if you can't leave at all (self-loop prob 1 — the extreme recurrent). States that can each reach the other form one **communicating class**. A class's **period** = the gcd of the step-lengths of all its returns (1 = aperiodic).",
+        "collapsible": true
+      },
+      "feedback": {
+        "correct": "Five words: recurrent, transient, absorbing, communicating class, period. Keep them.",
+        "hints": [
+          "Return-for-sure vs maybe-never vs can't-leave.",
+          "Two states *communicate* when each can reach the other — that's mutual, not one-way.",
+          "Period = gcd of the step-lengths of all returns (1 = aperiodic)."
+        ]
+      }
+    },
+    {
+      "beatId": "classify-first",
+      "required": true,
+      "track": "both",
+      "prompt": "Which state, once entered, never lets you leave? Tap it.",
+      "interaction": {
+        "type": "chainBoard",
+        "display": "diagram",
+        "task": "classify",
+        "matrix": [
+          { "cells": [{"n":1,"d":2},{"n":1,"d":2},{"n":0,"d":1}] },
+          { "cells": [{"n":1,"d":2},{"n":0,"d":1},{"n":1,"d":2}] },
+          { "cells": [{"n":0,"d":1},{"n":0,"d":1},{"n":1,"d":1}] }
+        ],
+        "labels": ["1","2","3"],
+        "headline": "absorbing"
+      },
+      "feedback": {
+        "correct": "State 3's row is `[0, 0, 1]` — a self-loop of probability 1. Once you arrive you never leave: that's **absorbing**, no matter how often 1 and 2 are visited.",
+        "hints": [
+          "Which state, once you enter it, never lets you step away again?",
+          "Popularity isn't the test — leaving is. Don't pick the most-visited node; find the one whose only move is back to itself (self-loop probability 1).",
+          "Tap state 3: its row is [0, 0, 1], so it stays put forever. Absorbing."
+        ]
+      }
+    },
+    {
+      "beatId": "classify-board",
+      "required": true,
+      "track": "both",
+      "prompt": "Tap each node to classify it as recurrent, transient, or absorbing. Then flip the period toggle on the {2,3} pair.",
+      "interaction": {
+        "type": "chainBoard",
+        "display": "diagram",
+        "task": "classify",
+        "matrix": [
+          { "cells": [{"n":0,"d":1},{"n":1,"d":2},{"n":0,"d":1},{"n":1,"d":2}] },
+          { "cells": [{"n":0,"d":1},{"n":0,"d":1},{"n":1,"d":1},{"n":0,"d":1}] },
+          { "cells": [{"n":0,"d":1},{"n":1,"d":1},{"n":0,"d":1},{"n":0,"d":1}] },
+          { "cells": [{"n":0,"d":1},{"n":0,"d":1},{"n":0,"d":1},{"n":1,"d":1}] }
+        ],
+        "labels": ["1","2","3","4"],
+        "interactive": true,
+        "headline": "2"
+      },
+      "feedback": {
+        "correct": "Three kinds in one chain: **1** leaks away and never returns (transient), **{2,3}** bounce between each other forever (recurrent), **4** traps you (absorbing). Flip the period toggle: {2,3} only returns in *even* numbers of steps → period 2.",
+        "hints": [
+          "Tap each node to label it, then flip the period toggle on the {2,3} pair.",
+          "Leaving a state doesn't make it transient — {2,3} leave each other *every* step but always come back (return prob 1). Transient means a real escape route you take with positive probability (that's state 1, which slips to {2,3} or 4 and never returns).",
+          "1 transient · 2,3 recurrent (period 2) · 4 absorbing."
+        ]
+      },
+      "hero": {
+        "slowFirst": true,
+        "structuralReadout": "From state 2 you can only return in 2, 4, 6, … steps — gcd = 2, so the {2,3} class has **period 2**.",
+        "reducedMotionFinalFrame": true
+      }
+    },
+    {
+      "beatId": "classify-and-group",
+      "required": true,
+      "track": "both",
+      "prompt": "Classify each state and name the communicating classes of this chain.",
+      "interaction": {
+        "type": "chainBoard",
+        "display": "diagram",
+        "task": "classify",
+        "matrix": [
+          { "cells": [{"n":0,"d":1},{"n":1,"d":2},{"n":0,"d":1},{"n":1,"d":2}] },
+          { "cells": [{"n":0,"d":1},{"n":0,"d":1},{"n":1,"d":1},{"n":0,"d":1}] },
+          { "cells": [{"n":0,"d":1},{"n":1,"d":1},{"n":0,"d":1},{"n":0,"d":1}] },
+          { "cells": [{"n":0,"d":1},{"n":0,"d":1},{"n":0,"d":1},{"n":1,"d":1}] }
+        ],
+        "labels": ["1","2","3","4"],
+        "headline": "transient,recurrent,recurrent,absorbing"
+      },
+      "feedback": {
+        "correct": "Communication is **mutual**: 1 reaches {2,3} but they can't reach back, so 1 is its own (transient) class. {2,3} reach each other → one recurrent class; 4 is alone (absorbing). Kinds: **transient, recurrent, recurrent, absorbing**; classes **{1}, {2,3}, {4}**.",
+        "hints": [
+          "For each pair ask: can *each* reach the other? Only mutual pairs share a class.",
+          "Being in the same diagram isn't communicating. 1 → {2,3} is one-way (they never get back to 1), so 1 is a separate class — not 'all one class because it's one chain.' Only {2,3} are mutual.",
+          "Classes {1}, {2,3}, {4}; kinds transient, recurrent, recurrent, absorbing."
+        ]
+      },
+      "interviewNote": "Recurrent vs transient — *will the chain ever come back?* — is the structural question behind every absorption interview problem (hitting probabilities, gambler's ruin, MCMC mixing). Name each state's communicating class first; the arithmetic (return probabilities, expected hitting times) only makes sense once the structure is fixed."
+    },
+    {
+      "beatId": "model-period",
+      "required": true,
+      "track": "both",
+      "prompt": "Reveal each lens on recurrence — they all converge on the same definition.",
+      "interaction": {
+        "type": "tripletReveal",
+        "value": "return prob 1",
+        "display": "cards",
+        "lenses": [
+          {
+            "label": "Return probability",
+            "body": "Recurrent ⇔ you come back with probability 1; transient ⇔ return prob < 1; absorbing ⇔ you never even leave."
+          },
+          {
+            "label": "Number of visits",
+            "body": "Recurrent ⇔ you visit it infinitely often; transient ⇔ only finitely many visits before you leave for good."
+          },
+          {
+            "label": "Period",
+            "body": "Period = gcd of the step-lengths of all returns (1 = aperiodic). It times the returns — it doesn't change whether you return."
+          }
+        ]
+      },
+      "feedback": {
+        "correct": "Three views of recurrence: return with probability 1 ⇔ visit it infinitely often. **Period only *times* the returns — it doesn't decide whether you come back.**",
+        "hints": [
+          "Reveal each lens — return probability, number of visits, period.",
+          "Recurrent and absorbing are NOT the same: absorbing never leaves (return prob 1 in zero steps); recurrent *leaves all the time* but always comes back (return prob 1). Period is a separate question about *when* you return.",
+          "Recurrent ⇔ return prob 1 ⇔ infinitely many visits; period = gcd of return lengths."
+        ]
+      }
+    },
+    {
+      "beatId": "ehrenfest-period",
+      "required": true,
+      "track": "both",
+      "prompt": "The 2-ball Ehrenfest urn alternates between states each step. Classify each state — recurrent, transient, or absorbing.",
+      "interaction": {
+        "type": "chainBoard",
+        "display": "diagram",
+        "task": "classify",
+        "matrix": [
+          { "cells": [{"n":0,"d":1},{"n":1,"d":1},{"n":0,"d":1}] },
+          { "cells": [{"n":1,"d":2},{"n":0,"d":1},{"n":1,"d":2}] },
+          { "cells": [{"n":0,"d":1},{"n":1,"d":1},{"n":0,"d":1}] }
+        ],
+        "labels": ["0","1","2"],
+        "headline": "2"
+      },
+      "feedback": {
+        "correct": "In the Ehrenfest urn you can only come home in an **even** number of steps — return lengths are {2, 4, 6, …}, and gcd = **2**. The period is 2.",
+        "hints": [
+          "Count the steps of a few returns to one state. Are any of the return lengths odd?",
+          "Not every chain is aperiodic / period 1. Here every return takes an even number of steps; period 1 would need an *odd* return somewhere (e.g. a self-loop), and there is none.",
+          "gcd{2, 4, 6, …} = 2 → period 2."
+        ]
+      }
+    },
+    {
+      "beatId": "transient-vs-recurrent",
+      "required": true,
+      "track": "both",
+      "prompt": "Classify this chain, then find the probability of ever returning to state 1.",
+      "interaction": {
+        "type": "chainBoard",
+        "display": "diagram",
+        "task": "absorption",
+        "matrix": [
+          { "cells": [{"n":0,"d":1},{"n":1,"d":1},{"n":0,"d":1}] },
+          { "cells": [{"n":1,"d":2},{"n":0,"d":1},{"n":1,"d":2}] },
+          { "cells": [{"n":0,"d":1},{"n":0,"d":1},{"n":1,"d":1}] }
+        ],
+        "labels": ["1","2","3"],
+        "absorbing": [2],
+        "cell": {"row": 0, "col": 0},
+        "headline": "1/2"
+      },
+      "feedback": {
+        "correct": "From 1 you must step to 2; from 2 you either fall back to 1 (½) or get absorbed at 3 (½). So you return with probability exactly **1/2** — that's transient: return prob < 1, not 0.",
+        "hints": [
+          "Trace state 1's only way out and back: 1 → 2 (forced), then 2 → 1 (return) or 2 → 3 (absorbed).",
+          "Transient does NOT mean you never return — it means return prob < 1. You may even come back several times; each visit just risks the escape to absorbing 3.",
+          "f₁₁ = P(1→2) · P(reach 1 from 2 before 3) = 1 · ½ = 1/2."
+        ]
+      }
+    },
+    {
+      "beatId": "mastery-challenge",
+      "required": true,
+      "track": "both",
+      "prompt": "Fully classify gambler's ruin and compute the return probability.",
+      "interaction": {
+        "type": "masteryChallenge",
+        "scenario": "Gambler's ruin on \\(\\{0, 1, 2, 3\\}\\): each step you go up with probability \\(\\tfrac{2}{3}\\) and down with \\(\\tfrac{1}{3}\\); \\$0 and \\$3 are absorbing walls. (i) Classify every state and name the communicating classes. (ii) Starting from state \\(1\\), what is the probability you ever return to state \\(1\\)?",
+        "fields": [
+          {
+            "id": "classes",
+            "label": "Classify all states + name the communicating classes",
+            "accept": [
+              "{0},{3} absorbing; {1,2} transient",
+              "0 and 3 absorbing, 1 and 2 transient",
+              "{0} absorbing {3} absorbing {1,2} transient one class",
+              "0,3 absorbing; 1,2 transient communicating"
+            ]
+          },
+          {
+            "id": "return1",
+            "label": "\\(P(\\text{ever return to } 1 \\mid \\text{start } 1)\\)",
+            "accept": ["2/9"]
+          }
+        ]
+      },
+      "feedback": {
+        "correct": "\\(\\{0\\}\\) and \\(\\{3\\}\\) are **absorbing** (recurrent singletons); \\(\\{1,2\\}\\) **communicate** and are **transient**. From \\(1\\): down to \\(0\\) (\\(\\tfrac{1}{3}\\), gone) or up to \\(2\\) (\\(\\tfrac{2}{3}\\)); from \\(2\\) you only get back to \\(1\\) by stepping down (\\(\\tfrac{1}{3}\\)). So \\(f_{11} = \\tfrac{2}{3} \\cdot \\tfrac{1}{3} = \\tfrac{2}{9} < 1\\) — the interior states are transient even though the steps look balanced.",
+        "hints": [
+          "Classify the \\$0 and \\$3 barriers first, then trace the one way back to 1 from 2.",
+          "Symmetry doesn't make interior states recurrent — the absorbing walls leak probability away. From 1 you can fall to 0 and never return, so the return probability is < 1.",
+          "\\(f_{11} = \\tfrac{2}{3} \\cdot \\tfrac{1}{3} = \\tfrac{2}{9}\\); classes \\(\\{0\\}\\), \\(\\{3\\}\\) absorbing, \\(\\{1,2\\}\\) transient (one communicating class)."
+        ]
+      }
+    },
+    {
+      "beatId": "recap",
+      "required": true,
+      "track": "both",
+      "prompt": "Let's close with the full picture.",
+      "interaction": {
+        "type": "recap"
+      },
+      "feedback": {
+        "correct": "A state's whole fate is one question — *what's the chance you ever return?* Recurrent = 1, transient = < 1, absorbing = you never leave. Communicating classes group mutual reachability, and a class's period = gcd of its return lengths. **Structure, not arithmetic, decides where a chain ends up.**",
+        "hints": [
+          "Absorbing (self-loop 1) is the extreme recurrent — it never forgets where it stopped.",
+          "Communication is mutual reachability: a one-way link splits classes (state 1 vs the {2,3} pair).",
+          "Next up — Hitting Times & Absorption: not *whether* you get caught, but *how long* until you do."
+        ]
+      }
+    }
+  ]
+}

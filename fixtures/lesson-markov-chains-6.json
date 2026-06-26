@@ -1,0 +1,318 @@
+{
+  "lessonId": "lesson-markov-chains-6",
+  "courseId": "course-markov-chains",
+  "title": "The Stationary Distribution",
+  "patternOptions": ["H"],
+  "milestoneId": "markov-chains-stationary",
+  "unlocks": "lesson-markov-chains-7",
+  "schemaVersion": 1,
+  "beats": [
+    {
+      "beatId": "recall-geometric",
+      "required": true,
+      "track": "both",
+      "prompt": "Quick warm-up — match each wait-time fact to its answer.",
+      "interaction": {
+        "type": "retrievalGrid",
+        "pairs": [
+          { "left": "Wait for a chance-p event (geometric)", "right": "1/p trials on average" },
+          { "left": "p = 1/5 success each trial", "right": "5 trials to the first success" },
+          { "left": "Return to a state with long-run share πᵢ (Kac)", "right": "1/πᵢ steps on average" }
+        ]
+      },
+      "feedback": {
+        "correct": "A chance-p event recurs every 1/p trials — and a state the chain spends a long-run share πᵢ of its time in recurs every 1/πᵢ steps. That reciprocal is Kac's mean return time.",
+        "hints": [
+          "Warm-up from EV-5's geometric wait, E = 1/p — no pressure.",
+          "Return time isn't about one edge's probability; it's the reciprocal of the long-run SHARE the chain spends in that state (Kac uses π, not a single transition).",
+          "Chance p → 1/p trials; long-run share πᵢ → 1/πᵢ steps."
+        ]
+      }
+    },
+    {
+      "beatId": "settle-bet",
+      "required": true,
+      "track": "both",
+      "prompt": "Two towns — Aria (starts clear Monday) and Brume (starts rainy Monday) — run forever under the same weather rules. Fast-forward a thousand days. Which best describes their long-run share of clear weather?",
+      "interaction": {
+        "type": "prediction",
+        "options": [
+          "Aria stays sunnier — it started clear",
+          "They end up identical — same rules, same long-run climate",
+          "Each town freezes on its Monday weather"
+        ]
+      },
+      "feedback": {
+        "byOption": {
+          "Aria stays sunnier — it started clear": {
+            "note": "Tempting, but a regular chain forgets where it started. Run it from clear or from rainy and the long-run share of clear days is identical — 3/7 either way. That's the whole point (and L7's hook).",
+            "correct": false
+          },
+          "They end up identical — same rules, same long-run climate": {
+            "note": "Right — every start converges to the same π. The chain forgets where it began; only the transition rules survive in the long run.",
+            "correct": true
+          },
+          "Each town freezes on its Monday weather": {
+            "note": "That's an ABSORBING chain (L5), where πP=π is a stuck point-mass. A regular chain never stops switching — what settles is the FRACTION of time in each state (a spread), not a resting spot.",
+            "correct": false
+          }
+        },
+        "hints": [
+          "No wrong guess yet — commit and we'll run both towns.",
+          "Different starts do NOT mean different long-run mixes for a regular chain — and it doesn't freeze on one state either; it keeps switching.",
+          "Same rules ⇒ same π: both towns land at clear 3/7, rainy 4/7."
+        ]
+      }
+    },
+    {
+      "beatId": "name-stationary",
+      "required": false,
+      "track": "A",
+      "prompt": "Before we solve, read this quick name for the limit you just saw — then continue.",
+      "interaction": {
+        "type": "primer",
+        "variant": "custom",
+        "title": "The stationary distribution π",
+        "body": "The long-run share of time a chain spends in each state is its **stationary distribution** π. It is the one mix that one more step leaves **unchanged**: **πP = π**, with the shares summing to 1 (**Σπ = 1**). 'Stationary' describes the *distribution*, not the chain — the chain keeps hopping forever; what stops moving is the fraction of time in each state.",
+        "collapsible": true
+      },
+      "feedback": {
+        "correct": "Stationary = the distribution holds still, even though the chain keeps moving.",
+        "hints": [
+          "π is the long-run share of time spent in each state.",
+          "πP=π: one more step leaves the mix unchanged — that's what 'stationary' means.",
+          "And the shares sum to 1: Σπ = 1."
+        ]
+      }
+    },
+    {
+      "beatId": "read-the-share",
+      "required": true,
+      "track": "both",
+      "prompt": "The Sunny/Rainy bars have stopped moving. What fraction of days does Sunny hold in the long run?",
+      "interaction": {
+        "type": "chainBoard",
+        "display": "distribution",
+        "task": "stationary",
+        "matrix": [
+          { "cells": [{"n":7,"d":10},{"n":3,"d":10}] },
+          { "cells": [{"n":4,"d":10},{"n":6,"d":10}] }
+        ],
+        "labels": ["Sunny","Rainy"],
+        "cell": {"row":0,"col":0},
+        "headline": "4/7"
+      },
+      "feedback": {
+        "correct": "The bars have stopped moving — Sunny holds 4/7 of the days, Rainy 3/7. The long-run answer is a share, not a single state the chain ends on.",
+        "hints": [
+          "The distribution has settled — read Sunny's bar height straight off.",
+          "The long-run answer isn't one state the chain lands on; a regular chain never stops — it's the FRACTION of days each state holds.",
+          "Sunny settles at 4 in 7 → 4/7."
+        ]
+      }
+    },
+    {
+      "beatId": "watch-it-settle",
+      "required": true,
+      "track": "both",
+      "prompt": "Watch the Clear/Rainy chain run from both starts — Clear and Rainy — and see where they land.",
+      "interaction": {
+        "type": "chainBoard",
+        "display": "distribution",
+        "task": "stationary",
+        "matrix": [
+          { "cells": [{"n":3,"d":5},{"n":2,"d":5}] },
+          { "cells": [{"n":3,"d":10},{"n":7,"d":10}] }
+        ],
+        "labels": ["Clear","Rainy"],
+        "headline": "3/7,4/7"
+      },
+      "hero": {
+        "slowFirst": true,
+        "structuralReadout": "From either start, the bars converge to clear 3 in 7, rainy 4 in 7 — the unique π with πP = π. The start is forgotten.",
+        "reducedMotionFinalFrame": true
+      },
+      "feedback": {
+        "correct": "Start from Clear or from Rainy — both runs settle to the same bars: clear 3/7, rainy 4/7. The start washes out, and πP=π marks the fixed point they land on.",
+        "hints": [
+          "Watch both starts — clear and rainy — run side by side.",
+          "They don't drift apart and neither freezes on one state; they converge to the SAME share.",
+          "Both land at (3/7, 4/7) — the unique π solving πP=π."
+        ]
+      }
+    },
+    {
+      "beatId": "solve-pi",
+      "required": true,
+      "track": "both",
+      "prompt": "Solve πP = π with Σπ = 1 for the Clear/Rainy chain.",
+      "interaction": {
+        "type": "answerEntry",
+        "fields": [
+          {
+            "id": "piClear",
+            "label": "π(Clear) — long-run share of clear days",
+            "accept": ["3/7"],
+            "placeholder": "e.g. 1/2"
+          },
+          {
+            "id": "piRainy",
+            "label": "π(Rainy)",
+            "accept": ["4/7"],
+            "placeholder": "e.g. 1/2"
+          }
+        ]
+      },
+      "feedback": {
+        "correct": "Balance gives (2/5)·π_clear = (3/10)·π_rainy ⇒ π_clear : π_rainy = 3 : 4, and with π_clear + π_rainy = 1 that's (3/7, 4/7). πP=π means unchanged, not uniform.",
+        "hints": [
+          "Write the balance for one state: π_clear = π_clear·p_cc + π_rainy·p_rc, then use π_clear + π_rainy = 1.",
+          "πP=π does NOT mean π is flat (1/2, 1/2) — it means one step leaves the mix unchanged; the structure weights each state by how its neighbors feed it. Uniform only happens when the chain is symmetric.",
+          "(3/7, 4/7)."
+        ]
+      }
+    },
+    {
+      "beatId": "kac-return",
+      "required": true,
+      "track": "both",
+      "prompt": "A clear day's long-run share is 3/7. By Kac's theorem, how many days until a clear day returns on average?",
+      "interaction": {
+        "type": "answerEntry",
+        "fields": [
+          {
+            "id": "kacClear",
+            "label": "Mean return time to a clear day",
+            "accept": ["7/3"],
+            "placeholder": "e.g. 5/2",
+            "suffix": "days"
+          }
+        ]
+      },
+      "feedback": {
+        "correct": "A clear day holds long-run share 3/7, so by Kac it recurs every 1/(3/7) = 7/3 days. Kac reads the share, not a single edge's probability.",
+        "hints": [
+          "Kac's mean return time to a state is 1 / (its long-run share).",
+          "Don't use a one-step transition probability — use π(clear) = 3/7, the SHARE from the solve, not an edge of P.",
+          "1/(3/7) = 7/3."
+        ]
+      }
+    },
+    {
+      "beatId": "triangulate-pi",
+      "required": true,
+      "track": "both",
+      "prompt": "Three independent lenses all converge on (3/7, 4/7) — reveal each to see why they agree.",
+      "interaction": {
+        "type": "tripletReveal",
+        "value": "(3/7, 4/7)",
+        "lenses": [
+          {
+            "label": "Solve πP=π",
+            "body": "(2/5)·π_c = (3/10)·π_r ⇒ π_c : π_r = 3 : 4 ⇒ (3/7, 4/7)"
+          },
+          {
+            "label": "Watch Pⁿ settle",
+            "body": "Every row of Pⁿ collapses to (3/7, 4/7) as n grows — the start washes out (L7)"
+          },
+          {
+            "label": "Simulate",
+            "body": "Long-run frequency of clear days → 3/7, i.e. one clear day every 1/(3/7) = 7/3 steps (Kac)"
+          }
+        ],
+        "display": "cards"
+      },
+      "feedback": {
+        "correct": "Algebra, the power iteration, and a long-run simulation all land on (3/7, 4/7) — the fraction isn't an artifact of one method.",
+        "hints": [
+          "Reveal each lens — solve, watch, simulate.",
+          "Three roads to the same vector; simulation only approximates what the algebra nails.",
+          "All three say (3/7, 4/7)."
+        ]
+      }
+    },
+    {
+      "beatId": "absorbing-vs-stationary",
+      "required": true,
+      "track": "both",
+      "prompt": "Tap to match each chain's πP = π to what it actually means.",
+      "interaction": {
+        "type": "retrievalGrid",
+        "pairs": [
+          { "left": "An absorbing chain's πP=π", "right": "a stuck point-mass (0, 1) — once there it never leaves" },
+          { "left": "A regular chain's πP=π", "right": "a spread (3/7, 4/7) — time split, never frozen" },
+          { "left": "What \"settles\" in a regular chain", "right": "the fraction of time per state, not a resting spot" }
+        ]
+      },
+      "feedback": {
+        "correct": "Same πP=π lens, opposite meaning: an absorbing chain's fixed point is a stuck point-mass (0, 1); a regular chain's is a spread (3/7, 4/7) — time split across states, never frozen.",
+        "hints": [
+          "Both vectors solve πP=π — but ask whether the chain ever leaves the state once there.",
+          "Stationary is NOT 'where the chain gets stuck'. For an absorbing chain that's true (a one-way trap); for a regular chain π is the SPREAD of time across states, and it keeps switching forever.",
+          "Absorbing → (0, 1); regular → (3/7, 4/7)."
+        ]
+      }
+    },
+    {
+      "beatId": "mastery-cloudy-town",
+      "required": true,
+      "track": "both",
+      "prompt": "Solve the three-state Cloudy-town stationary distribution and apply Kac to the sunny state.",
+      "interviewNote": "The 3-state stationary solve is the canonical interview example: set up πP=π with Σπ=1 and eliminate column by column for exact fractions — cloudy-town lands on (1/5, 2/5, 2/5). Then Kac reads the mean return time straight off the share: a sunny day (π = 1/5) recurs every 5 days. Saying the reciprocal relationship — return time = 1/πᵢ — out loud is the insight.",
+      "interaction": {
+        "type": "masteryChallenge",
+        "scenario": "Cloudy-town cycles its weather with transition matrix \\[P = \\begin{pmatrix}0 & \\tfrac{1}{2} & \\tfrac{1}{2} \\\\ \\tfrac{1}{4} & \\tfrac{1}{2} & \\tfrac{1}{4} \\\\ \\tfrac{1}{4} & \\tfrac{1}{4} & \\tfrac{1}{2}\\end{pmatrix}\\] (rows/columns = sunny, cloudy, rainy). Solve \\(\\pi P = \\pi\\) with \\(\\Sigma\\pi = 1\\), then apply Kac to the sunny state.",
+        "fields": [
+          {
+            "id": "piSunny",
+            "label": "π(sunny)",
+            "accept": ["1/5"],
+            "placeholder": "e.g. 1/3"
+          },
+          {
+            "id": "piCloudy",
+            "label": "π(cloudy)",
+            "accept": ["2/5"]
+          },
+          {
+            "id": "piRainy",
+            "label": "π(rainy)",
+            "accept": ["2/5"]
+          },
+          {
+            "id": "kacSunny",
+            "label": "Mean return time to a sunny day",
+            "accept": ["5"],
+            "placeholder": "e.g. 4",
+            "suffix": "days"
+          }
+        ]
+      },
+      "feedback": {
+        "correct": "Solve column by column: \\(\\pi_{\\text{sunny}} = \\tfrac{1}{4}(1-\\pi_{\\text{sunny}}) \\Rightarrow \\pi_{\\text{sunny}} = \\tfrac{1}{5}\\); then \\(\\tfrac{3}{2}\\pi_{\\text{cloudy}} = \\tfrac{3}{5} \\Rightarrow \\pi_{\\text{cloudy}} = \\tfrac{2}{5}\\), leaving \\(\\pi_{\\text{rainy}} = \\tfrac{2}{5} \\Rightarrow \\mathbf{(1/5,\\,2/5,\\,2/5)}\\). Kac: a sunny day (share \\(\\tfrac{1}{5}\\)) recurs every \\(\\tfrac{1}{1/5} = \\mathbf{5}\\) days. Three states still solve to exact fractions.",
+        "hints": [
+          "πP=π with Σπ=1 is a linear system — solve it with exact fractions, column by column.",
+          "More states does NOT mean 'no clean answer, must simulate'; rational Gaussian elimination nails it. Start with the sunny column: π_s = ¼·(1 − π_s).",
+          "(1/5, 2/5, 2/5); Kac sunny = 1/(1/5) = 5 days."
+        ]
+      }
+    },
+    {
+      "beatId": "recap",
+      "required": true,
+      "track": "both",
+      "prompt": "Reveal the recap.",
+      "interaction": {
+        "type": "recap"
+      },
+      "feedback": {
+        "correct": "A regular chain forgets its start: the long-run share of time in each state is the unique π solving πP = π with Σπ = 1 — and that share fixes how often each state returns, every 1/πᵢ steps (Kac).",
+        "hints": [
+          "π is a spread, not a sink and not uniform: clear/rainy settles to (3/7, 4/7), never (1/2, 1/2) and never one frozen state.",
+          "Return time = 1/πᵢ: a clear day recurs every 7/3 days; a sunny cloudy-town day every 5.",
+          "Next up: WHY every start converges — Pⁿ → π (convergence, L7)."
+        ]
+      }
+    }
+  ]
+}

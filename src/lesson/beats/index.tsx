@@ -39,6 +39,7 @@ import { BayesUpdateBeat } from './BayesUpdateBeat'
 import { ExpectationScaleBeat } from './ExpectationScaleBeat'
 import { ConditionalTreeBeat } from './ConditionalTreeBeat'
 import { CouponCollectorSimBeat } from './CouponCollectorSimBeat'
+import { ChainBoardBeat } from './ChainBoardBeat'
 
 function ContinueStub({ beat, isLast, onAdvance }: BeatProps) {
   return (
@@ -100,6 +101,8 @@ export function BeatView(props: BeatProps) {
       return <AutocorrelationRulerBeat {...props} />
     case 'tripletReveal':
       return <TripletRevealBeat {...props} />
+    case 'chainBoard':
+      return <ChainBoardBeat {...props} />
     // Lesson-specific heroes (build-brief §4.4 / §6).
     case 'raceSim':
       return <RaceSimBeat {...props} />

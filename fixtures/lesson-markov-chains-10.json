@@ -1,0 +1,260 @@
+{
+  "lessonId": "lesson-markov-chains-10",
+  "courseId": "course-markov-chains",
+  "title": "Markov in the Wild",
+  "patternOptions": ["H"],
+  "milestoneId": "markov-chains-wild",
+  "unlocks": null,
+  "schemaVersion": 1,
+  "beats": [
+    {
+      "beatId": "recall-pick-the-tool",
+      "required": true,
+      "track": "both",
+      "prompt": "Quick warm-up — tap to match each famous result to the formula that made it.",
+      "interaction": {
+        "type": "retrievalGrid",
+        "pairs": [
+          { "left": "4/7 — a gambler reaches $3 before $0", "right": "Absorption probability (I−Q)⁻¹R" },
+          { "left": "(3,4,3) — a drunkard's steps to a wall", "right": "Hitting time (I−Q)t=1" },
+          { "left": "(3/7,4/7) — long-run clear/rainy share", "right": "Stationary share πP=π" }
+        ]
+      },
+      "feedback": {
+        "correct": "Each headline number is the fingerprint of one tool: a probability **split** with no +1 (absorption), a step-**count** with a +1 (hitting time), or a long-run **share** (stationary). The result reveals the question that was asked.",
+        "hints": [
+          "Warm-up — match each famous result to the formula that produced it.",
+          "A probability split (no +1) is absorption; a step-count (+1 every move) is hitting time; a long-run fraction is the stationary share — the +1 is the only thing separating the first two.",
+          "4/7 → absorption (I−Q)⁻¹R · (3,4,3) → hitting time (I−Q)t=1 · (3/7,4/7) → stationary share πP=π."
+        ]
+      }
+    },
+    {
+      "beatId": "which-tool-bet",
+      "required": true,
+      "track": "both",
+      "prompt": "An unlabeled Ehrenfest urn: balls rattle between two boxes, bouncing forever. Before classifying — which tool does it call for?",
+      "interaction": {
+        "type": "prediction",
+        "options": [
+          "Absorption — the balls eventually get stuck in one box",
+          "Stationary share (πP=π) — it mixes forever",
+          "Convergence (Pⁿ→π) — the distribution settles"
+        ]
+      },
+      "feedback": {
+        "byOption": {
+          "Absorption — the balls eventually get stuck in one box": {
+            "note": "Bouncing forever is the *opposite* of stuck. The Ehrenfest urn has NO absorbing state — every count leads back out, so there is nothing to be absorbed into. Ask the long-run share, πP=π.",
+            "correct": false
+          },
+          "Stationary share (πP=π) — it mixes forever": {
+            "note": "Right — every state leads back out, so the chain never settles into one box. Ask what fraction of the time it spends at each count: (1/4, 1/2, 1/4).",
+            "correct": true
+          },
+          "Convergence (Pⁿ→π) — the distribution settles": {
+            "note": "Careful — Ehrenfest is *periodic* (period 2): parity flips every step, so Pⁿ never settles. The long-run *time-average* (πP=π) still exists — that's the answerable question, not Pⁿ-convergence.",
+            "correct": false
+          }
+        },
+        "hints": [
+          "No wrong guess yet — commit, and we'll test it by structure.",
+          "Balls that bounce forever are the opposite of stuck — there is no state they can't leave, so 'when/where absorbed' is the wrong question.",
+          "No absorbing state ⇒ ask the long-run share πP=π → (1/4, 1/2, 1/4)."
+        ]
+      }
+    },
+    {
+      "beatId": "name-the-rubric",
+      "required": false,
+      "track": "A",
+      "prompt": "Expand the primer — read the one fork that decides the tool.",
+      "interaction": {
+        "type": "primer",
+        "variant": "custom",
+        "title": "One fork decides the tool",
+        "body": "Before computing anything, ask: **is there a state the chain can never leave?** **Yes → absorbing:** ask *which* exit (absorption probability (I−Q)⁻¹R) and *how long* until it's trapped (hitting time (I−Q)t=1). **No → it mixes forever (ergodic):** ask the *long-run share* (πP=π, Kac return time 1/πᵢ). Read the **structure, not the story** — and the tool picks itself.",
+        "collapsible": true
+      },
+      "feedback": {
+        "correct": "One fork, then the tool picks itself: can the chain reach a state it can never leave?",
+        "hints": [
+          "Ask one structural question before any algebra.",
+          "A state you can't leave = absorbing → ask which / when. No such state = ergodic → ask the long-run share.",
+          "Absorbing → (I−Q)⁻¹R & (I−Q)t=1 · Ergodic → πP=π & 1/πᵢ."
+        ]
+      }
+    },
+    {
+      "beatId": "classify-one",
+      "required": true,
+      "track": "both",
+      "prompt": "Is the weather chain absorbing or ergodic? Tap its class.",
+      "interaction": {
+        "type": "chainBoard",
+        "display": "diagram",
+        "task": "classify",
+        "matrix": [
+          { "cells": [{"n":3,"d":5},{"n":2,"d":5}] },
+          { "cells": [{"n":3,"d":10},{"n":7,"d":10}] }
+        ],
+        "labels": ["Clear","Rainy"],
+        "interactive": true,
+        "headline": "ergodic"
+      },
+      "feedback": {
+        "correct": "Neither Clear nor Rainy is a trap — each leads back to the other, so the weather **mixes forever**. That's **ergodic** ⇒ ask the long-run share, πP=π = (3/7, 4/7).",
+        "hints": [
+          "Look for a state with no way out. Is there one?",
+          "A 'bad-weather' state is not a trap — Rainy still leads back to Clear. No state is absorbing, so the chain never gets stuck.",
+          "No absorbing state ⇒ ergodic ⇒ tap 'ergodic → stationary share' (πP=π = 3/7, 4/7)."
+        ]
+      }
+    },
+    {
+      "beatId": "walk-recall",
+      "required": true,
+      "track": "both",
+      "prompt": "Watch the absorbing drunkard slam into a wall — replay L5's tools.",
+      "interaction": {
+        "type": "walkBoard",
+        "n": 4,
+        "p": 0.5,
+        "start": 2,
+        "interactive": false,
+        "display": "single"
+      },
+      "hero": {
+        "slowFirst": false,
+        "structuralReadout": "Walls at 0 & 4 are absorbing — from the middle (start 2) the drunkard reaches a wall w.p. 1/2 each side; reach P = i/4 = (1/4, 1/2, 3/4), steps to a wall = i(4−i) = (3, 4, 3).",
+        "reducedMotionFinalFrame": true
+      },
+      "feedback": {
+        "correct": "The walls at 0 and 4 swallow the walker — once he hits one he never leaves. That's **absorbing**: ask *which* wall (reach P = i/4 = (1/4, 1/2, 3/4)) and *how long* (steps = i(4−i) = (3, 4, 3)).",
+        "hints": [
+          "Watch where the walk ends — does it ever come back?",
+          "A symmetric walk has NO long-run share of the middle: the walls absorb it, so the chain ends rather than settling.",
+          "Walls are absorbing ⇒ reach P = i/4 = (1/4, 1/2, 3/4), steps = i(4−i) = (3, 4, 3)."
+        ]
+      }
+    },
+    {
+      "beatId": "explore-mixed",
+      "required": true,
+      "track": "both",
+      "prompt": "Watch the rubric at work: cycle through Ehrenfest, weather, and drunkard — classify each and see the right tool resolve.",
+      "interaction": {
+        "type": "chainBoard",
+        "display": "diagram",
+        "task": "classify",
+        "matrix": [
+          { "cells": [{"n":3,"d":5},{"n":2,"d":5}] },
+          { "cells": [{"n":3,"d":10},{"n":7,"d":10}] }
+        ],
+        "labels": ["Clear","Rainy"],
+        "interactive": true,
+        "headline": "ergodic"
+      },
+      "hero": {
+        "slowFirst": true,
+        "structuralReadout": "no exit ⇒ πP=π · has an exit ⇒ (I−Q)⁻¹R / (I−Q)t=1",
+        "reducedMotionFinalFrame": true
+      },
+      "feedback": {
+        "correct": "Same fork, three costumes: weather and the Ehrenfest urn have **no exit** ⇒ stationary share (πP=π); the drunkard has **walls** ⇒ absorption (I−Q)⁻¹R / hitting time (I−Q)t=1. The structure, not the story, picks the tool.",
+        "hints": [
+          "Classify each chain first: is there a state it can never leave?",
+          "The urn / weather / walk costumes don't matter — two mix forever (ergodic), one has walls (absorbing). Pick by structure.",
+          "Ergodic → πP=π (weather 3/7,4/7; Ehrenfest 1/4,1/2,1/4) · Absorbing → absorption (1/4,1/2,3/4) / time (3,4,3)."
+        ]
+      }
+    },
+    {
+      "beatId": "discriminate",
+      "required": true,
+      "track": "both",
+      "prompt": "Match each structural cue to the tool it triggers.",
+      "interaction": {
+        "type": "retrievalGrid",
+        "pairs": [
+          { "left": "A state you can never leave (a wall)", "right": "Absorption: which exit (I−Q)⁻¹R" },
+          { "left": "How many steps until you hit that wall", "right": "Hitting time (I−Q)t=1 (the +1)" },
+          { "left": "Every state leads back out — it mixes forever", "right": "Stationary share πP=π" },
+          { "left": "How often you return to a state", "right": "Kac return time 1/πᵢ" }
+        ]
+      },
+      "interviewNote": "The first move on *any* chain problem is to classify it — absorbing or ergodic — because that single fork decides whether you set up (I−Q)⁻¹ (which exit / how long) or πP=π (the long-run share). Naming the fork out loud is half the solution.",
+      "feedback": {
+        "correct": "Each structural **cue** names its tool: a state you can't leave → absorption; the steps to reach it → hitting time (the +1); every state leads back out → stationary share; how often you return → Kac time. Classify first, compute second.",
+        "hints": [
+          "Match by structure: what does each cue tell you about exits?",
+          "Absorption probability and hitting time are NOT one computation — both use (I−Q)⁻¹, but hitting time adds +1 per step. 'Which end' vs 'how long' is the difference.",
+          "Can't-leave → absorption (I−Q)⁻¹R · steps-to-it → hitting time (I−Q)t=1 · leads-back-out → πP=π · how-often-return → 1/πᵢ."
+        ]
+      }
+    },
+    {
+      "beatId": "interleave-A-vs-B",
+      "required": true,
+      "track": "both",
+      "prompt": "Decide the tool for each problem first — then compute.",
+      "interaction": {
+        "type": "masteryChallenge",
+        "scenario": "Two unlabeled problems. **Part A:** a walker on \\(\\{0,1,2,3,4\\}\\) steps \\(\\pm 1\\) with equal chance; 0 and 4 stop it — find the chance it reaches 4 starting from 1. **Part B:** a sky flips Clear\\(\\leftrightarrow\\)Rainy forever by \\(P=[[3/5,2/5],[3/10,7/10]]\\) — find the long-run fraction of Clear days. Decide the tool for each *first*.",
+        "fields": [
+          { "id": "partA", "label": "Part A — P(reach 4 | start 1)", "accept": ["1/4"] },
+          { "id": "partB", "label": "Part B — long-run Clear share", "accept": ["3/7"] }
+        ]
+      },
+      "feedback": {
+        "correct": "Part A has **walls** (the drunkard at 0 and 4 is absorbing) \\(\\Rightarrow\\) absorption: \\(P(\\text{reach 4} \\mid \\text{start 1}) = i/N = \\mathbf{1/4}\\). Part B **mixes forever** (the weather is ergodic) \\(\\Rightarrow\\) stationary: long-run Clear share \\(= \\mathbf{3/7}\\). The cover story is a costume — classify by structure.",
+        "hints": [
+          "Don't compute yet — first ask each part: is there a state it can never leave?",
+          "Pick the tool by *structure*, not the cover story: Part A has absorbing walls (ask which / when); Part B mixes forever (ask the long-run share).",
+          "Part A absorption i/N = 1/4 · Part B stationary π_Clear = 3/7."
+        ]
+      }
+    },
+    {
+      "beatId": "mastery-challenge",
+      "required": true,
+      "track": "both",
+      "prompt": "Classify the chain and give the full absorption vector.",
+      "interaction": {
+        "type": "masteryChallenge",
+        "scenario": "A frog sits on lily pads \\(0\\text{–}4\\) and hops left / right with equal chance. Pads **0** and **4** are sink pads — land there and it stops forever. Classify the chain, then give the chance it ends on pad 4 from each interior start.",
+        "fields": [
+          { "id": "kind", "label": "Is this chain absorbing or ergodic?", "accept": ["absorbing"] },
+          { "id": "from1", "label": "P(reach pad 4 | start pad 1)", "accept": ["1/4"] },
+          { "id": "from2", "label": "P(reach pad 4 | start pad 2)", "accept": ["1/2"] },
+          { "id": "from3", "label": "P(reach pad 4 | start pad 3)", "accept": ["3/4"] }
+        ]
+      },
+      "feedback": {
+        "correct": "A frog on pads \\(0\\text{–}4\\) with sink pads 0 & 4 is a **symmetric absorbing walk** — *not* ergodic, so 'long-run share' is the trap. \\[\\text{Absorption: } P(\\text{reach pad 4} \\mid \\text{start } i) = i/4 \\Rightarrow \\mathbf{(1/4,\\; 1/2,\\; 3/4)}\\]",
+        "hints": [
+          "It runs a while — but does it ever leave pad 0 or pad 4? Classify before you compute.",
+          "'It runs a long time, so ask its long-run share' is the trap: the sink pads are absorbing, so the chain ends. Ask *which* pad and *how likely*, not a long-run fraction.",
+          "Absorbing ⇒ absorption vector i/4 = (1/4, 1/2, 3/4): start 1 → 1/4, start 2 → 1/2, start 3 → 3/4."
+        ]
+      }
+    },
+    {
+      "beatId": "recap",
+      "required": true,
+      "track": "both",
+      "prompt": "Reveal the recap — one fork, three tools, exact rationals.",
+      "interaction": {
+        "type": "recap"
+      },
+      "feedback": {
+        "correct": "Every chain question forks on one structural test — *is there a state the chain can never leave?* **Yes → absorbing** (which exit (I−Q)⁻¹R, how long (I−Q)t=1); **No → ergodic** (long-run share πP=π, return 1/πᵢ). Read the structure, not the story.",
+        "hints": [
+          "Absorbing walls ⇒ which / when: gambler 4/7, drunkard (1/4,1/2,3/4) & (3,4,3).",
+          "Ergodic mixing ⇒ long-run share: weather (3/7,4/7), cloudy-town (1/5,2/5,2/5), Ehrenfest (1/4,1/2,1/4).",
+          "Periodic warning: Ehrenfest's πP=π share exists, but Pⁿ never settles (period 2). That's the whole concept in one fork — you're done."
+        ]
+      }
+    }
+  ]
+}

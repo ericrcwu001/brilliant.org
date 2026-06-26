@@ -1,0 +1,269 @@
+{
+  "lessonId": "lesson-markov-chains-8",
+  "courseId": "course-markov-chains",
+  "title": "Reversibility & Detailed Balance",
+  "patternOptions": ["H"],
+  "milestoneId": "markov-chains-reversible",
+  "unlocks": "lesson-markov-chains-9",
+  "schemaVersion": 1,
+  "beats": [
+    {
+      "beatId": "recall-birth-death",
+      "required": true,
+      "track": "both",
+      "prompt": "Warm-up — match each birth–death concept to its definition.",
+      "interaction": {
+        "type": "retrievalGrid",
+        "pairs": [
+          { "left": "Gambler's-ruin step (P₂ = ½P₃ + ½P₁)", "right": "move only to a neighbor (nearest-neighbor up/down)" },
+          { "left": "An absorbing wall (ruin / win)", "right": "the walk stops there forever" },
+          { "left": "Seal the wall to reflect", "right": "the walk bounces back — a birth–death chain" },
+          { "left": "Birth–death line, reflecting ends", "right": "the canonical reversible chain" }
+        ]
+      },
+      "feedback": {
+        "correct": "A nearest-neighbor up/down walk — gambler's ruin — is a **birth–death** line. Seal the absorbing walls into **reflecting** ends and that same line becomes the canonical **reversible** chain.",
+        "hints": [
+          "Warm-up from Gambler's Ruin — the walk that only steps to a neighbor (P₂ = ½P₃ + ½P₁).",
+          "An absorbing walk gets stuck at a wall — but seal the walls to reflect and the same line has a clean long-run π.",
+          "Up/down to a neighbor = birth–death; reflect the ends → the canonical reversible chain."
+        ]
+      }
+    },
+    {
+      "beatId": "guess-pi-bet",
+      "required": true,
+      "track": "both",
+      "prompt": "Two urns, a handful of balls — can you find the long-run distribution π without solving the full πP=π system?",
+      "interaction": {
+        "type": "prediction",
+        "options": [
+          "No — you must always solve the full πP=π system",
+          "Yes — if the chain has no preferred direction, read π off the edges",
+          "Only for tiny 2-state chains"
+        ]
+      },
+      "feedback": {
+        "byOption": {
+          "No — you must always solve the full πP=π system": {
+            "note": "Not for a reversible chain. If every edge balances (πᵢpᵢⱼ=πⱼpⱼᵢ) you can walk π out edge by edge — no linear system at all.",
+            "correct": false
+          },
+          "Yes — if the chain has no preferred direction, read π off the edges": {
+            "note": "Right — detailed balance lets you telescope π edge by edge. On the Ehrenfest urn that's just (1,2,1), normalized to (1/4,1/2,1/4).",
+            "correct": true
+          },
+          "Only for tiny 2-state chains": {
+            "note": "No — the shortcut works for any reversible chain, including the m-ball Ehrenfest birth–death line. Size doesn't matter; reversibility does.",
+            "correct": false
+          }
+        },
+        "hints": [
+          "No wrong guess yet — commit and we'll test it.",
+          "A reversible chain balances every edge, so π telescopes out without the full solve.",
+          "Yes: (1,2,1) → (1/4,1/2,1/4), no πP=π needed."
+        ]
+      }
+    },
+    {
+      "beatId": "name-detailed-balance",
+      "required": false,
+      "track": "A",
+      "prompt": "Read this just-in-time primer on reversibility and detailed balance, then continue.",
+      "interaction": {
+        "type": "primer",
+        "variant": "custom",
+        "title": "Detailed balance: the movie runs the same backward",
+        "body": "A chain is **reversible** when every edge balances its own back-flow: **πᵢpᵢⱼ = πⱼpⱼᵢ**. As much probability crosses i→j as crosses j→i. Film the chain in equilibrium and play it backward — you can't tell the difference. When this holds, you can build π **edge by edge** instead of solving πP=π.",
+        "collapsible": true
+      },
+      "feedback": {
+        "correct": "Detailed balance: **πᵢpᵢⱼ = πⱼpⱼᵢ**. Flow i→j equals flow j→i on every edge — the movie runs the same backward.",
+        "hints": [
+          "Forward flow = back-flow, edge by edge.",
+          "Balance is per-edge (πᵢpᵢⱼ=πⱼpⱼᵢ) — stronger than just a steady total.",
+          "Reversible ⇒ run the movie backward and it looks identical."
+        ]
+      }
+    },
+    {
+      "beatId": "balance-one-edge",
+      "required": true,
+      "track": "both",
+      "prompt": "Given π₀ = 1/4 for the m=2 Ehrenfest urn, apply detailed balance on edge (0,1) to find π₁.",
+      "interaction": {
+        "type": "chainBoard",
+        "display": "stationary",
+        "task": "balance",
+        "matrix": [
+          { "cells": [{ "n": 0, "d": 1 }, { "n": 1, "d": 1 }, { "n": 0, "d": 1 }] },
+          { "cells": [{ "n": 1, "d": 2 }, { "n": 0, "d": 1 }, { "n": 1, "d": 2 }] },
+          { "cells": [{ "n": 0, "d": 1 }, { "n": 1, "d": 1 }, { "n": 0, "d": 1 }] }
+        ],
+        "labels": ["0", "1", "2"],
+        "cell": { "row": 0, "col": 1 },
+        "interactive": true,
+        "headline": "1/2"
+      },
+      "feedback": {
+        "correct": "Detailed balance on edge (0,1): π₀p₀₁ = π₁p₁₀ → (1/4)·1 = π₁·(1/2) → π₁ = **1/2**. One edge, one equation — no system.",
+        "hints": [
+          "Use the edge you just named: π₀p₀₁ = π₁p₁₀.",
+          "It's one concrete equation — read p₀₁=1 and p₁₀=1/2 straight off P, plug in π₀=1/4, solve for π₁.",
+          "(1/4)·1 = π₁·(1/2) → π₁ = 1/2."
+        ]
+      }
+    },
+    {
+      "beatId": "ehrenfest-walk",
+      "required": true,
+      "track": "both",
+      "prompt": "Step the Ehrenfest urn — watch each crossing 0↔1↔2 happen as often forward as back.",
+      "interaction": {
+        "type": "chainBoard",
+        "display": "diagram",
+        "task": "balance",
+        "layout": "line",
+        "matrix": [
+          { "cells": [{ "n": 0, "d": 1 }, { "n": 1, "d": 1 }, { "n": 0, "d": 1 }] },
+          { "cells": [{ "n": 1, "d": 2 }, { "n": 0, "d": 1 }, { "n": 1, "d": 2 }] },
+          { "cells": [{ "n": 0, "d": 1 }, { "n": 1, "d": 1 }, { "n": 0, "d": 1 }] }
+        ],
+        "labels": ["0", "1", "2"],
+        "interactive": true,
+        "headline": "1/4,1/2,1/4"
+      },
+      "hero": {
+        "slowFirst": true,
+        "structuralReadout": "Each crossing i↔i+1 happens as often forward as back — flows balance edge by edge → π = (1/4, 1/2, 1/4)",
+        "reducedMotionFinalFrame": true
+      },
+      "feedback": {
+        "correct": "Watch the token cross 0↔1↔2: each crossing happens as often forward as back. Flows balance edge by edge → π = **(1/4, 1/2, 1/4)**.",
+        "hints": [
+          "Step the urn and watch one crossing at a time.",
+          "The balls don't drift to a 50/50 split and freeze — they keep crossing; π is Binomial(2,½), not a frozen middle.",
+          "Forward flow matches back-flow on every edge → π = (1/4,1/2,1/4)."
+        ]
+      }
+    },
+    {
+      "beatId": "telescope-to-pi",
+      "required": true,
+      "track": "both",
+      "prompt": "Build π via the detailed-balance telescoping product on the m=2 Ehrenfest urn, then normalize.",
+      "interaction": {
+        "type": "chainBoard",
+        "display": "stationary",
+        "task": "balance",
+        "matrix": [
+          { "cells": [{ "n": 0, "d": 1 }, { "n": 1, "d": 1 }, { "n": 0, "d": 1 }] },
+          { "cells": [{ "n": 1, "d": 2 }, { "n": 0, "d": 1 }, { "n": 1, "d": 2 }] },
+          { "cells": [{ "n": 0, "d": 1 }, { "n": 1, "d": 1 }, { "n": 0, "d": 1 }] }
+        ],
+        "labels": ["0", "1", "2"],
+        "interactive": true,
+        "headline": "1/4,1/2,1/4"
+      },
+      "interviewNote": "Detailed balance — πᵢpᵢⱼ=πⱼpⱼᵢ — is the fastest route to a birth–death chain's stationary distribution, the standard follow-up once you've solved πP=π the long way.",
+      "feedback": {
+        "correct": "Telescope the edge ratios: π ∝ (1, p₀₁/p₁₀, …) = (1, 2, 1); normalize → **(1/4, 1/2, 1/4)**. No πP=π system — detailed balance built it edge by edge.",
+        "hints": [
+          "Chain the edge balances: π₁/π₀ = p₀₁/p₁₀, then π₂/π₁ = p₁₂/p₂₁.",
+          "No hidden system — each ratio is read straight off P: (1, 1/(1/2), …) = (1, 2, 1).",
+          "(1,2,1) normalized → (1/4,1/2,1/4)."
+        ]
+      }
+    },
+    {
+      "beatId": "triplet-reveal",
+      "required": true,
+      "track": "both",
+      "prompt": "Three methods all converge on (1/4, 1/2, 1/4) — reveal each lens.",
+      "interaction": {
+        "type": "tripletReveal",
+        "value": "1/4,1/2,1/4",
+        "lenses": [
+          { "label": "Detailed balance", "body": "π ∝ (1,2,1) from edge ratios → (1/4,1/2,1/4)" },
+          { "label": "πP=π (L6)", "body": "Solve the full stationary system → (1/4,1/2,1/4)" },
+          { "label": "Long-run simulation", "body": "Run the urn forever (simulateChain) → fractions 1/4, 1/2, 1/4 = Binomial(2,½)" }
+        ],
+        "display": "cards"
+      },
+      "feedback": {
+        "correct": "Detailed balance, πP=π (L6), and a long-run simulation all land on **(1/4, 1/2, 1/4)** — the same Binomial(2,½), not a trick of one method.",
+        "hints": [
+          "Reveal each lens.",
+          "Three roads — edge balance, the full solve, and the simulation — to one π.",
+          "All three say (1/4,1/2,1/4)."
+        ]
+      }
+    },
+    {
+      "beatId": "reversible-or-not",
+      "required": true,
+      "track": "both",
+      "prompt": "Tap edge A→B and its back-edge B→A on the directed 3-cycle — is the chain reversible?",
+      "interaction": {
+        "type": "chainBoard",
+        "display": "stationary",
+        "task": "balance",
+        "matrix": [
+          { "cells": [{ "n": 0, "d": 1 }, { "n": 1, "d": 1 }, { "n": 0, "d": 1 }] },
+          { "cells": [{ "n": 0, "d": 1 }, { "n": 0, "d": 1 }, { "n": 1, "d": 1 }] },
+          { "cells": [{ "n": 1, "d": 1 }, { "n": 0, "d": 1 }, { "n": 0, "d": 1 }] }
+        ],
+        "labels": ["A", "B", "C"],
+        "interactive": true,
+        "headline": "not-reversible"
+      },
+      "feedback": {
+        "correct": "Directed 3-cycle A→B→C→A: forward flow π_A·p_AB = (1/3)·1 = 1/3, back-flow π_B·p_BA = (1/3)·0 = 0. 1/3 ≠ 0 → detailed balance fails → **not reversible**. It is still *stationary* at (1/3,1/3,1/3) — but not every chain is reversible, so here you must fall back to L6's full πP=π.",
+        "hints": [
+          "Compare forward flow π_A·p_AB with back-flow π_B·p_BA on the A–B edge.",
+          "Stationary ≠ reversible. The cycle is stationary at (1/3,1/3,1/3), yet the back-edge B→A has probability 0 — no edge balance.",
+          "1/3 ≠ 0 → not reversible."
+        ]
+      }
+    },
+    {
+      "beatId": "mastery-ehrenfest-m3",
+      "required": true,
+      "track": "both",
+      "prompt": "Mastery challenge: Ehrenfest urn with m = 3 balls. Find π via the detailed-balance telescoping product.",
+      "interaction": {
+        "type": "masteryChallenge",
+        "scenario": "The Ehrenfest urn with \\(m = 3\\) balls, states \\(\\{0,1,2,3\\}\\), transition matrix \\(P = [[0,1,0,0],[\\tfrac{1}{3},0,\\tfrac{2}{3},0],[0,\\tfrac{2}{3},0,\\tfrac{1}{3}],[0,0,1,0]]\\). Find the stationary distribution \\(\\pi\\) via detailed balance.",
+        "fields": [
+          { "id": "pi0", "label": "\\(\\pi(0)\\)", "accept": ["1/8"] },
+          { "id": "pi1", "label": "\\(\\pi(1)\\)", "accept": ["3/8"] },
+          { "id": "pi2", "label": "\\(\\pi(2)\\)", "accept": ["3/8"] },
+          { "id": "pi3", "label": "\\(\\pi(3)\\)", "accept": ["1/8"] }
+        ]
+      },
+      "feedback": {
+        "correct": "Telescope on \\(\\{0,1,2,3\\}\\): edge (0,1) gives \\(\\pi_1 = 3\\pi_0\\), edge (1,2) gives \\(\\pi_2 = \\pi_1\\), edge (2,3) gives \\(\\pi_3 = \\pi_0\\) \\(\\Rightarrow \\pi \\propto (1,3,3,1)\\); normalize by \\(2^3 = 8\\) \\(\\Rightarrow \\mathbf{(1/8,\\, 3/8,\\, 3/8,\\, 1/8)} = \\binom{3}{i}/2^3\\). More states, same shortcut — no \\(\\pi P = \\pi\\).",
+        "hints": [
+          "Same telescoping product, now four states: \\(\\pi_1/\\pi_0 = p_{01}/p_{10}\\), etc.",
+          "Still no system — π is Binomial(3,½), not 1/3 again and not a frozen middle: (1,3,3,1).",
+          "(1,3,3,1)/8 = (1/8,3/8,3/8,1/8)."
+        ]
+      }
+    },
+    {
+      "beatId": "recap",
+      "required": true,
+      "track": "both",
+      "prompt": "Reveal the recap to review the core principle.",
+      "interaction": { "type": "recap" },
+      "feedback": {
+        "correct": "When every edge balances (πᵢpᵢⱼ=πⱼpⱼᵢ), the chain is **reversible** and π telescopes out edge by edge — no πP=π. For a birth–death chain like the Ehrenfest urn that hands you π(i) = C(m,i)/2ᵐ for free.",
+        "hints": [
+          "Reversible = forward flow equals back-flow on every edge.",
+          "Telescoping product π ∝ ∏(pₖ,ₖ₊₁/pₖ₊₁,ₖ): Ehrenfest m=2 → (1/4,1/2,1/4), m=3 → (1/8,3/8,3/8,1/8).",
+          "When detailed balance fails (a one-way cycle), drop back to L6's full πP=π solve."
+        ]
+      }
+    }
+  ]
+}
