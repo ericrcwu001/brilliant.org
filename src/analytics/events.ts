@@ -103,4 +103,35 @@ export const analytics = {
   quickCheckOffered: (p: { conceptId: string }) => track('quick_check_offered', p),
   quickCheckCompleted: (p: { conceptId: string; track: 'A' | 'B'; skipped: boolean }) =>
     track('quick_check_completed', p),
+
+  interviewCtaClicked: (p: {
+    conceptId: string
+    surface: 'lesson_complete' | 'concept_page'
+  }) => track('interview_cta_clicked', p),
+  interviewStarted: (p: {
+    conceptId: string
+    questionId: string
+    tier: 'hard' | 'harder' | 'brutal'
+    mode: 'voice' | 'text'
+  }) => track('interview_started', p),
+  interviewConnected: (p: { conceptId: string }) =>
+    track('interview_connected', p),
+  interviewFallbackUsed: (p: { conceptId: string }) =>
+    track('interview_fallback_used', p),
+  interviewCompleted: (p: {
+    conceptId: string
+    questionId: string
+    durationSec: number
+    hireSignal: string
+  }) => track('interview_completed', p),
+  interviewReportViewed: (p: { conceptId: string; attemptId: string }) =>
+    track('interview_report_viewed', p),
+  interviewQuotaBlocked: (p: {
+    conceptId: string
+    reason: 'daily' | 'session'
+  }) => track('interview_quota_blocked', p),
+  interviewError: (p: {
+    conceptId: string
+    stage: 'mint' | 'connect' | 'grade'
+  }) => track('interview_error', p),
 }

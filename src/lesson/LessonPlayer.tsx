@@ -42,6 +42,7 @@ export function LessonPlayer({
   initialSnapshot,
   persistence,
   onExit,
+  onInterviewCta,
   track = 'B',
   review = false,
 }: {
@@ -49,6 +50,8 @@ export function LessonPlayer({
   initialSnapshot?: Snapshot | null
   persistence?: { uid: string; lessonId: string }
   onExit?: () => void
+  /** Called when the learner clicks "Take the capstone interview" on the done screen. */
+  onInterviewCta?: () => void
   // Two-track selection (L1 §3.3). Default 'B' = today's experience. Track 'A'
   // reveals the additive scaffolds (primers, split density, name-the-overlap).
   track?: 'A' | 'B'
@@ -450,6 +453,21 @@ export function LessonPlayer({
               onClick={onExit}
             >
               Back to course path
+            </button>
+          )}
+          {canExit && completion?.unlockedLessonId === null && onInterviewCta && (
+            <button
+              type="button"
+              className="btn btn--primary"
+              onClick={() => {
+                void analytics.interviewCtaClicked({
+                  conceptId: lesson.courseId,
+                  surface: 'lesson_complete',
+                })
+                onInterviewCta()
+              }}
+            >
+              Take the capstone interview
             </button>
           )}
         </footer>

@@ -22,6 +22,7 @@ import {
   ROUTES,
   parseLessonId,
   parseConceptId,
+  parseInterviewId,
   type NavigateFn,
   type NavigateOptions,
 } from './pages/routes'
@@ -53,6 +54,9 @@ const OnboardingSurvey = lazy(() =>
 )
 const LessonPage = lazy(() =>
   import('./pages/LessonPage').then(m => ({ default: m.LessonPage })),
+)
+const InterviewPage = lazy(() =>
+  import('./pages/InterviewPage').then(m => ({ default: m.InterviewPage })),
 )
 
 function useRouter() {
@@ -111,7 +115,8 @@ function redirectTarget(
     path === ROUTES.landing ||
     path === ROUTES.profile ||
     parseLessonId(path) !== null ||
-    parseConceptId(path) !== null
+    parseConceptId(path) !== null ||
+    parseInterviewId(path) !== null
   return known ? null : ROUTES.landing
 }
 
@@ -152,6 +157,10 @@ function GuardedRoutes({
 
   const conceptId = parseConceptId(path)
   if (conceptId) return <CoursePathPage navigate={navigate} conceptId={conceptId} />
+
+  const interviewConceptId = parseInterviewId(path)
+  if (interviewConceptId)
+    return <InterviewPage navigate={navigate} conceptId={interviewConceptId} />
 
   // Unreachable: the guard redirects unknown paths above.
   return <BootScreen />

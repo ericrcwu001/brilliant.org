@@ -19,7 +19,7 @@ import { loadTrack, saveTrack, type Track } from '../progress/track'
 import { analytics } from '../analytics/events'
 import { StudyDesk } from './StudyDesk'
 import { DiagnosticGate } from './DiagnosticGate'
-import { ROUTES, type NavigateFn } from './routes'
+import { ROUTES, interviewPath, type NavigateFn } from './routes'
 
 const seenKey = (uid: string) => `phht:seenSeals:${uid}`
 
@@ -155,7 +155,9 @@ export function CoursePathPage({
       displayName={displayName}
       navigate={navigate}
       onBack={() => navigate(ROUTES.landing)}
-      conceptTitle={course?.title ?? effectiveConceptId}
+      conceptTitle={course?.title}
+      completionMilestoneId={course?.completionMilestoneId}
+      onInterviewCta={(conceptId) => navigate(interviewPath(conceptId))}
     />
   )
 }

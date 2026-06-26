@@ -15,3 +15,19 @@ We chose Realtime for the natural, low-latency back-and-forth and the live audio
 - Hosting must allow `https://api.openai.com` in the CSP `connect-src` and flip the microphone `Permissions-Policy` (currently `microphone=()`, which hard-blocks mic).
 - Cost is **per minute of audio**, so it is load-bearing — not optional — to enforce a per-user daily quota (~30 min), a per-session hard cap (~8 min), required auth, and **App Check on the mint function** (even though global App Check enforcement stays off).
 - The transcript is assembled on the client and sent to the grader, so it is tamperable. Acceptable **only because the interview gates nothing**; revisit if it ever becomes a gate.
+
+## Detailed phase specifications
+
+The implementation is broken into seven phases (P0–P6). Each has a dedicated spec under
+[`docs/capstone-interview/`](../capstone-interview/README.md); the index there carries the shared
+contracts (data shapes, callable I/O, Firestore layout, caps, the hidden-answer leak rule, analytics,
+routes) and a verified OpenAI Realtime API reference, so the phase docs don't duplicate them.
+
+- [Spec index & shared contracts](../capstone-interview/README.md) — the hub for everything below.
+- [Phase 0 — Infrastructure](../capstone-interview/phase-0-infrastructure.md) — hosting CSP/`Permissions-Policy`, the `OPENAI_API_KEY` secret, deps, pack→functions bundling.
+- [Phase 1 — Cloud Functions](../capstone-interview/phase-1-cloud-functions.md) — `mintInterviewToken` (server draw + caps + quota + App Check + token mint) and `gradeInterview`; client wrappers.
+- [Phase 2 — Interview-pack content layer](../capstone-interview/phase-2-interview-pack-content.md) — the shared Zod pack schema + hidden-stripped loader + draw module + validate script (2A), and authoring the pattern-hitting-times pack (2B).
+- [Phase 3 — Realtime client](../capstone-interview/phase-3-realtime-client.md) — the `/interview/:conceptId` route, `InterviewPage`, and the `useRealtimeInterview` WebRTC hook (transcript, typed fallback, session countdown).
+- [Phase 4 — Orb](../capstone-interview/phase-4-orb.md) — the audio-reactive WebGL sphere driven by the live audio stream.
+- [Phase 5 — Report, persistence & CTAs](../capstone-interview/phase-5-report-persistence-and-ctas.md) — the report UI, the attempts read layer, `firestore.rules`, the entry-point CTAs, and analytics.
+- [Phase 6 — Guardrails & tests](../capstone-interview/phase-6-guardrails-and-tests.md) — guardrail hardening plus the unit/rules/e2e test suite.

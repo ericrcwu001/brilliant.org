@@ -43,9 +43,8 @@ async function answerEntry(page: Page, values: string[]) {
 }
 
 async function couponCollectorSim(page: Page) {
-  // Draw boxes until set complete (or wait for hero auto-draw to finish)
-  const drawBtn = page.locator('.ccsim__draw-btn')
-  // Wait up to 30s for set complete (hero auto-draws at 500ms/box × ~15 draws)
+  // Draw boxes until set complete (or wait for hero auto-draw to finish).
+  // The hero auto-draws at 500 ms/box × ~15 draws; just wait for the primary gate.
   await expect(primaryOf(page)).toBeEnabled({ timeout: 30000 })
   await primaryClick(page)
 }

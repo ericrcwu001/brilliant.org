@@ -33,6 +33,10 @@ export interface StudyDeskProps {
   onBack?: () => void
   /** Title to display beside the back button (concept name). */
   conceptTitle?: string
+  /** The concept's completion milestone id — gates the capstone interview CTA. */
+  completionMilestoneId?: string
+  /** Called when learner clicks "Take capstone interview" on the detail card. */
+  onInterviewCta?: (conceptId: string) => void
 }
 
 // Stagger: sections rise in sequence on load; reduced-motion drops the slide
@@ -56,6 +60,8 @@ export function StudyDesk({
   navigate,
   onBack,
   conceptTitle,
+  completionMilestoneId,
+  onInterviewCta,
 }: StudyDeskProps) {
   const reducedMotion = useReducedMotion()
 
@@ -147,6 +153,9 @@ export function StudyDesk({
                 progressById={progressById}
                 navigate={navigate}
                 reducedMotion={reducedMotion}
+                earned={earned}
+                completionMilestoneId={completionMilestoneId}
+                onInterviewCta={onInterviewCta}
               />
             </m.div>
           </m.div>

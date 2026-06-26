@@ -200,3 +200,66 @@ describe('milestones / streaks (Cloud Functions only)', () => {
     )
   })
 })
+
+describe('interviews / interviewUsage / interviewState (Cloud Functions only)', () => {
+  it('allows owner reads but denies all client writes', async () => {
+    // Simulate Cloud Function writes (Admin SDK bypasses rules).
+    await seed('users/alice/interviews/attempt-1', {
+      conceptId: 'course-expected-value',
+      questionId: 'q-ev-1',
+      fingerprint: 'abc123',
+      tier: 'hard',
+      mode: 'voice',
+      status: 'graded',
+      startedAt: 'ts',
+      createdAt: 'ts',
+    })
+    await seed('users/alice/interviewUsage/2026-06-26', {
+      date: '2026-06-26',
+      secondsUsed: 300,
+      sessionCount: 1,
+      updatedAt: 'ts',
+    })
+    await seed('users/alice/interviewState/course-expected-value', {
+      seenQuestionIds: ['q-ev-1'],
+      attemptCount: 1,
+      lastAttemptAt: 'ts',
+    })
+
+    // Owner can read all three subcollections.
+    await assertSucceeds(
+      getDoc(doc(alice(), 'users/alice/interviews/attempt-1')),
+    )
+    await assertSucceeds(
+      getDoc(doc(alice(), 'users/alice/interviewUsage/2026-06-26')),
+    )
+    await assertSucceeds(
+      getDoc(doc(alice(), 'users/alice/interviewState/course-expected-value')),
+    )
+
+    // Non-owner cannot read.
+    await assertFails(
+      getDoc(doc(bob(), 'users/alice/interviews/attempt-1')),
+    )
+
+    // Client writes are denied for all three (regardless of content).
+    await assertFails(
+      setDoc(doc(alice(), 'users/alice/interviews/forged'), {
+        conceptId: 'course-expected-value',
+        status: 'graded',
+        hireSignal: 'Strong Yes',
+      }),
+    )
+    await assertFails(
+      setDoc(doc(alice(), 'users/alice/interviewUsage/2026-06-26'), {
+        secondsUsed: 0,
+      }),
+    )
+    await assertFails(
+      setDoc(
+        doc(alice(), 'users/alice/interviewState/course-expected-value'),
+        { attemptCount: 0 },
+      ),
+    )
+  })
+})

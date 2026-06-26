@@ -22,6 +22,9 @@
 /** view-transition name used when opening a concept from the catalog. */
 export const CONCEPT_OPEN_TRANSITION = 'concept-open'
 
+/** view-transition name used when opening an interview from a concept or lesson. */
+export const INTERVIEW_OPEN_TRANSITION = 'interview-open'
+
 // ─────────────────────────────────────────────────────────────────────────────
 
 let _vtGen = 0

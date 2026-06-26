@@ -6,6 +6,7 @@ import { ROUTES, parseDevLessonId } from './routes'
 import { loadDevLesson } from '../content/devLessons'
 import { LessonPlayer } from '../lesson/LessonPlayer'
 import { DevHomePage } from './DevHomePage'
+import { DevInterviewPage } from './DevInterviewPage'
 
 export function DevRoutes({ path }: { path: string }) {
   if (path === ROUTES.devLesson) {
@@ -35,6 +36,8 @@ export function DevRoutes({ path }: { path: string }) {
   }
 
   if (path === ROUTES.devHome) return <DevHomePage />
+
+  if (path === ROUTES.devInterview) return <DevInterviewPage />
 
   // Fallback: shouldn't be reached given the /dev prefix guard in App.
   return <DevHomePage />

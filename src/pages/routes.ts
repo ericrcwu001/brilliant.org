@@ -20,6 +20,8 @@ export const ROUTES = {
   devLesson: '/dev/lesson',
   /** Dev-only Study Desk harness (fixture data, no Firebase). */
   devHome: '/dev/home',
+  /** Dev-only interview harness (fixture data, no Firebase/OpenAI). */
+  devInterview: '/dev/interview',
 } as const
 
 export const FLAGSHIP_LESSON_ID = 'lesson-pattern-hitting-times'
@@ -55,5 +57,16 @@ export function conceptPath(conceptId: string): string {
 /** Returns the conceptId for a `/concept/:conceptId` path, else null. */
 export function parseConceptId(pathname: string): string | null {
   const match = pathname.match(/^\/concept\/([^/]+)$/)
+  return match ? decodeURIComponent(match[1]) : null
+}
+
+/** Returns the path for an interview page: `/interview/:conceptId`. */
+export function interviewPath(conceptId: string): string {
+  return `/interview/${conceptId}`
+}
+
+/** Returns the conceptId for an `/interview/:conceptId` path, else null. */
+export function parseInterviewId(pathname: string): string | null {
+  const match = pathname.match(/^\/interview\/([^/]+)$/)
   return match ? decodeURIComponent(match[1]) : null
 }

@@ -277,3 +277,7 @@ export const recordQualifyingAction = onCall(
     return { recorded: true, lessonId, beatId, streak }
   },
 )
+
+// Capstone-interview callables (ADR-0008). Re-exported at the bottom so the
+// initializeApp()/setGlobalOptions(...) above run before these register.
+export { mintInterviewToken, gradeInterview } from './interview'

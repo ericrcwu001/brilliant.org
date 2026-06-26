@@ -12,6 +12,7 @@ import { Fragment, useRef, useState } from 'react'
 import type { Course, Progress } from '../content/schema'
 import type { NavigateFn } from './routes'
 import { lessonPath } from './routes'
+import { analytics } from '../analytics/events'
 import {
   resolveNodes,
   resolveChapters,
@@ -30,8 +31,14 @@ export function CourseJourney(props: {
   progressById: Record<string, Progress>
   navigate: NavigateFn
   reducedMotion: boolean
+  /** Earned milestone ids — used to gate the capstone interview CTA. */
+  earned?: Set<string>
+  /** The concept's completion milestone id (course.completionMilestoneId). */
+  completionMilestoneId?: string
+  /** Called when learner clicks "Take capstone interview" on the detail card. */
+  onInterviewCta?: (conceptId: string) => void
 }): React.JSX.Element {
-  const { course, progressById, navigate, reducedMotion } = props
+  const { course, progressById, navigate, reducedMotion, earned, completionMilestoneId, onInterviewCta } = props
 
   const nodes = resolveNodes(course, progressById)
   const chapters = resolveChapters(course)
@@ -130,6 +137,10 @@ export function CourseJourney(props: {
                             chapterIndex={activeChapterIndex}
                             progress={progressById[activeNode.lessonId]}
                             navigate={navigate}
+                            conceptId={course.courseId}
+                            earned={earned}
+                            completionMilestoneId={completionMilestoneId}
+                            onInterviewCta={onInterviewCta}
                           />
                         </div>
                       )}
@@ -165,6 +176,10 @@ export function CourseJourney(props: {
             chapterIndex={activeChapterIndex}
             progress={progressById[activeNode.lessonId]}
             navigate={navigate}
+            conceptId={course.courseId}
+            earned={earned}
+            completionMilestoneId={completionMilestoneId}
+            onInterviewCta={onInterviewCta}
           />
         </aside>
       )}
@@ -517,15 +532,26 @@ function DetailCard({
   chapterIndex,
   progress,
   navigate,
+  conceptId,
+  earned,
+  completionMilestoneId,
+  onInterviewCta,
 }: {
   node: DeskNode
   chapter: Chapter | null
   chapterIndex: number
   progress: Progress | undefined
   navigate: NavigateFn
+  conceptId?: string
+  earned?: Set<string>
+  completionMilestoneId?: string
+  onInterviewCta?: (conceptId: string) => void
 }) {
   const chColor = chapter ? `var(--${chapter.hueVar})` : 'var(--ergo-brand)'
   const cta = nodeCtaLabel(node, progress)
+  const completionEarned = earned && completionMilestoneId
+    ? earned.has(completionMilestoneId)
+    : false
 
   const chNum = chapterIndex >= 0 ? chapterIndex + 1 : ''
   const chName = chapter?.label ?? ''
@@ -630,6 +656,38 @@ function DetailCard({
           aria-label={`${cta} ${node.title}`}
         >
           {cta} lesson
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 16 16"
+            fill="none"
+            aria-hidden="true"
+          >
+            <path
+              d="M3 8h10M9 4l4 4-4 4"
+              stroke="white"
+              strokeWidth="1.8"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
+        </button>
+      )}
+      {completionEarned && conceptId && (
+        <button
+          type="button"
+          className="ergo-detail__cta ergo-detail__cta--interview"
+          style={{ background: chColor }}
+          onClick={() => {
+            void analytics.interviewCtaClicked({
+              conceptId,
+              surface: 'concept_page',
+            })
+            onInterviewCta?.(conceptId)
+          }}
+          aria-label={`Take the capstone interview for ${node.title}`}
+        >
+          Take capstone interview
           <svg
             width="16"
             height="16"
