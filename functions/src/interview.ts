@@ -308,6 +308,18 @@ const INTERVIEW_REPORT_SCHEMA = {
   },
 } as const
 
+export function extractGradeJson(data: { output?: unknown; output_text?: unknown }): string {
+  if (typeof data.output_text === 'string' && data.output_text.trim()) return data.output_text
+  const out = Array.isArray(data.output) ? data.output : []
+  for (const item of out as Array<{ type?: string; content?: Array<{ type?: string; text?: string }> }>) {
+    if (item?.type === 'message' && Array.isArray(item.content)) {
+      const seg = item.content.find((c) => c?.type === 'output_text' && typeof c.text === 'string')
+      if (seg?.text) return seg.text
+    }
+  }
+  return ''
+}
+
 function buildGraderPrompt(question: Question, transcript: Turn[]): string {
   const turns = transcript.map((t) => `[${t.role}] ${t.text}`).join('\n')
   return [
@@ -384,13 +396,12 @@ export const gradeInterview = onCall(
       throw new HttpsError('internal', `OpenAI grade failed: ${gradeRes.status} ${body}`)
     }
 
-    const gradeData = (await gradeRes.json()) as {
-      output?: Array<{ content?: Array<{ text?: string }> }>
-      output_text?: string
-    }
-    const reportJson =
-      gradeData.output?.[0]?.content?.[0]?.text ?? gradeData.output_text ?? '{}'
+    const gradeData = (await gradeRes.json()) as { output?: unknown; output_text?: unknown }
+    const reportJson = extractGradeJson(gradeData)
+    if (!reportJson.trim()) throw new HttpsError('internal', 'Grader returned no usable output')
     const report = JSON.parse(reportJson) as InterviewReport
+    if (!report.hireSignal || !report.dimensions || typeof report.dimensions !== 'object')
+      throw new HttpsError('internal', 'Grader returned an incomplete report')
 
     // 5 — transaction: finalize attempt + seen-set + usage (reads before writes)
     const stateRef = db.doc(`users/${uid}/interviewState/${conceptId}`)

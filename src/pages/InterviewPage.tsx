@@ -3,7 +3,6 @@
 // done(report) → error. Mounts <Orb> for audio-reactive visuals and
 // <InterviewReportView> when the session ends.
 
-import { useRef, type FormEvent } from 'react'
 import type { NavigateFn } from '../pages/routes'
 import type { RealtimeTransport } from '../interview/useRealtimeInterview'
 import { useRealtimeInterview } from '../interview/useRealtimeInterview'
@@ -37,21 +36,10 @@ export function InterviewPage({
     attemptId,
     start,
     stop,
-    sendTypedAnswer,
   } = useRealtimeInterview(conceptId, _transport)
-
-  const typedInputRef = useRef<HTMLInputElement>(null)
 
   function handleBack() {
     navigate(conceptPath(conceptId))
-  }
-
-  function handleTypedSubmit(e: FormEvent<HTMLFormElement>) {
-    e.preventDefault()
-    const input = typedInputRef.current
-    if (!input || !input.value.trim()) return
-    sendTypedAnswer(input.value.trim())
-    input.value = ''
   }
 
   // ── Preflight (idle) ──────────────────────────────────────────────────────
@@ -84,7 +72,7 @@ export function InterviewPage({
             </p>
           )}
           <p className="iv-ready__note">
-            Microphone access is recommended but optional — you can type your answers.
+            Microphone access is required — please allow it when prompted.
           </p>
           <button
             type="button"
@@ -136,8 +124,9 @@ export function InterviewPage({
   // ── Error ─────────────────────────────────────────────────────────────────
 
   if (status === 'error') {
-    const isQuota = error?.code === 'resource-exhausted'
-    const isGrade = error?.stage === 'grade'
+    const isQuota  = error?.code === 'resource-exhausted'
+    const isGrade  = error?.stage === 'grade'
+    const isMic    = error?.stage === 'awaitingMic'
     return (
       <div className="iv-page">
         <header className="iv-topbar">
@@ -155,6 +144,16 @@ export function InterviewPage({
           {isQuota ? (
             <>
               <p>You've used today's interview quota. Come back tomorrow!</p>
+              <button type="button" className="btn btn--secondary" onClick={handleBack}>
+                Back to course
+              </button>
+            </>
+          ) : isMic ? (
+            <>
+              <p>Microphone access is required for the interview.</p>
+              <button type="button" className="btn btn--primary" onClick={start}>
+                Retry
+              </button>
               <button type="button" className="btn btn--secondary" onClick={handleBack}>
                 Back to course
               </button>
@@ -278,18 +277,6 @@ export function InterviewPage({
           ))}
         </ol>
 
-        <form className="iv-typed-form" onSubmit={handleTypedSubmit}>
-          <input
-            ref={typedInputRef}
-            type="text"
-            className="iv-typed-input"
-            placeholder="Type your answer…"
-            aria-label="Type your answer"
-          />
-          <button type="submit" className="btn btn--primary">
-            Send
-          </button>
-        </form>
       </div>
     </div>
   )

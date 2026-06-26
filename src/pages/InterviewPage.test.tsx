@@ -45,7 +45,6 @@ function makeReturn(overrides: Partial<UseRealtimeInterviewReturn>): UseRealtime
     attemptId: null,
     start: vi.fn(),
     stop: vi.fn(),
-    sendTypedAnswer: vi.fn(),
     ...overrides,
   }
 }
@@ -97,11 +96,11 @@ describe('InterviewPage (smoke — renderToString)', () => {
       expect(html).toContain('aria-live="polite"')
     })
 
-    it('renders the typed-input field', () => {
+    it('does not render the typed-input field (voice-first)', () => {
       const html = renderToString(
         <InterviewPage navigate={() => {}} conceptId="course-expected-value" />,
       )
-      expect(html).toContain('iv-typed-input')
+      expect(html).not.toContain('iv-typed-input')
     })
 
     it('renders the countdown', () => {

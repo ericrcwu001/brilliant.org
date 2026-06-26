@@ -239,11 +239,11 @@ export function Orb({ remoteStream, isAiSpeaking, reducedMotion: reducedMotionPr
       gl.drawArrays(gl.TRIANGLES, 0, 6)
     }
 
-    // Reduced motion: draw one static frame, skip rAF.
-    if (reducedMotion) {
-      drawFrame(0.12, 0.0)
-      return
-    }
+    // Draw a resting frame immediately so the orb is visible before the first rAF tick.
+    drawFrame(0.12, 0.0)
+
+    // Reduced motion: one static frame is enough — skip rAF.
+    if (reducedMotion) return
 
     const startTime = performance.now()
     let lastDrawTime = 0
@@ -264,7 +264,7 @@ export function Orb({ remoteStream, isAiSpeaking, reducedMotion: reducedMotionPr
       const t = (now - startTime) / 1000
 
       drawFrame(
-        speaking ? amplitude : amplitude * 0.04,
+        speaking ? amplitude : Math.max(amplitude * 0.04, 0.12),
         t,
       )
     }
