@@ -1,0 +1,175 @@
+/* CouponCollectorSimBeat — L5 draw-boxes-until-complete sim.
+   Tokens only; no raw hex. Reads --ch2 for the teal EV-5 concept accent.
+   The Lead wires `@import './surfaces/expected-value-5.css'` in app.css. */
+
+.ccsim {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s4);
+  padding: var(--s3) 0;
+}
+
+/* Toy grid: N pill cells for type 1…N */
+.ccsim__grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s2);
+  justify-content: center;
+}
+
+.ccsim__type-pill {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  min-height: 44px;
+  padding: var(--s2) var(--s3);
+  border: 1.5px solid var(--rule);
+  border-radius: var(--radius-md);
+  font-family: var(--font-sans);
+  font-size: calc(14px * var(--fs));
+  font-weight: 600;
+  color: var(--ergo-ink-2);
+  background: var(--ergo-surface-2);
+  transition: background 200ms ease, border-color 200ms ease, color 200ms ease;
+  user-select: none;
+}
+
+.ccsim__type-pill--collected {
+  background: var(--ch2-tint);
+  border-color: var(--ch2);
+  color: var(--ch2);
+}
+
+.ccsim__type-pill--new {
+  animation: ccsim-glow-pulse 600ms ease-out;
+}
+
+@keyframes ccsim-glow-pulse {
+  0% {
+    box-shadow: 0 0 0 0 var(--ch2);
+    background: var(--ch2);
+    color: #fff;
+  }
+  60% {
+    box-shadow: 0 0 0 6px transparent;
+  }
+  100% {
+    box-shadow: none;
+    background: var(--ch2-tint);
+    color: var(--ch2);
+  }
+}
+
+/* "Draw box" button — ≥44px, Space/Enter repeats draw */
+.ccsim__draw-btn {
+  align-self: center;
+  min-height: 44px;
+  padding: var(--s2) var(--s5);
+  border: 1.5px solid var(--ch2);
+  border-radius: var(--radius-md);
+  background: var(--ch2-tint);
+  color: var(--ch2);
+  font-family: var(--font-sans);
+  font-size: calc(14px * var(--fs));
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 120ms ease, color 120ms ease;
+}
+
+.ccsim__draw-btn:hover:not(:disabled) {
+  background: var(--ch2);
+  color: #fff;
+}
+
+.ccsim__draw-btn:focus-visible {
+  outline: 2px solid var(--ring-focus);
+  outline-offset: 2px;
+}
+
+.ccsim__draw-btn:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+/* Σ panel: JetBrains Mono tabular-nums running total */
+.ccsim__sigma-panel {
+  background: var(--ergo-surface-2);
+  border-radius: var(--radius-md);
+  padding: var(--s3);
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-size: calc(13px * var(--fs));
+  color: var(--ergo-ink-1);
+  line-height: 1.6;
+  min-height: 3em;
+}
+
+.ccsim__sigma-terms {
+  color: var(--ergo-ink-2);
+}
+
+.ccsim__sigma-total {
+  font-weight: 700;
+  color: var(--ch2);
+}
+
+/* Stage-prob pill */
+.ccsim__stage-prob {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s2);
+  padding: var(--s2) var(--s3);
+  border-radius: var(--radius-pill);
+  background: var(--ergo-surface-2);
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-size: calc(12px * var(--fs));
+  color: var(--ergo-ink-2);
+  transition: background 200ms ease;
+}
+
+.ccsim__stage-prob--active {
+  background: var(--ch2-tint);
+  color: var(--ch2);
+}
+
+/* Aria-live regions: visually hidden, read by screen readers */
+.ccsim__announce-polite,
+.ccsim__announce-assertive {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Draw counter */
+.ccsim__draw-count {
+  font-family: var(--font-sans);
+  font-size: calc(12px * var(--fs));
+  color: var(--ergo-ink-3);
+  text-align: center;
+}
+
+/* Reduced-motion: no transitions, no animations */
+@media (prefers-reduced-motion: reduce) {
+  .ccsim__type-pill {
+    transition: none;
+  }
+
+  .ccsim__type-pill--new {
+    animation: none;
+  }
+
+  .ccsim__draw-btn {
+    transition: none;
+  }
+
+  .ccsim__stage-prob {
+    transition: none;
+  }
+}

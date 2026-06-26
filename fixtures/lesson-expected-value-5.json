@@ -1,0 +1,234 @@
+{
+  "lessonId": "lesson-expected-value-5",
+  "courseId": "course-expected-value",
+  "title": "Coupon Collector",
+  "patternOptions": ["H"],
+  "milestoneId": "coupon-collector-mastered",
+  "unlocks": "lesson-expected-value-6",
+  "schemaVersion": 1,
+  "beats": [
+    {
+      "beatId": "ev5-primer-geom",
+      "required": false,
+      "track": "A",
+      "prompt": "Quick recap before the boxes — read the card, then continue.",
+      "interaction": {
+        "type": "primer",
+        "variant": "custom",
+        "title": "Geometric wait and the harmonic sum",
+        "body": "If each try succeeds with probability p, the expected number of tries is E = 1/p. Chaining N such waits with shrinking probabilities gives the harmonic sum H_N = 1 + 1/2 + 1/3 + … + 1/N. For N = 6: H₆ = 1 + 1/2 + 1/3 + 1/4 + 1/5 + 1/6 = 49/20 = 2.45.",
+        "collapsible": true
+      },
+      "feedback": {
+        "correct": "E = 1/p — the building block for every stage ahead.",
+        "hints": [
+          "E = 1/p for a geometric wait.",
+          "H_N is the sum of 1/k for k = 1 to N.",
+          "Continue."
+        ]
+      }
+    },
+    {
+      "beatId": "ev5-recall",
+      "required": true,
+      "prompt": "Before the boxes, match each random wait to its expected count.",
+      "interaction": {
+        "type": "retrievalGrid",
+        "pairs": [
+          { "left": "Each try succeeds with prob p", "right": "E = 1/p" },
+          { "left": "Fair coin flip (p = 1/2)", "right": "E = 2" },
+          { "left": "One face of a fair die (p = 1/6)", "right": "E = 6" },
+          { "left": "Next new type (k of N held)", "right": "E = N/(N−k)" }
+        ]
+      },
+      "feedback": {
+        "correct": "Good — each geometric wait costs 1/p; a full set chains several such waits.",
+        "hints": [
+          "Tap a description, then its expected wait.",
+          "p = 1/6 gives E = 6; p = 1/2 gives E = 2.",
+          "E = N/(N−k) is the per-stage formula when k types are held."
+        ]
+      }
+    },
+    {
+      "beatId": "ev5-bet",
+      "required": false,
+      "prompt": "You want the full set of 6 toy types. Each cereal box is equally likely to hold any one of the 6. How many boxes do you expect to buy?",
+      "interaction": {
+        "type": "prediction",
+        "options": ["Just over 6", "About 8", "Around 12–15"]
+      },
+      "feedback": {
+        "byOption": {
+          "Just over 6": {
+            "note": "Let's test it — the first toys come fast, but the last ones drag, more than doubling the total."
+          },
+          "About 8": {
+            "note": "Let's test it — closer, but the rare final toys push it higher."
+          },
+          "Around 12–15": {
+            "note": "Good instinct — let's prove it by summing the ever-longer waits for each new toy.",
+            "correct": true
+          }
+        }
+      }
+    },
+    {
+      "beatId": "ev5-win",
+      "required": true,
+      "prompt": "You've found 5 of the 6 toy types. Only one is still missing, and it appears in 1 of every 6 boxes. How many more boxes do you expect to buy?",
+      "interaction": {
+        "type": "answerEntry",
+        "fields": [
+          {
+            "id": "last-type",
+            "label": "Expected boxes for the last type",
+            "accept": ["6"],
+            "placeholder": "?",
+            "suffix": "boxes"
+          }
+        ]
+      },
+      "feedback": {
+        "correct": "E = 1/p = 1/(1/6) = 6 — the last type is the slowest, averaging 6 boxes alone.",
+        "hints": [
+          "Only 1 of 6 boxes now helps, so the last type isn't quick: E = 1/p = 6.",
+          "p = 1/6, so E = 1/p = 6.",
+          "E = 6."
+        ]
+      }
+    },
+    {
+      "beatId": "ev5-explore",
+      "required": false,
+      "prompt": "Tap 'Draw box' to open cereal boxes until you've collected all 6 toy types. Watch the running expected total Σ N/(N−i+1) build, and notice how the per-stage hit-probability (N−k)/N shrinks as you collect.",
+      "interaction": {
+        "type": "couponCollectorSim",
+        "n": 6
+      },
+      "hero": {
+        "slowFirst": true,
+        "structuralReadout": "On average, the full set of 6 takes 147/10 = 14.7 boxes — the running Σ N/(N−i+1) converges to N·H₆.",
+        "reducedMotionFinalFrame": true
+      },
+      "feedback": {
+        "correct": "Set complete — it took far more than 6 boxes, and the last type alone cost the most.",
+        "hints": [
+          "Keep drawing until all 6 toy types appear.",
+          "Watch how the last type stalls the running total.",
+          "Σ N/(N−i+1) converges to N·H_N ≈ 14.7."
+        ]
+      }
+    },
+    {
+      "beatId": "ev5-model",
+      "required": false,
+      "introducesSymbol": "N·H_N",
+      "groundedBy": ["ev5-win", "ev5-explore"],
+      "comparison": true,
+      "interviewNote": "N·H_N ~ N·ln N for large N (the integral approximation of the harmonic series). The rare last type alone costs N boxes — that single stage explains why total cost grows faster than linear; doubling N more than doubles the expected boxes. For N = 6: 14.7 boxes; for N = 52 (a full card deck): ≈ 236.",
+      "prompt": "Each stage i is a geometric wait with success probability p = (N−i+1)/N, so it costs N/(N−i+1) boxes on average. By linearity of expectation (L2), E[full set] = Σ_{i=1}^{N} N/(N−i+1) = N·H_N.",
+      "interaction": {
+        "type": "primer",
+        "variant": "custom",
+        "title": "E[full set] = N·H_N",
+        "body": "Six geometric waits, each longer than the last:\n  Stage 1: 6/6 = 1  (first type; p=1)\n  Stage 2: 6/5 = 1.2\n  Stage 3: 6/4 = 1.5\n  Stage 4: 6/3 = 2\n  Stage 5: 6/2 = 3\n  Stage 6: 6/1 = 6  ← the slow one\nSum = 14.7 = 6·H₆ = N·H_N. Linearity (L2) lets us add these waits without worrying about dependence between stages.",
+        "collapsible": false
+      },
+      "feedback": {
+        "correct": "E[full set] = N·H_N — linearity threads six geometric waits into one total.",
+        "hints": [
+          "Each stage i has hit-prob (N−i+1)/N and wait N/(N−i+1).",
+          "Sum six such waits using linearity.",
+          "N·H_N = 6·(49/20) = 147/10."
+        ]
+      }
+    },
+    {
+      "beatId": "ev5-stage-scaffold",
+      "required": false,
+      "track": "A",
+      "prompt": "Counting step — read, then try the next problem.",
+      "interaction": {
+        "type": "primer",
+        "variant": "custom",
+        "title": "Count the new types",
+        "body": "When you hold k of N types, exactly (N−k) of the N possible box outcomes show a new type. So: p = (N−k)/N, and E = 1/p = N/(N−k). Example: k = 2, N = 6 → (N−k) = 4 new types out of 6 → p = 4/6 = 2/3 → E = 3/2.",
+        "collapsible": true
+      },
+      "feedback": {
+        "correct": "p = (N−k)/N — count the new types, not 1/N.",
+        "hints": [
+          "N−k of the N box outcomes are new.",
+          "p = (N−k)/N.",
+          "E = N/(N−k)."
+        ]
+      }
+    },
+    {
+      "beatId": "ev5-stage",
+      "required": true,
+      "prompt": "You hold 2 of the 6 toy types. A box shows a new type if it holds one of the 4 types you don't have yet. What's the expected number of boxes until your next new toy?",
+      "interaction": {
+        "type": "answerEntry",
+        "fields": [
+          {
+            "id": "next-new",
+            "label": "Expected boxes for next new type",
+            "accept": ["3/2", "1.5"],
+            "placeholder": "?",
+            "suffix": "boxes"
+          }
+        ]
+      },
+      "feedback": {
+        "correct": "p = 4/6 = 2/3, so E = 1/p = 3/2. The hit-prob is (N−k)/N, falling as you collect.",
+        "hints": [
+          "With 2 types held, 4 of 6 boxes are new, so p = 4/6 and E = 3/2.",
+          "p = (N−k)/N = 4/6 = 2/3.",
+          "E = N/(N−k) = 6/4 = 3/2."
+        ]
+      }
+    },
+    {
+      "beatId": "ev5-prove",
+      "required": true,
+      "prompt": "Mastery challenge: you buy boxes until you hold the full set of N = 6 toy types. Sum the six geometric waits. Give the expected total as an exact fraction.",
+      "interaction": {
+        "type": "masteryChallenge",
+        "scenario": "Each new type costs N/(N−k) boxes on average. Sum all six stages — but remember, the last few are expensive.",
+        "fields": [
+          {
+            "id": "full-set",
+            "label": "E[full set of 6 types]",
+            "accept": ["147/10"],
+            "placeholder": "?",
+            "suffix": ""
+          }
+        ]
+      },
+      "feedback": {
+        "correct": "6·H₆ = 6·(49/20) = 147/10 = 14.7. Growth is N·ln N — double the types, more than double the boxes.",
+        "hints": [
+          "Cost grows like N·ln N, not linearly. Sum the six waits: 6·H₆ = 6·(49/20) = 147/10.",
+          "H₆ = 1 + 1/2 + 1/3 + 1/4 + 1/5 + 1/6 = 49/20.",
+          "6·(49/20) = 294/20 = 147/10."
+        ]
+      }
+    },
+    {
+      "beatId": "ev5-recap",
+      "required": true,
+      "prompt": "Reveal the recap cards to lock in the collection formula.",
+      "interaction": { "type": "recap" },
+      "feedback": {
+        "correct": "A full set = sum of ever-longer geometric waits; N·H_N sets up the extremes ahead in L6.",
+        "hints": [
+          "Each new type is a geometric wait with shrinking hit-probability.",
+          "Linearity sums them into N·H_N.",
+          "N = 6 gives exactly 147/10 = 14.7."
+        ]
+      }
+    }
+  ]
+}

@@ -30,6 +30,7 @@ import { GamblerLedgerBeat } from './GamblerLedgerBeat'
 import { BalanceSolveBeat } from './BalanceSolveBeat'
 import { ExpectationScaleBeat } from './ExpectationScaleBeat'
 import { ConditionalTreeBeat } from './ConditionalTreeBeat'
+import { CouponCollectorSimBeat } from './CouponCollectorSimBeat'
 
 function ContinueStub({ beat, isLast, onAdvance }: BeatProps) {
   return (
@@ -106,9 +107,8 @@ export function BeatView(props: BeatProps) {
       return <ExpectationScaleBeat {...props} />
     case 'conditionalTree':
       return <ConditionalTreeBeat {...props} />
-    // Wave-0 stub slot; real renderer lands in the next build wave.
     case 'couponCollectorSim':
-      return <ContinueStub {...props} />
+      return <CouponCollectorSimBeat {...props} />
     default:
       return <ContinueStub {...props} />
   }
