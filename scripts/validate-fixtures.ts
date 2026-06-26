@@ -48,6 +48,25 @@ import {
   buildChain, matrixPower, classifyStates, absorptionProbabilities, expectedAbsorptionTime,
   stationaryDistribution, kacReturnTime, detailedBalance, pagerank, formatVector,
 } from '../src/engine/markov'
+import {
+  pureNashEquilibria as gtPureNash,
+  iesdsSolution as gtIesds,
+  strictlyDominatedRows as gtDomRows,
+  saddlePoint as gtSaddle,
+  mixedValue2x2 as gtMixedValue,
+  mixedNash2x2 as gtMixedNash,
+  backwardInduction as gtBackward,
+  pirateGame as gtPirate,
+  tigerSheepEaten as gtTiger,
+  nimSum as gtNimSum,
+  nimWinningMoves as gtNimMoves,
+  subtractionWinningMove as gtSubMove,
+  subtractionIsWinning as gtSubWin,
+  formatRational as gtFmt,
+  formatVector as gtVec,
+  type Game as GtGame,
+  type GameTreeNode as GtNode,
+} from '../src/engine/gameTheory'
 
 const fixturesDir = join(dirname(fileURLToPath(import.meta.url)), '..', 'fixtures')
 
@@ -182,6 +201,41 @@ console.log('✓ bayes.ts goldens (2/3, 1/2, 1024/2023, 99/100, k=10, …)')
   okM('kac cloudy sunny', formatRational(kacReturnTime(cloudy, 0)), '5')
 }
 console.log('✓ markov.ts goldens (3/8, 4/7,6/7, 3/7,4/7, 1/5,2/5,2/5, 4/13…, kac 5)')
+
+// ── 2d. Game-theory engine goldens — inline fact-check independent of fixtures;
+// mirrors the bayes/markov goldens so gameTheory.ts correctness fails CI directly.
+{
+  const R = (n: number, d = 1): Rational => ({ n, d })
+  const C = (r: number, c: number) => ({ row: R(r), col: R(c) })
+  const PD: GtGame = [[C(3, 3), C(0, 5)], [C(5, 0), C(1, 1)]]
+  const STAG: GtGame = [[C(3, 3), C(0, 1)], [C(1, 0), C(1, 1)]]
+  const BOS: GtGame = [[C(3, 2), C(0, 0)], [C(0, 0), C(2, 3)]]
+  const MPm = [[R(1), R(-1)], [R(-1), R(1)]]
+  const MORRA = [[R(2), R(-3)], [R(-3), R(4)]]
+  const okG = (label: string, cond: boolean) => {
+    if (!cond) fail(`gameTheory golden failed: ${label}`)
+  }
+  okG('PD dominated row 0', gtDomRows(PD).join(',') === '0')
+  const pd = gtIesds(PD)
+  okG('PD iesds (1,1)', !!pd && pd.row === 1 && pd.col === 1)
+  okG('PD pure NE (1,1)', gtPureNash(PD).map((e) => `${e.row},${e.col}`).join(';') === '1,1')
+  okG('Stag two NE', gtPureNash(STAG).map((e) => `${e.row},${e.col}`).join(';') === '0,0;1,1')
+  okG('Matching Pennies no saddle', gtSaddle(MPm) === null)
+  okG('Matching Pennies value 0', gtFmt(gtMixedValue(MPm).value) === '0')
+  okG('Morra value -1/12', gtFmt(gtMixedValue(MORRA).value) === '-1/12')
+  okG('Morra mix 7/12', gtFmt(gtMixedValue(MORRA).p) === '7/12')
+  okG('saddle [[3,5],[2,4]] value 3', gtFmt(gtSaddle([[R(3), R(5)], [R(2), R(4)]])!.value) === '3')
+  okG('no-saddle [[1,3],[4,2]] value 5/2', gtFmt(gtMixedValue([[R(1), R(3)], [R(4), R(2)]]).value) === '5/2')
+  okG('BoS mixed 3/5', gtFmt(gtMixedNash(BOS)!.p) === '3/5')
+  okG('pirate 5/100', gtPirate(5, 100).join(',') === '98,0,1,0,1')
+  okG('pirate 3/100', gtPirate(3, 100).join(',') === '99,0,1')
+  okG('tiger parity', gtTiger(100) === false && gtTiger(7) === true)
+  okG('nim 3-4-5 sum 2', gtNimSum([3, 4, 5]) === 2)
+  okG('nim 3-4-5 move 3→1', JSON.stringify(gtNimMoves([3, 4, 5])) === JSON.stringify([{ heap: 0, removeTo: 1 }]))
+  okG('nim 1-4-5 losing', gtNimSum([1, 4, 5]) === 0)
+  okG('subtraction 12 losing / move(10,3)=2', gtSubWin(12, 3) === false && gtSubMove(10, 3) === 2)
+  console.log('✓ gameTheory engine self-check (Stage-2 anchor)')
+}
 
 // ── 3. Engine cross-check (hitting-time recurrences only). A `equationTiles`
 // beat opts into the buildAutomaton cross-check by setting `beat.pattern` to its
@@ -341,6 +395,70 @@ for (const lesson of lessons) {
 }
 console.log(`✓ chainBoard headlines match markov.ts (${chainChecked} beats)`)
 
+// ── 3d. Game-theory headline cross-check — recompute each declared `headline`
+// via gameTheory.ts (switch on type/task) and assert equality (mirrors §3c). The
+// payoffMatrix/gameTree/nimBoard types are NOT graded/hero; this cross-check is
+// their Stage-2 anchor (per-lesson factcheck tests cover answerEntry/mastery accepts).
+let gtChecked = 0
+for (const lesson of lessons) {
+  for (const beat of lesson.beats) {
+    const it = beat.interaction
+    if (it.type === 'payoffMatrix' && it.headline) {
+      const game: GtGame = it.matrix.map((r) =>
+        r.cells.map((c) => ({ row: toR(c.row), col: toR(c.col) })),
+      )
+      const rowM = it.matrix.map((r) => r.cells.map((c) => toR(c.row)))
+      let got: string
+      switch (it.task) {
+        case 'nash': {
+          const eqs = gtPureNash(game)
+          got = eqs.length ? eqs.map((e) => `${e.row},${e.col}`).join(';') : 'none'
+          break
+        }
+        case 'dominance': {
+          const sol = gtIesds(game)
+          got = sol ? `${sol.row},${sol.col}` : 'none'
+          break
+        }
+        case 'value': {
+          const sp = gtSaddle(rowM)
+          got = sp ? gtFmt(sp.value) : 'mixed'
+          break
+        }
+        case 'mix': {
+          got = gtFmt(gtMixedValue(rowM).value)
+          break
+        }
+        default:
+          continue // bestResponse → ungraded explore, no headline cross-check
+      }
+      if (got !== it.headline) {
+        fail(`${lesson.lessonId}/${beat.beatId}: payoffMatrix(${it.task}) headline ${it.headline} ≠ engine ${got}`)
+      }
+      gtChecked++
+    } else if (it.type === 'gameTree' && it.headline) {
+      const got = gtVec(gtBackward(it.root as GtNode).payoff)
+      if (got !== it.headline) {
+        fail(`${lesson.lessonId}/${beat.beatId}: gameTree headline ${it.headline} ≠ engine ${got}`)
+      }
+      gtChecked++
+    } else if (it.type === 'nimBoard' && it.headline) {
+      let got: string
+      if ((it.task ?? 'nim') === 'subtraction') {
+        if (!it.maxRemove) fail(`${lesson.lessonId}/${beat.beatId}: nimBoard subtraction needs maxRemove`)
+        got = String(it.heaps[0] % (it.maxRemove! + 1))
+      } else {
+        got = String(gtNimSum(it.heaps))
+      }
+      if (got !== it.headline) {
+        fail(`${lesson.lessonId}/${beat.beatId}: nimBoard(${it.task ?? 'nim'}) headline ${it.headline} ≠ engine ${got}`)
+      }
+      gtChecked++
+    }
+  }
+}
+console.log(`✓ gameTheory headlines match gameTheory.ts (${gtChecked} beats)`)
+
 // ── 4. Inclusivity gate (build-brief §4.5 / §10). Mechanizable subset of the
 // per-lesson DoD, applied to the remaining lessons (L2–L6). L0/L1 predate the
 // gate (their own specs) and are exempt. The asserts are dormant until each
@@ -372,6 +490,9 @@ const GATED = new Set([
   'lesson-markov-chains-1','lesson-markov-chains-2','lesson-markov-chains-3','lesson-markov-chains-4',
   'lesson-markov-chains-5','lesson-markov-chains-6','lesson-markov-chains-7','lesson-markov-chains-8',
   'lesson-markov-chains-9','lesson-markov-chains-10',
+  // concept-game-theory
+  'lesson-game-theory-1','lesson-game-theory-2','lesson-game-theory-3',
+  'lesson-game-theory-4','lesson-game-theory-5','lesson-game-theory-6',
 ])
 // L5 transfer lesson is the logged exception to the retrieval-opener rule.
 const NO_RETRIEVAL_OPENER = new Set(['lesson-longer-patterns'])
@@ -539,6 +660,9 @@ const MASTERY_LESSONS = new Set([
   'lesson-markov-chains-1','lesson-markov-chains-2','lesson-markov-chains-3','lesson-markov-chains-4',
   'lesson-markov-chains-5','lesson-markov-chains-6','lesson-markov-chains-7','lesson-markov-chains-8',
   'lesson-markov-chains-9','lesson-markov-chains-10',
+  // concept-game-theory
+  'lesson-game-theory-1','lesson-game-theory-2','lesson-game-theory-3',
+  'lesson-game-theory-4','lesson-game-theory-5','lesson-game-theory-6',
 ])
 for (const lesson of lessons) {
   if (!MASTERY_LESSONS.has(lesson.lessonId)) continue
