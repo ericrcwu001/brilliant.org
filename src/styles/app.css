@@ -30,3 +30,4 @@
 @import './surfaces/expected-value-6.css' layer(components);
 @import './surfaces/interview.css' layer(components);
 @import './surfaces/markov.css' layer(components);
+@import './surfaces/optimal-stopping.css' layer(components);

@@ -1,0 +1,174 @@
+/* ── StoppingBoardBeat — secretary-problem board (course-optimal-stopping) ────
+   Tokens only; no raw hex. Chapter accent resolves through var(--accent), which
+   the lesson shell injects per chapter (ch3/ch4). Three displays share the
+   .stopboard root: sequence (arriving candidates), cutoff (success curve),
+   convergence (the 37% table). */
+
+.stopboard {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s3);
+}
+
+.stopboard__caption,
+.stopboard__headline,
+.stopboard__live {
+  margin: 0;
+  font-size: calc(15px * var(--fs));
+  color: var(--graphite);
+}
+
+.stopboard__headline {
+  font-size: calc(16px * var(--fs));
+  color: var(--ink);
+}
+
+.stopboard__headline strong {
+  font-family: var(--font-mono);
+  color: var(--accent);
+}
+
+.stopboard__peak-tag,
+.stopboard__live {
+  color: var(--accent);
+}
+
+/* ── Bar lanes (shared by sequence + cutoff) ─────────────────────────────── */
+
+.stopboard__lanes,
+.stopboard__curve {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--s2);
+  min-height: 160px;
+  padding: var(--s2) 0;
+}
+
+.stopboard__lane,
+.stopboard__clane {
+  position: relative;
+  display: flex;
+  flex: 1 1 0;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--s1);
+}
+
+.stopboard__bar-track {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  width: 100%;
+  height: 140px;
+  border-bottom: 2px solid var(--rule);
+}
+
+.stopboard__cand,
+.stopboard__cbar {
+  position: relative;
+  width: 70%;
+  min-width: 16px;
+  border-radius: var(--r-sm) var(--r-sm) 0 0;
+  background: var(--ergo-line-2);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .stopboard__cand,
+  .stopboard__cbar {
+    transition: height var(--dur-base) var(--ease-out);
+  }
+}
+
+/* sequence: look = muted, leap = accent-tinted, selected = solid accent. */
+.stopboard__cand--look {
+  background: var(--ergo-line-2);
+  opacity: 0.55;
+}
+
+.stopboard__cand--leap {
+  background: var(--accent-tint);
+}
+
+.stopboard__cand--selected {
+  background: var(--accent);
+  box-shadow: var(--ring-focus);
+}
+
+.stopboard__crown {
+  position: absolute;
+  top: -18px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: calc(14px * var(--fs));
+  color: var(--accent);
+}
+
+.stopboard__pos {
+  font-family: var(--font-mono);
+  font-size: calc(12px * var(--fs));
+  color: var(--graphite);
+}
+
+.stopboard__leapline {
+  position: absolute;
+  top: 0;
+  right: calc(-1 * var(--s2) / 2);
+  width: 2px;
+  height: 140px;
+  background: var(--accent);
+  opacity: 0.6;
+}
+
+/* cutoff curve highlights */
+.stopboard__cbar--active {
+  background: var(--accent);
+}
+
+.stopboard__cbar--peak {
+  outline: 2px dashed var(--accent);
+  outline-offset: 1px;
+}
+
+/* ── Slider control ──────────────────────────────────────────────────────── */
+
+.stopboard__control {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s2);
+  font-family: var(--font-mono);
+  font-size: calc(14px * var(--fs));
+  color: var(--ink);
+}
+
+.stopboard__control input[type='range'] {
+  width: 100%;
+  min-height: 44px;
+  accent-color: var(--accent);
+}
+
+/* ── Convergence table ───────────────────────────────────────────────────── */
+
+.stopboard__table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: calc(15px * var(--fs));
+}
+
+.stopboard__table th,
+.stopboard__table td {
+  padding: var(--s2) var(--s3);
+  text-align: center;
+  border-bottom: 1px solid var(--rule);
+}
+
+.stopboard__table th {
+  font-family: var(--font-mono);
+  font-size: calc(13px * var(--fs));
+  color: var(--graphite);
+  font-weight: 600;
+}
+
+.stopboard__table td {
+  font-family: var(--font-mono);
+  color: var(--ink);
+}

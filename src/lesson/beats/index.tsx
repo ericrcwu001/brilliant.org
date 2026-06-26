@@ -40,6 +40,7 @@ import { ExpectationScaleBeat } from './ExpectationScaleBeat'
 import { ConditionalTreeBeat } from './ConditionalTreeBeat'
 import { CouponCollectorSimBeat } from './CouponCollectorSimBeat'
 import { ChainBoardBeat } from './ChainBoardBeat'
+import { StoppingBoardBeat } from './StoppingBoardBeat'
 
 function ContinueStub({ beat, isLast, onAdvance }: BeatProps) {
   return (
@@ -103,6 +104,8 @@ export function BeatView(props: BeatProps) {
       return <TripletRevealBeat {...props} />
     case 'chainBoard':
       return <ChainBoardBeat {...props} />
+    case 'stoppingBoard':
+      return <StoppingBoardBeat {...props} />
     // Lesson-specific heroes (build-brief §4.4 / §6).
     case 'raceSim':
       return <RaceSimBeat {...props} />
