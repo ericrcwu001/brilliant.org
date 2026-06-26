@@ -9,6 +9,10 @@
 // Track A (density 'split', L1 §4.3/§5.4) shares the graph-visible-from-load
 // opening and adds: dual state labels, a single-stepped near-miss replay with the
 // other channels dimmed, and a one-time gambler's-fallacy note on a >=3 same-face run.
+//
+// EV additive extension: when coinSim.p is present and ≠ 0.5 the export routes
+// to IndicatorSim — a biased 0/1 Bernoulli stream whose running average converges
+// to p. CoinSimPHT below is the original code, unchanged byte-for-byte.
 
 import { useCallback, useEffect, useRef, useState } from 'react'
 import type { BeatProps } from './types'
@@ -18,6 +22,118 @@ import { BeatShell } from '../BeatShell'
 import { CoinStream, type Flip } from '../CoinStream'
 import { StateGraph, type EdgeRef } from '../konva/StateGraph'
 
+// ── IndicatorSim — biased 0/1 stream; ev3-explore ────────────────────────────
+// Rendered only when coinSim.p is defined and ≠ 0.5. Outcome labels ("Ace (1)"
+// / "Not ace (0)"), running average, and theory line at p. PHT path untouched.
+
+function IndicatorSim({
+  p,
+  gamblerNote,
+  isLast,
+  reducedMotion,
+  onAdvance,
+}: {
+  p: number
+  gamblerNote: string
+  isLast: boolean
+  reducedMotion: boolean
+  onAdvance: () => void
+}) {
+  const [draws, setDraws] = useState<number[]>([])
+  const [lastDraw, setLastDraw] = useState<0 | 1 | null>(null)
+  const [showGambler, setShowGambler] = useState(false)
+  const gamblerShownRef = useRef(false)
+  // Mirror of draws kept in a ref so addDraws can read the current value without
+  // a stale closure. Never read during render — only inside event handlers.
+  const drawsRef = useRef<number[]>([])
+
+  const count = draws.length
+  const avg = count > 0 ? draws.reduce((a, b) => a + b, 0) / count : -1
+  const avgPct = avg >= 0 ? (Math.min(avg, 1) * 100).toFixed(2) : '0.00'
+  const theoryPct = (Math.min(p, 1) * 100).toFixed(2)
+
+  function addDraws(n: number) {
+    const batch = Array.from({ length: n }, () => (Math.random() < p ? 1 : 0)) as (0 | 1)[]
+    const next = [...drawsRef.current, ...batch]
+    drawsRef.current = next
+    setDraws(next)
+    setLastDraw(batch[batch.length - 1] ?? null)
+    if (!gamblerShownRef.current && next.length >= 50) {
+      const nextAvg = next.reduce((a, b) => a + b, 0) / next.length
+      if (Math.abs(nextAvg - p) <= 0.02) {
+        gamblerShownRef.current = true
+        setShowGambler(true)
+      }
+    }
+  }
+
+  const hasDraw = count > 0
+  const primaryLabel = hasDraw ? (isLast ? 'Finish' : 'Continue') : 'Draw card'
+  const onPrimary = hasDraw ? onAdvance : () => addDraws(1)
+  const secondary = hasDraw
+    ? { label: 'Draw card', onClick: () => addDraws(1) }
+    : { label: 'Run 100', onClick: () => addDraws(100) }
+  const tertiary = hasDraw ? { label: 'Run 100', onClick: () => addDraws(100) } : undefined
+
+  return (
+    <BeatShell
+      primary={{ label: primaryLabel, enabled: true, onClick: onPrimary }}
+      secondary={secondary}
+      tertiary={tertiary}
+    >
+      <div className='isim'>
+        <p className='isim__count' aria-hidden='true'>
+          Outcomes:&nbsp;<strong>Ace&nbsp;(1)</strong>&nbsp;·&nbsp;<strong>Not&nbsp;ace&nbsp;(0)</strong>
+        </p>
+        <div className='isim__track-wrap'>
+          <div className='isim__track' role='presentation' aria-hidden='true'>
+            <div
+              className='isim__avg-bar'
+              style={{
+                width: `${avgPct}%`,
+                transition: reducedMotion ? 'none' : undefined,
+              }}
+            />
+            <div className='isim__theory-line' style={{ left: `${theoryPct}%` }} />
+          </div>
+          <div className='isim__axis' aria-hidden='true'>
+            <span>0</span>
+            <span className='isim__theory-label' style={{ left: `${theoryPct}%` }}>
+              P={p.toFixed(3)}
+            </span>
+            <span>1</span>
+          </div>
+        </div>
+        <p className='isim__readout' aria-live='polite' aria-atomic='true'>
+          {avg < 0
+            ? 'Running average of indicator: draw to begin'
+            : `Running average of indicator: ${avg.toFixed(4)}`}
+        </p>
+        {lastDraw !== null && (
+          <p className='isim__last'>
+            Last draw: {lastDraw === 1 ? 'Ace\u00a0(1)' : 'Not\u00a0ace\u00a0(0)'}
+          </p>
+        )}
+        {count > 0 && (
+          <p className='isim__count'>
+            {count} draw{count !== 1 ? 's' : ''}
+          </p>
+        )}
+        {showGambler && (
+          <p className='hint-note hint-note--mark' role='status' aria-live='polite'>
+            {gamblerNote}
+          </p>
+        )}
+      </div>
+    </BeatShell>
+  )
+}
+
+// ── Thin router ────────────────────────────────────────────────────────────────
+// Dispatches to IndicatorSim (EV p-path) or CoinSimPHT (existing PHT path).
+// Keeping dispatch here (not inside CoinSimPHT) satisfies rules-of-hooks: each
+// downstream component calls all its own hooks unconditionally.
+
 const labelOf = (automaton: BeatProps['automaton'], id: StateId) =>
   automaton.states.find((s) => s.id === id)?.label ?? ''
 
@@ -26,7 +142,33 @@ const DEFAULT_GAMBLER_NOTE =
 
 type Phase = 'free' | 'replaying' | 'done'
 
-export function CoinSimBeat({
+export function CoinSimBeat(props: BeatProps) {
+  const { beat, reducedMotion, isLast, onAdvance } = props
+  const interaction = beat.interaction
+  if (
+    interaction.type === 'coinSim' &&
+    typeof interaction.p === 'number' &&
+    interaction.p !== 0.5
+  ) {
+    const gn =
+      interaction.gamblerNote ||
+      'As draws grow, the running average of 0s and 1s settles to P.'
+    return (
+      <IndicatorSim
+        p={interaction.p}
+        gamblerNote={gn}
+        isLast={isLast}
+        reducedMotion={reducedMotion}
+        onAdvance={onAdvance}
+      />
+    )
+  }
+  return <CoinSimPHT {...props} />
+}
+
+// ── CoinSimPHT — original PHT automaton simulation (unchanged) ────────────────
+
+function CoinSimPHT({
   beat,
   automaton,
   reducedMotion,

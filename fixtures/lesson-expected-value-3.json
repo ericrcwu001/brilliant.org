@@ -1,0 +1,232 @@
+{
+  "lessonId": "lesson-expected-value-3",
+  "courseId": "course-expected-value",
+  "title": "Indicator Variables",
+  "patternOptions": ["H"],
+  "milestoneId": "indicator-mastered",
+  "unlocks": "lesson-expected-value-4",
+  "schemaVersion": 1,
+  "beats": [
+    {
+      "beatId": "ev3-indicator-primer",
+      "required": false,
+      "prompt": "Before we start — what is a 0/1 indicator variable?",
+      "interaction": {
+        "type": "primer",
+        "variant": "custom",
+        "title": "The indicator: a 0/1 switch",
+        "body": "An **indicator variable** 1_A equals **1** when event A happens, and **0** when it doesn't. Nothing more — it's a switch. Its expected value is exactly the probability the switch turns on: E[1_A] = P(A).",
+        "collapsible": true
+      },
+      "feedback": {
+        "correct": "Good — a 0/1 switch whose mean is exactly P(A). Let's recall some probabilities you already computed.",
+        "hints": [
+          "An indicator is 1 when the event fires, 0 otherwise.",
+          "Its expected value is its probability of being 1.",
+          "Continue."
+        ]
+      }
+    },
+    {
+      "beatId": "ev3-recall",
+      "required": true,
+      "prompt": "You've computed these probabilities before. Match each situation to its value — they're each secretly E[1_A] for the right indicator.",
+      "interaction": {
+        "type": "retrievalGrid",
+        "pairs": [
+          { "left": "P(win) in Gambler's Ruin, starting at i chips of N", "right": "i/N" },
+          { "left": "P(winning the streak bet, PHT lesson)", "right": "7/8" },
+          { "left": "P(event A occurs), combinatorics style", "right": "favorable/total" }
+        ]
+      },
+      "feedback": {
+        "correct": "Each value is P(A) — and now you know that's E[1_A] too. Probability and expectation collapse into one for a 0/1 variable.",
+        "hints": [
+          "Tap a probability description, then its formula.",
+          "Gambler's Ruin P(win | start i, goal N) = i/N.",
+          "Match all three."
+        ]
+      }
+    },
+    {
+      "beatId": "ev3-bet",
+      "required": false,
+      "prompt": "Shuffle a 52-card deck and flip one card at a time. How deep do you expect to dig before the first ace turns up — about halfway?",
+      "interaction": {
+        "type": "prediction",
+        "options": ["Around card 26", "Around card 13", "Around card 10"]
+      },
+      "feedback": {
+        "byOption": {
+          "Around card 26": {
+            "note": "Let's test it — 'halfway' assumes one ace, but four aces split the deck, pulling the first one much earlier."
+          },
+          "Around card 13": {
+            "note": "Let's test it — warmer; four aces make five equal gaps, so the first ace averages near card 11."
+          },
+          "Around card 10": {
+            "note": "Good instinct — let's prove it: five equal gaps from four aces put the first ace near 10.6.",
+            "correct": true
+          }
+        }
+      }
+    },
+    {
+      "beatId": "ev3-win",
+      "required": true,
+      "prompt": "Draw one card at random from a shuffled 52-card deck. Let 1_ace = 1 if it's an ace, 0 otherwise. What is E[1_ace]?",
+      "interaction": {
+        "type": "answerEntry",
+        "fields": [
+          {
+            "id": "e-indicator",
+            "label": "E[1_ace]",
+            "accept": ["1/13", "4/52"],
+            "placeholder": "?"
+          }
+        ]
+      },
+      "feedback": {
+        "correct": "E[1_ace] = P(ace) = 4/52 = 1/13. A 0/1 variable needs no long sum — its mean is just P.",
+        "hints": [
+          "A 0/1 variable needs no long sum. Its mean is just P(ace) = 4/52 = 1/13.",
+          "There are 4 aces in 52 cards. P(ace) = 4/52.",
+          "4/52 = 1/13."
+        ]
+      }
+    },
+    {
+      "beatId": "ev3-explore",
+      "required": false,
+      "prompt": "Draw cards one at a time. Each draw records a 1 (ace) or 0 (not ace). Watch the running average settle.",
+      "interaction": {
+        "type": "coinSim",
+        "mode": "free",
+        "p": 0.07692307692307693,
+        "gamblerNote": "As draws grow, the average of 0s and 1s settles to P(ace) = 1/13 ≈ 0.077 — that is E[1_ace]."
+      },
+      "hero": {
+        "slowFirst": true,
+        "structuralReadout": "Running average settles to P(ace) = 1/13 as draws grow.",
+        "reducedMotionFinalFrame": true
+      },
+      "feedback": {
+        "correct": "The average of 0s and 1s is the hit-rate — and the hit-rate is P(ace). That's E[1_A]=P(A) in motion.",
+        "hints": [
+          "Run a large batch and watch the average stabilize.",
+          "The running average of 0s and 1s equals the fraction of aces drawn.",
+          "That fraction converges to P(ace) = 1/13."
+        ]
+      }
+    },
+    {
+      "beatId": "ev3-model",
+      "required": false,
+      "comparison": true,
+      "introducesSymbol": "E[1_A]=P(A)",
+      "groundedBy": ["ev3-win"],
+      "prompt": "Tap the formula terms to see why E[1_A]=P(A) — and how any count becomes a sum of probabilities.",
+      "interaction": {
+        "type": "primer",
+        "variant": "custom",
+        "title": "The indicator trick",
+        "body": "**E[1_A] = 1·P(A) + 0·P(Aᶜ) = P(A).** The only nonzero value is 1, taken with probability P(A).\n\nAny count of events is a sum of 0/1 indicators: **count = Σ 1_{A_i}**. By linearity (from L2, no independence needed): **E[count] = Σ E[1_{A_i}] = Σ P(A_i)**. A messy expectation collapses to a sum of plain probabilities you already know how to compute.",
+        "collapsible": true
+      },
+      "feedback": {
+        "correct": "E[1_A]=P(A) — probability and expectation are one and the same for a 0/1 indicator. A count is a sum of indicators, so E[count]=ΣP(A_i) by linearity.",
+        "hints": [
+          "E[1_A] = 1·P(A) + 0·P(Aᶜ) = P(A).",
+          "Any count = Σ indicators; linearity (L2) adds their expectations without needing independence.",
+          "Continue."
+        ]
+      }
+    },
+    {
+      "beatId": "ev3-scaffold",
+      "required": false,
+      "track": "A",
+      "prompt": "Before the mastery challenge: a closer look at the five-region argument.",
+      "interaction": {
+        "type": "primer",
+        "variant": "custom",
+        "title": "Five equal gaps",
+        "body": "Place 4 aces randomly among 52 cards. They divide the deck into **5 regions**: before ace 1, between aces 1–2, 2–3, 3–4, and after ace 4.\n\nEach of the 48 non-aces is equally likely to land in any of these 5 positions relative to the 4 aces. So **P(non-ace i precedes all 4 aces) = 1/5**.\n\nLet I_i = 1 if non-ace i comes before all aces. E[I_i] = 1/5 for each i. The expected position of the first ace = 1 (for the ace itself) + Σ E[I_i] over all 48 non-aces.",
+        "collapsible": true
+      },
+      "feedback": {
+        "correct": "The key: 4 aces create 5 equal slots. Each non-ace lands in any slot with probability 1/5.",
+        "hints": [
+          "4 aces → 5 regions in any deck order.",
+          "Each non-ace has P=1/5 of being positioned before all aces.",
+          "Continue."
+        ]
+      }
+    },
+    {
+      "beatId": "ev3-count",
+      "required": true,
+      "prompt": "Roll a fair 6-sided die twice (N=6 faces, m=2 rolls). Let I_i = 1 if face i appears at least once. What is the expected number of distinct faces seen?",
+      "interaction": {
+        "type": "answerEntry",
+        "fields": [
+          {
+            "id": "e-distinct",
+            "label": "E[distinct faces]",
+            "accept": ["11/6"],
+            "placeholder": "?"
+          }
+        ]
+      },
+      "feedback": {
+        "correct": "E[distinct] = 6(1−(5/6)²) = 6·11/36 = 11/6 ≈ 1.83. The two rolls can land on the same face, so it's below 2.",
+        "hints": [
+          "The two rolls might repeat a face. Sum each face's chance of appearing: 6(1−(5/6)²) = 11/6.",
+          "E[I_i] = 1 − P(face i never appears in 2 rolls) = 1 − (5/6)².",
+          "6 · (1 − 25/36) = 6 · 11/36 = 11/6."
+        ]
+      }
+    },
+    {
+      "beatId": "ev3-prove",
+      "required": true,
+      "prompt": "Mastery challenge: use indicator variables to find the expected number of cards turned over before (and including) the first ace.",
+      "interaction": {
+        "type": "masteryChallenge",
+        "scenario": "Four aces divide the 52 cards into 5 equally likely positions for each non-ace. Let I_i = 1 if non-ace i precedes all 4 aces. There are 48 non-aces. What is E[first ace position]?",
+        "fields": [
+          {
+            "id": "e-first-ace",
+            "label": "E[cards until first ace]",
+            "accept": ["53/5", "10.6"],
+            "placeholder": "?",
+            "suffix": "cards"
+          }
+        ]
+      },
+      "interviewNote": "The 5-equal-gaps argument (Green Book p.48): four aces create five 'slots' in any random ordering of 52 cards. By symmetry, each of the 48 non-aces lands in any of the five slots with equal probability 1/5. So P(non-ace i precedes all aces) = 1/5. Therefore E[first ace] = 1 + Σ_{i=1}^{48} E[I_i] = 1 + 48·(1/5) = 53/5 ≈ 10.6. Clean interview answer: no casework, no recursion, just one symmetry observation.",
+      "feedback": {
+        "correct": "E[first ace] = 1 + 48·(1/5) = 53/5 ≈ 10.6. Four aces carve five equal gaps; by symmetry each non-ace has a 1/5 chance of landing before all aces.",
+        "hints": [
+          "Each non-ace adds only its 1/5 chance of preceding every ace, not a full card. That gives 53/5.",
+          "Let I_i = 1 if non-ace i precedes all 4 aces. By symmetry (5 equal gaps), P(I_i=1)=1/5. E = 1 + 48·(1/5).",
+          "1 + 48/5 = 5/5 + 48/5 = 53/5."
+        ]
+      }
+    },
+    {
+      "beatId": "ev3-recap",
+      "required": true,
+      "prompt": "Reveal the recap cards — the indicator bridge in three moves.",
+      "interaction": { "type": "recap" },
+      "feedback": {
+        "correct": "Indicators: the bridge from probability to expectation. A count of events = a sum of probabilities you already know. Sets up L5 — a full coupon set as a sum of geometric waits.",
+        "hints": [
+          "E[1_A]=P(A).",
+          "E[count]=ΣP(A_i) by linearity, no independence needed.",
+          "L5 next: coupon collector via the same trick."
+        ]
+      }
+    }
+  ]
+}
