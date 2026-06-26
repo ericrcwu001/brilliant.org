@@ -17,6 +17,16 @@ const LESSON_CHAPTER: Record<string, ChapterHue> = {
   'lesson-states-streaks': 'ch3',
   'lesson-longer-patterns': 'ch3',
   'lesson-overlap-shortcut': 'ch3',
+  'lesson-markov-chains-1': 'ch3',
+  'lesson-markov-chains-2': 'ch3',
+  'lesson-markov-chains-3': 'ch3',
+  'lesson-markov-chains-4': 'ch3',
+  'lesson-markov-chains-5': 'ch3',
+  'lesson-markov-chains-6': 'ch3',
+  'lesson-markov-chains-7': 'ch3',
+  'lesson-markov-chains-8': 'ch3',
+  'lesson-markov-chains-9': 'ch3',
+  'lesson-markov-chains-10': 'ch3',
 }
 
 // Resolved hex per chapter — keep in sync with the --chN tokens in
