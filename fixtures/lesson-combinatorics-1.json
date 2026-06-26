@@ -197,7 +197,7 @@
       "prompt": "Three students each have a birthday drawn from 365 days. How many birthday sequences have no two students sharing a day?",
       "interaction": {
         "type": "masteryChallenge",
-        "scenario": "365 days in the year; 3 students; each student's birthday is drawn independently. Count only sequences where no two students share the same day.",
+        "scenario": "There are \\(365\\) days in the year and 3 students, each with an independently chosen birthday. Count only the sequences where no two students share the same day.",
         "fields": [
           {
             "id": "ans",
@@ -208,11 +208,11 @@
         ]
       },
       "feedback": {
-        "correct": "Exactly — 365·364·363; same rule, each next person has one fewer day.",
+        "correct": "\\[ 365 \\cdot 364 \\cdot 363 = 48{,}228{,}180 \\] Student 1 picks any of \\(365\\) days; student 2 must avoid that day — \\(364\\) choices; student 3 avoids both taken days — \\(363\\) choices. Substituting: \\(365 \\cdot 364 = 132{,}860\\), then \\(132{,}860 \\cdot 363 = 48{,}228{,}180\\). This is the same shrinking-product rule as \\(n!\\), but anchored at 365 rather than \\(n\\).",
         "hints": [
-          "Same shrinking-product rule as the n! tree: each next person has one fewer available day.",
-          "Student 1: 365 days. Student 2: 364 (one day taken). Student 3: 363.",
-          "365×364×363 = 48,228,180."
+          "The same shrinking-product rule as the coin tree — each next student has one fewer available birthday to pick from.",
+          "Student 1: \\(365\\) choices; student 2: \\(364\\) (one day taken); student 3: \\(363\\). Multiply all three.",
+          "\\(365 \\times 364 \\times 363 = 48{,}228{,}180\\)."
         ]
       }
     },

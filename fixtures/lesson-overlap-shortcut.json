@@ -156,17 +156,17 @@
       "prompt": "Mastery challenge: use the 2^L overlap shortcut to find E[HHHH] - the average flips until four heads in a row. Type a whole number.",
       "interaction": {
         "type": "masteryChallenge",
-        "scenario": "Remember E[HHH] = 14 took a whole state machine? With the shortcut, HHHH is one line - but you have to catch every overlap.",
+        "scenario": "Recall \\(E[\\text{HHH}] = 14\\) required a full state machine. With the overlap shortcut, \\(E[\\text{HHHH}]\\) is one line — but you must catch every overlap.",
         "fields": [
-          { "id": "e-hhhh", "label": "Average flips until HHHH", "accept": ["30"], "placeholder": "?", "suffix": "flips" }
+          { "id": "e-hhhh", "label": "Average flips until \\(\\text{HHHH}\\)", "accept": ["30"], "placeholder": "?", "suffix": "flips" }
         ]
       },
       "feedback": {
-        "correct": "E[HHHH] = 30 = 2 + 4 + 8 + 16. Every prefix of HHHH is also a suffix, so all four overlaps fire. Compare three length-4 patterns: HHTT (no overlap) waits 16, HTHT waits 20, HHHH waits 30. Same length, very different waits - overlap is the whole story.",
+        "correct": "\\(E[\\text{HHHH}] = 30\\). For any run of identical symbols, every shorter prefix is also a suffix, so \\(\\text{HHHH}\\) overlaps itself at lengths 1, 2, 3, and 4. The overlap shortcut gives \\[ E[\\text{HHHH}] = \\sum 2^L = 2^1 + 2^2 + 2^3 + 2^4 = 2 + 4 + 8 + 16 = 30. \\] Compare three length-4 patterns: \\(\\text{HHTT}\\) (overlap only at length 4) waits \\(2^4 = 16\\) flips; \\(\\text{HTHT}\\) (overlaps at lengths 2 and 4) waits \\(2^2 + 2^4 = 20\\); \\(\\text{HHHH}\\) (all four overlaps) waits \\(30\\). Same length, very different waits — overlap is the whole story.",
         "hints": [
-          "A run of identical symbols overlaps itself in every possible way - each shift still lines up.",
-          "Add 2^L over every self-overlap length, including the full match. For HHHH the start meets the end at lengths 1, 2, 3, and 4.",
-          "2^1 + 2^2 + 2^3 + 2^4 = 2 + 4 + 8 + 16 = 30."
+          "A run of identical symbols overlaps itself at every possible shift. How many overlap lengths does \\(\\text{HHHH}\\) have?",
+          "Add \\(2^L\\) over every self-overlap length, including the full match. For \\(\\text{HHHH}\\) the overlaps are at lengths 1, 2, 3, and 4.",
+          "\\(2^1 + 2^2 + 2^3 + 2^4 = 2 + 4 + 8 + 16 = 30\\)."
         ]
       }
     },

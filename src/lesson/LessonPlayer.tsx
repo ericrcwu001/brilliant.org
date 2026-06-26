@@ -22,7 +22,7 @@ import {
   type CompleteLessonResult,
 } from '../progress/functions'
 import { loadStreak, ZERO_STREAK, type Streak } from '../habit/streaks'
-import { milestoneMeta } from '../habit/milestones'
+import { milestoneMeta, type ConceptBadge } from '../habit/milestones'
 import { BadgeStamp } from './BadgeStamp'
 import { WeeklyStreak } from '../habit/WeeklyStreak'
 import { analytics } from '../analytics/events'
@@ -43,6 +43,7 @@ export function LessonPlayer({
   persistence,
   onExit,
   onInterviewCta,
+  badge,
   track = 'B',
   review = false,
 }: {
@@ -52,6 +53,8 @@ export function LessonPlayer({
   onExit?: () => void
   /** Called when the learner clicks "Take the capstone interview" on the done screen. */
   onInterviewCta?: () => void
+  // Per-concept completion badge (icon meta + accent hue). When omitted (e.g. /dev/lesson) it falls back to the flagship milestone meta + chapter hue.
+  badge?: ConceptBadge
   // Two-track selection (L1 §3.3). Default 'B' = today's experience. Track 'A'
   // reveals the additive scaffolds (primers, split density, name-the-overlap).
   track?: 'A' | 'B'
@@ -437,8 +440,8 @@ export function LessonPlayer({
             )}
             <p className="done-note__mastered">Concept mastered</p>
             <BadgeStamp
-              meta={milestone}
-              hueVar={chapterHueVar(lessonId)}
+              meta={badge?.meta ?? milestone}
+              hueVar={badge?.hueVar ?? chapterHueVar(lessonId)}
               reducedMotion={reducedMotion}
             />
           </div>

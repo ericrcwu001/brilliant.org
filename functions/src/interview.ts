@@ -76,7 +76,11 @@ function requireString(value: unknown, name: string): string {
 // deploy time; __dirname is functions/lib/ in the compiled output, packs/ a
 // sibling of lib/).
 function loadPack(conceptId: string): InterviewPack {
-  const filepath = path.join(__dirname, '../packs', `course-${conceptId}.json`)
+  // conceptId is the course id and may already carry the `course-` prefix (the
+  // CTAs pass `courseId`). Strip it so the filename is course-<slug>.json and
+  // never the doubled course-course-*.json.
+  const slug = conceptId.replace(/^course-/, '')
+  const filepath = path.join(__dirname, '../packs', `course-${slug}.json`)
   let raw: string
   try {
     raw = fs.readFileSync(filepath, 'utf8')

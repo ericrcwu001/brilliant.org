@@ -111,6 +111,18 @@ export function conceptBadges(course: Course): ConceptBadge[] {
   ]
 }
 
+// The badge for a single lesson, resolved the same way as the gallery
+// (conceptBadges) so the lesson-completion celebration matches the gallery
+// medallion. Returns undefined for an unknown or optional (no-badge) lesson.
+export function lessonBadge(
+  course: Course,
+  lessonId: string,
+): ConceptBadge | undefined {
+  const node = course.lessons.find((l) => l.lessonId === lessonId)
+  if (!node) return undefined
+  return conceptBadges(course).find((b) => b.meta.id === node.milestoneId)
+}
+
 // Realtime earned-milestone ids for the seal gallery. A collection listener so a
 // seal awarded by the completeLesson Cloud Function appears the instant it is
 // written (no manual refresh). Empty/last-known on a listen error.

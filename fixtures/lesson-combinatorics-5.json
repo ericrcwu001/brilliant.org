@@ -218,7 +218,7 @@
       "prompt": "51 ants wander onto a unit square. You cut the square into a 5×5 grid of 25 equal smaller squares. You have a circular glass of radius 1/7. What is the minimum number of ants that must share one of the 25 regions?",
       "interaction": {
         "type": "masteryChallenge",
-        "scenario": "Remember: once you name the holes and count pigeons, ⌈N/H⌉ gives the guaranteed minimum. Here the partition is handed to you — 25 regions.",
+        "scenario": "51 ants scatter onto a unit square cut into a \\(5 \\times 5\\) grid of \\(25\\) equal sub-squares (the holes). You have a circular glass of radius \\(\\tfrac{1}{7}\\). Name the holes, count the pigeons, and apply \\(\\lceil N/H \\rceil\\) to find the guaranteed minimum crowding.",
         "fields": [
           {
             "id": "min-per-region",
@@ -230,11 +230,11 @@
         ]
       },
       "feedback": {
-        "correct": "Exactly — 25 regions, ⌈51/25⌉ = 3, so some region holds ≥3 ants; a radius-1/7 glass covers it.",
+        "correct": "Name the holes: \\(25\\) sub-squares. Count the pigeons: \\(N = 51\\) ants. Apply the ceiling formula: \\[ \\lceil 51/25 \\rceil = \\lceil 2.04 \\rceil = 3. \\] Even perfectly spread, \\(25 \\times 2 = 50 < 51\\), so one sub-square must hold at least \\(3\\) ants. Each sub-square has side \\(\\tfrac{1}{5}\\) and fits inside a circle of radius \\(\\tfrac{1}{7}\\), so the glass always covers a triple.",
         "hints": [
-          "Even perfectly spread, 51 ants can't fit ≤2 per region: 25 × 2 = 50 < 51. Some region is forced to 3.",
-          "Use the formula: ⌈51/25⌉ = ceiling(51 ÷ 25) = ceiling(2.04) = 3. Some region must hold at least 3.",
-          "51 ants, 25 regions → ⌈51/25⌉ = 3. A radius-1/7 glass covers a side-1/5 square. Yes, always."
+          "\\(25\\) sub-squares are the holes; \\(51\\) ants are the pigeons. Could all \\(51\\) ants fit with \\(2\\) or fewer per square?",
+          "\\(25 \\times 2 = 50 < 51\\), so one square must hold more. Apply \\(\\lceil N/H \\rceil = \\lceil 51/25 \\rceil\\).",
+          "\\(\\lceil 51/25 \\rceil = \\lceil 2.04 \\rceil = 3\\). Some region holds at least 3 ants."
         ]
       }
     },

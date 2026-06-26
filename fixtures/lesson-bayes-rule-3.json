@@ -210,7 +210,7 @@
       "prompt": "Mastery challenge: the 1-in-1000 double-headed coin keeps landing heads. What is the smallest number of heads to make the double-headed coin more likely than not?",
       "interaction": {
         "type": "masteryChallenge",
-        "scenario": "The 1-in-1000 double-headed coin keeps landing heads.",
+        "scenario": "The 1-in-1000 double-headed coin keeps landing heads. (The double-headed coin always shows heads; the fair coin shows heads half the time.)",
         "fields": [
           {
             "id": "k",
@@ -221,11 +221,11 @@
         ]
       },
       "feedback": {
-        "correct": "Each head doubles the odds (×2), so you need 2ᵏ > 999 → k = 10. Strong evidence compounds fast.",
+        "correct": "Each head multiplies the prior odds by the likelihood ratio \\(\\frac{P(H\\mid\\text{DH})}{P(H\\mid\\text{fair})} = \\frac{1}{1/2} = 2\\). After \\(k\\) heads the posterior odds are: \\[ \\text{posterior odds} = \\frac{1}{999}\\times 2^k \\] The double-headed coin is more likely when \\(2^k > 999\\). Checking: \\(2^9 = 512 < 999\\) (not enough); \\(2^{10} = 1024 > 999\\) (enough). So \\(k = 10\\). The posterior at \\(k = 10\\) is \\(\\frac{1024}{1024+999} = \\frac{1024}{2023}\\) — just over half. Evidence compounds in odds, not additively in probability.",
         "hints": [
-          "You need the odds to pass 1:1, i.e. 2^k > 999.",
-          "2^9 = 512 (too few); 2^10 = 1024 (enough).",
-          "k = 10."
+          "Each head multiplies the prior odds by the likelihood ratio \\(\\frac{P(H\\mid\\text{DH})}{P(H\\mid\\text{fair})} = \\frac{1}{1/2} = 2\\).",
+          "You need \\(2^k > 999\\); checking: \\(2^9 = 512\\) (not enough), \\(2^{10} = 1024\\) (enough).",
+          "\\(k = 10\\); at that point the posterior is \\(\\frac{1024}{2023}\\) — just over \\(\\tfrac{1}{2}\\)."
         ]
       }
     },

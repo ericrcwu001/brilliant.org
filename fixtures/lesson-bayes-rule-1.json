@@ -211,17 +211,17 @@
       "prompt": "Mastery challenge: same two coins — you flip the chosen coin and see heads twice (HH). Give the exact posterior.",
       "interaction": {
         "type": "masteryChallenge",
-        "scenario": "Same two coins (one fair, one two-headed). You flip the chosen coin and see heads twice (HH).",
+        "scenario": "Same two coins (one fair, one two-headed). You flip the chosen coin twice and see \\(HH\\).",
         "fields": [
-          { "id": "hh", "label": "P(two-headed | HH)", "accept": ["4/5"] }
+          { "id": "hh", "label": "\\(P(\\text{two-headed}\\mid HH)\\)", "accept": ["4/5"] }
         ]
       },
       "feedback": {
-        "correct": "The fair coin's likelihood is now (½)²=¼: (½·1)/(½·1 + ½·¼) = (½)/(⅝) = 4/5. A second head DOES move a settled belief.",
+        "correct": "Apply the posterior formula: \\[ P(H\\mid E) = \\frac{P(H)\\,P(E\\mid H)}{\\sum_j P(H_j)\\,P(E\\mid H_j)} \\] Priors: \\(P(\\text{TH}) = P(\\text{fair}) = \\tfrac{1}{2}\\). Two-head likelihoods: \\(P(HH\\mid\\text{TH}) = 1\\) and \\(P(HH\\mid\\text{fair}) = \\left(\\tfrac{1}{2}\\right)^2 = \\tfrac{1}{4}\\). Substituting: \\[ P(\\text{TH}\\mid HH) = \\frac{\\tfrac{1}{2}\\cdot 1}{\\tfrac{1}{2}\\cdot 1 + \\tfrac{1}{2}\\cdot\\tfrac{1}{4}} = \\frac{\\tfrac{1}{2}}{\\tfrac{5}{8}} = \\frac{4}{5} \\] The two-headed coin is four times as likely to show \\(HH\\) as the fair coin — a second head pushes the posterior from \\(\\tfrac{2}{3}\\) to \\(\\tfrac{4}{5}\\).",
         "hints": [
-          "A second head is more evidence — recompute, don't keep 2/3.",
-          "Fair-coin likelihood is ½·½=¼; numerator ½·1, denominator ½·1 + ½·¼ = ⅝.",
-          "(½)/(⅝) = 4/5."
+          "A second head multiplies the evidence again — the fair coin's two-head likelihood is now \\(\\left(\\tfrac{1}{2}\\right)^2 = \\tfrac{1}{4}\\), not \\(\\tfrac{1}{2}\\).",
+          "Numerator: \\(\\tfrac{1}{2}\\cdot 1 = \\tfrac{1}{2}\\); denominator: \\(\\tfrac{1}{2}\\cdot 1 + \\tfrac{1}{2}\\cdot\\tfrac{1}{4} = \\tfrac{5}{8}\\).",
+          "\\(\\frac{1/2}{5/8} = \\frac{4}{5}\\)."
         ]
       }
     },

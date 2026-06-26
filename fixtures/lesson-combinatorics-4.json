@@ -211,7 +211,7 @@
       "prompt": "A 5-card hand is dealt from a standard 52-card deck. How many hands are four of a kind? Then find the exact probability.",
       "interaction": {
         "type": "masteryChallenge",
-        "scenario": "Each rank (A, 2, …, K) has exactly 4 cards in the deck. A four-of-a-kind hand uses all 4 cards of one rank plus any 1 other card.",
+        "scenario": "There are \\(13\\) ranks (A, 2, \\dots, K), each with exactly \\(4\\) suited cards. A four-of-a-kind hand holds all \\(4\\) cards of one rank plus one kicker from the \\(48\\) remaining cards.",
         "fields": [
           {
             "id": "four-count",
@@ -222,7 +222,7 @@
           },
           {
             "id": "four-prob",
-            "label": "P(four of a kind)",
+            "label": "\\(P(\\text{four of a kind})\\)",
             "accept": ["1/4165"],
             "placeholder": "?"
           }
@@ -230,11 +230,11 @@
       },
       "interviewNote": "P(four-of-a-kind) = 624/C(52,5) = 1/4165 (GB p.34 §4.2). Count = 13 ranks × 48 kickers = 624; C(52,5) = 2,598,960; reduce(624, 2598960) = 1/4165.",
       "feedback": {
-        "correct": "Exactly — 13 ranks × 48 kickers = 624, over C(52,5) = 2,598,960 → 1/4165.",
+        "correct": "Choose the rank, then the kicker: \\[ 13 \\times 48 = 624. \\] There are \\(13\\) ranks; once a rank is fixed, all \\(4\\) of its cards are in the hand, leaving \\(52 - 4 = 48\\) cards for the kicker. The probability is \\[ P(\\text{four of a kind}) = \\frac{624}{\\binom{52}{5}} = \\frac{624}{2{,}598{,}960} = \\frac{1}{4165}. \\] Dividing numerator and denominator by their GCD of \\(624\\) reduces the fraction to \\(\\tfrac{1}{4165}\\).",
         "hints": [
-          "13 ranks; for each rank, the 5th card is any of 52 − 4 = 48 remaining cards.",
-          "13 × 48 = 624 four-of-a-kind hands.",
-          "624 / 2,598,960 = 1/4165."
+          "For each rank, all \\(4\\) cards of that rank are forced into the hand. How many ranks are there, and how many cards remain for the kicker?",
+          "\\(13\\) ranks \\(\\times\\) \\(48\\) kicker cards \\(= 624\\) four-of-a-kind hands.",
+          "\\(\\frac{624}{2{,}598{,}960} = \\frac{1}{4165}\\)."
         ]
       }
     },

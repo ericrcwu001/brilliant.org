@@ -216,7 +216,7 @@
       "prompt": "From scratch: how many two-pairs hands are in a 5-card deck? Then find P(two pairs). Finally, confirm the full ranking: four-of-a-kind, full house, two pairs.",
       "interaction": {
         "type": "masteryChallenge",
-        "scenario": "Two pairs: choose 2 ranks unordered (C(13,2)), choose the suits for each rank (C(4,2) each), then pick a kicker card from the 44 cards not of those ranks.",
+        "scenario": "Choose \\(2\\) ranks unordered — \\(\\binom{13}{2}\\) ways; pick the suits for each rank's pair — \\(\\binom{4}{2}\\) each; then choose a kicker from the \\(44\\) remaining cards (not of either chosen rank).",
         "fields": [
           {
             "id": "two-pair-count",
@@ -227,7 +227,7 @@
           },
           {
             "id": "two-pair-prob",
-            "label": "P(two pairs)",
+            "label": "\\(P(\\text{two pairs})\\)",
             "accept": ["198/4165"],
             "placeholder": "?"
           }
@@ -235,11 +235,11 @@
       },
       "interviewNote": "P(two pairs) = 123,552/2,598,960 = 198/4165 (GB p.34 §4.2). Count: C(13,2)·C(4,2)²·44 = 78·6·6·44 = 123,552; the '44 = 52 − 8' kicker bars both chosen ranks' 8 cards. GB OCR garbles printed integer to '123,582'; formula 78×6×6×44 = 123,552 unambiguous (engine: probabilityFromCounts(123552, 2598960) = 198/4165).",
       "feedback": {
-        "correct": "Exactly — 78·6·6·44 = 123,552, so 198/4165. Re-rank: 1 < 6 < 198 — two pairs is most common.",
+        "correct": "Count step by step: \\[ \\binom{13}{2} \\cdot \\binom{4}{2}^2 \\cdot 44 = 78 \\cdot 6 \\cdot 6 \\cdot 44 = 123{,}552. \\] \\(\\binom{13}{2} = 78\\): choose the two pair-ranks unordered. \\(\\binom{4}{2} = 6\\): pick which 2 of 4 suits form each rank's pair, applied twice. \\(44 = 52 - 8\\): kicker is any card not of either chosen rank. The probability is \\[ P(\\text{two pairs}) = \\frac{123{,}552}{2{,}598{,}960} = \\frac{198}{4165}. \\] Over the shared denominator 4165 the numerators rank \\(1 < 6 < 198\\) — two pairs is the most common of the three.",
         "hints": [
-          "Don't use 13×12 for the two ranks — 'kings & sevens' = 'sevens & kings.' Pick them unordered: C(13,2) = 78.",
-          "C(13,2)·C(4,2)²·44 = 78·6·6·44 = 123,552 two-pairs hands.",
-          "P = 123,552 / 2,598,960 = 198/4165."
+          "The two ranks are unordered — 'kings & sevens' equals 'sevens & kings.' Use \\(\\binom{13}{2}\\), not \\(13 \\times 12\\).",
+          "\\(\\binom{13}{2} \\cdot \\binom{4}{2}^2 \\cdot 44 = 78 \\cdot 6 \\cdot 6 \\cdot 44 = 123{,}552\\) two-pairs hands.",
+          "\\(\\frac{123{,}552}{2{,}598{,}960} = \\frac{198}{4165}\\)."
         ]
       }
     },

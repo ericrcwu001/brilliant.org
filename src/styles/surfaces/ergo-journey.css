@@ -513,6 +513,10 @@
   min-height: 48px;
 }
 
+.ergo-detail__cta + .ergo-detail__cta {
+  margin-top: var(--s3, 12px);
+}
+
 .ergo-detail__cta:hover {
   filter: brightness(0.9);
 }

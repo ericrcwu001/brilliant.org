@@ -2,7 +2,9 @@
   "lessonId": "lesson-expected-value-4",
   "courseId": "course-expected-value",
   "title": "Conditional & Total Expectation",
-  "patternOptions": ["H"],
+  "patternOptions": [
+    "H"
+  ],
   "milestoneId": "conditional-expectation-mastered",
   "unlocks": "lesson-expected-value-5",
   "schemaVersion": 1,
@@ -14,8 +16,14 @@
       "interaction": {
         "type": "retrievalGrid",
         "pairs": [
-          { "left": "Expected flips until HH", "right": "6" },
-          { "left": "Method used", "right": "condition on first flip" }
+          {
+            "left": "Expected flips until HH",
+            "right": "6"
+          },
+          {
+            "left": "Method used",
+            "right": "condition on first flip"
+          }
         ]
       },
       "feedback": {
@@ -33,7 +41,12 @@
       "prompt": "Roll a die. Get {1,2,3}: collect the face and stop. Get {4,5,6}: collect the face and roll again, adding to your total. What is a single play worth?",
       "interaction": {
         "type": "prediction",
-        "options": ["A little over $3.50", "About $5", "About $7", "Unbounded"]
+        "options": [
+          "A little over $3.50",
+          "About $5",
+          "About $7",
+          "Unbounded"
+        ]
       },
       "feedback": {
         "byOption": {
@@ -63,7 +76,11 @@
           {
             "id": "coin-die",
             "label": "Value of the bet",
-            "accept": ["7/4", "1.75", "1 3/4"],
+            "accept": [
+              "7/4",
+              "1.75",
+              "1 3/4"
+            ],
             "placeholder": "?/?",
             "suffix": "dollars"
           }
@@ -87,13 +104,27 @@
         "cases": [
           {
             "label": "Roll {1, 2, 3}",
-            "p": { "n": 1, "d": 2 },
-            "value": { "n": 2, "d": 1 }
+            "p": {
+              "n": 1,
+              "d": 2
+            },
+            "value": {
+              "n": 2,
+              "d": 1
+            }
           },
           {
             "label": "Roll {4, 5, 6}",
-            "p": { "n": 1, "d": 2 },
-            "restart": { "add": { "n": 5, "d": 1 } }
+            "p": {
+              "n": 1,
+              "d": 2
+            },
+            "restart": {
+              "add": {
+                "n": 5,
+                "d": 1
+              }
+            }
           }
         ]
       },
@@ -115,7 +146,10 @@
       "beatId": "ev4-model",
       "required": false,
       "introducesSymbol": "E[X]=Σ E[X|case]P(case)",
-      "groundedBy": ["ev4-win", "ev4-explore"],
+      "groundedBy": [
+        "ev4-win",
+        "ev4-explore"
+      ],
       "comparison": true,
       "prompt": "Those two examples used the same move. Read the law — then tap to confirm you see why averaging is not the same as belief-updating.",
       "interaction": {
@@ -144,7 +178,14 @@
           {
             "id": "highcase",
             "label": "Value of the {4, 5, 6} case",
-            "accept": ["5+E[X]", "E[X]+5", "5+E", "E+5", "5 + E[X]", "E[X] + 5"],
+            "accept": [
+              "5+E[X]",
+              "E[X]+5",
+              "5+E",
+              "E+5",
+              "5 + E[X]",
+              "E[X] + 5"
+            ],
             "placeholder": "? + E[X]"
           }
         ]
@@ -186,23 +227,25 @@
       "prompt": "Mastery challenge: set up and solve the self-referential dice game equation. What is a single play worth?",
       "interaction": {
         "type": "masteryChallenge",
-        "scenario": "Roll a die. Get {1,2,3}: collect the face and stop. Get {4,5,6}: collect the face and roll again, adding to your total. Set up E[X] = ½·2 + ½·(5+E[X]) and solve.",
+        "scenario": "Roll a die. Get \\(\\{1,2,3\\}\\): collect the face and stop. Get \\(\\{4,5,6\\}\\): collect the face and roll again, adding to your total. Set up \\(E[X] = \\tfrac{1}{2}\\cdot 2 + \\tfrac{1}{2}\\cdot(5+E[X])\\) and solve.",
         "fields": [
           {
             "id": "ev",
-            "label": "E[X] =",
-            "accept": ["7"],
+            "label": "\\(E[X]\\) =",
+            "accept": [
+              "7"
+            ],
             "placeholder": "?",
             "suffix": "dollars"
           }
         ]
       },
       "feedback": {
-        "correct": "E[X] = 7. Treat E[X] as the unknown: expand ½·2 + ½·(5+E[X]) = E[X] → 1 + 5/2 + E[X]/2 = E[X] → ½·E[X] = 7/2 → E[X] = 7.",
+        "correct": "Condition on the first roll and treat \\( E[X] \\) as the unknown: \\[ E[X] = \\tfrac{1}{2}\\cdot 2 + \\tfrac{1}{2}\\bigl(5 + E[X]\\bigr) \\] Expanding: \\( 1 + \\tfrac{5}{2} + \\tfrac{E[X]}{2} = E[X] \\), so \\( \\tfrac{E[X]}{2} = \\tfrac{7}{2} \\), giving \\( E[X] = 7 \\). Self-reference is not circular — it is a linear equation in one unknown.",
         "hints": [
-          "E[X] on both sides isn't a dead end; treat it as the unknown and solve: ½·2 + ½·(5+E[X]) = 7.",
-          "Expand: 1 + 5/2 + E[X]/2 = E[X]. Collect E[X] terms on one side.",
-          "E[X] − E[X]/2 = 7/2 → ½·E[X] = 7/2 → E[X] = 7."
+          "\\(E[X]\\) on both sides isn't a dead end — treat it as the unknown and solve: \\(\\tfrac{1}{2}\\cdot 2 + \\tfrac{1}{2}(5+E[X]) = E[X]\\).",
+          "Expand: \\( 1 + \\tfrac{5}{2} + \\tfrac{E[X]}{2} = E[X] \\). Collect \\(E[X]\\) terms on one side.",
+          "\\( E[X] - \\tfrac{E[X]}{2} = \\tfrac{7}{2} \\) \\(\\to\\) \\( \\tfrac{1}{2}E[X] = \\tfrac{7}{2} \\) \\(\\to\\) \\( E[X] = 7 \\)."
         ]
       }
     },
@@ -210,7 +253,9 @@
       "beatId": "ev4-recap",
       "required": true,
       "prompt": "Tap to reveal the lesson's core moves.",
-      "interaction": { "type": "recap" },
+      "interaction": {
+        "type": "recap"
+      },
       "feedback": {
         "correct": "Split the game into cases → average within each → weight by P(case). When a case restarts, E[X] appears on both sides — solve for it. Belief-updating from evidence is Bayes, coming later.",
         "hints": [

@@ -2,7 +2,9 @@
   "lessonId": "lesson-expected-value-6",
   "courseId": "course-expected-value",
   "title": "Order Statistics & Extremes",
-  "patternOptions": ["H"],
+  "patternOptions": [
+    "H"
+  ],
   "milestoneId": "expected-value-mastered",
   "unlocks": null,
   "schemaVersion": 1,
@@ -35,15 +37,21 @@
       "interaction": {
         "type": "retrievalGrid",
         "pairs": [
-          { "left": "arrange n distinct items in order", "right": "n!" },
-          { "left": "ordered selection of k items from n", "right": "nPk = n!/(n\u2212k)!" }
+          {
+            "left": "arrange n distinct items in order",
+            "right": "n!"
+          },
+          {
+            "left": "ordered selection of k items from n",
+            "right": "nPk = n!/(n−k)!"
+          }
         ]
       },
       "feedback": {
         "correct": "n! counts all orderings; nPk ordered-picks k of n. Both count ordered structure — the doorway to order statistics.",
         "hints": [
           "n! is every way to arrange n distinct items.",
-          "nPk orders k items chosen from n: n \u00d7 (n\u22121) \u00d7 \u2026 \u00d7 (n\u2212k+1).",
+          "nPk orders k items chosen from n: n × (n−1) × … × (n−k+1).",
           "n! matches 'arrange n', nPk matches 'ordered selection of k'."
         ]
       }
@@ -54,7 +62,11 @@
       "prompt": "500 ants stand at random spots on a 1-foot stick. Each marches at 1 ft/min; when two meet head-on they instantly reverse. How long until every ant has fallen off?",
       "interaction": {
         "type": "prediction",
-        "options": ["About 1 minute", "Many minutes", "Hours / intractable"]
+        "options": [
+          "About 1 minute",
+          "Many minutes",
+          "Hours / intractable"
+        ]
       },
       "feedback": {
         "byOption": {
@@ -81,14 +93,18 @@
           {
             "id": "ev6-win-max",
             "label": "E[max of 2 draws]",
-            "accept": ["2/3"],
+            "accept": [
+              "2/3"
+            ],
             "placeholder": "?",
             "suffix": ""
           },
           {
             "id": "ev6-win-min",
             "label": "E[min of 2 draws]",
-            "accept": ["1/3"],
+            "accept": [
+              "1/3"
+            ],
             "placeholder": "?",
             "suffix": ""
           }
@@ -112,11 +128,13 @@
         "type": "raceSim",
         "display": "lanes",
         "mode": "ants",
-        "ants": { "n": 500 }
+        "ants": {
+          "n": 500
+        }
       },
       "hero": {
         "slowFirst": true,
-        "structuralReadout": "With 500 ants, the last one off falls at 500/501 \u2248 0.998 min \u2014 barely over a minute.",
+        "structuralReadout": "With 500 ants, the last one off falls at 500/501 ≈ 0.998 min — barely over a minute.",
         "reducedMotionFinalFrame": true
       },
       "feedback": {
@@ -132,8 +150,11 @@
       "beatId": "ev6-model",
       "required": false,
       "introducesSymbol": "E[max]=n/(n+1)",
-      "groundedBy": ["ev6-win", "ev6-explore"],
-      "interviewNote": "E[max] = n/(n+1) < 1 for all finite n; it approaches 1 only asymptotically (n=9 \u2192 0.9; n=99 \u2192 ~0.99). The 'E[max] must reach 1 eventually' trap fires here \u2014 values are bounded at 1.",
+      "groundedBy": [
+        "ev6-win",
+        "ev6-explore"
+      ],
+      "interviewNote": "E[max] = n/(n+1) < 1 for all finite n; it approaches 1 only asymptotically (n=9 → 0.9; n=99 → ~0.99). The 'E[max] must reach 1 eventually' trap fires here — values are bounded at 1.",
       "prompt": "Drag n from 2 to 20. Watch E[max]=n/(n+1) and E[min]=1/(n+1) update. Does E[max] ever reach 1?",
       "interaction": {
         "type": "slider",
@@ -160,14 +181,14 @@
         "variant": "custom",
         "collapsible": true,
         "title": "Deriving E[max] = n/(n+1)",
-        "body": "**Why E[max] = n/(n+1):** The max of n uniform draws \u2264 x iff every draw \u2264 x, so F_max(x) = x^n.\n\nUsing E[X] = \u222b\u2080\u00b9 P(X > t) dt for X \u2208 [0,1]:\n\n    E[max] = \u222b\u2080\u00b9 (1 \u2212 x^n) dx = [x \u2212 x^(n+1)/(n+1)]\u2080\u00b9 = 1 \u2212 1/(n+1) = n/(n+1)\n\nBy symmetry (replace each draw x with 1\u2212x): F_min(x) = 1\u2212(1\u2212x)^n, giving **E[min] = 1/(n+1)**."
+        "body": "**Why E[max] = n/(n+1):** The max of n uniform draws ≤ x iff every draw ≤ x, so F_max(x) = x^n.\n\nUsing E[X] = ∫₀¹ P(X > t) dt for X ∈ [0,1]:\n\n    E[max] = ∫₀¹ (1 − x^n) dx = [x − x^(n+1)/(n+1)]₀¹ = 1 − 1/(n+1) = n/(n+1)\n\nBy symmetry (replace each draw x with 1−x): F_min(x) = 1−(1−x)^n, giving **E[min] = 1/(n+1)**."
       },
       "feedback": {
-        "correct": "F_max(x)=x^n \u2192 \u222b\u2080\u00b9(1\u2212x^n)dx = n/(n+1). By symmetry E[min]=1/(n+1).",
+        "correct": "F_max(x)=x^n → ∫₀¹(1−x^n)dx = n/(n+1). By symmetry E[min]=1/(n+1).",
         "hints": [
-          "F_max(x) = x^n because every draw must be \u2264 x.",
-          "The survival-integral formula: E[X] = \u222b\u2080\u00b9 P(X > t) dt for bounded X.",
-          "Integrate: \u222b\u2080\u00b9 (1\u2212x^n) dx = 1 \u2212 1/(n+1) = n/(n+1)."
+          "F_max(x) = x^n because every draw must be ≤ x.",
+          "The survival-integral formula: E[X] = ∫₀¹ P(X > t) dt for bounded X.",
+          "Integrate: ∫₀¹ (1−x^n) dx = 1 − 1/(n+1) = n/(n+1)."
         ]
       }
     },
@@ -181,7 +202,9 @@
           {
             "id": "ev6-min-f",
             "label": "E[min of 4 draws]",
-            "accept": ["1/5"],
+            "accept": [
+              "1/5"
+            ],
             "placeholder": "?",
             "suffix": ""
           }
@@ -199,27 +222,29 @@
     {
       "beatId": "ev6-prove",
       "required": true,
-      "interviewNote": "Ants on a string: 'n ants at random positions, bouncing on collision \u2014 expected clearing time?' Relabeling: collision \u2261 pass-through \u2192 last-off ant = ant with max starting position \u2192 E[T] = E[max of n U(0,1)] = n/(n+1). For n=500: 500/501 \u2248 1 min. E[max] \u2192 1 as n\u2192\u221e (values bounded at 1), so more ants barely changes the answer \u2014 the chaos collapses to a single-line expectation.",
+      "interviewNote": "Ants on a string: 'n ants at random positions, bouncing on collision — expected clearing time?' Relabeling: collision ≡ pass-through → last-off ant = ant with max starting position → E[T] = E[max of n U(0,1)] = n/(n+1). For n=500: 500/501 ≈ 1 min. E[max] → 1 as n→∞ (values bounded at 1), so more ants barely changes the answer — the chaos collapses to a single-line expectation.",
       "prompt": "Mastery challenge: use the relabeling trick to find the expected time for all 500 ants to fall off. Type an exact fraction.",
       "interaction": {
         "type": "masteryChallenge",
-        "scenario": "500 ants stand at random spots on a 1-foot stick and march at 1 ft/min. Collisions look like bounces — but relabeling shows each bounce is identical to passing through. The last ant off is simply the one that started farthest from its exit. What is E[time until all 500 have fallen off]?",
+        "scenario": "500 ants stand at random spots on a 1-foot stick and march at 1 ft/min. Collisions look like bounces — but relabeling shows each bounce is identical to passing through. The last ant off is simply the one that started farthest from its exit. What is \\(E[\\text{time until all 500 have fallen off}]\\)?",
         "fields": [
           {
             "id": "ev6-prove-f",
             "label": "Expected time (minutes)",
-            "accept": ["500/501"],
+            "accept": [
+              "500/501"
+            ],
             "placeholder": "?",
             "suffix": "min"
           }
         ]
       },
       "feedback": {
-        "correct": "E[T] = E[max of 500 U(0,1)] = 500/501 \u2248 0.998 min. More ants barely change it: E[max] saturates toward 1.",
+        "correct": "Relabeling collisions as pass-throughs, the clearing time equals the maximum initial walking distance. Each ant's position is uniform on \\([0,1]\\), so: \\[ E[T] = E\\!\\left[\\max_{i=1}^{n} U_i\\right] = \\frac{n}{n+1} \\] The density of the maximum is \\( n\\,x^{n-1} \\), giving \\( \\int_0^1 x \\cdot n\\,x^{n-1}\\,dx = \\tfrac{n}{n+1} \\). With \\( n=500 \\): \\( \\tfrac{500}{501} \\approx 0.998 \\) min — more ants barely change it, since \\( E[\\max] \\) saturates toward 1.",
         "hints": [
-          "More ants don't mean more time. Relabeling gives the max: E=n/(n+1)=500/501, about one minute.",
-          "E[max of n U(0,1)] = n/(n+1). For n=500: 500/501.",
-          "500/501."
+          "More ants don't mean more time. Relabeling gives the max: \\(E = \\tfrac{n}{n+1} = \\tfrac{500}{501}\\), about one minute.",
+          "\\( E\\!\\left[\\max_{i=1}^{n} U_i\\right] = \\tfrac{n}{n+1} \\). For \\(n=500\\): \\(\\tfrac{500}{501}\\).",
+          "\\(\\tfrac{500}{501}\\)."
         ]
       }
     },
@@ -227,9 +252,11 @@
       "beatId": "ev6-recap",
       "required": true,
       "prompt": "Tap each card to close the Expected Value arc.",
-      "interaction": { "type": "recap" },
+      "interaction": {
+        "type": "recap"
+      },
       "feedback": {
-        "correct": "Four tools, one move: list\u2192weight\u2192add. Variance \u2014 the spread \u2014 is next.",
+        "correct": "Four tools, one move: list→weight→add. Variance — the spread — is next.",
         "hints": [
           "The single move: list outcomes, weight by probability, add.",
           "Two superpowers: linearity (sums always add) + conditioning (average the averages).",

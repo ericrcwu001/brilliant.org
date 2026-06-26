@@ -10,7 +10,7 @@ import { WeeklyStreak } from '../habit/WeeklyStreak'
 import type { Streak } from '../habit/streaks'
 import { analytics } from '../analytics/events'
 import { CONCEPT_OPEN_TRANSITION } from '../app/viewTransition'
-import { conceptPath, ROUTES, type NavigateFn } from './routes'
+import { conceptPath, interviewPath, ROUTES, type NavigateFn } from './routes'
 import type { CatalogModel, ConceptCard, DomainSection } from './conceptCatalog.model'
 
 // ── Props ─────────────────────────────────────────────────────────────────────
@@ -20,6 +20,7 @@ export interface ConceptCatalogProps {
   streak: Streak
   displayName: string
   navigate: NavigateFn
+  resumeInterviewDone?: boolean
 }
 
 // ── vizKey → MathVizKind mapping ──────────────────────────────────────────────
@@ -148,18 +149,27 @@ function ResumeHero({
   recommendedStart,
   focusAreaComingSoon,
   onNavigate,
+  interviewDone,
+  onInterview,
 }: {
   card: ConceptCard
   recommendedStart?: boolean
   focusAreaComingSoon?: boolean
   onNavigate: (card: ConceptCard, heroEl: HTMLElement) => void
+  interviewDone?: boolean
+  onInterview?: (conceptId: string) => void
 }) {
   const heroRef = useRef<HTMLElement>(null)
 
   const eyebrow = recommendedStart ? 'Recommended for you' : 'Continue learning'
-  const ctaLabel =
-    recommendedStart
-      ? 'Start here →'
+
+  const masteredNeedsInterview =
+    !recommendedStart && card.progress.state === 'mastered' && !interviewDone
+
+  const ctaLabel = recommendedStart
+    ? 'Start here →'
+    : masteredNeedsInterview
+      ? 'Take the interview →'
       : card.progress.state === 'mastered'
         ? 'Review →'
         : card.progress.state === 'in_progress'
@@ -202,6 +212,10 @@ function ResumeHero({
             className="ergo-resume-hero__cta"
             style={{ background: `var(--${card.accent}, var(--ergo-brand))` }}
             onClick={() => {
+              if (masteredNeedsInterview) {
+                onInterview?.(card.conceptId)
+                return
+              }
               if (heroRef.current) onNavigate(card, heroRef.current)
             }}
           >
@@ -422,6 +436,7 @@ export function ConceptCatalog({
   streak,
   displayName,
   navigate,
+  resumeInterviewDone,
 }: ConceptCatalogProps) {
   const reducedMotion = useReducedMotion()
 
@@ -434,6 +449,11 @@ export function ConceptCatalog({
     heroEl.classList.add('concept-hero-source')
     void analytics.conceptSelected({ conceptId: card.conceptId })
     navigate(conceptPath(card.conceptId), { viewTransition: CONCEPT_OPEN_TRANSITION })
+  }
+
+  function handleResumeInterview(conceptId: string) {
+    void analytics.interviewCtaClicked({ conceptId, surface: 'catalog_hero' })
+    navigate(interviewPath(conceptId))
   }
 
   return (
@@ -466,6 +486,8 @@ export function ConceptCatalog({
             recommendedStart={model.recommendedStart}
             focusAreaComingSoon={model.focusAreaComingSoon}
             onNavigate={handleNavigate}
+            interviewDone={resumeInterviewDone}
+            onInterview={handleResumeInterview}
           />
         )}
 

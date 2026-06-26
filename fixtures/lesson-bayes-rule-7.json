@@ -211,15 +211,15 @@
         "type": "masteryChallenge",
         "scenario": "A cold hit found by trawling a database of 1,000,001 people; the same 1-in-1,000,000 random-match profile.",
         "fields": [
-          { "id": "milliondb", "label": "P(he is the source | match)", "accept": ["1/2"] }
+          { "id": "milliondb", "label": "\\(P(\\text{he is the source}\\mid\\text{match})\\)", "accept": ["1/2"] }
         ]
       },
       "feedback": {
-        "correct": "Trawl a 1,000,001-person database with a 1/1,000,000 profile: about 1 true source vs ~1 coincidental match → odds 1:1 → 1/2. A bigger search makes a cold hit weaker, not stronger — more innocents means more chances to match.",
+        "correct": "Use the odds form of Bayes: \\[ \\text{posterior odds} = \\text{prior odds}\\times\\text{likelihood ratio} \\] Database: 1,000,001 people (1 true source \\(+\\) 1,000,000 innocents). Prior odds \\(= 1:1{,}000{,}000\\). Likelihood ratio \\(= \\frac{P(\\text{match}\\mid\\text{source})}{P(\\text{match}\\mid\\text{innocent})} = \\frac{1}{1/1{,}000{,}000} = 1{,}000{,}000\\). Substituting: \\[ \\text{posterior odds} = \\frac{1}{1{,}000{,}000}\\times 1{,}000{,}000 = 1{:}1 \\] Odds \\(1:1\\) gives \\(P(\\text{source}\\mid\\text{match}) = \\tfrac{1}{2}\\). A larger database means more expected coincidental matches — a cold hit grows weaker, not stronger, as the search pool expands.",
         "hints": [
-          "More people searched = more expected coincidental matches.",
-          "Pool 1,000,001: prior odds 1:1,000,000 × LR 1,000,000 = 1:1.",
-          "1/2."
+          "Prior odds \\(= 1:1{,}000{,}000\\) (1 true source vs 1,000,000 innocents in the database).",
+          "Likelihood ratio \\(= \\frac{P(\\text{match}\\mid\\text{source})}{P(\\text{match}\\mid\\text{innocent})} = \\frac{1}{1/1{,}000{,}000} = 1{,}000{,}000\\).",
+          "Posterior odds \\(= \\frac{1}{1{,}000{,}000}\\times 1{,}000{,}000 = 1{:}1\\), giving \\(P(\\text{source}\\mid\\text{match}) = \\tfrac{1}{2}\\)."
         ]
       }
     },

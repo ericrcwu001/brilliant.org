@@ -131,18 +131,18 @@
       "prompt": "Mastery challenge: each part uses a different tool - a pattern wait or a walk between two walls. Decide which, then compute.",
       "interaction": {
         "type": "masteryChallenge",
-        "scenario": "Part A: a fair coin is flipped until TT (two tails in a row) first appears. Part B (separate game): a chip starts at $3 with walls at $0 and $8; each flip moves it +$1 on heads, -$1 on tails until it hits a wall.",
+        "scenario": "Part A: a fair coin is flipped until \\(\\text{TT}\\) (two tails in a row) first appears. Part B (separate game): a chip starts at \\(\\$3\\) with walls at \\(\\$0\\) and \\(\\$8\\); each flip moves it \\(+\\$1\\) on heads, \\(-\\$1\\) on tails until it hits a wall.",
         "fields": [
-          { "id": "partA", "label": "Part A - average flips until TT", "accept": ["6"], "placeholder": "?", "suffix": "flips" },
-          { "id": "partB", "label": "Part B - chance the chip reaches $8 before $0", "accept": ["3/8", "0.375", ".375"], "placeholder": "e.g. 2/5" }
+          { "id": "partA", "label": "Part A - average flips until \\(\\text{TT}\\)", "accept": ["6"], "placeholder": "?", "suffix": "flips" },
+          { "id": "partB", "label": "Part B - chance the chip reaches \\(\\$8\\) before \\(\\$0\\)", "accept": ["3/8", "0.375", ".375"], "placeholder": "e.g. 2/5" }
         ]
       },
       "feedback": {
-        "correct": "Part A = 6, Part B = 3/8. Part A is a wait: TT resets on a single head, exactly like HH, so E[TT] = 6 (not 4 - it doesn't keep progress the way HT does). Part B is a walk: the reach chance is pure position, i/N = 3/8. Same coin, two different machines - naming the tool is the real skill.",
+        "correct": "Part A = \\(6\\), Part B = \\(\\tfrac{3}{8}\\). Part A is a pattern wait: \\(\\text{TT}\\) has no self-overlap other than its full length, so a single H resets all progress just like \\(\\text{HH}\\). The wait equations are \\[ E_0 = 1 + \\tfrac{1}{2}E_0 + \\tfrac{1}{2}E_1, \\] \\[ E_1 = 1 + \\tfrac{1}{2}E_0. \\] Substituting \\(E_1\\) into \\(E_0\\): \\(E_0 = \\tfrac{3}{2} + \\tfrac{3}{4}E_0\\), so \\(\\tfrac{1}{4}E_0 = \\tfrac{3}{2}\\) and \\(E[\\text{TT}] = 6\\). Part B is a walk: the straight-line formula \\[ P_i = \\tfrac{i}{N} \\] gives \\(P_3 = \\tfrac{3}{8}\\). Naming the right tool — pattern wait vs. random walk — is the core skill.",
         "hints": [
-          "Part A waits for one pattern (count the flips). Part B is a single chip drifting between two walls (a probability). Different tools.",
-          "Part A: does TT keep any progress after a near-miss like HT, or reset like HH? Part B: use the straight-line law P = i/N.",
-          "TT resets on a head, just like HH, so E[TT] = 6. The walk: P = i/N = 3/8."
+          "Part A counts flips until one pattern first appears. Part B is a chip drifting between two walls — different tools, different formulas.",
+          "Part A: does \\(\\text{TT}\\) keep any progress after a lone T followed by a head? Compare \\(\\text{HH}\\) vs \\(\\text{HT}\\). Part B: use the straight-line law \\(P_i = \\tfrac{i}{N}\\).",
+          "\\(\\text{TT}\\) resets on a head just like \\(\\text{HH}\\), so \\(E[\\text{TT}] = 6\\). The walk: \\(P_3 = \\tfrac{3}{8}\\)."
         ]
       }
     },

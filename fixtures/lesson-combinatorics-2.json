@@ -220,7 +220,7 @@
       "prompt": "Deal a standard 52-card deck to 4 players (13 cards each). The 4 aces land in 4 distinct piles. How many ways can the aces be distributed — one per pile?",
       "interaction": {
         "type": "masteryChallenge",
-        "scenario": "The aces look identical in rank — but the 4 piles are distinct destinations. Does order matter here?",
+        "scenario": "The 4 aces go one-per-pile into \\(4\\) distinct player hands. Even though the aces share the same rank, the destination piles are distinguishable. Does this call for a permutation or a combination?",
         "fields": [
           {
             "id": "aces",
@@ -232,11 +232,11 @@
         ]
       },
       "feedback": {
-        "correct": "Exactly — 4!=24; the piles are distinct destinations, so the aces' order matters.",
+        "correct": "\\[ 4! = 4 \\cdot 3 \\cdot 2 \\cdot 1 = 24 \\] Each pile is a distinct, labeled destination (one per player). Assign the first ace to any of \\(4\\) piles, the second to any of the \\(3\\) remaining, the third to \\(2\\), and the last ace to the \\(1\\) remaining pile. Because the piles are distinguishable, swapping two aces between piles produces a genuinely different deal.",
         "hints": [
-          "Each ace lands in a different pile — are the 4 piles distinguishable?",
-          "The piles are distinct (each player's hand) → 4 distinct slots → 4! = 4·3·2·1.",
-          "4! = 24."
+          "Each ace lands in a different pile — are the 4 piles (one per player) distinguishable from each other?",
+          "The piles are labeled (each player's hand) — swapping two aces gives a different deal. That makes this \\(4!\\): four distinct slots, one ace each.",
+          "\\(4! = 4 \\cdot 3 \\cdot 2 \\cdot 1 = 24\\)."
         ]
       }
     },

@@ -7,6 +7,7 @@ import { useState } from 'react'
 import type { BeatProps } from './types'
 import { BeatShell } from '../BeatShell'
 import { resolveFeedback, useHintLadder } from '../feedback'
+import { MathText, mathToPlain } from '../MathText'
 
 const norm = (s: string) => s.trim().toLowerCase().replace(/\s+/g, '')
 
@@ -62,7 +63,7 @@ export function MasteryChallengeBeat(props: BeatProps) {
     >
       <div className="mastery">
         <p className="mastery__badge">Mastery challenge</p>
-        {scenario && <p className="mastery__scenario">{scenario}</p>}
+        {scenario && <p className="mastery__scenario"><MathText>{scenario}</MathText></p>}
         <div className="answer-entry">
           {fields.map((f) => {
             const shown = revealed ? f.accept[0] : (values[f.id] ?? '')
@@ -72,7 +73,7 @@ export function MasteryChallengeBeat(props: BeatProps) {
               !f.accept.map(norm).includes(norm(values[f.id] ?? ''))
             return (
               <label className="answer-entry__field" key={f.id}>
-                <span className="answer-entry__label">{f.label}</span>
+                <span className="answer-entry__label"><MathText>{f.label}</MathText></span>
                 <span className="answer-entry__inputwrap">
                   <input
                     type="text"
@@ -81,7 +82,7 @@ export function MasteryChallengeBeat(props: BeatProps) {
                       (isWrong ? ' answer-entry__input--wrong' : '') +
                       (solved || revealed ? ' answer-entry__input--correct' : '')
                     }
-                    aria-label={f.label}
+                    aria-label={mathToPlain(f.label)}
                     value={shown}
                     placeholder={f.placeholder}
                     disabled={solved || revealed}

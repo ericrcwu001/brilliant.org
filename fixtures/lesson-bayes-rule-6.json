@@ -211,15 +211,15 @@
         "type": "masteryChallenge",
         "scenario": "A family has three children. I tell you at least one is a boy.",
         "fields": [
-          { "id": "three", "label": "P(all three boys | at least one is a boy)", "accept": ["1/7"] }
+          { "id": "three", "label": "\\(P(\\text{all three boys}\\mid\\text{at least one is a boy})\\)", "accept": ["1/7"] }
         ]
       },
       "feedback": {
-        "correct": "Re-enumerate the eight three-child families; '≥1 boy' removes only GGG, leaving 7; just BBB is all boys → 1/7. The clue's form is reused, but you must recount the new sample space.",
+        "correct": "Enumerate all \\(2^3 = 8\\) equally-likely three-child families: \\[ \\{BBB,\\;BBG,\\;BGB,\\;GBB,\\;BGG,\\;GBG,\\;GGB,\\;GGG\\} \\] The clue \\(\\geq 1\\text{ boy}\\) removes only \\(GGG\\), leaving 7. Only \\(BBB\\) is all-boys: \\[ P(\\text{all boys}\\mid\\geq 1\\text{ boy}) = \\frac{P(\\text{all boys})}{P(\\geq 1\\text{ boy})} = \\frac{1/8}{7/8} = \\frac{1}{7} \\] The clue's form matches the two-child version, but the sample space is larger — recount rather than reuse \\(\\tfrac{1}{3}\\).",
         "hints": [
-          "Three children → 8 equally-likely families. Don't assume it's 1/3 again.",
-          "'≥1 boy' removes only all-girls (GGG), leaving 7. All-boys (BBB) is one of them.",
-          "1/7."
+          "Three children means \\(2^3 = 8\\) equally-likely families — list them all, don't reuse the \\(\\tfrac{1}{3}\\) from the two-child version.",
+          "The clue \\(\\geq 1\\text{ boy}\\) removes only \\(GGG\\), leaving 7 families; \\(BBB\\) is one of them.",
+          "\\(P(\\text{all boys}\\mid\\geq 1\\text{ boy}) = \\frac{1}{7}\\)."
         ]
       }
     },

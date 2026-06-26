@@ -2,7 +2,9 @@
   "lessonId": "lesson-expected-value-3",
   "courseId": "course-expected-value",
   "title": "Indicator Variables",
-  "patternOptions": ["H"],
+  "patternOptions": [
+    "H"
+  ],
   "milestoneId": "indicator-mastered",
   "unlocks": "lesson-expected-value-4",
   "schemaVersion": 1,
@@ -34,9 +36,18 @@
       "interaction": {
         "type": "retrievalGrid",
         "pairs": [
-          { "left": "P(win) in Gambler's Ruin, starting at i chips of N", "right": "i/N" },
-          { "left": "P(winning the streak bet, PHT lesson)", "right": "7/8" },
-          { "left": "P(event A occurs), combinatorics style", "right": "favorable/total" }
+          {
+            "left": "P(win) in Gambler's Ruin, starting at i chips of N",
+            "right": "i/N"
+          },
+          {
+            "left": "P(winning the streak bet, PHT lesson)",
+            "right": "7/8"
+          },
+          {
+            "left": "P(event A occurs), combinatorics style",
+            "right": "favorable/total"
+          }
         ]
       },
       "feedback": {
@@ -54,7 +65,11 @@
       "prompt": "Shuffle a 52-card deck and flip one card at a time. How deep do you expect to dig before the first ace turns up — about halfway?",
       "interaction": {
         "type": "prediction",
-        "options": ["Around card 26", "Around card 13", "Around card 10"]
+        "options": [
+          "Around card 26",
+          "Around card 13",
+          "Around card 10"
+        ]
       },
       "feedback": {
         "byOption": {
@@ -81,7 +96,10 @@
           {
             "id": "e-indicator",
             "label": "E[1_ace]",
-            "accept": ["1/13", "4/52"],
+            "accept": [
+              "1/13",
+              "4/52"
+            ],
             "placeholder": "?"
           }
         ]
@@ -124,7 +142,9 @@
       "required": false,
       "comparison": true,
       "introducesSymbol": "E[1_A]=P(A)",
-      "groundedBy": ["ev3-win"],
+      "groundedBy": [
+        "ev3-win"
+      ],
       "prompt": "Tap the formula terms to see why E[1_A]=P(A) — and how any count becomes a sum of probabilities.",
       "interaction": {
         "type": "primer",
@@ -173,7 +193,9 @@
           {
             "id": "e-distinct",
             "label": "E[distinct faces]",
-            "accept": ["11/6"],
+            "accept": [
+              "11/6"
+            ],
             "placeholder": "?"
           }
         ]
@@ -193,12 +215,15 @@
       "prompt": "Mastery challenge: use indicator variables to find the expected number of cards turned over before (and including) the first ace.",
       "interaction": {
         "type": "masteryChallenge",
-        "scenario": "Four aces divide the 52 cards into 5 equally likely positions for each non-ace. Let I_i = 1 if non-ace i precedes all 4 aces. There are 48 non-aces. What is E[first ace position]?",
+        "scenario": "Four aces divide the 52 cards into 5 equally likely positions for each non-ace. Let \\(I_i = 1\\) if non-ace \\(i\\) precedes all 4 aces. There are 48 non-aces. What is \\(E[\\text{first ace position}]\\)?",
         "fields": [
           {
             "id": "e-first-ace",
-            "label": "E[cards until first ace]",
-            "accept": ["53/5", "10.6"],
+            "label": "\\(E[\\text{cards until first ace}]\\)",
+            "accept": [
+              "53/5",
+              "10.6"
+            ],
             "placeholder": "?",
             "suffix": "cards"
           }
@@ -206,11 +231,11 @@
       },
       "interviewNote": "The 5-equal-gaps argument (Green Book p.48): four aces create five 'slots' in any random ordering of 52 cards. By symmetry, each of the 48 non-aces lands in any of the five slots with equal probability 1/5. So P(non-ace i precedes all aces) = 1/5. Therefore E[first ace] = 1 + Σ_{i=1}^{48} E[I_i] = 1 + 48·(1/5) = 53/5 ≈ 10.6. Clean interview answer: no casework, no recursion, just one symmetry observation.",
       "feedback": {
-        "correct": "E[first ace] = 1 + 48·(1/5) = 53/5 ≈ 10.6. Four aces carve five equal gaps; by symmetry each non-ace has a 1/5 chance of landing before all aces.",
+        "correct": "Let \\( I_i = 1 \\) if non-ace \\( i \\) appears before all four aces. The four aces create five equally likely gaps for each non-ace, so: \\[ E[\\text{first ace}] = 1 + \\sum_{i=1}^{48} P(I_i = 1) \\] With \\( P(I_i=1) = \\tfrac{1}{5} \\) by symmetry: \\( 1 + 48 \\cdot \\tfrac{1}{5} = \\tfrac{5}{5}+\\tfrac{48}{5} = \\tfrac{53}{5} \\approx 10.6 \\). Four aces create five equal gaps — one symmetry observation replaces all casework.",
         "hints": [
-          "Each non-ace adds only its 1/5 chance of preceding every ace, not a full card. That gives 53/5.",
-          "Let I_i = 1 if non-ace i precedes all 4 aces. By symmetry (5 equal gaps), P(I_i=1)=1/5. E = 1 + 48·(1/5).",
-          "1 + 48/5 = 5/5 + 48/5 = 53/5."
+          "Each non-ace adds only its \\(\\tfrac{1}{5}\\) chance of preceding every ace. Sum: \\(1 + 48 \\cdot \\tfrac{1}{5} = \\tfrac{53}{5}\\).",
+          "Let \\(I_i = 1\\) if non-ace \\(i\\) precedes all 4 aces. By symmetry (5 equal gaps), \\(P(I_i=1)=\\tfrac{1}{5}\\). Then \\(E = 1 + 48 \\cdot \\tfrac{1}{5}\\).",
+          "\\( 1 + \\tfrac{48}{5} = \\tfrac{5}{5} + \\tfrac{48}{5} = \\tfrac{53}{5} \\)."
         ]
       }
     },
@@ -218,7 +243,9 @@
       "beatId": "ev3-recap",
       "required": true,
       "prompt": "Reveal the recap cards — the indicator bridge in three moves.",
-      "interaction": { "type": "recap" },
+      "interaction": {
+        "type": "recap"
+      },
       "feedback": {
         "correct": "Indicators: the bridge from probability to expectation. A count of events = a sum of probabilities you already know. Sets up L5 — a full coupon set as a sum of geometric waits.",
         "hints": [

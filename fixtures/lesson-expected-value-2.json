@@ -2,7 +2,9 @@
   "lessonId": "lesson-expected-value-2",
   "courseId": "course-expected-value",
   "title": "Linearity of Expectation",
-  "patternOptions": ["H"],
+  "patternOptions": [
+    "H"
+  ],
   "milestoneId": "linearity-mastered",
   "unlocks": "lesson-expected-value-3",
   "schemaVersion": 1,
@@ -14,8 +16,14 @@
       "interaction": {
         "type": "retrievalGrid",
         "pairs": [
-          { "left": "E[net gain], one fair bet",        "right": "0" },
-          { "left": "E[total net], sum of fair bets",   "right": "0" }
+          {
+            "left": "E[net gain], one fair bet",
+            "right": "0"
+          },
+          {
+            "left": "E[total net], sum of fair bets",
+            "right": "0"
+          }
         ]
       },
       "feedback": {
@@ -33,13 +41,26 @@
       "prompt": "There are 100 noodles in a bowl. Blindfolded, you grab two loose ends at random and tie them, again and again. How many loops do you expect?",
       "interaction": {
         "type": "prediction",
-        "options": ["About 50", "About 10", "Just a handful"]
+        "options": [
+          "About 50",
+          "About 10",
+          "Just a handful"
+        ]
       },
       "feedback": {
         "byOption": {
-          "About 50":       { "note": "Let's test it — that's near half the noodles; each tie rarely closes a loop, so loops stay few.", "correct": false },
-          "About 10":       { "note": "Let's test it — closer, but still high; the tiny per-tie chances add to about three loops.", "correct": false },
-          "Just a handful": { "note": "Good instinct — let's prove it by adding each tie's small chance of closing a loop.", "correct": true }
+          "About 50": {
+            "note": "Let's test it — that's near half the noodles; each tie rarely closes a loop, so loops stay few.",
+            "correct": false
+          },
+          "About 10": {
+            "note": "Let's test it — closer, but still high; the tiny per-tie chances add to about three loops.",
+            "correct": false
+          },
+          "Just a handful": {
+            "note": "Good instinct — let's prove it by adding each tie's small chance of closing a loop.",
+            "correct": true
+          }
         }
       }
     },
@@ -50,7 +71,15 @@
       "interaction": {
         "type": "answerEntry",
         "fields": [
-          { "id": "two-dice", "label": "E[X + Y]", "accept": ["7"], "placeholder": "?", "suffix": "" }
+          {
+            "id": "two-dice",
+            "label": "E[X + Y]",
+            "accept": [
+              "7"
+            ],
+            "placeholder": "?",
+            "suffix": ""
+          }
         ]
       },
       "feedback": {
@@ -66,7 +95,11 @@
       "beatId": "ev2-explore",
       "required": false,
       "prompt": "Press Step to tie a pair of ends. Watch the running E[loops] build up — one tiny bet at a time.",
-      "interaction": { "type": "theorySimChart", "mode": "noodleLoops", "nMax": 100 },
+      "interaction": {
+        "type": "theorySimChart",
+        "mode": "noodleLoops",
+        "nMax": 100
+      },
       "hero": {
         "slowFirst": true,
         "structuralReadout": "E[100 noodles] ≈ 3.28 — a handful",
@@ -86,7 +119,9 @@
       "required": false,
       "comparison": true,
       "introducesSymbol": "E[X+Y]=E[X]+E[Y]",
-      "groundedBy": ["ev2-win"],
+      "groundedBy": [
+        "ev2-win"
+      ],
       "interviewNote": "The product rule E[XY]=E[X]E[Y] fails for dependent variables. The sum rule E[X+Y]=E[X]+E[Y] never fails — it is a property of summation itself, not of independence. The first-ace decomposition (53/5) is a linearity sum only; why each piece=1/5 is the indicator argument, owned by L3.",
       "prompt": "Tap each card to reveal three facets of linearity — the rule, a decomposition, and the #1 confusion.",
       "interaction": {
@@ -165,7 +200,15 @@
       "interaction": {
         "type": "answerEntry",
         "fields": [
-          { "id": "noodles-2", "label": "E[loops], n = 2", "accept": ["4/3"], "placeholder": "?/?", "suffix": "" }
+          {
+            "id": "noodles-2",
+            "label": "E[loops], n = 2",
+            "accept": [
+              "4/3"
+            ],
+            "placeholder": "?/?",
+            "suffix": ""
+          }
         ]
       },
       "feedback": {
@@ -184,17 +227,25 @@
       "prompt": "Mastery challenge: three noodles, six loose ends, three ties. Use E[loops] = Σ 1/(2k−1) to find E[loops] for n = 3. Enter your answer as a fraction.",
       "interaction": {
         "type": "masteryChallenge",
-        "scenario": "Each tie closes a loop with probability 1/(2(n−k+1)−1). For n=3 the three terms are 1/5, 1/3, 1. Sum them — and you'll see exactly why 100 noodles stays near 3.28.",
+        "scenario": "Each tie closes a loop with probability \\(\\tfrac{1}{2(n-k+1)-1}\\). For \\(n=3\\) the three terms are \\(\\tfrac{1}{5}\\), \\(\\tfrac{1}{3}\\), \\(1\\). Sum them — and you'll see exactly why 100 noodles stays near 3.28.",
         "fields": [
-          { "id": "noodles-3", "label": "E[loops], n = 3", "accept": ["23/15"], "placeholder": "?/??", "suffix": "" }
+          {
+            "id": "noodles-3",
+            "label": "\\(E[\\text{loops}]\\), \\(n = 3\\)",
+            "accept": [
+              "23/15"
+            ],
+            "placeholder": "?/??",
+            "suffix": ""
+          }
         ]
       },
       "feedback": {
-        "correct": "n=3: 1 + 1/3 + 1/5 = 23/15. For 100 noodles ≈ 3.28 — logarithmic growth, not proportional.",
+        "correct": "By linearity of expectation, each tie contributes its own loop probability independently: \\[ E[\\text{loops}] = \\sum_{k=1}^{n} \\frac{1}{2k-1} \\] For \\( n = 3 \\): \\( \\tfrac{1}{1} + \\tfrac{1}{3} + \\tfrac{1}{5} = \\tfrac{15+5+3}{15} = \\tfrac{23}{15} \\). Loop count grows as \\( \\tfrac{1}{2}\\ln(2n) \\) — far slower than the number of noodles.",
         "hints": [
-          "Loops don't scale with noodles. Add the odd-denominator chances: 1 + 1/3 + 1/5 = 23/15.",
-          "Three ties: P = 1/(2·3−1), 1/(2·2−1), 1/(2·1−1) = 1/5, 1/3, 1.",
-          "1 + 1/3 + 1/5 = 15/15 + 5/15 + 3/15 = 23/15."
+          "Loops don't scale with noodles. Add the odd-denominator chances: \\(1 + \\tfrac{1}{3} + \\tfrac{1}{5} = \\tfrac{23}{15}\\).",
+          "Three ties: \\( P = \\tfrac{1}{2\\cdot3-1},\\,\\tfrac{1}{2\\cdot2-1},\\,\\tfrac{1}{2\\cdot1-1} = \\tfrac{1}{5},\\,\\tfrac{1}{3},\\,1 \\).",
+          "\\( 1 + \\tfrac{1}{3} + \\tfrac{1}{5} = \\tfrac{15}{15} + \\tfrac{5}{15} + \\tfrac{3}{15} = \\tfrac{23}{15} \\)."
         ]
       }
     },
@@ -202,7 +253,9 @@
       "beatId": "ev2-recap",
       "required": true,
       "prompt": "Reveal the recap cards.",
-      "interaction": { "type": "recap" },
+      "interaction": {
+        "type": "recap"
+      },
       "feedback": {
         "correct": "Break the tangle into a sum, add the easy pieces — dependence doesn't matter. Next: why does each piece equal 1/(2k−1)? That's the indicator variable trick in L3.",
         "hints": [

@@ -106,7 +106,7 @@ export const analytics = {
 
   interviewCtaClicked: (p: {
     conceptId: string
-    surface: 'lesson_complete' | 'concept_page'
+    surface: 'lesson_complete' | 'concept_page' | 'catalog_hero'
   }) => track('interview_cta_clicked', p),
   interviewStarted: (p: {
     conceptId: string

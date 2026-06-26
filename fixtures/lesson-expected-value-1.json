@@ -2,7 +2,9 @@
   "lessonId": "lesson-expected-value-1",
   "courseId": "course-expected-value",
   "title": "What is Expected Value?",
-  "patternOptions": ["H"],
+  "patternOptions": [
+    "H"
+  ],
   "milestoneId": "ev-fundamentals",
   "unlocks": "lesson-expected-value-2",
   "schemaVersion": 1,
@@ -14,8 +16,14 @@
       "interaction": {
         "type": "retrievalGrid",
         "pairs": [
-          { "left": "Average flips until first Heads", "right": "E[H] = 2" },
-          { "left": "P(H) on any single flip", "right": "1/2" }
+          {
+            "left": "Average flips until first Heads",
+            "right": "E[H] = 2"
+          },
+          {
+            "left": "P(H) on any single flip",
+            "right": "1/2"
+          }
         ]
       },
       "feedback": {
@@ -33,7 +41,11 @@
       "prompt": "A casino offers you one roll of a fair die, paid that many dollars. A ticket costs $3. Before computing: is a $3 ticket a good deal, a bad deal, or exactly fair?",
       "interaction": {
         "type": "prediction",
-        "options": ["A good deal", "A bad deal", "Exactly fair"]
+        "options": [
+          "A good deal",
+          "A bad deal",
+          "Exactly fair"
+        ]
       },
       "feedback": {
         "byOption": {
@@ -82,7 +94,10 @@
           {
             "id": "ev",
             "label": "Expected payoff",
-            "accept": ["7/2", "21/6"],
+            "accept": [
+              "7/2",
+              "21/6"
+            ],
             "placeholder": "?/?",
             "suffix": "$"
           }
@@ -104,12 +119,30 @@
       "interaction": {
         "type": "expectationScale",
         "outcomes": [
-          { "x": 1, "label": "1" },
-          { "x": 2, "label": "2" },
-          { "x": 3, "label": "3" },
-          { "x": 4, "label": "4" },
-          { "x": 5, "label": "5" },
-          { "x": 6, "label": "6" }
+          {
+            "x": 1,
+            "label": "1"
+          },
+          {
+            "x": 2,
+            "label": "2"
+          },
+          {
+            "x": 3,
+            "label": "3"
+          },
+          {
+            "x": 4,
+            "label": "4"
+          },
+          {
+            "x": 5,
+            "label": "5"
+          },
+          {
+            "x": 6,
+            "label": "6"
+          }
         ]
       },
       "hero": {
@@ -130,7 +163,10 @@
       "beatId": "ev1-model",
       "required": false,
       "introducesSymbol": "E[X]=Σx·P(x)",
-      "groundedBy": ["ev1-win", "ev1-explore"],
+      "groundedBy": [
+        "ev1-win",
+        "ev1-explore"
+      ],
       "comparison": true,
       "interviewNote": "Interview framing: E[X|X>0] = √(2/π) ≈ 0.798 for X∼N(0,1) shows EV can be irrational; the clean rationals here (7/2, 7) are a feature of these toy distributions, not a general rule. The 'fair price' of any bet equals its expected value — casinos profit on the delta between the ticket price and E[X].",
       "prompt": "You just saw it on the beam. Now name it.",
@@ -155,7 +191,9 @@
       "required": false,
       "track": "A",
       "prompt": "Watch many die rolls. Does the running average settle where the balance beam predicted?",
-      "interaction": { "type": "theorySimChart" },
+      "interaction": {
+        "type": "theorySimChart"
+      },
       "feedback": {
         "correct": "The empirical mean converges to E[X] = 3.5 — the balance point is the long-run average. This is the Law of Large Numbers.",
         "hints": [
@@ -175,13 +213,18 @@
           {
             "id": "prob5",
             "label": "P(sum = 5)",
-            "accept": ["1/9", "4/36"],
+            "accept": [
+              "1/9",
+              "4/36"
+            ],
             "placeholder": "?/?"
           },
           {
             "id": "ev-short",
             "label": "E[payout] — 3-outcome game",
-            "accept": ["5"],
+            "accept": [
+              "5"
+            ],
             "placeholder": "?",
             "suffix": "$"
           }
@@ -203,22 +246,25 @@
       "prompt": "Mastery challenge — the sum of two fair dice, the hard way. The table shows all 11 outcomes (sums 2 through 12) with their triangular weights (1, 2, 3, 4, 5, 6, 5, 4, 3, 2, 1)/36. Compute E[X] = Σ x·P(x). Enter a whole number or simplified fraction.",
       "interaction": {
         "type": "masteryChallenge",
-        "scenario": "Two fair dice — sum the full non-uniform pmf. Weights peak at P(7)=6/36. The midpoint of 2–12 is 7 by symmetry. Is E[X] always the midpoint? Compute to find out.",
+        "scenario": "Two fair dice — sum the full non-uniform pmf. Weights peak at \\(P(7)=\\tfrac{6}{36}\\). The midpoint of 2–12 is 7 by symmetry. Is \\(E[X]\\) always the midpoint? Compute to find out.",
         "fields": [
           {
             "id": "ev-two-dice",
-            "label": "E[sum of two dice]",
-            "accept": ["7", "252/36"],
+            "label": "\\(E[\\text{sum of two dice}]\\)",
+            "accept": [
+              "7",
+              "252/36"
+            ],
             "placeholder": "?"
           }
         ]
       },
       "feedback": {
-        "correct": "E=252/36=7. Triangular weights peak at 7 and pull the balance point there. The midpoint of 2–12 is also 7 — a coincidence of symmetry (the pmf is symmetric around 7). An asymmetric pmf won't be so tidy.",
+        "correct": "The general formula sums every outcome times its probability: \\[ E[X] = \\sum_{x=2}^{12} x \\cdot P(x) \\] With triangular weights \\( P(k) = \\tfrac{6-|k-7|}{36} \\), the numerator is \\( 2\\cdot1+3\\cdot2+4\\cdot3+5\\cdot4+6\\cdot5+7\\cdot6+8\\cdot5+9\\cdot4+10\\cdot3+11\\cdot2+12\\cdot1 = 252 \\), so \\( E[X] = \\tfrac{252}{36} = 7 \\). The pmf is symmetric around 7 — symmetry always pins the mean to the mirror point.",
         "hints": [
-          "Eyeballing the middle gives 6, but the weights peak at 7. Sum x·P(x) over the triangular pmf.",
-          "Group by symmetry: P(k)=P(14−k). Pairs (2,12),(3,11),(4,10),(5,9),(6,8) each contribute k·P(k)+(14−k)·P(k)=14·P(k). P(7)=6/36 contributes alone.",
-          "Σ x·P(x)=(2·1+3·2+4·3+5·4+6·5+7·6+8·5+9·4+10·3+11·2+12·1)/36=252/36=7."
+          "Eyeballing the middle gives 6, but the weights peak at 7. Sum \\(x \\cdot P(x)\\) over the triangular pmf.",
+          "Group by symmetry: \\(P(k)=P(14-k)\\). Each pair \\((k,\\,14-k)\\) contributes \\(14 \\cdot P(k)\\); then \\(P(7)=\\tfrac{6}{36}\\) stands alone.",
+          "\\( \\tfrac{2\\cdot1+3\\cdot2+4\\cdot3+5\\cdot4+6\\cdot5+7\\cdot6+8\\cdot5+9\\cdot4+10\\cdot3+11\\cdot2+12\\cdot1}{36} = \\tfrac{252}{36} = 7 \\)."
         ]
       }
     },
@@ -226,7 +272,9 @@
       "beatId": "ev1-recap",
       "required": true,
       "prompt": "The move that ran through this whole lesson.",
-      "interaction": { "type": "recap" },
+      "interaction": {
+        "type": "recap"
+      },
       "feedback": {
         "correct": "List → weight → add: E[X]=Σ x·P(x). The balance point of the distribution, not the midpoint of its labels. Next: how expectations add — even when things are tangled.",
         "hints": [

@@ -212,18 +212,18 @@
       "prompt": "Mastery challenge: your friend goes first and picks TTT. Going second, pick the 3-flip pattern that beats it most often, and give your exact win probability as a fraction.",
       "interaction": {
         "type": "masteryChallenge",
-        "scenario": "You both watch the same fair-coin stream; whoever's pattern appears first wins. (Recall how THH was built to beat HHH.)",
+        "scenario": "You both watch the same fair-coin stream; whoever's pattern appears first wins. (Recall how \\(\\text{THH}\\) was built to beat \\(\\text{HHH}\\).)",
         "fields": [
-          { "id": "counter", "label": "Your counter to TTT", "accept": ["HTT"], "placeholder": "e.g. HTH" },
-          { "id": "winprob", "label": "P(your pattern appears before TTT)", "accept": ["7/8", "0.875", ".875"], "placeholder": "e.g. 3/4" }
+          { "id": "counter", "label": "Your counter to \\(\\text{TTT}\\)", "accept": ["HTT"], "placeholder": "e.g. HTH" },
+          { "id": "winprob", "label": "\\(P(\\text{your pattern appears before TTT})\\)", "accept": ["7/8", "0.875", ".875"], "placeholder": "e.g. 3/4" }
         ]
       },
       "feedback": {
-        "correct": "HTT beats TTT 7 times out of 8. It's the mirror of THH-beats-HHH: take the friend's pattern, flip its second symbol, and slide it in front. TTT wins only when the first three flips are all tails (1/8); otherwise an H lands in front of a TT and completes HTT first.",
+        "correct": "\\(\\text{HTT}\\) beats \\(\\text{TTT}\\) with probability \\(\\tfrac{7}{8}\\). The second-mover rule: negate \\(\\text{TTT}\\)'s second symbol (T becomes H) and prepend it to the first two, giving \\(\\text{HTT}\\). For the win chance, ask when \\(\\text{TTT}\\) can win: it must appear before any H, meaning the first three flips are all T: \\[ P(\\text{TTT wins}) = \\left(\\tfrac{1}{2}\\right)^3 = \\tfrac{1}{8}. \\] Any other start places an H in the stream; that H eventually precedes a TT, completing \\(\\text{HTT}\\) before \\(\\text{TTT}\\) forms. Therefore \\[ P(\\text{HTT wins}) = 1 - \\tfrac{1}{8} = \\tfrac{7}{8}. \\] Going second creates a 7-to-1 edge from a fair coin — structure, not luck.",
         "hints": [
-          "Don't pick the opposite (HHH) or the reverse. You want a pattern that finishes just before TTT can.",
-          "Use the second-mover rule: flip the friend's 2nd symbol and put it in front, keeping the first two. TTT becomes H + TT. For the odds, ask how TTT could ever win.",
-          "Counter = HTT. TTT wins only if the first three flips are TTT (probability 1/8); every other start lets an H slip in front of a TT, so you win 1 - 1/8 = 7/8."
+          "Don't pick the opposite (\\(\\text{HHH}\\)) or the reverse. You want a pattern that completes just before \\(\\text{TTT}\\) can.",
+          "Second-mover rule: negate \\(\\text{TTT}\\)'s second symbol and prepend it to the first two, giving \\(\\text{HTT}\\). For the odds, ask: how can \\(\\text{TTT}\\) possibly win before \\(\\text{HTT}\\)?",
+          "Counter = \\(\\text{HTT}\\). \\(\\text{TTT}\\) wins only if the first three flips are all T: \\(P = \\left(\\tfrac{1}{2}\\right)^3 = \\tfrac{1}{8}\\), so \\(P(\\text{HTT wins}) = 1 - \\tfrac{1}{8} = \\tfrac{7}{8}\\)."
         ]
       }
     },

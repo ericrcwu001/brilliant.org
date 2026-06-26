@@ -320,18 +320,18 @@
       "prompt": "Mastery challenge: starting at $3, what is your chance of reaching $10 before going broke (as a fraction), and how many flips will the game last on average (a whole number)?",
       "interaction": {
         "type": "masteryChallenge",
-        "scenario": "Each fair flip pays +$1 on heads, -$1 on tails. You stop at $10 (goal) or $0 (broke).",
+        "scenario": "Each fair flip pays \\(+\\$1\\) on heads, \\(-\\$1\\) on tails. You stop at \\(\\$10\\) (goal) or \\(\\$0\\) (broke).",
         "fields": [
-          { "id": "reach", "label": "Chance of reaching $10 from $3", "accept": ["3/10", "0.3", ".3"], "placeholder": "e.g. 2/5" },
+          { "id": "reach", "label": "Chance of reaching \\(\\$10\\) from \\(\\$3\\)", "accept": ["3/10", "0.3", ".3"], "placeholder": "e.g. 2/5" },
           { "id": "steps", "label": "Average flips until the game ends", "accept": ["21"], "placeholder": "?", "suffix": "flips" }
         ]
       },
       "feedback": {
-        "correct": "P(reach $10) = 3/10 and the game lasts 21 flips on average. The win chance is your share of the distance, i/N = 3/10 - a fair coin is no safety net. The duration i*(N-i) = 3*7 = 21 peaks in the middle, farthest from both walls.",
+        "correct": "\\(P_3 = \\tfrac{3}{10}\\) and the game lasts \\(21\\) flips on average. For a fair walk between \\(\\$0\\) and \\(\\$N\\) starting at \\(\\$i\\), two closed-form results hold: \\[ P_i = \\tfrac{i}{N}, \\] \\[ D_i = i \\cdot (N - i). \\] With \\(i = 3\\), \\(N = 10\\): \\(P_3 = \\tfrac{3}{10}\\), and \\(D_3 = 3 \\cdot (10 - 3) = 3 \\cdot 7 = 21\\). The win chance climbs in a straight line from \\(\\$0\\) to \\(\\$10\\) — a fair coin is no safety net for a short stack. Duration equals the product of the two wall-distances, peaking at the midpoint.",
         "hints": [
-          "$3 out of $10 isn't the middle, so it isn't 50/50 - and being low doesn't make you 'due.' Both lesson formulas take any start i and any N.",
-          "Win chance rises in a straight line, P = i/N. The average length is the product of the two wall-distances, D = i*(N-i).",
-          "P = 3/10. D = 3*(10-3) = 3*7 = 21."
+          "\\(\\$3\\) out of \\(\\$10\\) is not the midpoint, so the win chance is not \\(\\tfrac{1}{2}\\). Both formulas take any start \\(i\\) and any \\(N\\).",
+          "Win chance is straight-line: \\(P_i = \\tfrac{i}{N}\\). Expected length is the product of the two wall-distances: \\(D_i = i \\cdot (N - i)\\).",
+          "\\(P_3 = \\tfrac{3}{10}\\). \\(D_3 = 3 \\cdot (10 - 3) = 3 \\cdot 7 = 21\\)."
         ]
       }
     },

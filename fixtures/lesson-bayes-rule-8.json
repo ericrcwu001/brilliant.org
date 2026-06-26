@@ -210,17 +210,17 @@
       "prompt": "Mastery challenge: a fraud model with 95% recall and a 1% false-positive rate flags a transaction; fraud occurs in 1 of every 1000 transactions. What is P(fraud | flagged)?",
       "interaction": {
         "type": "masteryChallenge",
-        "scenario": "A fraud model with 95% recall and a 1% false-positive rate flags a transaction; fraud occurs in 1 of every 1000 transactions.",
+        "scenario": "A fraud model with 95% recall and a 1% false-positive rate flags a transaction; fraud occurs in 1 of every 1,000 transactions.",
         "fields": [
-          { "id": "fraud", "label": "P(fraud | flagged)", "accept": ["95/1094"] }
+          { "id": "fraud", "label": "\\(P(\\text{fraud}\\mid\\text{flagged})\\)", "accept": ["95/1094"] }
         ]
       },
       "feedback": {
-        "correct": "Per 100,000 transactions: 100 fraud × 95% = 95 true flags; 99,900 honest × 1% = 999 false flags → precision = 95/(95+999) = 95/1094 ≈ 8.7%. A great-sounding model + a rare base rate ⇒ most flags are false alarms.",
+        "correct": "Apply Bayes with a natural-frequency count: \\[ P(\\text{fraud}\\mid\\text{flagged}) = \\frac{P(\\text{fraud})\\,P(\\text{flagged}\\mid\\text{fraud})}{P(\\text{fraud})\\,P(\\text{flagged}\\mid\\text{fraud}) + P(\\text{honest})\\,P(\\text{flagged}\\mid\\text{honest})} \\] Per 100,000 transactions (fraud rate \\(= \\tfrac{1}{1000}\\)): 100 fraud \\(\\times\\,95\\% = 95\\) true flags; 99,900 honest \\(\\times\\,1\\% = 999\\) false flags; total flagged \\(= 1094\\). Substituting: \\[ P(\\text{fraud}\\mid\\text{flagged}) = \\frac{95}{1094} \\approx 8.7\\% \\] A 95% recall model on a 1-in-1,000 base rate still produces roughly 10 false alarms per true flag — the rare prior dominates.",
         "hints": [
-          "Recall 95% is P(flagged | fraud); you want P(fraud | flagged).",
-          "Fraud is 1-in-1000. 95 true flags vs ~999 false flags over the honest majority.",
-          "95/(95+999) = 95/1094."
+          "Recall 95% is \\(P(\\text{flagged}\\mid\\text{fraud})\\); you want \\(P(\\text{fraud}\\mid\\text{flagged})\\) — flip the arrow using the base rate.",
+          "Per 100,000 transactions: 100 fraud \\(\\times\\,95\\% = 95\\) true flags; 99,900 honest \\(\\times\\,1\\% = 999\\) false flags.",
+          "\\(\\frac{95}{95+999} = \\frac{95}{1094}\\)."
         ]
       }
     },

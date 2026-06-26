@@ -355,17 +355,17 @@
       "prompt": "Mastery challenge: on a fair coin, what is E[HHH] - the average number of flips until three heads in a row first appear? Type a whole number.",
       "interaction": {
         "type": "masteryChallenge",
-        "scenario": "You proved E[HH] = 6 by building its little state machine. HHH is the same idea, one state longer - a single tail still throws away all your progress.",
+        "scenario": "You proved \\(E[\\text{HH}] = 6\\) by building its state machine. \\(\\text{HHH}\\) is the same idea, one state longer — any tail still wipes out all progress.",
         "fields": [
-          { "id": "e-hhh", "label": "Average flips until HHH", "accept": ["14"], "placeholder": "?", "suffix": "flips" }
+          { "id": "e-hhh", "label": "Average flips until \\(\\text{HHH}\\)", "accept": ["14"], "placeholder": "?", "suffix": "flips" }
         ]
       },
       "feedback": {
-        "correct": "E[HHH] = 14. Track progress with run-length states none, H, HH (reaching HHH ends it, so its wait is 0). Each flip costs 1, and a tail wipes out every banked head back to none: E2 = 1 + 1/2 E0, E1 = 1 + 1/2 E2 + 1/2 E0, E0 = 1 + 1/2 E1 + 1/2 E0. Substituting upward collapses these to E0 = 7/4 + 7/8 E0, so E0 = 14. The waits don't \"roughly\" double - they obey the exact rule E[k] = 2*E[k-1] + 2: double 2 and add 2 gives E[HH] = 6, then double 6 and add 2 gives E[HHH] = 14. That +2 each step is the price of the reset, which is why the wait comes from the pattern's structure, not its length.",
+        "correct": "\\(E[\\text{HHH}] = 14\\). States \\(E_0\\) (no heads), \\(E_1\\) (one H), \\(E_2\\) (two H's); \\(E_3 = 0\\) since HHH is complete. Any tail resets to \\(E_0\\): \\[ E_0 = 1 + \\tfrac{1}{2}E_1 + \\tfrac{1}{2}E_0, \\] \\[ E_1 = 1 + \\tfrac{1}{2}E_2 + \\tfrac{1}{2}E_0, \\] \\[ E_2 = 1 + \\tfrac{1}{2}E_0. \\] Back-substitute: \\(E_2 = 1 + \\tfrac{1}{2}E_0\\) into \\(E_1\\) gives \\(E_1 = \\tfrac{3}{2} + \\tfrac{3}{4}E_0\\); into \\(E_0\\): \\(E_0 = \\tfrac{7}{4} + \\tfrac{7}{8}E_0\\), so \\(\\tfrac{1}{8}E_0 = \\tfrac{7}{4}\\) and \\(E_0 = 14\\). Heads-run waits obey \\[ E_k = 2E_{k-1} + 2, \\] so \\(E[\\text{HH}] = 6 \\to E[\\text{HHH}] = 2 \\cdot 6 + 2 = 14\\) — each extra head doubles the wait and adds 2 for the full reset.",
         "hints": [
-          "Same machine as HH, just one state longer. A single tail still sends you all the way back to the start.",
-          "Build the wait equations with states none, H, HH, and HHH (=0): E0 = 1 + 1/2 E1 + 1/2 E0, E1 = 1 + 1/2 E2 + 1/2 E0, E2 = 1 + 1/2 E0.",
-          "E2 = 1 + 1/2 E0; substitute upward to E1 = 3/2 + 3/4 E0, then E0 = 7/4 + 7/8 E0, so 1/8 E0 = 7/4 and E0 = 14."
+          "Same machine as \\(\\text{HH}\\), just one state longer. Any tail still sends you all the way back to the start.",
+          "Write wait equations for \\(E_0\\) (none), \\(E_1\\) (one H), \\(E_2\\) (two H's), \\(E_3 = 0\\): \\(E_0 = 1 + \\tfrac{1}{2}E_1 + \\tfrac{1}{2}E_0\\), \\(E_1 = 1 + \\tfrac{1}{2}E_2 + \\tfrac{1}{2}E_0\\), \\(E_2 = 1 + \\tfrac{1}{2}E_0\\).",
+          "From \\(E_2 = 1 + \\tfrac{1}{2}E_0\\) substitute upward: \\(E_1 = \\tfrac{3}{2} + \\tfrac{3}{4}E_0\\), then \\(E_0 = \\tfrac{7}{4} + \\tfrac{7}{8}E_0\\), so \\(\\tfrac{1}{8}E_0 = \\tfrac{7}{4}\\) and \\(E_0 = 14\\)."
         ]
       }
     },

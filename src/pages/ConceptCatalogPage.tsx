@@ -14,6 +14,7 @@ import { buildCatalogModel, type ProgressMap } from './conceptCatalog.model'
 import { analytics } from '../analytics/events'
 import type { NavigateFn } from './routes'
 import { ConceptCatalog } from './ConceptCatalog'
+import { subscribeInterviewAttempts } from '../interview/attempts'
 
 export function ConceptCatalogPage({ navigate }: { navigate: NavigateFn }) {
   const { user, userDoc } = useAuth()
@@ -23,6 +24,7 @@ export function ConceptCatalogPage({ navigate }: { navigate: NavigateFn }) {
   const [progressById, setProgressById] = useState<ProgressMap>({})
   const [streak, setStreak] = useState<Streak>(ZERO_STREAK)
   const [loadError, setLoadError] = useState(false)
+  const [resumeInterviewDone, setResumeInterviewDone] = useState(false)
 
   // One-time course list load.
   useEffect(() => {
@@ -61,6 +63,16 @@ export function ConceptCatalogPage({ navigate }: { navigate: NavigateFn }) {
       )
     : null
 
+  const masteredResumeConceptId =
+    model?.resume?.progress.state === 'mastered' ? model.resume.conceptId : null
+
+  useEffect(() => {
+    if (!user || !masteredResumeConceptId) return
+    return subscribeInterviewAttempts(user.uid, masteredResumeConceptId, (attempts) => {
+      setResumeInterviewDone(attempts.some((a) => a.status === 'graded'))
+    })
+  }, [user, masteredResumeConceptId])
+
   // Fire recommendation_shown once when a recommended-start hero is displayed.
   useEffect(() => {
     if (model?.recommendedStart && model.resume) {
@@ -97,6 +109,7 @@ export function ConceptCatalogPage({ navigate }: { navigate: NavigateFn }) {
       streak={streak}
       displayName={displayName}
       navigate={navigate}
+      resumeInterviewDone={resumeInterviewDone}
     />
   )
 }

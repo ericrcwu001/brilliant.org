@@ -208,17 +208,17 @@
       "prompt": "Mastery challenge: a weaker test — 95% sensitive, 95% specific, same 1% disease. Compute P(disease | positive).",
       "interaction": {
         "type": "masteryChallenge",
-        "scenario": "A weaker test: 95% sensitive, 95% specific, same 1% disease, positive result.",
+        "scenario": "A weaker test: 95% sensitive, 95% specific, same 1% disease prevalence, positive result.",
         "fields": [
-          { "id": "p", "label": "P(disease | positive)", "accept": ["19/118"] }
+          { "id": "p", "label": "\\(P(\\text{disease}\\mid +)\\)", "accept": ["19/118"] }
         ]
       },
       "feedback": {
-        "correct": "95 TP vs 495 FP → 95/590 = 19/118 ≈ 16%. A weaker test lowers PPV quantitatively; the base-rate trap is the same shape.",
+        "correct": "Apply Bayes with a natural-frequency count: \\[ P(\\text{disease}\\mid +) = \\frac{P(\\text{disease})\\,P(+\\mid\\text{disease})}{P(\\text{disease})\\,P(+\\mid\\text{disease}) + P(\\text{healthy})\\,P(+\\mid\\text{healthy})} \\] Per 10,000 people: \\(100\\) sick \\(\\times\\,95\\% = 95\\) true positives; \\(9{,}900\\) healthy \\(\\times\\,5\\% = 495\\) false positives; total \\(= 590\\). Substituting: \\[ P(\\text{disease}\\mid +) = \\frac{95}{590} = \\frac{19}{118} \\approx 16\\% \\] Even a 95% test cannot escape the 1% base rate — false alarms (495) swamp true cases (95) nearly five to one.",
         "hints": [
-          "10,000 people: 100 sick → 95 TP; 9,900 healthy × 5% → 495 FP.",
-          "PPV = 95/(95+495) = 95/590.",
-          "19/118."
+          "Sensitivity 95% is \\(P(+\\mid\\text{sick})\\), not \\(P(\\text{sick}\\mid+)\\) — count actual people over 10,000.",
+          "Per 10,000: 100 sick \\(\\times\\,95\\% = 95\\) true positives; 9,900 healthy \\(\\times\\,5\\% = 495\\) false positives; total 590.",
+          "\\(\\frac{95}{590} = \\frac{19}{118}\\)."
         ]
       }
     },

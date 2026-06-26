@@ -10,7 +10,7 @@ import type { BeatProps } from './types'
 import type { CanonicalRecurrence, Tile } from '../../content/schema'
 import type { StateId } from '../../engine/types'
 import { BeatShell } from '../BeatShell'
-import { m, type PanInfo } from 'motion/react'
+import { animate, m, useMotionValue, type PanInfo } from 'motion/react'
 import { SPRING } from '../../motion/tokens'
 import { resolveFeedback, useHintLadder } from '../feedback'
 import { StateGraph, type EdgeRef } from '../konva/StateGraph'
@@ -228,6 +228,91 @@ function isExampleRow(row: { lhs: string; target: CanonicalRecurrence }): boolea
   return row.lhs === 'E0' && row.target.terms.length > 0
 }
 
+type DraggableTileProps = {
+  className: string
+  'aria-pressed'?: boolean
+  'aria-label'?: string
+  disabled?: boolean
+  children: ReactNode
+  onTap: () => void
+  onDragMove: (info: PanInfo) => void
+  clearDragover: () => void
+  resolveDrop: (info: PanInfo, rect: DOMRect) => { cx: number; cy: number; commit: () => void } | null
+  reducedMotion?: boolean
+}
+
+function DraggableTile({
+  className,
+  'aria-pressed': ariaPressed,
+  'aria-label': ariaLabel,
+  disabled,
+  children,
+  onTap,
+  onDragMove,
+  clearDragover,
+  resolveDrop,
+  reducedMotion,
+}: DraggableTileProps) {
+  const x = useMotionValue(0)
+  const y = useMotionValue(0)
+  const ref = useRef<HTMLButtonElement>(null)
+  const wasDrag = useRef(false)
+
+  return (
+    <m.button
+      ref={ref}
+      type="button"
+      className={className}
+      aria-pressed={ariaPressed}
+      aria-label={ariaLabel}
+      disabled={disabled}
+      style={{ x, y, position: 'relative' }}
+      drag
+      dragMomentum={false}
+      whileHover={{ y: -3, scale: 1.04 }}
+      whileTap={{ scale: 0.95 }}
+      whileDrag={{ scale: 1.04, rotate: 3, boxShadow: 'var(--ergo-shadow-md)' }}
+      transition={SPRING}
+      onClick={() => {
+        if (wasDrag.current) { wasDrag.current = false; return }
+        onTap()
+      }}
+      onDrag={(_e, info) => onDragMove(info)}
+      onDragEnd={(_e, info) => {
+        clearDragover()
+        const realDrag = Math.abs(info.offset.x) > 3 || Math.abs(info.offset.y) > 3
+        if (!realDrag) {
+          animate(x, 0, SPRING)
+          animate(y, 0, SPRING)
+          return
+        }
+        wasDrag.current = true
+        const rect = ref.current?.getBoundingClientRect()
+        const target = rect ? resolveDrop(info, rect) : null
+        if (!target || !rect) {
+          animate(x, 0, SPRING)
+          animate(y, 0, SPRING)
+          return
+        }
+        const curCx = rect.left + rect.width / 2
+        const curCy = rect.top + rect.height / 2
+        const nx = x.get() + (target.cx - curCx)
+        const ny = y.get() + (target.cy - curCy)
+        if (reducedMotion) {
+          target.commit()
+          x.set(0)
+          y.set(0)
+          return
+        }
+        animate(x, nx, SPRING)
+        animate(y, ny, { ...SPRING, onComplete: () => { target.commit(); x.set(0); y.set(0) } })
+      }}
+    >
+      {children}
+    </m.button>
+  )
+}
+
 export function EquationTilesBeat(props: BeatProps) {
   const {
     beat,
@@ -306,8 +391,6 @@ export function EquationTilesBeat(props: BeatProps) {
   const [solved, setSolved] = useState(false)
   // Slot element refs for drag hit-testing, keyed as `${rowId}:${idx}`.
   const slotRefs = useRef<Map<string, HTMLButtonElement>>(new Map())
-  // Guards against a stray onClick firing right after a real drag gesture.
-  const wasDragRef = useRef(false)
   // Tracks the slot currently under the dragged tile; toggled directly on the
   // DOM element (classList) so there is zero per-frame React setState.
   const dragoverSlotKeyRef = useRef<string | null>(null)
@@ -571,10 +654,7 @@ export function EquationTilesBeat(props: BeatProps) {
   // Dragover highlight: imperatively toggle the CSS class on slot DOM nodes so
   // there is zero per-frame React setState. Motion drives the tile transform;
   // we only touch classList when the pointer crosses a slot boundary.
-  function handleTileDrag(
-    _event: MouseEvent | TouchEvent | PointerEvent,
-    info: PanInfo,
-  ) {
+  function handleTileDrag(info: PanInfo) {
     const found = findSlotAtPoint(info.point.x, info.point.y)
     const newKey = found ? `${found.rowId}:${found.idx}` : null
     if (newKey === dragoverSlotKeyRef.current) return
@@ -587,35 +667,39 @@ export function EquationTilesBeat(props: BeatProps) {
     dragoverSlotKeyRef.current = newKey
   }
 
-  function handleTileDragEnd(
-    token: string,
-    _event: MouseEvent | TouchEvent | PointerEvent,
-    info: PanInfo,
-  ) {
-    // Always clear the imperative dragover highlight.
+  function clearDragover() {
     if (dragoverSlotKeyRef.current) {
       slotRefs.current.get(dragoverSlotKeyRef.current)?.classList.remove('slot--dragover')
       dragoverSlotKeyRef.current = null
     }
-    // Small movements are taps; let the onClick handler take over.
-    const realDrag = Math.abs(info.offset.x) > 3 || Math.abs(info.offset.y) > 3
-    if (!realDrag) return
-    wasDragRef.current = true
+  }
+
+  function resolveDrop(
+    token: string,
+    info: PanInfo,
+  ): { cx: number; cy: number; commit: () => void } | null {
     const found = findSlotAtPoint(info.point.x, info.point.y)
-    if (!found) return
+    if (!found) return null
     const { rowId, idx } = found
     const row = buildableRows.find((r) => r.lhs === rowId)
-    if (!row) return
+    if (!row) return null
     const locked = isFaded(row) && idx !== fadedOpenIdx(row.target)
-    if (locked || solved || revealed) return
-    // Reuse the same placement path as tap — no separate code path.
-    placeInto(rowId, idx, token)
-    setSelTile(null)
-    setSelSlot(null)
-    // One setState at drop-end only: triggers the deboss-flash CSS animation.
-    if (dropFlashTimer.current) clearTimeout(dropFlashTimer.current)
-    setDropFlashKey(`${rowId}:${idx}`)
-    dropFlashTimer.current = setTimeout(() => setDropFlashKey(null), 500)
+    if (locked || solved || revealed) return null
+    const slotEl = slotRefs.current.get(`${rowId}:${idx}`)
+    if (!slotEl) return null
+    const slotRect = slotEl.getBoundingClientRect()
+    return {
+      cx: slotRect.left + slotRect.width / 2,
+      cy: slotRect.top + slotRect.height / 2,
+      commit: () => {
+        placeInto(rowId, idx, token)
+        setSelTile(null)
+        setSelSlot(null)
+        if (dropFlashTimer.current) clearTimeout(dropFlashTimer.current)
+        setDropFlashKey(`${rowId}:${idx}`)
+        dropFlashTimer.current = setTimeout(() => setDropFlashKey(null), 500)
+      },
+    }
   }
 
   function slot(row: (typeof buildableRows)[number], idx: number, kind: SlotKind): ReactNode {
@@ -834,27 +918,18 @@ export function EquationTilesBeat(props: BeatProps) {
                     tile.kind === 'state' ? 'state' : tile.kind === 'prob' ? 'prob' : 'const'
                   const selected = selTile === token
                   return (
-                    <m.button
+                    <DraggableTile
                       key={token}
-                      type="button"
                       className={`token token--${cat}${selected ? ' token--selected' : ''}`}
                       aria-pressed={selected}
-                      onClick={() => {
-                        if (wasDragRef.current) { wasDragRef.current = false; return }
-                        onTileTap(token)
-                      }}
-                      drag
-                      dragSnapToOrigin
-                      whileHover={{ y: -3, scale: 1.04 }}
-                      whileTap={{ scale: 0.95 }}
-                      whileDrag={{ scale: 1.04, rotate: 3, boxShadow: 'var(--ergo-shadow-md)' }}
-                      transition={SPRING}
-                      onDrag={handleTileDrag}
-                      onDragEnd={(e, info) => handleTileDragEnd(token, e, info)}
-                      style={{ position: 'relative' }}
+                      onTap={() => onTileTap(token)}
+                      onDragMove={handleTileDrag}
+                      clearDragover={clearDragover}
+                      resolveDrop={(info) => resolveDrop(token, info)}
+                      reducedMotion={props.reducedMotion}
                     >
                       {tile.kind === 'state' ? stateLabel(String(tile.value)) : tile.value}
-                    </m.button>
+                    </DraggableTile>
                   )
                 })}
               </div>

@@ -17,6 +17,7 @@ import {
   isMilestoneMastered,
   isMilestoneMasteredForCourse,
   conceptBadges,
+  lessonBadge,
 } from './milestones'
 
 const flagship = CourseSchema.parse(flagshipFixture)
@@ -175,5 +176,32 @@ describe('isMilestoneMasteredForCourse', () => {
     expect(
       isMilestoneMasteredForCourse(flagship, 'three-lessons-complete', allAced),
     ).toBe(true)
+  })
+})
+
+describe('lessonBadge', () => {
+  it('flagship: resolves to the hand-authored badge for the milestone lesson', () => {
+    // lesson-pattern-hitting-times → hh-ht-mastered (first in MILESTONE_SEQUENCE)
+    const badge = lessonBadge(flagship, 'lesson-pattern-hitting-times')
+    expect(badge?.meta.id).toBe('hh-ht-mastered')
+    expect(badge?.meta.glyph).toBe('HH≠HT')
+    expect(badge?.hueVar).toBe('ch1')
+    expect(badge?.capstone).toBe(false)
+  })
+
+  it('non-flagship: resolves to the per-lesson badge with correct meta and chapter hue', () => {
+    expect(lessonBadge(bayes, 'lesson-bayes-rule-1')).toEqual({
+      meta: { id: 'bayes-rule-update', title: 'The Update Rule', glyph: '2/3' },
+      hueVar: 'ch1',
+      capstone: false,
+    })
+    const badge2 = lessonBadge(bayes, 'lesson-bayes-rule-2')
+    expect(badge2?.hueVar).toBe('ch4')
+    expect(badge2?.meta.glyph).toBe('1%')
+    expect(badge2?.capstone).toBe(false)
+  })
+
+  it('returns undefined for an unknown lesson id', () => {
+    expect(lessonBadge(bayes, 'does-not-exist')).toBeUndefined()
   })
 })

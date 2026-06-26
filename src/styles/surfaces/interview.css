@@ -10,6 +10,13 @@
   color: var(--color-text-primary);
 }
 
+/* The base .btn (beats.css) is flex:1 1 auto for the horizontal actionbar; in
+   the interview's column/row flex shells that grow stretches buttons. Pin to
+   natural size (matches .authactions .btn in auth-landing.css). */
+.iv-page .btn {
+  flex: 0 0 auto;
+}
+
 .iv-topbar {
   display: flex;
   align-items: center;

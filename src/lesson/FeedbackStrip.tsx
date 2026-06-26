@@ -2,6 +2,7 @@
 // (docs/ui_design_system.md "Feedback Strip").
 
 import type { FeedbackView } from './feedback'
+import { MathText } from './MathText'
 
 export type { FeedbackView }
 
@@ -38,7 +39,7 @@ export function FeedbackStrip({
         <span aria-hidden="true">{icon} </span>
         {label}
       </p>
-      <p className="feedback__text">{view.text}</p>
+      <p className="feedback__text"><MathText>{view.text}</MathText></p>
       {view.kind === 'hint' && view.revealed && onTryAgain && (
         <button type="button" className="feedback__retry" onClick={onTryAgain}>
           Try again

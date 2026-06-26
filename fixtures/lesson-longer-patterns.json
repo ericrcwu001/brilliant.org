@@ -303,17 +303,17 @@
       "prompt": "Mastery challenge: use the overlap shortcut to find E[HTHT] - the average flips until HTHT first appears. Type a whole number.",
       "interaction": {
         "type": "masteryChallenge",
-        "scenario": "Length 4 doesn't automatically mean 16 - slide HTHT over itself and watch for a near-miss that keeps progress.",
+        "scenario": "Length 4 doesn't automatically mean \\(2^4 = 16\\) — slide \\(\\text{HTHT}\\) over itself and watch for a near-miss that keeps progress.",
         "fields": [
-          { "id": "e-htht", "label": "Average flips until HTHT", "accept": ["20"], "placeholder": "?", "suffix": "flips" }
+          { "id": "e-htht", "label": "Average flips until \\(\\text{HTHT}\\)", "accept": ["20"], "placeholder": "?", "suffix": "flips" }
         ]
       },
       "feedback": {
-        "correct": "E[HTHT] = 20. Its overlaps sit at length 2 (the leading 'HT' reappears at the end) and length 4 (itself), so 2^2 + 2^4 = 4 + 16 = 20. Miss that hidden length-2 overlap and you'd guess 16 - same length as HHTT, but a longer wait.",
+        "correct": "\\(E[\\text{HTHT}] = 20\\). Use the overlap shortcut: \\[ E[P] = \\sum 2^L \\] summed over every self-overlap length \\(L\\). Slide \\(\\text{HTHT}\\) over itself: the full shift (length 4) always matches, and at shift 2 the leading \\(\\text{HT}\\) aligns with the trailing \\(\\text{HT}\\), giving overlaps at lengths 2 and 4. Substituting: \\[ E[\\text{HTHT}] = 2^2 + 2^4 = 4 + 16 = 20. \\] Missing the hidden length-2 overlap gives \\(16\\) — the wait for \\(\\text{HHTT}\\), which has only the full-length match — but \\(\\text{HTHT}\\) waits 4 flips longer because that extra overlap lets near-misses preserve partial progress.",
         "hints": [
-          "Longer doesn't automatically mean a longer wait. Slide HTHT over itself - where does its start line up with its end?",
-          "Each self-overlap of length L adds 2^L (the full length always counts). Check every shift.",
-          "Overlaps at length 2 ('HT' = 'HT') and length 4: 2^2 + 2^4 = 4 + 16 = 20."
+          "Longer doesn't automatically mean a longer wait. Slide \\(\\text{HTHT}\\) over itself — where does its start line up with its end?",
+          "The full length always overlaps. Check every shift for a start-equals-end match. The overlap shortcut: \\(E[P] = \\sum 2^L\\).",
+          "Overlaps at length 2 (\\(\\text{HT} = \\text{HT}\\)) and length 4: \\(2^2 + 2^4 = 4 + 16 = 20\\)."
         ]
       }
     },

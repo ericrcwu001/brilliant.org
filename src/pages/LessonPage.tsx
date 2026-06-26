@@ -9,13 +9,14 @@
 
 import { useEffect, useState } from 'react'
 import { useAuth } from '../auth/authContext'
-import { loadLessonFromFirestore, COURSE_ID } from '../content/loader'
+import { loadLessonFromFirestore, loadCourseFromFirestore, COURSE_ID } from '../content/loader'
 import { loadSnapshot } from '../lesson/snapshot'
 import { LessonPlayer } from '../lesson/LessonPlayer'
 import { loadTrack, type Track } from '../progress/track'
 import { loadProgress } from '../progress/progress'
+import { lessonBadge, type ConceptBadge } from '../habit/milestones'
 import type { Lesson, Snapshot } from '../content/schema'
-import { ROUTES, interviewPath, type NavigateFn } from './routes'
+import { ROUTES, conceptPath, interviewPath, type NavigateFn } from './routes'
 
 type LoadState =
   | { status: 'loading' }
@@ -28,6 +29,7 @@ type LoadState =
       // null ⇒ per-concept calibrate not yet taken; fall back to global default.
       track: Track | null
       completed: boolean
+      badge: ConceptBadge | undefined
     }
 
 export function LessonPage({
@@ -47,15 +49,17 @@ export function LessonPage({
     let cancelled = false
     void (async () => {
       try {
+        const lesson = await loadLessonFromFirestore(lessonId)
         // TODO: map lesson→concept when multiple concepts go live.
         // For now all live lessons belong to the flagship concept.
         const conceptId = COURSE_ID
-        const [lesson, snapshot, track, progress] = await Promise.all([
-          loadLessonFromFirestore(lessonId),
+        const [snapshot, track, progress, course] = await Promise.all([
           loadSnapshot(uid, lessonId),
           loadTrack(uid, conceptId),
           loadProgress(uid, lessonId),
+          loadCourseFromFirestore(lesson.courseId).catch(() => null),
         ])
+        const badge = course ? lessonBadge(course, lessonId) : undefined
         if (!cancelled)
           setState({
             status: 'ready',
@@ -64,6 +68,7 @@ export function LessonPage({
             snapshot,
             track,
             completed: progress?.completionStatus === 'completed',
+            badge,
           })
       } catch (err) {
         if (!cancelled) {
@@ -92,7 +97,8 @@ export function LessonPage({
         persistence={{ uid: user.uid, lessonId }}
         track={effectiveTrack}
         review={state.completed}
-        onExit={() => navigate(ROUTES.landing)}
+        badge={state.badge}
+        onExit={() => navigate(conceptPath(state.lesson.courseId))}
         onInterviewCta={() => navigate(interviewPath(state.lesson.courseId))}
       />
     )
