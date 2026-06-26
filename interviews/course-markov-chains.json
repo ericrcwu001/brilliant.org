@@ -1,0 +1,2954 @@
+{
+  "version": 1,
+  "kind": "interview-pack",
+  "courseId": "course-markov-chains",
+  "concept": "Markov Chains",
+  "greenBookAnchor": "Xinfeng Zhou, A Practical Guide to Quantitative Finance Interviews — §5.1 Markov Chain (p.53-57): Markov property, transition matrix, path probability, state classification, and first-step analysis for absorption probability and expected absorption time (gambler's ruin 4/7; dice single-12 vs two consecutive-7s 7/13 & 6/13; coin HHH-before-THH 1/8, E[THH]=8); §5.2 Martingale and Random Walk (p.58-62): symmetric random walk / drunk-man bridge (17/100, 1411) and E[n heads]=2^(n+1)-2. Stationary distribution, convergence, reversibility/detailed balance, periodicity, and PageRank are WEB-anchored (confirmed absent from the Green Book; see concepts/markov-chains/source-pack.md §3 and §5).",
+  "engineModule": "src/engine/markov.ts",
+  "generator": "interviews/_build/build-markov-chains-pack.ts",
+  "note": "Dormant capstone asset: committed but NOT seeded or deployed (the seed glob matches only lesson-*/course-* fixtures, not interviews/). Every answer is reproduced by the exact-rational engine src/engine/markov.ts (solveLinearSystem over the rationals; no floats on any graded path).",
+  "counts": {
+    "total": 55,
+    "byTier": {
+      "hard": 15,
+      "harder": 23,
+      "brutal": 17
+    },
+    "templated": 50,
+    "freeForm": 5
+  },
+  "interviewerPrompt": "ROLE\nYou are a senior quantitative-research interviewer at a top trading desk (Jane Street / Citadel / IMC), a specialist in Markov chains and stochastic processes, running a live mock interview on MARKOV CHAINS. Be professional, probing, and fair-but-pressured: warm enough that the candidate keeps thinking aloud, sharp enough that sloppy reasoning gets caught. You are interviewing one candidate, right now, on the single question below.\n\nTHE QUESTION (injected at runtime)\n- Prompt: {{prompt}}\n- Tier: {{tier}}  (hard | harder | brutal — calibrate your pressure and follow-up depth to the tier)\n- Source: {{source}}  (your context only; never read it aloud)\n\nPROTOCOL\n1. Ask the question once, faithfully from {{prompt}}, then stop and let the candidate drive. ONE question at a time — never stack asks or surface the follow-ups early.\n2. Make them build the MODEL first. Before any arithmetic, push: \"What are the states? Is there a state the chain can never leave — so is this absorbing or ergodic? Now write the structure: the transition rows, and the recurrence or balance equation you will actually solve.\" Reward an explicit setup; flag a candidate who jumps straight to numbers.\n3. Probe, don't solve. Ask Socratic questions that test whether they have seen the edge this problem turns on (see EDGE CASES). Do NOT do the derivation for them and do NOT hand over the structure unless they are stuck.\n4. Release hints only when genuinely stuck or explicitly asked (see HINTS).\n5. After they COMMIT to a final answer, work the follow-up chain (see FOLLOW-UPS).\n6. Then close (see SCORING).\n\nEDGE CASES TO PROBE (the Markov traps that separate strong candidates — press the ones this question actually hinges on)\n- Absorbing vs ergodic is the master fork: FIRST ask whether any state can never be left. A chain that mixes forever (Ehrenfest urn, weather) has NO absorbing state — ask the long-run share (piP=pi, or Kac's mean return time 1/pi_i), NEVER \"when/where is it absorbed.\" A chain with walls (gambler's ruin, drunkard's walk) IS absorbing — ask which wall (absorption probability) and how long (expected hitting time). Picking the wrong branch is the most common failure.\n- Reach probability != expected duration: absorption probability (I-Q)^-1 R is a split with NO +1 (=> i/N for a fair walk); expected hitting time solves (I-Q)t=1, the +1 per step (=> i(N-i)). Candidates conflate them constantly — make them say which object the question asks for.\n- Stationary != convergence under periodicity: piP=pi needs only irreducibility, but P^n -> pi needs aperiodicity. The Ehrenfest urn has period 2, so its long-run time-fraction (1/4,1/2,1/4) is answerable while the step-n distribution OSCILLATES and never converges. Do not let \"stationary\" be conflated with \"the distribution at step n settles.\"\n- The start changes the absorption split: a symmetric walk is one-half / one-half per STEP, not one-half to win. From $1 of a $0-to-$4 game, P(reach $4) = 1/4, not 1/2. Press anyone who says \"fifty-fifty from anywhere.\"\n- A biased coin breaks the clean fair forms: fair reach = i/N and duration = i(N-i); biased reach = (1 - r^i)/(1 - r^N) with r = q/p (e.g. gambler's ruin from $1, up 2/3 => 4/7). Check they switch forms the moment the chain is asymmetric.\n- PageRank != most-in-links: rank is the random surfer's stationary distribution, and damping handles dangling/disconnected pages; on a symmetric cycle every page ties at 1/n regardless of d. Reject \"the page with the most in-links wins.\"\n- Event mis-mapping (dice / coin chains): name the absorbing state BEFORE computing — 7/13 = P(a single 12 first), 6/13 = P(two consecutive 7s first). Make them label the target state precisely.\n- Detailed balance is a shortcut, not the definition: pi_i p_ij = pi_j p_ji (reversibility) is a fast route to pi for birth-death chains, but not every stationary chain is reversible. Reward using it as a shortcut; flag treating it as the meaning of stationary.\n\nHINTS — escalating, ONLY when stuck\nUse {{hidden.hintLadder}} = [nudge, stronger, near-reveal]. Release ONE rung at a time, in order, and only after a visible stuck-signal (a long silence, a wrong turn they cannot recover, or an explicit request). Start at the nudge. Never skip ahead, never give two rungs at once, never go past near-reveal. The near-reveal points at the METHOD only — it must NOT state the final number, vector, or fraction.\n\nNO-ANSWER-LEAK (critical)\nBefore the candidate commits, NEVER state, approximate, confirm, deny, or \"narrow down\" the final answer, and NEVER reveal {{hidden.answer}}. Do not paste or paraphrase any part of the hidden record ({{hidden.answer}}, {{hidden.approaches}}, {{hidden.wrongTurns}}, {{hidden.hintLadder}}, {{hidden.rubric}}). Hints come only from the ladder, one rung at a time, as above. If asked \"is that right?\" mid-solve, redirect (\"walk me through why you think so\") rather than confirm.\n\nGROUNDING (critical)\nTreat {{hidden.answer}} and {{hidden.approaches}} as GROUND TRUTH — they were verified by this concept's exact-rational engine (src/engine/markov.ts), which solves every system over the rationals Q via solveLinearSystem (no floats on any graded path). Every Markov answer is a clean integer, a fraction n/d, or a comma-joined rational vector (e.g. 1/5,2/5,2/5). Do NOT re-derive the math yourself and do NOT \"correct\" the ground truth even if your own mental arithmetic disagrees — if there is a conflict, you are the one who is wrong. Accept ANY mathematically-equivalent exact form: an equal but unreduced fraction (e.g. 2/4 = 1/2), the clean decimal of an exact rational (e.g. 0.25 = 1/4), a vector written in an equivalent stated ordering (as long as the candidate makes the state labels explicit), or an equivalent unevaluated expression (e.g. (I-Q)^-1 R written out, or 1/pi_i left symbolic). Reject only forms that are genuinely not equal, or a float that merely rounds an exact rational the candidate never actually pinned down. Use {{hidden.wrongTurns}} to RECOGNIZE a misconception, not to lead the candidate into it. Grade ONLY against the rubric.\n\nFOLLOW-UPS — after they commit\nOnce a final answer is locked, ask {{followUps}} in order, one at a time (typical chain: bias the chain, generalize to n states, ask about periodicity / convergence, or ask for the mean return time too). Let each be its own mini-exchange, with the no-leak and hint rules still in force.\n\nSCORING — close the interview\nGive structured feedback, then a numeric score against {{hidden.rubric}}. Rate each axis 1-5 with one line of justification: correctness, approach, rigor, communication, speed. Then give an overall 1-5 (a hire-signal read, not a raw average). Tie every judgment to the rubric's stated bar and cite the specific moment that earned or cost points. Be candid and specific — fair-but-pressured to the end.\n\nINJECTION NOTE\nAt runtime the live feature replaces every {{...}} placeholder above with the drawn question's fields ({{prompt}}, {{tier}}, {{source}}, {{hidden.*}}, {{followUps}}); treat the filled-in values as the entire ground truth for this interview.",
+  "generatorPrompt": "ROLE\nYou generate ONE fresh, hard, real-quant-style MARKOV-CHAIN interview question on demand, to top up a pre-built pool without ever repeating one a student has seen. Every question you emit must be (a) a realistic quant-interview question anchored to this concept's Green-Book / web topics, (b) engine-verifiable before it is served, and (c) structurally new versus an avoid-list. If you cannot satisfy all three, you REFUSE (see SELF-REJECTION). Output is a single JSON object and nothing else.\n\nSCOPE — only these Markov-chain topics (anchor each honestly; GB = Green Book, WEB = web-sourced)\n- Stationary distribution piP=pi (long-run share) and Kac's mean return time 1/pi_i — WEB (absent from the Green Book).\n- Multi-step transitions via P^n / Chapman-Kolmogorov — GB path-probability p(i,j)*p(j,k)*... (p.53) PLUS WEB for the exact P^n entry.\n- State classification: recurrent / transient / absorbing / communicating — GB p.54-55; the PERIODICITY sub-part is WEB (absent from GB).\n- Absorption probability and expected hitting / absorption time, including gambler's ruin and the drunkard's walk — GB section 5.1-5.2 (p.54-62).\n- Detailed balance / reversibility (birth-death, Ehrenfest urn) — WEB (absent from GB).\n- PageRank — the random surfer with damping d — WEB (absent from GB).\n\nREAL-QUANT-STYLE (mandatory, hard fence — ADR-0005)\nModel every question on the actual quant-interview canon: gambler's ruin, the weather / Land-of-Oz stationary chain, dice and coin absorption races (a single 12 vs two consecutive 7s; HHH vs THH), the Ehrenfest urn (reversibility / detailed balance), and PageRank. It must read like something genuinely asked on a Jane Street / Citadel / IMC desk. NEVER invent an arbitrary chain puzzle that merely happens to be engine-solvable — real-quant-style grounding is not optional.\n\nPREFER TEMPLATES (first choice); free-form only as a fallback\nFirst, try to PARAMETERIZE an engine-backed template (set template.id + template.params), since templates are inherently verifiable. The eight forms and the engine function each maps to:\n- tmpl-stationary          -> stationaryDistribution(P)              (weather / cloudy-town chain; long-run share)\n- tmpl-multistep           -> matrixPower(P, n), then read the (i,j) entry or a row   (Chapman-Kolmogorov)\n- tmpl-absorption          -> absorptionProbabilities(P, absorbing)  (dice 12-vs-7s, coin HHH/THH, reach-a-wall)\n- tmpl-expected-absorption -> expectedAbsorptionTime(P, absorbing)   (drunkard i(N-i), E[THH])\n- tmpl-gamblers-ruin       -> absorptionProbabilities AND expectedAbsorptionTime on a 1-D walk   (reach prob AND duration; fair + biased)\n- tmpl-detailed-balance    -> detailedBalance(P) / isReversible(P, pi)   (Ehrenfest / birth-death => stationary)\n- tmpl-kac-return          -> kacReturnTime(P, i)    (= 1/pi_i)\n- tmpl-pagerank            -> pagerank(linkGraph, damping)   (random surfer; row-stochastic out-link graph; left stationary of the Google matrix)\nEmit a free-form question ONLY if no template fits — and it STILL must pass engine verification below, with fingerprint \"sem:<hash>\".\n\nENGINE-VERIFY-BEFORE-SERVE (second hard fence — ADR-0005)\nYour output MUST carry the exact data to reproduce the answer with src/engine/markov.ts, so the live feature can RUN the engine and REJECT / regenerate anything it cannot verify. In engineCheck put: module = \"src/engine/markov.ts\"; calls = the exact function call(s) with concrete args (transition rows as small-denominator rationals); answer = the exact value the engine returns. The engine is EXACT-RATIONAL (solveLinearSystem over Q). Documented functions, signatures, and ranges:\n- buildChain(P, labels) -> validates P is square and EVERY row sums to exactly 1 (use to assert a well-formed stochastic chain before any other call).\n- stationaryDistribution(P) -> Rational[] solving piP=pi with sum(pi)=1. Requires an irreducible chain.\n- matrixPower(P, n) -> Rational[][], the exact P^n; the graded answer is the asked (i,j) entry or a row.\n- absorptionProbabilities(P, absorbing: number[]) -> Rational[][] = (I-Q)^-1 R; row = transient start state, column = absorbing target. The graded answer is the asked entry (or the column vector).\n- expectedAbsorptionTime(P, absorbing: number[]) -> Rational[] solving (I-Q)t=1; one entry per transient state.\n- classifyStates(P) -> per state {class, kind: recurrent | transient | absorbing, period}.\n- detailedBalance(P) -> {reversible: boolean, pi: Rational[]};  isReversible(P, pi) -> boolean.\n- kacReturnTime(P, i) -> Rational = 1/pi_i.\n- pagerank(linkGraph, damping: Rational) -> Rational[], the stationary of G = d*M + (1-d)/n * J (M is the row-stochastic out-link matrix; all-zero dangling rows are replaced with a uniform row).\n- Output format: answers print via formatRational / formatVector — an integer, a fraction n/d, or a comma-joined vector in the chain's state order (e.g. 1/5,2/5,2/5).\nHARD RANGE RULE: every graded answer must be an exact rational, an integer, or a vector of them. Keep all transition probabilities small-denominator rationals and the chain small (<= ~12 states) so the exact-rational solve stays representable. NEVER emit a decimal approximation or an irrational. The standard damped PageRank decimals (e.g. d = 0.85 giving roughly .387/.214/.399) are NOT clean rationals — only emit a PageRank answer the engine reproduces exactly (e.g. the symmetric cycle 1/3,1/3,1/3 for any rational d, or the d = 1 four-node 4/13,5/13,1/13,3/13). If the natural answer would be irrational or out of range, switch to a parameterization whose answer is an exact rational, or REFUSE.\n\nAVOID-LIST / NO-OVERLAP\nYou are given avoidList: an array of fingerprints (the student's seen-set union the global pool). Your question's fingerprint MUST NOT be in avoidList. Fingerprint = \"<templateId>:<normalized-params>\" for a template (sort params into a canonical order so trivial re-parameterizations collide), or \"sem:<hash>\" for free-form (hash the structural semantics — states, transition probabilities, and what is asked — not the wording, so reworded duplicates collide). If your first candidate's fingerprint is in avoidList, change the structure or parameters until it is new, or REFUSE.\n\nOUTPUT SCHEMA (emit EXACTLY this one JSON object — no prose, no code fences; the comments below are explanatory only)\n{\n  \"tier\": \"hard | harder | brutal\",\n  \"fingerprint\": \"<templateId>:<normalized-params>  |  sem:<hash>\",\n  \"template\": { \"id\": \"<templateId>\", \"params\": { } },\n  \"prompt\": \"the question text shown to the candidate\",\n  \"source\": \"Green Book p.<n> section 5.x  |  <web / real quant-interview source> (mark GB-anchored or WEB-anchored)\",\n  \"engineCheck\": {\n    \"module\": \"src/engine/markov.ts\",\n    \"calls\": [ \"exact call(s) with concrete rational args, e.g. stationaryDistribution([[0,1/2,1/2],[1/4,1/2,1/4],[1/4,1/4,1/2]])\" ],\n    \"answer\": \"<exact value the engine returns, e.g. 1/5,2/5,2/5>\"\n  },\n  \"hidden\": {\n    \"answer\": \"<exact answer; identical value to engineCheck.answer>\",\n    \"approaches\": [ \"accepted solution path 1\", \"alternate accepted path 2\" ],\n    \"wrongTurns\": [ \"common misconception 1\", \"common misconception 2\" ],\n    \"hintLadder\": [ \"nudge\", \"stronger\", \"near-reveal\" ],\n    \"rubric\": {\n      \"correctness\": \"what a correct answer must contain\",\n      \"approach\": \"what a strong method looks like (e.g. classify absorbing-vs-ergodic FIRST, then pick the formula)\",\n      \"rigor\": \"states the irreducibility / aperiodicity assumptions; keeps exact rationals; names the absorbing target before computing\",\n      \"communication\": \"clarity of the think-aloud\",\n      \"speed\": \"the pace bar for this tier\"\n    }\n  },\n  \"followUps\": [ \"first follow-up (e.g. bias the chain / generalize to n states)\", \"second follow-up\" ]\n}\n\nFIELD RULES\n- tier: tag honestly; the floor is \"hard\" (always harder than any lesson's mastery challenge). \"harder\" / \"brutal\" add cross-topic synthesis or nastier parameters.\n- hintLadder: EXACTLY 3 rungs, escalating nudge -> stronger -> near-reveal. The near-reveal points at the METHOD / structure ONLY — it must NOT state the final number, vector, or fraction.\n- hidden.answer MUST equal engineCheck.answer exactly (the verified rational or vector, in the engine's state order).\n- followUps: a real chain (>=1, ideally 2-3): bias the chain, generalize to n states, ask periodicity / convergence, or ask the mean return time too.\n- source: anchor to the Green-Book section the topic comes from (GB section 5.1-5.2 for path-probability, classification, absorption, hitting time, gambler's ruin), or a web / real quant-interview source for the WEB-only topics (stationary, convergence, reversibility, periodicity, PageRank) — and say which.\n\nSELF-REJECTION (never serve an unverifiable or off-fence question)\nIf you cannot produce a question that is simultaneously (a) real-quant-style + GB / web-anchored, (b) engine-verifiable within the exact-rational range, and (c) structurally new vs avoidList — do NOT emit a question. Instead output exactly:\n{ \"refusal\": true, \"reason\": \"<one line: which fence failed — not-anchored | not-engine-verifiable | out-of-range/irrational | no-new-fingerprint>\" }\nAn honest refusal beats an unverifiable or repeated question.",
+  "templates": [
+    {
+      "id": "tmpl-stationary",
+      "title": "Stationary distribution piP=pi — long-run share of a regime",
+      "source": "WEB (absent from GB): Math.SE 3336273 · GeeksforGeeks · Rochester ECE440 HW5 #2 · Math.SE 259852",
+      "description": "Solve piP=pi with sum(pi)=1 for the long-run time-share; interpret it and argue why a regular chain forgets its start.",
+      "engineModule": "src/engine/markov.ts"
+    },
+    {
+      "id": "tmpl-multistep",
+      "title": "Multi-step transitions — entries of P^n (Chapman-Kolmogorov)",
+      "source": "GB §5.1 p.53 (path probability) · WEB Land of Oz (Grinstead & Snell Ch.11 Table 11.1; UC Davis dis6)",
+      "description": "An n-step probability is the (from,to) entry of P^n; it sums over every intermediate path, not one path.",
+      "engineModule": "src/engine/markov.ts"
+    },
+    {
+      "id": "tmpl-absorption",
+      "title": "Absorption probability — which exit, via (I-Q)^-1 R / first-step analysis",
+      "source": "GB §5.1 p.54-57 (gambler 4/7; dice 7/13; coin 1/8) · WEB drunkard i/N (Grinstead & Snell Ex.11.13-15)",
+      "description": "P(absorbed at one target before another) by first-step analysis B=(I-Q)^-1 R — a split with no +1; the start sets the split.",
+      "engineModule": "src/engine/markov.ts"
+    },
+    {
+      "id": "tmpl-expected-absorption",
+      "title": "Expected time to absorption — (I-Q)t=1 (the +1 per step)",
+      "source": "GB §5.1 p.54 + §5.2 p.59-61 (E[THH]=8, E[HH]=6, E[HHH]=14) · WEB drunkard i(N-i) (Grinstead & Snell Ex.11.15)",
+      "description": "Expected steps to absorption, solving (I-Q)t=1 — every step adds the +1 a probability-split lacks.",
+      "engineModule": "src/engine/markov.ts"
+    },
+    {
+      "id": "tmpl-gamblers-ruin",
+      "title": "Gambler's ruin / birth-death walk — reach probability and expected duration",
+      "source": "GB §5.1 p.54-55 + §5.2 p.59 (drunk-man 17/100, 1411) · WEB drunkard i/N & i(N-i) (Grinstead & Snell Ex.11.13-15)",
+      "description": "Boundary-value problems on a 0..N walk with up-prob p: reach P(hit N before 0|i) and duration E[steps|i]; fair gives i/N and i(N-i), bias breaks both.",
+      "engineModule": "src/engine/markov.ts"
+    },
+    {
+      "id": "tmpl-detailed-balance",
+      "title": "Reversibility & detailed balance — pi without solving the whole system",
+      "source": "WEB (absent from GB): Ehrenfest stats.libretexts 16.8 · phys.libretexts 12.3",
+      "description": "When pi_i p_ij = pi_j p_ji holds (birth-death / 2-state), march the ratios along the ladder to read pi directly.",
+      "engineModule": "src/engine/markov.ts"
+    },
+    {
+      "id": "tmpl-kac-return",
+      "title": "Kac's mean return time — 1/pi_i",
+      "source": "WEB (absent from GB): Kac's recurrence theorem; pi from Math.SE 3336273 (clear/rainy) & Rochester ECE440 HW5 #2 (cloudy-town)",
+      "description": "Expected steps to first return to a state = the reciprocal of its stationary share, 1/pi_i.",
+      "engineModule": "src/engine/markov.ts"
+    },
+    {
+      "id": "tmpl-pagerank",
+      "title": "PageRank — stationary distribution of the damped random surfer",
+      "source": "WEB (absent from GB): theorempath.com (3-cycle) · practicaldsc.org (4-node) · Wikipedia PageRank + arXiv math/0612079 (damping)",
+      "description": "Rank pages by the stationary distribution of G=d*M+(1-d)/n*J (M = row-stochastic out-links); the surfer's long-run share IS the rank.",
+      "engineModule": "src/engine/markov.ts"
+    }
+  ],
+  "questions": [
+    {
+      "id": "tmpl-stationary#machine-2",
+      "tier": "hard",
+      "fingerprint": "tmpl-stationary:chain=machine-2",
+      "template": {
+        "id": "tmpl-stationary",
+        "params": {
+          "chain": "machine-2"
+        }
+      },
+      "prompt": "A trading signal flips between **on** and **off**: an on-day stays on w.p. 1/2 (else off); an off-day stays off w.p. 2/3 (else on). Build the transition matrix from these words, then find the long-run fraction of on vs off days; show the 2-state fixed point and explain the b/(a+b) structure.",
+      "source": "WEB (absent from GB): Math.SE 3336273 · GeeksforGeeks · Rochester ECE440 HW5 #2 · Math.SE 259852",
+      "engineCheck": {
+        "module": "src/engine/markov.ts",
+        "calls": [
+          "stationaryDistribution(CHAINS['machine-2'].P)"
+        ],
+        "answer": "2/5,3/5",
+        "verified": true
+      },
+      "hidden": {
+        "answer": "2/5,3/5",
+        "approaches": [
+          "Write the left system (P^T - I)pi^T = 0, drop one redundant equation, close with sum(pi)=1, solve over the rationals.",
+          "2-state shortcut: pi=(b/(a+b), a/(a+b)) with a,b the two switching probabilities; verify sum(pi)=1."
+        ],
+        "wrongTurns": [
+          "the starting state changes the long-run share",
+          "pi is just the row of P with the biggest entries",
+          "piP=pi implies P^n converges, even for a periodic chain",
+          "solving the RIGHT eigenvector P*pi=pi instead of the left system piP=pi"
+        ],
+        "hintLadder": [
+          "You want the share that one more step leaves unchanged — set up piP=pi using the rows of machine-2.",
+          "Transpose to a left-eigenvector system (P^T - I)pi^T = 0; one equation is redundant, so replace it with the constraint that the shares sum to one.",
+          "Solve that augmented system over the rationals and reduce, then check the components sum to one — derive pi, never read it off the matrix."
+        ],
+        "rubric": {
+          "correctness": "matches the exact engine stationary vector (reduced, sums to 1)",
+          "approach": "sets up the LEFT system piP=pi plus the sum(pi)=1 normalization",
+          "rigor": "keeps exact rationals; checks components sum to 1; notes uniqueness needs irreducibility",
+          "communication": "reads pi as a long-run time-share, not the single most-likely state",
+          "speed": "reduces the 2-3 state system with no decimal drift"
+        }
+      },
+      "followUps": [
+        "From your pi, give a state's mean return time (Kac, 1/pi_i).",
+        "Is this chain periodic? If so does the step-n distribution still converge?",
+        "Nudge one transition up — which way does the busiest state's share move?"
+      ]
+    },
+    {
+      "id": "tmpl-stationary#clear-rainy",
+      "tier": "hard",
+      "fingerprint": "tmpl-stationary:chain=weather-clear-rainy",
+      "template": {
+        "id": "tmpl-stationary",
+        "params": {
+          "chain": "weather-clear-rainy"
+        }
+      },
+      "prompt": "You model a stock's daily regime as two states. If it's **clear** today it stays clear tomorrow w.p. 3/5 (else rainy); if **rainy** it stays rainy w.p. 7/10 (else clear). Build the transition matrix from these words, then find the long-run fraction of days in each regime — and justify why the answer does **not** depend on today's regime.",
+      "source": "WEB (absent from GB): Math.SE 3336273 · GeeksforGeeks · Rochester ECE440 HW5 #2 · Math.SE 259852",
+      "engineCheck": {
+        "module": "src/engine/markov.ts",
+        "calls": [
+          "stationaryDistribution(CHAINS['weather-clear-rainy'].P)"
+        ],
+        "answer": "3/7,4/7",
+        "verified": true
+      },
+      "hidden": {
+        "answer": "3/7,4/7",
+        "approaches": [
+          "Write the left system (P^T - I)pi^T = 0, drop one redundant equation, close with sum(pi)=1, solve over the rationals.",
+          "2-state shortcut: pi=(b/(a+b), a/(a+b)) with a,b the two switching probabilities; verify sum(pi)=1."
+        ],
+        "wrongTurns": [
+          "the starting state changes the long-run share",
+          "pi is just the row of P with the biggest entries",
+          "piP=pi implies P^n converges, even for a periodic chain",
+          "solving the RIGHT eigenvector P*pi=pi instead of the left system piP=pi"
+        ],
+        "hintLadder": [
+          "You want the share that one more step leaves unchanged — set up piP=pi using the rows of weather-clear-rainy.",
+          "Transpose to a left-eigenvector system (P^T - I)pi^T = 0; one equation is redundant, so replace it with the constraint that the shares sum to one.",
+          "Solve that augmented system over the rationals and reduce, then check the components sum to one — derive pi, never read it off the matrix."
+        ],
+        "rubric": {
+          "correctness": "matches the exact engine stationary vector (reduced, sums to 1)",
+          "approach": "sets up the LEFT system piP=pi plus the sum(pi)=1 normalization",
+          "rigor": "keeps exact rationals; checks components sum to 1; notes uniqueness needs irreducibility",
+          "communication": "reads pi as a long-run time-share, not the single most-likely state",
+          "speed": "reduces the 2-3 state system with no decimal drift"
+        }
+      },
+      "followUps": [
+        "From your pi, give a state's mean return time (Kac, 1/pi_i).",
+        "Is this chain periodic? If so does the step-n distribution still converge?",
+        "Nudge one transition up — which way does the busiest state's share move?"
+      ]
+    },
+    {
+      "id": "tmpl-stationary#gfg",
+      "tier": "hard",
+      "fingerprint": "tmpl-stationary:chain=weather-gfg",
+      "template": {
+        "id": "tmpl-stationary",
+        "params": {
+          "chain": "weather-gfg"
+        }
+      },
+      "prompt": "A two-state system: from A -> A w.p. 7/10 (else B); from B -> B w.p. 6/10 (else A). Construct P, then compute the steady-state share of time in each state and explain what 'steady state' means operationally for a desk that only cares about long-run occupancy.",
+      "source": "WEB (absent from GB): Math.SE 3336273 · GeeksforGeeks · Rochester ECE440 HW5 #2 · Math.SE 259852",
+      "engineCheck": {
+        "module": "src/engine/markov.ts",
+        "calls": [
+          "stationaryDistribution(CHAINS['weather-gfg'].P)"
+        ],
+        "answer": "4/7,3/7",
+        "verified": true
+      },
+      "hidden": {
+        "answer": "4/7,3/7",
+        "approaches": [
+          "Write the left system (P^T - I)pi^T = 0, drop one redundant equation, close with sum(pi)=1, solve over the rationals.",
+          "2-state shortcut: pi=(b/(a+b), a/(a+b)) with a,b the two switching probabilities; verify sum(pi)=1."
+        ],
+        "wrongTurns": [
+          "the starting state changes the long-run share",
+          "pi is just the row of P with the biggest entries",
+          "piP=pi implies P^n converges, even for a periodic chain",
+          "solving the RIGHT eigenvector P*pi=pi instead of the left system piP=pi"
+        ],
+        "hintLadder": [
+          "You want the share that one more step leaves unchanged — set up piP=pi using the rows of weather-gfg.",
+          "Transpose to a left-eigenvector system (P^T - I)pi^T = 0; one equation is redundant, so replace it with the constraint that the shares sum to one.",
+          "Solve that augmented system over the rationals and reduce, then check the components sum to one — derive pi, never read it off the matrix."
+        ],
+        "rubric": {
+          "correctness": "matches the exact engine stationary vector (reduced, sums to 1)",
+          "approach": "sets up the LEFT system piP=pi plus the sum(pi)=1 normalization",
+          "rigor": "keeps exact rationals; checks components sum to 1; notes uniqueness needs irreducibility",
+          "communication": "reads pi as a long-run time-share, not the single most-likely state",
+          "speed": "reduces the 2-3 state system with no decimal drift"
+        }
+      },
+      "followUps": [
+        "From your pi, give a state's mean return time (Kac, 1/pi_i).",
+        "Is this chain periodic? If so does the step-n distribution still converge?",
+        "Nudge one transition up — which way does the busiest state's share move?"
+      ]
+    },
+    {
+      "id": "tmpl-stationary#snoqualmie",
+      "tier": "hard",
+      "fingerprint": "tmpl-stationary:chain=snoqualmie",
+      "template": {
+        "id": "tmpl-stationary",
+        "params": {
+          "chain": "snoqualmie"
+        }
+      },
+      "prompt": "In Snoqualmie the weather is sticky: a **clear** day stays clear w.p. 4/5; a **rainy** day stays rainy w.p. 3/5. Build P and find the fraction of clear vs rainy days in the long run; show your pi is unchanged by one more day and say why that fixed-point property is the definition you need.",
+      "source": "WEB (absent from GB): Math.SE 3336273 · GeeksforGeeks · Rochester ECE440 HW5 #2 · Math.SE 259852",
+      "engineCheck": {
+        "module": "src/engine/markov.ts",
+        "calls": [
+          "stationaryDistribution(CHAINS['snoqualmie'].P)"
+        ],
+        "answer": "2/3,1/3",
+        "verified": true
+      },
+      "hidden": {
+        "answer": "2/3,1/3",
+        "approaches": [
+          "Write the left system (P^T - I)pi^T = 0, drop one redundant equation, close with sum(pi)=1, solve over the rationals.",
+          "2-state shortcut: pi=(b/(a+b), a/(a+b)) with a,b the two switching probabilities; verify sum(pi)=1."
+        ],
+        "wrongTurns": [
+          "the starting state changes the long-run share",
+          "pi is just the row of P with the biggest entries",
+          "piP=pi implies P^n converges, even for a periodic chain",
+          "solving the RIGHT eigenvector P*pi=pi instead of the left system piP=pi"
+        ],
+        "hintLadder": [
+          "You want the share that one more step leaves unchanged — set up piP=pi using the rows of snoqualmie.",
+          "Transpose to a left-eigenvector system (P^T - I)pi^T = 0; one equation is redundant, so replace it with the constraint that the shares sum to one.",
+          "Solve that augmented system over the rationals and reduce, then check the components sum to one — derive pi, never read it off the matrix."
+        ],
+        "rubric": {
+          "correctness": "matches the exact engine stationary vector (reduced, sums to 1)",
+          "approach": "sets up the LEFT system piP=pi plus the sum(pi)=1 normalization",
+          "rigor": "keeps exact rationals; checks components sum to 1; notes uniqueness needs irreducibility",
+          "communication": "reads pi as a long-run time-share, not the single most-likely state",
+          "speed": "reduces the 2-3 state system with no decimal drift"
+        }
+      },
+      "followUps": [
+        "From your pi, give a state's mean return time (Kac, 1/pi_i).",
+        "Is this chain periodic? If so does the step-n distribution still converge?",
+        "Nudge one transition up — which way does the busiest state's share move?"
+      ]
+    },
+    {
+      "id": "tmpl-stationary#weather-asym",
+      "tier": "harder",
+      "fingerprint": "tmpl-stationary:chain=weather-asym",
+      "template": {
+        "id": "tmpl-stationary",
+        "params": {
+          "chain": "weather-asym"
+        }
+      },
+      "prompt": "Regime chain: S1 -> S1 w.p. 1/4 (else S2); S2 -> S2 w.p. 4/5 (else S1). Build it and give the long-run share of each state as exact fractions; the denominators aren't pretty — explain where the 19 comes from in terms of a+b.",
+      "source": "WEB (absent from GB): Math.SE 3336273 · GeeksforGeeks · Rochester ECE440 HW5 #2 · Math.SE 259852",
+      "engineCheck": {
+        "module": "src/engine/markov.ts",
+        "calls": [
+          "stationaryDistribution(CHAINS['weather-asym'].P)"
+        ],
+        "answer": "4/19,15/19",
+        "verified": true
+      },
+      "hidden": {
+        "answer": "4/19,15/19",
+        "approaches": [
+          "Write the left system (P^T - I)pi^T = 0, drop one redundant equation, close with sum(pi)=1, solve over the rationals.",
+          "2-state shortcut: pi=(b/(a+b), a/(a+b)) with a,b the two switching probabilities; verify sum(pi)=1."
+        ],
+        "wrongTurns": [
+          "the starting state changes the long-run share",
+          "pi is just the row of P with the biggest entries",
+          "piP=pi implies P^n converges, even for a periodic chain",
+          "solving the RIGHT eigenvector P*pi=pi instead of the left system piP=pi"
+        ],
+        "hintLadder": [
+          "You want the share that one more step leaves unchanged — set up piP=pi using the rows of weather-asym.",
+          "Transpose to a left-eigenvector system (P^T - I)pi^T = 0; one equation is redundant, so replace it with the constraint that the shares sum to one.",
+          "Solve that augmented system over the rationals and reduce, then check the components sum to one — derive pi, never read it off the matrix."
+        ],
+        "rubric": {
+          "correctness": "matches the exact engine stationary vector (reduced, sums to 1)",
+          "approach": "sets up the LEFT system piP=pi plus the sum(pi)=1 normalization",
+          "rigor": "keeps exact rationals; checks components sum to 1; notes uniqueness needs irreducibility",
+          "communication": "reads pi as a long-run time-share, not the single most-likely state",
+          "speed": "reduces the 2-3 state system with no decimal drift"
+        }
+      },
+      "followUps": [
+        "From your pi, give a state's mean return time (Kac, 1/pi_i).",
+        "Is this chain periodic? If so does the step-n distribution still converge?",
+        "Nudge one transition up — which way does the busiest state's share move?"
+      ]
+    },
+    {
+      "id": "tmpl-stationary#cloudy-town",
+      "tier": "harder",
+      "fingerprint": "tmpl-stationary:chain=cloudy-town",
+      "template": {
+        "id": "tmpl-stationary",
+        "params": {
+          "chain": "cloudy-town"
+        }
+      },
+      "prompt": "A city cycles **sunny/cloudy/rainy**: from sunny it never stays sunny (1/2 cloudy, 1/2 rainy); from cloudy it's 1/4 sunny, 1/2 cloudy, 1/4 rainy; from rainy it's 1/4 sunny, 1/4 cloudy, 1/2 rainy. Build P, find the long-run share of each weather, and argue the chain is ergodic (so the share is unique and start-independent).",
+      "source": "WEB (absent from GB): Math.SE 3336273 · GeeksforGeeks · Rochester ECE440 HW5 #2 · Math.SE 259852",
+      "engineCheck": {
+        "module": "src/engine/markov.ts",
+        "calls": [
+          "stationaryDistribution(CHAINS['cloudy-town'].P)"
+        ],
+        "answer": "1/5,2/5,2/5",
+        "verified": true
+      },
+      "hidden": {
+        "answer": "1/5,2/5,2/5",
+        "approaches": [
+          "Write the left system (P^T - I)pi^T = 0, drop one redundant equation, close with sum(pi)=1, solve over the rationals.",
+          "2-state shortcut: pi=(b/(a+b), a/(a+b)) with a,b the two switching probabilities; verify sum(pi)=1."
+        ],
+        "wrongTurns": [
+          "the starting state changes the long-run share",
+          "pi is just the row of P with the biggest entries",
+          "piP=pi implies P^n converges, even for a periodic chain",
+          "solving the RIGHT eigenvector P*pi=pi instead of the left system piP=pi"
+        ],
+        "hintLadder": [
+          "You want the share that one more step leaves unchanged — set up piP=pi using the rows of cloudy-town.",
+          "Transpose to a left-eigenvector system (P^T - I)pi^T = 0; one equation is redundant, so replace it with the constraint that the shares sum to one.",
+          "Solve that augmented system over the rationals and reduce, then check the components sum to one — derive pi, never read it off the matrix."
+        ],
+        "rubric": {
+          "correctness": "matches the exact engine stationary vector (reduced, sums to 1)",
+          "approach": "sets up the LEFT system piP=pi plus the sum(pi)=1 normalization",
+          "rigor": "keeps exact rationals; checks components sum to 1; notes uniqueness needs irreducibility",
+          "communication": "reads pi as a long-run time-share, not the single most-likely state",
+          "speed": "reduces the 2-3 state system with no decimal drift"
+        }
+      },
+      "followUps": [
+        "From your pi, give a state's mean return time (Kac, 1/pi_i).",
+        "Is this chain periodic? If so does the step-n distribution still converge?",
+        "Nudge one transition up — which way does the busiest state's share move?"
+      ]
+    },
+    {
+      "id": "tmpl-stationary#land-of-oz",
+      "tier": "harder",
+      "fingerprint": "tmpl-stationary:chain=land-of-oz",
+      "template": {
+        "id": "tmpl-stationary",
+        "params": {
+          "chain": "land-of-oz"
+        }
+      },
+      "prompt": "Land of Oz weather (Rain/Nice/Snow): Rain->(1/2,1/4,1/4), Nice->(1/2,0,1/2), Snow->(1/4,1/4,1/2). Build P and find the long-run share of each — then state which state is rarest and explain why 'Nice' is squeezed out structurally.",
+      "source": "WEB (absent from GB): Math.SE 3336273 · GeeksforGeeks · Rochester ECE440 HW5 #2 · Math.SE 259852",
+      "engineCheck": {
+        "module": "src/engine/markov.ts",
+        "calls": [
+          "stationaryDistribution(CHAINS['land-of-oz'].P)"
+        ],
+        "answer": "2/5,1/5,2/5",
+        "verified": true
+      },
+      "hidden": {
+        "answer": "2/5,1/5,2/5",
+        "approaches": [
+          "Write the left system (P^T - I)pi^T = 0, drop one redundant equation, close with sum(pi)=1, solve over the rationals.",
+          "2-state shortcut: pi=(b/(a+b), a/(a+b)) with a,b the two switching probabilities; verify sum(pi)=1."
+        ],
+        "wrongTurns": [
+          "the starting state changes the long-run share",
+          "pi is just the row of P with the biggest entries",
+          "piP=pi implies P^n converges, even for a periodic chain",
+          "solving the RIGHT eigenvector P*pi=pi instead of the left system piP=pi"
+        ],
+        "hintLadder": [
+          "You want the share that one more step leaves unchanged — set up piP=pi using the rows of land-of-oz.",
+          "Transpose to a left-eigenvector system (P^T - I)pi^T = 0; one equation is redundant, so replace it with the constraint that the shares sum to one.",
+          "Solve that augmented system over the rationals and reduce, then check the components sum to one — derive pi, never read it off the matrix."
+        ],
+        "rubric": {
+          "correctness": "matches the exact engine stationary vector (reduced, sums to 1)",
+          "approach": "sets up the LEFT system piP=pi plus the sum(pi)=1 normalization",
+          "rigor": "keeps exact rationals; checks components sum to 1; notes uniqueness needs irreducibility",
+          "communication": "reads pi as a long-run time-share, not the single most-likely state",
+          "speed": "reduces the 2-3 state system with no decimal drift"
+        }
+      },
+      "followUps": [
+        "From your pi, give a state's mean return time (Kac, 1/pi_i).",
+        "Is this chain periodic? If so does the step-n distribution still converge?",
+        "Nudge one transition up — which way does the busiest state's share move?"
+      ]
+    },
+    {
+      "id": "tmpl-stationary#ergodic-3",
+      "tier": "brutal",
+      "fingerprint": "tmpl-stationary:chain=ergodic-3",
+      "template": {
+        "id": "tmpl-stationary",
+        "params": {
+          "chain": "ergodic-3"
+        }
+      },
+      "prompt": "Three states with rows s0->(1/2,1/4,1/4), s1->(1/3,1/3,1/3), s2->(0,1/2,1/2). Build P, **first** argue it is irreducible and aperiodic (hence has a unique stationary), **then** compute the long-run share of each state. Explain why s1 and s2 end up equally occupied despite different rows.",
+      "source": "WEB (absent from GB): Math.SE 3336273 · GeeksforGeeks · Rochester ECE440 HW5 #2 · Math.SE 259852",
+      "engineCheck": {
+        "module": "src/engine/markov.ts",
+        "calls": [
+          "stationaryDistribution(CHAINS['ergodic-3'].P)"
+        ],
+        "answer": "1/4,3/8,3/8",
+        "verified": true
+      },
+      "hidden": {
+        "answer": "1/4,3/8,3/8",
+        "approaches": [
+          "Write the left system (P^T - I)pi^T = 0, drop one redundant equation, close with sum(pi)=1, solve over the rationals.",
+          "2-state shortcut: pi=(b/(a+b), a/(a+b)) with a,b the two switching probabilities; verify sum(pi)=1."
+        ],
+        "wrongTurns": [
+          "the starting state changes the long-run share",
+          "pi is just the row of P with the biggest entries",
+          "piP=pi implies P^n converges, even for a periodic chain",
+          "solving the RIGHT eigenvector P*pi=pi instead of the left system piP=pi"
+        ],
+        "hintLadder": [
+          "You want the share that one more step leaves unchanged — set up piP=pi using the rows of ergodic-3.",
+          "Transpose to a left-eigenvector system (P^T - I)pi^T = 0; one equation is redundant, so replace it with the constraint that the shares sum to one.",
+          "Solve that augmented system over the rationals and reduce, then check the components sum to one — derive pi, never read it off the matrix."
+        ],
+        "rubric": {
+          "correctness": "matches the exact engine stationary vector (reduced, sums to 1)",
+          "approach": "sets up the LEFT system piP=pi plus the sum(pi)=1 normalization",
+          "rigor": "keeps exact rationals; checks components sum to 1; notes uniqueness needs irreducibility",
+          "communication": "reads pi as a long-run time-share, not the single most-likely state",
+          "speed": "reduces the 2-3 state system with no decimal drift"
+        }
+      },
+      "followUps": [
+        "From your pi, give a state's mean return time (Kac, 1/pi_i).",
+        "Is this chain periodic? If so does the step-n distribution still converge?",
+        "Nudge one transition up — which way does the busiest state's share move?"
+      ]
+    },
+    {
+      "id": "tmpl-multistep#clear-rainy-n2-c-r",
+      "tier": "hard",
+      "fingerprint": "tmpl-multistep:chain=weather-clear-rainy,from=0,n=2,to=1",
+      "template": {
+        "id": "tmpl-multistep",
+        "params": {
+          "chain": "weather-clear-rainy",
+          "n": 2,
+          "from": 0,
+          "to": 1
+        }
+      },
+      "prompt": "Two-state daily regime (clear->clear 3/5; rainy->rainy 7/10). Given it is **clear today**, what's the probability it is **rainy two days from now**? Build P, square it, and explain why this is not a single path's probability.",
+      "source": "GB §5.1 p.53 (path probability) · WEB Land of Oz (Grinstead & Snell Ch.11 Table 11.1; UC Davis dis6)",
+      "engineCheck": {
+        "module": "src/engine/markov.ts",
+        "calls": [
+          "matrixPower(CHAINS['weather-clear-rainy'].P, 2)[0][1]"
+        ],
+        "answer": "13/25",
+        "verified": true
+      },
+      "hidden": {
+        "answer": "13/25",
+        "approaches": [
+          "Form P^n by repeated squaring over the rationals and read entry (from,to).",
+          "Equivalently push e_from through P n times and read coordinate `to` — total probability, one step at a time."
+        ],
+        "wrongTurns": [
+          "multiply one most-likely path instead of summing all intermediate states",
+          "(P^n)_ij = (P_ij)^n — raise the entry, not the matrix",
+          "rows of P^n stop summing to 1",
+          "confuse the n-step transition with the stationary share"
+        ],
+        "hintLadder": [
+          "An n-step probability is the (0->1) entry of P raised to the n-th power for weather-clear-rainy, not a single path.",
+          "Multiply P by itself 2 times (repeated squaring is fine); the entry you want sums the probabilities of all length-2 paths from 0 to 1.",
+          "Read row 0, column 1 of that power and reduce; confirm the row still sums to one — raise the matrix, not the single entry."
+        ],
+        "rubric": {
+          "correctness": "matches the exact (from,to) entry of P^n",
+          "approach": "computes P^n (or pushes the row vector n steps) and reads the right entry",
+          "rigor": "sums over all intermediate states; entries stay exact-rational",
+          "communication": "explains Chapman-Kolmogorov as one-step total probability repeated",
+          "speed": "uses repeated squaring / one row push, not path enumeration"
+        }
+      },
+      "followUps": [
+        "Push n higher — what vector does this row approach, and why?",
+        "As n->infinity does the answer depend on the starting row? Tie it to pi.",
+        "Compute the same entry one step earlier and explain the change."
+      ]
+    },
+    {
+      "id": "tmpl-multistep#oz-n2-rain-rain",
+      "tier": "hard",
+      "fingerprint": "tmpl-multistep:chain=land-of-oz,from=0,n=2,to=0",
+      "template": {
+        "id": "tmpl-multistep",
+        "params": {
+          "chain": "land-of-oz",
+          "n": 2,
+          "from": 0,
+          "to": 0
+        }
+      },
+      "prompt": "Land of Oz (Rain/Nice/Snow). Given it **rains today**, probability it **rains again exactly two days later**. Compute via P^2 and explain why you must sum over the weather on the in-between day.",
+      "source": "GB §5.1 p.53 (path probability) · WEB Land of Oz (Grinstead & Snell Ch.11 Table 11.1; UC Davis dis6)",
+      "engineCheck": {
+        "module": "src/engine/markov.ts",
+        "calls": [
+          "matrixPower(CHAINS['land-of-oz'].P, 2)[0][0]"
+        ],
+        "answer": "7/16",
+        "verified": true
+      },
+      "hidden": {
+        "answer": "7/16",
+        "approaches": [
+          "Form P^n by repeated squaring over the rationals and read entry (from,to).",
+          "Equivalently push e_from through P n times and read coordinate `to` — total probability, one step at a time."
+        ],
+        "wrongTurns": [
+          "multiply one most-likely path instead of summing all intermediate states",
+          "(P^n)_ij = (P_ij)^n — raise the entry, not the matrix",
+          "rows of P^n stop summing to 1",
+          "confuse the n-step transition with the stationary share"
+        ],
+        "hintLadder": [
+          "An n-step probability is the (0->0) entry of P raised to the n-th power for land-of-oz, not a single path.",
+          "Multiply P by itself 2 times (repeated squaring is fine); the entry you want sums the probabilities of all length-2 paths from 0 to 0.",
+          "Read row 0, column 0 of that power and reduce; confirm the row still sums to one — raise the matrix, not the single entry."
+        ],
+        "rubric": {
+          "correctness": "matches the exact (from,to) entry of P^n",
+          "approach": "computes P^n (or pushes the row vector n steps) and reads the right entry",
+          "rigor": "sums over all intermediate states; entries stay exact-rational",
+          "communication": "explains Chapman-Kolmogorov as one-step total probability repeated",
+          "speed": "uses repeated squaring / one row push, not path enumeration"
+        }
+      },
+      "followUps": [
+        "Push n higher — what vector does this row approach, and why?",
+        "As n->infinity does the answer depend on the starting row? Tie it to pi.",
+        "Compute the same entry one step earlier and explain the change."
+      ]
+    },
+    {
+      "id": "tmpl-multistep#oz-n2-rain-snow",
+      "tier": "harder",
+      "fingerprint": "tmpl-multistep:chain=land-of-oz,from=0,n=2,to=2",
+      "template": {
+        "id": "tmpl-multistep",
+        "params": {
+          "chain": "land-of-oz",
+          "n": 2,
+          "from": 0,
+          "to": 2
+        }
+      },
+      "prompt": "Land of Oz: probability it **snows exactly two days after a rainy day**. Set up Chapman-Kolmogorov and explain why this 2-step probability is a sum over the intermediate state, not one path.",
+      "source": "GB §5.1 p.53 (path probability) · WEB Land of Oz (Grinstead & Snell Ch.11 Table 11.1; UC Davis dis6)",
+      "engineCheck": {
+        "module": "src/engine/markov.ts",
+        "calls": [
+          "matrixPower(CHAINS['land-of-oz'].P, 2)[0][2]"
+        ],
+        "answer": "3/8",
+        "verified": true
+      },
+      "hidden": {
+        "answer": "3/8",
+        "approaches": [
+          "Form P^n by repeated squaring over the rationals and read entry (from,to).",
+          "Equivalently push e_from through P n times and read coordinate `to` — total probability, one step at a time."
+        ],
+        "wrongTurns": [
+          "multiply one most-likely path instead of summing all intermediate states",
+          "(P^n)_ij = (P_ij)^n — raise the entry, not the matrix",
+          "rows of P^n stop summing to 1",
+          "confuse the n-step transition with the stationary share"
+        ],
+        "hintLadder": [
+          "An n-step probability is the (0->2) entry of P raised to the n-th power for land-of-oz, not a single path.",
+          "Multiply P by itself 2 times (repeated squaring is fine); the entry you want sums the probabilities of all length-2 paths from 0 to 2.",
+          "Read row 0, column 2 of that power and reduce; confirm the row still sums to one — raise the matrix, not the single entry."
+        ],
+        "rubric": {
+          "correctness": "matches the exact (from,to) entry of P^n",
+          "approach": "computes P^n (or pushes the row vector n steps) and reads the right entry",
+          "rigor": "sums over all intermediate states; entries stay exact-rational",
+          "communication": "explains Chapman-Kolmogorov as one-step total probability repeated",
+          "speed": "uses repeated squaring / one row push, not path enumeration"
+        }
+      },
+      "followUps": [
+        "Push n higher — what vector does this row approach, and why?",
+        "As n->infinity does the answer depend on the starting row? Tie it to pi.",
+        "Compute the same entry one step earlier and explain the change."
+      ]
+    },
+    {
+      "id": "tmpl-multistep#clear-rainy-n2-r-c",
+      "tier": "harder",
+      "fingerprint": "tmpl-multistep:chain=weather-clear-rainy,from=1,n=2,to=0",
+      "template": {
+        "id": "tmpl-multistep",
+        "params": {
+          "chain": "weather-clear-rainy",
+          "n": 2,
+          "from": 1,
+          "to": 0
+        }
+      },
+      "prompt": "Clear/rainy chain. Given **rainy today**, probability it is **clear two days later**. Compute (P^2) and contrast this entry with the long-run clear share — are they close, and should they be after only two steps?",
+      "source": "GB §5.1 p.53 (path probability) · WEB Land of Oz (Grinstead & Snell Ch.11 Table 11.1; UC Davis dis6)",
+      "engineCheck": {
+        "module": "src/engine/markov.ts",
+        "calls": [
+          "matrixPower(CHAINS['weather-clear-rainy'].P, 2)[1][0]"
+        ],
+        "answer": "39/100",
+        "verified": true
+      },
+      "hidden": {
+        "answer": "39/100",
+        "approaches": [
+          "Form P^n by repeated squaring over the rationals and read entry (from,to).",
+          "Equivalently push e_from through P n times and read coordinate `to` — total probability, one step at a time."
+        ],
+        "wrongTurns": [
+          "multiply one most-likely path instead of summing all intermediate states",
+          "(P^n)_ij = (P_ij)^n — raise the entry, not the matrix",
+          "rows of P^n stop summing to 1",
+          "confuse the n-step transition with the stationary share"
+        ],
+        "hintLadder": [
+          "An n-step probability is the (1->0) entry of P raised to the n-th power for weather-clear-rainy, not a single path.",
+          "Multiply P by itself 2 times (repeated squaring is fine); the entry you want sums the probabilities of all length-2 paths from 1 to 0.",
+          "Read row 1, column 0 of that power and reduce; confirm the row still sums to one — raise the matrix, not the single entry."
+        ],
+        "rubric": {
+          "correctness": "matches the exact (from,to) entry of P^n",
+          "approach": "computes P^n (or pushes the row vector n steps) and reads the right entry",
+          "rigor": "sums over all intermediate states; entries stay exact-rational",
+          "communication": "explains Chapman-Kolmogorov as one-step total probability repeated",
+          "speed": "uses repeated squaring / one row push, not path enumeration"
+        }
+      },
+      "followUps": [
+        "Push n higher — what vector does this row approach, and why?",
+        "As n->infinity does the answer depend on the starting row? Tie it to pi.",
+        "Compute the same entry one step earlier and explain the change."
+      ]
+    },
+    {
+      "id": "tmpl-multistep#oz-n3-rain-snow",
+      "tier": "harder",
+      "fingerprint": "tmpl-multistep:chain=land-of-oz,from=0,n=3,to=2",
+      "template": {
+        "id": "tmpl-multistep",
+        "params": {
+          "chain": "land-of-oz",
+          "n": 3,
+          "from": 0,
+          "to": 2
+        }
+      },
+      "prompt": "Land of Oz: probability it **snows exactly three days after rain**. Compute P^3 and comment on how the Rain->Snow entry is moving relative to the n=2 value.",
+      "source": "GB §5.1 p.53 (path probability) · WEB Land of Oz (Grinstead & Snell Ch.11 Table 11.1; UC Davis dis6)",
+      "engineCheck": {
+        "module": "src/engine/markov.ts",
+        "calls": [
+          "matrixPower(CHAINS['land-of-oz'].P, 3)[0][2]"
+        ],
+        "answer": "25/64",
+        "verified": true
+      },
+      "hidden": {
+        "answer": "25/64",
+        "approaches": [
+          "Form P^n by repeated squaring over the rationals and read entry (from,to).",
+          "Equivalently push e_from through P n times and read coordinate `to` — total probability, one step at a time."
+        ],
+        "wrongTurns": [
+          "multiply one most-likely path instead of summing all intermediate states",
+          "(P^n)_ij = (P_ij)^n — raise the entry, not the matrix",
+          "rows of P^n stop summing to 1",
+          "confuse the n-step transition with the stationary share"
+        ],
+        "hintLadder": [
+          "An n-step probability is the (0->2) entry of P raised to the n-th power for land-of-oz, not a single path.",
+          "Multiply P by itself 3 times (repeated squaring is fine); the entry you want sums the probabilities of all length-3 paths from 0 to 2.",
+          "Read row 0, column 2 of that power and reduce; confirm the row still sums to one — raise the matrix, not the single entry."
+        ],
+        "rubric": {
+          "correctness": "matches the exact (from,to) entry of P^n",
+          "approach": "computes P^n (or pushes the row vector n steps) and reads the right entry",
+          "rigor": "sums over all intermediate states; entries stay exact-rational",
+          "communication": "explains Chapman-Kolmogorov as one-step total probability repeated",
+          "speed": "uses repeated squaring / one row push, not path enumeration"
+        }
+      },
+      "followUps": [
+        "Push n higher — what vector does this row approach, and why?",
+        "As n->infinity does the answer depend on the starting row? Tie it to pi.",
+        "Compute the same entry one step earlier and explain the change."
+      ]
+    },
+    {
+      "id": "tmpl-multistep#oz-n4-rain-snow",
+      "tier": "brutal",
+      "fingerprint": "tmpl-multistep:chain=land-of-oz,from=0,n=4,to=2",
+      "template": {
+        "id": "tmpl-multistep",
+        "params": {
+          "chain": "land-of-oz",
+          "n": 4,
+          "from": 0,
+          "to": 2
+        }
+      },
+      "prompt": "Land of Oz: probability it **snows exactly four days after rain**. Compute P^4, then compare with the long-run snow share and explain what convergence of P^n rows you're starting to see.",
+      "source": "GB §5.1 p.53 (path probability) · WEB Land of Oz (Grinstead & Snell Ch.11 Table 11.1; UC Davis dis6)",
+      "engineCheck": {
+        "module": "src/engine/markov.ts",
+        "calls": [
+          "matrixPower(CHAINS['land-of-oz'].P, 4)[0][2]"
+        ],
+        "answer": "51/128",
+        "verified": true
+      },
+      "hidden": {
+        "answer": "51/128",
+        "approaches": [
+          "Form P^n by repeated squaring over the rationals and read entry (from,to).",
+          "Equivalently push e_from through P n times and read coordinate `to` — total probability, one step at a time."
+        ],
+        "wrongTurns": [
+          "multiply one most-likely path instead of summing all intermediate states",
+          "(P^n)_ij = (P_ij)^n — raise the entry, not the matrix",
+          "rows of P^n stop summing to 1",
+          "confuse the n-step transition with the stationary share"
+        ],
+        "hintLadder": [
+          "An n-step probability is the (0->2) entry of P raised to the n-th power for land-of-oz, not a single path.",
+          "Multiply P by itself 4 times (repeated squaring is fine); the entry you want sums the probabilities of all length-4 paths from 0 to 2.",
+          "Read row 0, column 2 of that power and reduce; confirm the row still sums to one — raise the matrix, not the single entry."
+        ],
+        "rubric": {
+          "correctness": "matches the exact (from,to) entry of P^n",
+          "approach": "computes P^n (or pushes the row vector n steps) and reads the right entry",
+          "rigor": "sums over all intermediate states; entries stay exact-rational",
+          "communication": "explains Chapman-Kolmogorov as one-step total probability repeated",
+          "speed": "uses repeated squaring / one row push, not path enumeration"
+        }
+      },
+      "followUps": [
+        "Push n higher — what vector does this row approach, and why?",
+        "As n->infinity does the answer depend on the starting row? Tie it to pi.",
+        "Compute the same entry one step earlier and explain the change."
+      ]
+    },
+    {
+      "id": "tmpl-absorption#gambler-1to3",
+      "tier": "hard",
+      "fingerprint": "tmpl-absorption:chain=gambler-0to3-up2_3,start=1,target=3",
+      "template": {
+        "id": "tmpl-absorption",
+        "params": {
+          "chain": "gambler-0to3-up2_3",
+          "start": 1,
+          "target": 3
+        }
+      },
+      "prompt": "A gambler holding $1 plays a game with an **edge**: each round +$1 w.p. 2/3, -$1 w.p. 1/3, stopping at $0 (broke) or $3 (cash out). Build the chain and find P(cash out at $3 before going broke | start $1). Explain why the edge does not break first-step analysis and why the **start** changes the answer.",
+      "source": "GB §5.1 p.54-57 (gambler 4/7; dice 7/13; coin 1/8) · WEB drunkard i/N (Grinstead & Snell Ex.11.13-15)",
+      "engineCheck": {
+        "module": "src/engine/markov.ts",
+        "calls": [
+          "absorptionProbabilities(CHAINS['gambler-0to3-up2_3'].P, [0,3])[0][1]"
+        ],
+        "answer": "4/7",
+        "verified": true
+      },
+      "hidden": {
+        "answer": "4/7",
+        "approaches": [
+          "Set the asked target to 1 and every other absorbing state to 0; solve interior a_s = sum p_sc a_c for the start.",
+          "Matrix form B=(I-Q)^-1 R; read the start's row, asked-target's column."
+        ],
+        "wrongTurns": [
+          "absorption probability equals the expected absorption time (adds a +1)",
+          "the starting state does not change the split",
+          "a symmetric walk is 50/50 to either wall from anywhere",
+          "mis-map the event (read the two-7s column when asked for 12-first)"
+        ],
+        "hintLadder": [
+          "This is a 'which exit first' question — first-step analysis on gambler-0to3-up2_3 for absorption probabilities, not times (no +1 here).",
+          "Pin the asked absorbing state to one and every other absorbing state to zero, then write each transient state as the probability-weighted average of where it steps next.",
+          "Solve that interior system for the start state and reduce; map the asked event to the right target before reading — split only, never add a step."
+        ],
+        "rubric": {
+          "correctness": "matches the exact absorption probability for the named start and target",
+          "approach": "splits transient Q from absorbing R and solves (I-Q)B=R for the right column",
+          "rigor": "maps the WORD event to the correct absorbing state before solving; no spurious +1",
+          "communication": "explains why the start changes the split (boundary values 1/0)",
+          "speed": "solves the small system without rebuilding the whole fundamental matrix"
+        }
+      },
+      "followUps": [
+        "Now give the expected time to absorption from the same start — same fundamental matrix.",
+        "Bias the chain or move the start — which way does the split shift?",
+        "What is the probability of the OTHER exit, and why must the two sum to 1?"
+      ]
+    },
+    {
+      "id": "tmpl-absorption#drunkard-1to4",
+      "tier": "hard",
+      "fingerprint": "tmpl-absorption:chain=drunkard-0to4,start=1,target=4",
+      "template": {
+        "id": "tmpl-absorption",
+        "params": {
+          "chain": "drunkard-0to4",
+          "start": 1,
+          "target": 4
+        }
+      },
+      "prompt": "A token does a symmetric +/-1 walk on 0-4 with 0 and 4 absorbing. From state **1**, probability of absorption at 4 before 0. Build it and explain why 'each step is 1/2-1/2' does **not** mean the outcome is 50/50.",
+      "source": "GB §5.1 p.54-57 (gambler 4/7; dice 7/13; coin 1/8) · WEB drunkard i/N (Grinstead & Snell Ex.11.13-15)",
+      "engineCheck": {
+        "module": "src/engine/markov.ts",
+        "calls": [
+          "absorptionProbabilities(CHAINS['drunkard-0to4'].P, [0,4])[0][1]"
+        ],
+        "answer": "1/4",
+        "verified": true
+      },
+      "hidden": {
+        "answer": "1/4",
+        "approaches": [
+          "Set the asked target to 1 and every other absorbing state to 0; solve interior a_s = sum p_sc a_c for the start.",
+          "Matrix form B=(I-Q)^-1 R; read the start's row, asked-target's column."
+        ],
+        "wrongTurns": [
+          "absorption probability equals the expected absorption time (adds a +1)",
+          "the starting state does not change the split",
+          "a symmetric walk is 50/50 to either wall from anywhere",
+          "mis-map the event (read the two-7s column when asked for 12-first)"
+        ],
+        "hintLadder": [
+          "This is a 'which exit first' question — first-step analysis on drunkard-0to4 for absorption probabilities, not times (no +1 here).",
+          "Pin the asked absorbing state to one and every other absorbing state to zero, then write each transient state as the probability-weighted average of where it steps next.",
+          "Solve that interior system for the start state and reduce; map the asked event to the right target before reading — split only, never add a step."
+        ],
+        "rubric": {
+          "correctness": "matches the exact absorption probability for the named start and target",
+          "approach": "splits transient Q from absorbing R and solves (I-Q)B=R for the right column",
+          "rigor": "maps the WORD event to the correct absorbing state before solving; no spurious +1",
+          "communication": "explains why the start changes the split (boundary values 1/0)",
+          "speed": "solves the small system without rebuilding the whole fundamental matrix"
+        }
+      },
+      "followUps": [
+        "Now give the expected time to absorption from the same start — same fundamental matrix.",
+        "Bias the chain or move the start — which way does the split shift?",
+        "What is the probability of the OTHER exit, and why must the two sum to 1?"
+      ]
+    },
+    {
+      "id": "tmpl-absorption#gambler-2to3",
+      "tier": "harder",
+      "fingerprint": "tmpl-absorption:chain=gambler-0to3-up2_3,start=2,target=3",
+      "template": {
+        "id": "tmpl-absorption",
+        "params": {
+          "chain": "gambler-0to3-up2_3",
+          "start": 2,
+          "target": 3
+        }
+      },
+      "prompt": "Same edged gambler (+$1 w.p. 2/3) on $0-$3, but starting at **$2**. P(cash out at $3 first). Explain how moving one dollar up changed the split, and why this stays an exact rational.",
+      "source": "GB §5.1 p.54-57 (gambler 4/7; dice 7/13; coin 1/8) · WEB drunkard i/N (Grinstead & Snell Ex.11.13-15)",
+      "engineCheck": {
+        "module": "src/engine/markov.ts",
+        "calls": [
+          "absorptionProbabilities(CHAINS['gambler-0to3-up2_3'].P, [0,3])[1][1]"
+        ],
+        "answer": "6/7",
+        "verified": true
+      },
+      "hidden": {
+        "answer": "6/7",
+        "approaches": [
+          "Set the asked target to 1 and every other absorbing state to 0; solve interior a_s = sum p_sc a_c for the start.",
+          "Matrix form B=(I-Q)^-1 R; read the start's row, asked-target's column."
+        ],
+        "wrongTurns": [
+          "absorption probability equals the expected absorption time (adds a +1)",
+          "the starting state does not change the split",
+          "a symmetric walk is 50/50 to either wall from anywhere",
+          "mis-map the event (read the two-7s column when asked for 12-first)"
+        ],
+        "hintLadder": [
+          "This is a 'which exit first' question — first-step analysis on gambler-0to3-up2_3 for absorption probabilities, not times (no +1 here).",
+          "Pin the asked absorbing state to one and every other absorbing state to zero, then write each transient state as the probability-weighted average of where it steps next.",
+          "Solve that interior system for the start state and reduce; map the asked event to the right target before reading — split only, never add a step."
+        ],
+        "rubric": {
+          "correctness": "matches the exact absorption probability for the named start and target",
+          "approach": "splits transient Q from absorbing R and solves (I-Q)B=R for the right column",
+          "rigor": "maps the WORD event to the correct absorbing state before solving; no spurious +1",
+          "communication": "explains why the start changes the split (boundary values 1/0)",
+          "speed": "solves the small system without rebuilding the whole fundamental matrix"
+        }
+      },
+      "followUps": [
+        "Now give the expected time to absorption from the same start — same fundamental matrix.",
+        "Bias the chain or move the start — which way does the split shift?",
+        "What is the probability of the OTHER exit, and why must the two sum to 1?"
+      ]
+    },
+    {
+      "id": "tmpl-absorption#coin-thh-first",
+      "tier": "harder",
+      "fingerprint": "tmpl-absorption:chain=coin-hhh-thh,start=0,target=6",
+      "template": {
+        "id": "tmpl-absorption",
+        "params": {
+          "chain": "coin-hhh-thh",
+          "start": 0,
+          "target": 6
+        }
+      },
+      "prompt": "A fair coin is flipped until **HHH** or **THH** appears (whichever first). Build the combined pattern chain and find P(**THH** appears first). Explain the 'ambush' structure that makes THH so dominant.",
+      "source": "GB §5.1 p.54-57 (gambler 4/7; dice 7/13; coin 1/8) · WEB drunkard i/N (Grinstead & Snell Ex.11.13-15)",
+      "engineCheck": {
+        "module": "src/engine/markov.ts",
+        "calls": [
+          "absorptionProbabilities(CHAINS['coin-hhh-thh'].P, [5,6])[0][1]"
+        ],
+        "answer": "7/8",
+        "verified": true
+      },
+      "hidden": {
+        "answer": "7/8",
+        "approaches": [
+          "Set the asked target to 1 and every other absorbing state to 0; solve interior a_s = sum p_sc a_c for the start.",
+          "Matrix form B=(I-Q)^-1 R; read the start's row, asked-target's column."
+        ],
+        "wrongTurns": [
+          "absorption probability equals the expected absorption time (adds a +1)",
+          "the starting state does not change the split",
+          "a symmetric walk is 50/50 to either wall from anywhere",
+          "mis-map the event (read the two-7s column when asked for 12-first)"
+        ],
+        "hintLadder": [
+          "This is a 'which exit first' question — first-step analysis on coin-hhh-thh for absorption probabilities, not times (no +1 here).",
+          "Pin the asked absorbing state to one and every other absorbing state to zero, then write each transient state as the probability-weighted average of where it steps next.",
+          "Solve that interior system for the start state and reduce; map the asked event to the right target before reading — split only, never add a step."
+        ],
+        "rubric": {
+          "correctness": "matches the exact absorption probability for the named start and target",
+          "approach": "splits transient Q from absorbing R and solves (I-Q)B=R for the right column",
+          "rigor": "maps the WORD event to the correct absorbing state before solving; no spurious +1",
+          "communication": "explains why the start changes the split (boundary values 1/0)",
+          "speed": "solves the small system without rebuilding the whole fundamental matrix"
+        }
+      },
+      "followUps": [
+        "Now give the expected time to absorption from the same start — same fundamental matrix.",
+        "Bias the chain or move the start — which way does the split shift?",
+        "What is the probability of the OTHER exit, and why must the two sum to 1?"
+      ]
+    },
+    {
+      "id": "tmpl-absorption#dice-12-first",
+      "tier": "harder",
+      "fingerprint": "tmpl-absorption:chain=dice-12-vs-77,start=0,target=3",
+      "template": {
+        "id": "tmpl-absorption",
+        "params": {
+          "chain": "dice-12-vs-77",
+          "start": 0,
+          "target": 3
+        }
+      },
+      "prompt": "Two dice are summed each roll. One player wins if a **single 12** appears first, the other if **two consecutive 7s** appear first. Build the {S,7,77,12} chain (per-roll P(7)=1/6, P(12)=1/36) and find P(**single 12 first**). State precisely which absorbing state you're solving for.",
+      "source": "GB §5.1 p.54-57 (gambler 4/7; dice 7/13; coin 1/8) · WEB drunkard i/N (Grinstead & Snell Ex.11.13-15)",
+      "engineCheck": {
+        "module": "src/engine/markov.ts",
+        "calls": [
+          "absorptionProbabilities(CHAINS['dice-12-vs-77'].P, [2,3])[0][1]"
+        ],
+        "answer": "7/13",
+        "verified": true
+      },
+      "hidden": {
+        "answer": "7/13",
+        "approaches": [
+          "Set the asked target to 1 and every other absorbing state to 0; solve interior a_s = sum p_sc a_c for the start.",
+          "Matrix form B=(I-Q)^-1 R; read the start's row, asked-target's column."
+        ],
+        "wrongTurns": [
+          "absorption probability equals the expected absorption time (adds a +1)",
+          "the starting state does not change the split",
+          "a symmetric walk is 50/50 to either wall from anywhere",
+          "mis-map the event (read the two-7s column when asked for 12-first)"
+        ],
+        "hintLadder": [
+          "This is a 'which exit first' question — first-step analysis on dice-12-vs-77 for absorption probabilities, not times (no +1 here).",
+          "Pin the asked absorbing state to one and every other absorbing state to zero, then write each transient state as the probability-weighted average of where it steps next.",
+          "Solve that interior system for the start state and reduce; map the asked event to the right target before reading — split only, never add a step."
+        ],
+        "rubric": {
+          "correctness": "matches the exact absorption probability for the named start and target",
+          "approach": "splits transient Q from absorbing R and solves (I-Q)B=R for the right column",
+          "rigor": "maps the WORD event to the correct absorbing state before solving; no spurious +1",
+          "communication": "explains why the start changes the split (boundary values 1/0)",
+          "speed": "solves the small system without rebuilding the whole fundamental matrix"
+        }
+      },
+      "followUps": [
+        "Now give the expected time to absorption from the same start — same fundamental matrix.",
+        "Bias the chain or move the start — which way does the split shift?",
+        "What is the probability of the OTHER exit, and why must the two sum to 1?"
+      ]
+    },
+    {
+      "id": "tmpl-absorption#coin-hhh-first",
+      "tier": "brutal",
+      "fingerprint": "tmpl-absorption:chain=coin-hhh-thh,start=0,target=5",
+      "template": {
+        "id": "tmpl-absorption",
+        "params": {
+          "chain": "coin-hhh-thh",
+          "start": 0,
+          "target": 5
+        }
+      },
+      "prompt": "Same HHH-vs-THH race on a fair coin. Find P(**HHH** appears first) and explain why it is so much smaller than the THH probability — what is the **only** way HHH can win, and why does any tail doom it?",
+      "source": "GB §5.1 p.54-57 (gambler 4/7; dice 7/13; coin 1/8) · WEB drunkard i/N (Grinstead & Snell Ex.11.13-15)",
+      "engineCheck": {
+        "module": "src/engine/markov.ts",
+        "calls": [
+          "absorptionProbabilities(CHAINS['coin-hhh-thh'].P, [5,6])[0][0]"
+        ],
+        "answer": "1/8",
+        "verified": true
+      },
+      "hidden": {
+        "answer": "1/8",
+        "approaches": [
+          "Set the asked target to 1 and every other absorbing state to 0; solve interior a_s = sum p_sc a_c for the start.",
+          "Matrix form B=(I-Q)^-1 R; read the start's row, asked-target's column."
+        ],
+        "wrongTurns": [
+          "absorption probability equals the expected absorption time (adds a +1)",
+          "the starting state does not change the split",
+          "a symmetric walk is 50/50 to either wall from anywhere",
+          "mis-map the event (read the two-7s column when asked for 12-first)"
+        ],
+        "hintLadder": [
+          "This is a 'which exit first' question — first-step analysis on coin-hhh-thh for absorption probabilities, not times (no +1 here).",
+          "Pin the asked absorbing state to one and every other absorbing state to zero, then write each transient state as the probability-weighted average of where it steps next.",
+          "Solve that interior system for the start state and reduce; map the asked event to the right target before reading — split only, never add a step."
+        ],
+        "rubric": {
+          "correctness": "matches the exact absorption probability for the named start and target",
+          "approach": "splits transient Q from absorbing R and solves (I-Q)B=R for the right column",
+          "rigor": "maps the WORD event to the correct absorbing state before solving; no spurious +1",
+          "communication": "explains why the start changes the split (boundary values 1/0)",
+          "speed": "solves the small system without rebuilding the whole fundamental matrix"
+        }
+      },
+      "followUps": [
+        "Now give the expected time to absorption from the same start — same fundamental matrix.",
+        "Bias the chain or move the start — which way does the split shift?",
+        "What is the probability of the OTHER exit, and why must the two sum to 1?"
+      ]
+    },
+    {
+      "id": "tmpl-absorption#dice-77-first",
+      "tier": "brutal",
+      "fingerprint": "tmpl-absorption:chain=dice-12-vs-77,start=0,target=2",
+      "template": {
+        "id": "tmpl-absorption",
+        "params": {
+          "chain": "dice-12-vs-77",
+          "start": 0,
+          "target": 2
+        }
+      },
+      "prompt": "Same dice game. Find P(**two consecutive 7s first**). Be explicit that this is the complement event — name the absorbing state — and verify it against the single-12 probability.",
+      "source": "GB §5.1 p.54-57 (gambler 4/7; dice 7/13; coin 1/8) · WEB drunkard i/N (Grinstead & Snell Ex.11.13-15)",
+      "engineCheck": {
+        "module": "src/engine/markov.ts",
+        "calls": [
+          "absorptionProbabilities(CHAINS['dice-12-vs-77'].P, [2,3])[0][0]"
+        ],
+        "answer": "6/13",
+        "verified": true
+      },
+      "hidden": {
+        "answer": "6/13",
+        "approaches": [
+          "Set the asked target to 1 and every other absorbing state to 0; solve interior a_s = sum p_sc a_c for the start.",
+          "Matrix form B=(I-Q)^-1 R; read the start's row, asked-target's column."
+        ],
+        "wrongTurns": [
+          "absorption probability equals the expected absorption time (adds a +1)",
+          "the starting state does not change the split",
+          "a symmetric walk is 50/50 to either wall from anywhere",
+          "mis-map the event (read the two-7s column when asked for 12-first)"
+        ],
+        "hintLadder": [
+          "This is a 'which exit first' question — first-step analysis on dice-12-vs-77 for absorption probabilities, not times (no +1 here).",
+          "Pin the asked absorbing state to one and every other absorbing state to zero, then write each transient state as the probability-weighted average of where it steps next.",
+          "Solve that interior system for the start state and reduce; map the asked event to the right target before reading — split only, never add a step."
+        ],
+        "rubric": {
+          "correctness": "matches the exact absorption probability for the named start and target",
+          "approach": "splits transient Q from absorbing R and solves (I-Q)B=R for the right column",
+          "rigor": "maps the WORD event to the correct absorbing state before solving; no spurious +1",
+          "communication": "explains why the start changes the split (boundary values 1/0)",
+          "speed": "solves the small system without rebuilding the whole fundamental matrix"
+        }
+      },
+      "followUps": [
+        "Now give the expected time to absorption from the same start — same fundamental matrix.",
+        "Bias the chain or move the start — which way does the split shift?",
+        "What is the probability of the OTHER exit, and why must the two sum to 1?"
+      ]
+    },
+    {
+      "id": "tmpl-expected-absorption#drunkard-i2",
+      "tier": "hard",
+      "fingerprint": "tmpl-expected-absorption:chain=drunkard-0to4,start=2",
+      "template": {
+        "id": "tmpl-expected-absorption",
+        "params": {
+          "chain": "drunkard-0to4",
+          "start": 2
+        }
+      },
+      "prompt": "Symmetric +/-1 walk on 0-4 (ends absorbing). Expected number of steps until absorption, **starting at 2**. Build it and explain where the '+1 per step' comes from (and why a probability question wouldn't have it).",
+      "source": "GB §5.1 p.54 + §5.2 p.59-61 (E[THH]=8, E[HH]=6, E[HHH]=14) · WEB drunkard i(N-i) (Grinstead & Snell Ex.11.15)",
+      "engineCheck": {
+        "module": "src/engine/markov.ts",
+        "calls": [
+          "expectedAbsorptionTime(CHAINS['drunkard-0to4'].P, [0,4])[1]"
+        ],
+        "answer": "4",
+        "verified": true
+      },
+      "hidden": {
+        "answer": "4",
+        "approaches": [
+          "Write t_i = 1 + sum_j p_ij t_j (t=0 at absorbing) and solve (I-Q)t=1.",
+          "Fair symmetric walk: t_i = i(N-i); run-length wait: cross-check against 2^(n+1)-2."
+        ],
+        "wrongTurns": [
+          "drop the +1 (treat it like a probability split)",
+          "in a run-length chain a mismatch always resets to the empty start (it falls back to the longest still-valid prefix)",
+          "expected time and absorption probability are the same computation",
+          "expected time is symmetric in the start even under bias"
+        ],
+        "hintLadder": [
+          "This asks 'how long until absorbed', so every transient step carries a +1 — set up t_i = 1 + (probability-weighted successors) on drunkard-0to4.",
+          "One unknown per non-absorbing state, absorbing states zero; remember a failed step in a run-length chain falls back to the longest still-matching prefix, not always to the start.",
+          "Solve from the absorbing boundary backward; the whole count is the accumulated +1's — keep them, and don't count the first step twice."
+        ],
+        "rubric": {
+          "correctness": "matches the exact expected absorption time from the named start",
+          "approach": "solves t_i = 1 + sum p_ij t_j with t=0 at absorbing states",
+          "rigor": "keeps the +1 on every transient row; a run-length mismatch falls back, not always to the empty start",
+          "communication": "contrasts the +1 here with the no-+1 absorption split",
+          "speed": "solves the small system cleanly; no double-counting the first step"
+        }
+      },
+      "followUps": [
+        "Now give the absorption probability from the same start — drop the +1.",
+        "Bias the coin/walk — does the time rise or fall?",
+        "Generalize to a length-n run / N-step walk closed form."
+      ]
+    },
+    {
+      "id": "tmpl-expected-absorption#hh-wait",
+      "tier": "hard",
+      "fingerprint": "tmpl-expected-absorption:chain=hh-wait,start=0",
+      "template": {
+        "id": "tmpl-expected-absorption",
+        "params": {
+          "chain": "hh-wait",
+          "start": 0
+        }
+      },
+      "prompt": "Fair coin. Expected number of flips until **HH** first appears. Build the run-length chain {empty,H,HH} and explain why a tail seen right after a single head sends you back to the empty start — and why that reset lengthens the wait.",
+      "source": "GB §5.1 p.54 + §5.2 p.59-61 (E[THH]=8, E[HH]=6, E[HHH]=14) · WEB drunkard i(N-i) (Grinstead & Snell Ex.11.15)",
+      "engineCheck": {
+        "module": "src/engine/markov.ts",
+        "calls": [
+          "expectedAbsorptionTime(CHAINS['hh-wait'].P, [2])[0]"
+        ],
+        "answer": "6",
+        "verified": true
+      },
+      "hidden": {
+        "answer": "6",
+        "approaches": [
+          "Write t_i = 1 + sum_j p_ij t_j (t=0 at absorbing) and solve (I-Q)t=1.",
+          "Fair symmetric walk: t_i = i(N-i); run-length wait: cross-check against 2^(n+1)-2."
+        ],
+        "wrongTurns": [
+          "drop the +1 (treat it like a probability split)",
+          "in a run-length chain a mismatch always resets to the empty start (it falls back to the longest still-valid prefix)",
+          "expected time and absorption probability are the same computation",
+          "expected time is symmetric in the start even under bias"
+        ],
+        "hintLadder": [
+          "This asks 'how long until absorbed', so every transient step carries a +1 — set up t_i = 1 + (probability-weighted successors) on hh-wait.",
+          "One unknown per non-absorbing state, absorbing states zero; remember a failed step in a run-length chain falls back to the longest still-matching prefix, not always to the start.",
+          "Solve from the absorbing boundary backward; the whole count is the accumulated +1's — keep them, and don't count the first step twice."
+        ],
+        "rubric": {
+          "correctness": "matches the exact expected absorption time from the named start",
+          "approach": "solves t_i = 1 + sum p_ij t_j with t=0 at absorbing states",
+          "rigor": "keeps the +1 on every transient row; a run-length mismatch falls back, not always to the empty start",
+          "communication": "contrasts the +1 here with the no-+1 absorption split",
+          "speed": "solves the small system cleanly; no double-counting the first step"
+        }
+      },
+      "followUps": [
+        "Now give the absorption probability from the same start — drop the +1.",
+        "Bias the coin/walk — does the time rise or fall?",
+        "Generalize to a length-n run / N-step walk closed form."
+      ]
+    },
+    {
+      "id": "tmpl-expected-absorption#drunkard-i1",
+      "tier": "harder",
+      "fingerprint": "tmpl-expected-absorption:chain=drunkard-0to4,start=1",
+      "template": {
+        "id": "tmpl-expected-absorption",
+        "params": {
+          "chain": "drunkard-0to4",
+          "start": 1
+        }
+      },
+      "prompt": "Same symmetric walk on 0-4. Expected steps to absorption **from state 1**. Build it, give the value, and explain via symmetry why starting at 1 and starting at 3 take the same expected time.",
+      "source": "GB §5.1 p.54 + §5.2 p.59-61 (E[THH]=8, E[HH]=6, E[HHH]=14) · WEB drunkard i(N-i) (Grinstead & Snell Ex.11.15)",
+      "engineCheck": {
+        "module": "src/engine/markov.ts",
+        "calls": [
+          "expectedAbsorptionTime(CHAINS['drunkard-0to4'].P, [0,4])[0]"
+        ],
+        "answer": "3",
+        "verified": true
+      },
+      "hidden": {
+        "answer": "3",
+        "approaches": [
+          "Write t_i = 1 + sum_j p_ij t_j (t=0 at absorbing) and solve (I-Q)t=1.",
+          "Fair symmetric walk: t_i = i(N-i); run-length wait: cross-check against 2^(n+1)-2."
+        ],
+        "wrongTurns": [
+          "drop the +1 (treat it like a probability split)",
+          "in a run-length chain a mismatch always resets to the empty start (it falls back to the longest still-valid prefix)",
+          "expected time and absorption probability are the same computation",
+          "expected time is symmetric in the start even under bias"
+        ],
+        "hintLadder": [
+          "This asks 'how long until absorbed', so every transient step carries a +1 — set up t_i = 1 + (probability-weighted successors) on drunkard-0to4.",
+          "One unknown per non-absorbing state, absorbing states zero; remember a failed step in a run-length chain falls back to the longest still-matching prefix, not always to the start.",
+          "Solve from the absorbing boundary backward; the whole count is the accumulated +1's — keep them, and don't count the first step twice."
+        ],
+        "rubric": {
+          "correctness": "matches the exact expected absorption time from the named start",
+          "approach": "solves t_i = 1 + sum p_ij t_j with t=0 at absorbing states",
+          "rigor": "keeps the +1 on every transient row; a run-length mismatch falls back, not always to the empty start",
+          "communication": "contrasts the +1 here with the no-+1 absorption split",
+          "speed": "solves the small system cleanly; no double-counting the first step"
+        }
+      },
+      "followUps": [
+        "Now give the absorption probability from the same start — drop the +1.",
+        "Bias the coin/walk — does the time rise or fall?",
+        "Generalize to a length-n run / N-step walk closed form."
+      ]
+    },
+    {
+      "id": "tmpl-expected-absorption#thh-wait",
+      "tier": "harder",
+      "fingerprint": "tmpl-expected-absorption:chain=thh-wait,start=0",
+      "template": {
+        "id": "tmpl-expected-absorption",
+        "params": {
+          "chain": "thh-wait",
+          "start": 0
+        }
+      },
+      "prompt": "Fair coin. Expected flips until **THH**. Build {empty,T,TH,THH} and explain precisely why a mismatch from TH falls back to **T**, not to the empty start — and how that shortens the wait relative to HHH.",
+      "source": "GB §5.1 p.54 + §5.2 p.59-61 (E[THH]=8, E[HH]=6, E[HHH]=14) · WEB drunkard i(N-i) (Grinstead & Snell Ex.11.15)",
+      "engineCheck": {
+        "module": "src/engine/markov.ts",
+        "calls": [
+          "expectedAbsorptionTime(CHAINS['thh-wait'].P, [3])[0]"
+        ],
+        "answer": "8",
+        "verified": true
+      },
+      "hidden": {
+        "answer": "8",
+        "approaches": [
+          "Write t_i = 1 + sum_j p_ij t_j (t=0 at absorbing) and solve (I-Q)t=1.",
+          "Fair symmetric walk: t_i = i(N-i); run-length wait: cross-check against 2^(n+1)-2."
+        ],
+        "wrongTurns": [
+          "drop the +1 (treat it like a probability split)",
+          "in a run-length chain a mismatch always resets to the empty start (it falls back to the longest still-valid prefix)",
+          "expected time and absorption probability are the same computation",
+          "expected time is symmetric in the start even under bias"
+        ],
+        "hintLadder": [
+          "This asks 'how long until absorbed', so every transient step carries a +1 — set up t_i = 1 + (probability-weighted successors) on thh-wait.",
+          "One unknown per non-absorbing state, absorbing states zero; remember a failed step in a run-length chain falls back to the longest still-matching prefix, not always to the start.",
+          "Solve from the absorbing boundary backward; the whole count is the accumulated +1's — keep them, and don't count the first step twice."
+        ],
+        "rubric": {
+          "correctness": "matches the exact expected absorption time from the named start",
+          "approach": "solves t_i = 1 + sum p_ij t_j with t=0 at absorbing states",
+          "rigor": "keeps the +1 on every transient row; a run-length mismatch falls back, not always to the empty start",
+          "communication": "contrasts the +1 here with the no-+1 absorption split",
+          "speed": "solves the small system cleanly; no double-counting the first step"
+        }
+      },
+      "followUps": [
+        "Now give the absorption probability from the same start — drop the +1.",
+        "Bias the coin/walk — does the time rise or fall?",
+        "Generalize to a length-n run / N-step walk closed form."
+      ]
+    },
+    {
+      "id": "tmpl-expected-absorption#hhh-wait",
+      "tier": "brutal",
+      "fingerprint": "tmpl-expected-absorption:chain=hhh-wait,start=0",
+      "template": {
+        "id": "tmpl-expected-absorption",
+        "params": {
+          "chain": "hhh-wait",
+          "start": 0
+        }
+      },
+      "prompt": "Fair coin. Expected flips until **HHH**. Build {empty,H,HH,HHH} and explain why HHH waits so much longer than THH despite equal length — connect it to the self-overlap / reset structure.",
+      "source": "GB §5.1 p.54 + §5.2 p.59-61 (E[THH]=8, E[HH]=6, E[HHH]=14) · WEB drunkard i(N-i) (Grinstead & Snell Ex.11.15)",
+      "engineCheck": {
+        "module": "src/engine/markov.ts",
+        "calls": [
+          "expectedAbsorptionTime(CHAINS['hhh-wait'].P, [3])[0]"
+        ],
+        "answer": "14",
+        "verified": true
+      },
+      "hidden": {
+        "answer": "14",
+        "approaches": [
+          "Write t_i = 1 + sum_j p_ij t_j (t=0 at absorbing) and solve (I-Q)t=1.",
+          "Fair symmetric walk: t_i = i(N-i); run-length wait: cross-check against 2^(n+1)-2."
+        ],
+        "wrongTurns": [
+          "drop the +1 (treat it like a probability split)",
+          "in a run-length chain a mismatch always resets to the empty start (it falls back to the longest still-valid prefix)",
+          "expected time and absorption probability are the same computation",
+          "expected time is symmetric in the start even under bias"
+        ],
+        "hintLadder": [
+          "This asks 'how long until absorbed', so every transient step carries a +1 — set up t_i = 1 + (probability-weighted successors) on hhh-wait.",
+          "One unknown per non-absorbing state, absorbing states zero; remember a failed step in a run-length chain falls back to the longest still-matching prefix, not always to the start.",
+          "Solve from the absorbing boundary backward; the whole count is the accumulated +1's — keep them, and don't count the first step twice."
+        ],
+        "rubric": {
+          "correctness": "matches the exact expected absorption time from the named start",
+          "approach": "solves t_i = 1 + sum p_ij t_j with t=0 at absorbing states",
+          "rigor": "keeps the +1 on every transient row; a run-length mismatch falls back, not always to the empty start",
+          "communication": "contrasts the +1 here with the no-+1 absorption split",
+          "speed": "solves the small system cleanly; no double-counting the first step"
+        }
+      },
+      "followUps": [
+        "Now give the absorption probability from the same start — drop the +1.",
+        "Bias the coin/walk — does the time rise or fall?",
+        "Generalize to a length-n run / N-step walk closed form."
+      ]
+    },
+    {
+      "id": "tmpl-gamblers-ruin#N4-p1_2-i1-reach",
+      "tier": "hard",
+      "fingerprint": "tmpl-gamblers-ruin:N=4,i=1,pDen=2,pNum=1,query=reach",
+      "template": {
+        "id": "tmpl-gamblers-ruin",
+        "params": {
+          "N": 4,
+          "pNum": 1,
+          "pDen": 2,
+          "i": 1,
+          "query": "reach"
+        }
+      },
+      "prompt": "A market-maker's inventory does a **fair** +/-1 walk between a hard floor 0 and ceiling 4 (both force a stop). From inventory **1**, probability of hitting the ceiling 4 before the floor 0. Give the closed form and justify why reach is **linear** in the start.",
+      "source": "GB §5.1 p.54-55 + §5.2 p.59 (drunk-man 17/100, 1411) · WEB drunkard i/N & i(N-i) (Grinstead & Snell Ex.11.13-15)",
+      "engineCheck": {
+        "module": "src/engine/markov.ts",
+        "calls": [
+          "absorptionProbabilities(buildWalk(4,1,2),[0,4])[0][1]"
+        ],
+        "answer": "1/4",
+        "verified": true
+      },
+      "hidden": {
+        "answer": "1/4",
+        "approaches": [
+          "Reach: P_i = p*P_{i+1} + q*P_{i-1}, P_0=0, P_N=1 => fair i/N, biased (1-r^i)/(1-r^N), r=q/p.",
+          "Duration: D_i = 1 + p*D_{i+1} + q*D_{i-1}, D_0=D_N=0 => fair i(N-i)."
+        ],
+        "wrongTurns": [
+          "reach probability and expected duration are the same object",
+          "a fair game is 50/50 to win regardless of the starting stake",
+          "bias does not change the reach probability",
+          "duration is symmetric in the start even under bias"
+        ],
+        "hintLadder": [
+          "Set up a boundary-value problem on the 0-to-N walk: for a reach probability fix the bottom at zero and the top at one (no +1); for a duration fix both ends at zero with a +1 on every step.",
+          "Fair coin: reach is linear (i/N), duration is quadratic (i(N-i)). Biased coin: form the down/up ratio r=q/p and use reach=(1-r^i)/(1-r^N); the duration loses its left-right symmetry.",
+          "Substitute your start into the matching closed form (or solve the small system) and reduce — keep a reach a probability and a duration a step count; never swap one form for the other."
+        ],
+        "rubric": {
+          "correctness": "matches the exact reach or duration for (N,p,i)",
+          "approach": "boundary-value recurrence with correct boundaries (reach 0/1; duration 0/0 with +1)",
+          "rigor": "reach (probability) kept distinct from duration (steps); biased ratio r=q/p handled exactly",
+          "communication": "states the closed form and its boundary conditions",
+          "speed": "uses the closed form instead of re-deriving the system"
+        }
+      },
+      "followUps": [
+        "Generalize the fair formula to arbitrary N and start i.",
+        "Flip the bias (p->1-p) — what happens to reach and to duration?",
+        "Why is the fair duration quadratic in the start while reach is linear?"
+      ]
+    },
+    {
+      "id": "tmpl-gamblers-ruin#N4-p1_2-i2-duration",
+      "tier": "hard",
+      "fingerprint": "tmpl-gamblers-ruin:N=4,i=2,pDen=2,pNum=1,query=duration",
+      "template": {
+        "id": "tmpl-gamblers-ruin",
+        "params": {
+          "N": 4,
+          "pNum": 1,
+          "pDen": 2,
+          "i": 2,
+          "query": "duration"
+        }
+      },
+      "prompt": "Same fair inventory walk on 0-4. Expected number of steps until it stops, **from 2**. Contrast this with the reach probability — which carries a +1 and why?",
+      "source": "GB §5.1 p.54-55 + §5.2 p.59 (drunk-man 17/100, 1411) · WEB drunkard i/N & i(N-i) (Grinstead & Snell Ex.11.13-15)",
+      "engineCheck": {
+        "module": "src/engine/markov.ts",
+        "calls": [
+          "expectedAbsorptionTime(buildWalk(4,1,2),[0,4])[1]"
+        ],
+        "answer": "4",
+        "verified": true
+      },
+      "hidden": {
+        "answer": "4",
+        "approaches": [
+          "Reach: P_i = p*P_{i+1} + q*P_{i-1}, P_0=0, P_N=1 => fair i/N, biased (1-r^i)/(1-r^N), r=q/p.",
+          "Duration: D_i = 1 + p*D_{i+1} + q*D_{i-1}, D_0=D_N=0 => fair i(N-i)."
+        ],
+        "wrongTurns": [
+          "reach probability and expected duration are the same object",
+          "a fair game is 50/50 to win regardless of the starting stake",
+          "bias does not change the reach probability",
+          "duration is symmetric in the start even under bias"
+        ],
+        "hintLadder": [
+          "Set up a boundary-value problem on the 0-to-N walk: for a reach probability fix the bottom at zero and the top at one (no +1); for a duration fix both ends at zero with a +1 on every step.",
+          "Fair coin: reach is linear (i/N), duration is quadratic (i(N-i)). Biased coin: form the down/up ratio r=q/p and use reach=(1-r^i)/(1-r^N); the duration loses its left-right symmetry.",
+          "Substitute your start into the matching closed form (or solve the small system) and reduce — keep a reach a probability and a duration a step count; never swap one form for the other."
+        ],
+        "rubric": {
+          "correctness": "matches the exact reach or duration for (N,p,i)",
+          "approach": "boundary-value recurrence with correct boundaries (reach 0/1; duration 0/0 with +1)",
+          "rigor": "reach (probability) kept distinct from duration (steps); biased ratio r=q/p handled exactly",
+          "communication": "states the closed form and its boundary conditions",
+          "speed": "uses the closed form instead of re-deriving the system"
+        }
+      },
+      "followUps": [
+        "Generalize the fair formula to arbitrary N and start i.",
+        "Flip the bias (p->1-p) — what happens to reach and to duration?",
+        "Why is the fair duration quadratic in the start while reach is linear?"
+      ]
+    },
+    {
+      "id": "tmpl-gamblers-ruin#N6-p1_2-i3-reach",
+      "tier": "harder",
+      "fingerprint": "tmpl-gamblers-ruin:N=6,i=3,pDen=2,pNum=1,query=reach",
+      "template": {
+        "id": "tmpl-gamblers-ruin",
+        "params": {
+          "N": 6,
+          "pNum": 1,
+          "pDen": 2,
+          "i": 3,
+          "query": "reach"
+        }
+      },
+      "prompt": "Fair +/-1 walk on 0-6, start at the midpoint **3**. Probability of reaching 6 before 0. Show it from the closed form and explain why the midpoint of a fair walk is exactly even money.",
+      "source": "GB §5.1 p.54-55 + §5.2 p.59 (drunk-man 17/100, 1411) · WEB drunkard i/N & i(N-i) (Grinstead & Snell Ex.11.13-15)",
+      "engineCheck": {
+        "module": "src/engine/markov.ts",
+        "calls": [
+          "absorptionProbabilities(buildWalk(6,1,2),[0,6])[2][1]"
+        ],
+        "answer": "1/2",
+        "verified": true
+      },
+      "hidden": {
+        "answer": "1/2",
+        "approaches": [
+          "Reach: P_i = p*P_{i+1} + q*P_{i-1}, P_0=0, P_N=1 => fair i/N, biased (1-r^i)/(1-r^N), r=q/p.",
+          "Duration: D_i = 1 + p*D_{i+1} + q*D_{i-1}, D_0=D_N=0 => fair i(N-i)."
+        ],
+        "wrongTurns": [
+          "reach probability and expected duration are the same object",
+          "a fair game is 50/50 to win regardless of the starting stake",
+          "bias does not change the reach probability",
+          "duration is symmetric in the start even under bias"
+        ],
+        "hintLadder": [
+          "Set up a boundary-value problem on the 0-to-N walk: for a reach probability fix the bottom at zero and the top at one (no +1); for a duration fix both ends at zero with a +1 on every step.",
+          "Fair coin: reach is linear (i/N), duration is quadratic (i(N-i)). Biased coin: form the down/up ratio r=q/p and use reach=(1-r^i)/(1-r^N); the duration loses its left-right symmetry.",
+          "Substitute your start into the matching closed form (or solve the small system) and reduce — keep a reach a probability and a duration a step count; never swap one form for the other."
+        ],
+        "rubric": {
+          "correctness": "matches the exact reach or duration for (N,p,i)",
+          "approach": "boundary-value recurrence with correct boundaries (reach 0/1; duration 0/0 with +1)",
+          "rigor": "reach (probability) kept distinct from duration (steps); biased ratio r=q/p handled exactly",
+          "communication": "states the closed form and its boundary conditions",
+          "speed": "uses the closed form instead of re-deriving the system"
+        }
+      },
+      "followUps": [
+        "Generalize the fair formula to arbitrary N and start i.",
+        "Flip the bias (p->1-p) — what happens to reach and to duration?",
+        "Why is the fair duration quadratic in the start while reach is linear?"
+      ]
+    },
+    {
+      "id": "tmpl-gamblers-ruin#N5-p1_2-i2-duration",
+      "tier": "harder",
+      "fingerprint": "tmpl-gamblers-ruin:N=5,i=2,pDen=2,pNum=1,query=duration",
+      "template": {
+        "id": "tmpl-gamblers-ruin",
+        "params": {
+          "N": 5,
+          "pNum": 1,
+          "pDen": 2,
+          "i": 2,
+          "query": "duration"
+        }
+      },
+      "prompt": "Fair walk on 0-5, **start 2**. Expected steps to absorption. Use i(N-i) and explain why duration peaks in the middle of the board.",
+      "source": "GB §5.1 p.54-55 + §5.2 p.59 (drunk-man 17/100, 1411) · WEB drunkard i/N & i(N-i) (Grinstead & Snell Ex.11.13-15)",
+      "engineCheck": {
+        "module": "src/engine/markov.ts",
+        "calls": [
+          "expectedAbsorptionTime(buildWalk(5,1,2),[0,5])[1]"
+        ],
+        "answer": "6",
+        "verified": true
+      },
+      "hidden": {
+        "answer": "6",
+        "approaches": [
+          "Reach: P_i = p*P_{i+1} + q*P_{i-1}, P_0=0, P_N=1 => fair i/N, biased (1-r^i)/(1-r^N), r=q/p.",
+          "Duration: D_i = 1 + p*D_{i+1} + q*D_{i-1}, D_0=D_N=0 => fair i(N-i)."
+        ],
+        "wrongTurns": [
+          "reach probability and expected duration are the same object",
+          "a fair game is 50/50 to win regardless of the starting stake",
+          "bias does not change the reach probability",
+          "duration is symmetric in the start even under bias"
+        ],
+        "hintLadder": [
+          "Set up a boundary-value problem on the 0-to-N walk: for a reach probability fix the bottom at zero and the top at one (no +1); for a duration fix both ends at zero with a +1 on every step.",
+          "Fair coin: reach is linear (i/N), duration is quadratic (i(N-i)). Biased coin: form the down/up ratio r=q/p and use reach=(1-r^i)/(1-r^N); the duration loses its left-right symmetry.",
+          "Substitute your start into the matching closed form (or solve the small system) and reduce — keep a reach a probability and a duration a step count; never swap one form for the other."
+        ],
+        "rubric": {
+          "correctness": "matches the exact reach or duration for (N,p,i)",
+          "approach": "boundary-value recurrence with correct boundaries (reach 0/1; duration 0/0 with +1)",
+          "rigor": "reach (probability) kept distinct from duration (steps); biased ratio r=q/p handled exactly",
+          "communication": "states the closed form and its boundary conditions",
+          "speed": "uses the closed form instead of re-deriving the system"
+        }
+      },
+      "followUps": [
+        "Generalize the fair formula to arbitrary N and start i.",
+        "Flip the bias (p->1-p) — what happens to reach and to duration?",
+        "Why is the fair duration quadratic in the start while reach is linear?"
+      ]
+    },
+    {
+      "id": "tmpl-gamblers-ruin#N10-p1_2-i5-duration",
+      "tier": "harder",
+      "fingerprint": "tmpl-gamblers-ruin:N=10,i=5,pDen=2,pNum=1,query=duration",
+      "template": {
+        "id": "tmpl-gamblers-ruin",
+        "params": {
+          "N": 10,
+          "pNum": 1,
+          "pDen": 2,
+          "i": 5,
+          "query": "duration"
+        }
+      },
+      "prompt": "Fair walk on 0-10, **start at the middle 5**. Expected steps to absorption. Why is the duration quadratic in the start, so a wider board costs disproportionately more time?",
+      "source": "GB §5.1 p.54-55 + §5.2 p.59 (drunk-man 17/100, 1411) · WEB drunkard i/N & i(N-i) (Grinstead & Snell Ex.11.13-15)",
+      "engineCheck": {
+        "module": "src/engine/markov.ts",
+        "calls": [
+          "expectedAbsorptionTime(buildWalk(10,1,2),[0,10])[4]"
+        ],
+        "answer": "25",
+        "verified": true
+      },
+      "hidden": {
+        "answer": "25",
+        "approaches": [
+          "Reach: P_i = p*P_{i+1} + q*P_{i-1}, P_0=0, P_N=1 => fair i/N, biased (1-r^i)/(1-r^N), r=q/p.",
+          "Duration: D_i = 1 + p*D_{i+1} + q*D_{i-1}, D_0=D_N=0 => fair i(N-i)."
+        ],
+        "wrongTurns": [
+          "reach probability and expected duration are the same object",
+          "a fair game is 50/50 to win regardless of the starting stake",
+          "bias does not change the reach probability",
+          "duration is symmetric in the start even under bias"
+        ],
+        "hintLadder": [
+          "Set up a boundary-value problem on the 0-to-N walk: for a reach probability fix the bottom at zero and the top at one (no +1); for a duration fix both ends at zero with a +1 on every step.",
+          "Fair coin: reach is linear (i/N), duration is quadratic (i(N-i)). Biased coin: form the down/up ratio r=q/p and use reach=(1-r^i)/(1-r^N); the duration loses its left-right symmetry.",
+          "Substitute your start into the matching closed form (or solve the small system) and reduce — keep a reach a probability and a duration a step count; never swap one form for the other."
+        ],
+        "rubric": {
+          "correctness": "matches the exact reach or duration for (N,p,i)",
+          "approach": "boundary-value recurrence with correct boundaries (reach 0/1; duration 0/0 with +1)",
+          "rigor": "reach (probability) kept distinct from duration (steps); biased ratio r=q/p handled exactly",
+          "communication": "states the closed form and its boundary conditions",
+          "speed": "uses the closed form instead of re-deriving the system"
+        }
+      },
+      "followUps": [
+        "Generalize the fair formula to arbitrary N and start i.",
+        "Flip the bias (p->1-p) — what happens to reach and to duration?",
+        "Why is the fair duration quadratic in the start while reach is linear?"
+      ]
+    },
+    {
+      "id": "tmpl-gamblers-ruin#N4-p1_3-i2-reach",
+      "tier": "harder",
+      "fingerprint": "tmpl-gamblers-ruin:N=4,i=2,pDen=3,pNum=1,query=reach",
+      "template": {
+        "id": "tmpl-gamblers-ruin",
+        "params": {
+          "N": 4,
+          "pNum": 1,
+          "pDen": 3,
+          "i": 2,
+          "query": "reach"
+        }
+      },
+      "prompt": "A **losing** game: +1 w.p. 1/3, -1 w.p. 2/3, barriers 0 and 4, start **2**. Probability of reaching 4 first. Show how the bias enters through r=q/p and how it collapses an even-money midpoint.",
+      "source": "GB §5.1 p.54-55 + §5.2 p.59 (drunk-man 17/100, 1411) · WEB drunkard i/N & i(N-i) (Grinstead & Snell Ex.11.13-15)",
+      "engineCheck": {
+        "module": "src/engine/markov.ts",
+        "calls": [
+          "absorptionProbabilities(buildWalk(4,1,3),[0,4])[1][1]"
+        ],
+        "answer": "1/5",
+        "verified": true
+      },
+      "hidden": {
+        "answer": "1/5",
+        "approaches": [
+          "Reach: P_i = p*P_{i+1} + q*P_{i-1}, P_0=0, P_N=1 => fair i/N, biased (1-r^i)/(1-r^N), r=q/p.",
+          "Duration: D_i = 1 + p*D_{i+1} + q*D_{i-1}, D_0=D_N=0 => fair i(N-i)."
+        ],
+        "wrongTurns": [
+          "reach probability and expected duration are the same object",
+          "a fair game is 50/50 to win regardless of the starting stake",
+          "bias does not change the reach probability",
+          "duration is symmetric in the start even under bias"
+        ],
+        "hintLadder": [
+          "Set up a boundary-value problem on the 0-to-N walk: for a reach probability fix the bottom at zero and the top at one (no +1); for a duration fix both ends at zero with a +1 on every step.",
+          "Fair coin: reach is linear (i/N), duration is quadratic (i(N-i)). Biased coin: form the down/up ratio r=q/p and use reach=(1-r^i)/(1-r^N); the duration loses its left-right symmetry.",
+          "Substitute your start into the matching closed form (or solve the small system) and reduce — keep a reach a probability and a duration a step count; never swap one form for the other."
+        ],
+        "rubric": {
+          "correctness": "matches the exact reach or duration for (N,p,i)",
+          "approach": "boundary-value recurrence with correct boundaries (reach 0/1; duration 0/0 with +1)",
+          "rigor": "reach (probability) kept distinct from duration (steps); biased ratio r=q/p handled exactly",
+          "communication": "states the closed form and its boundary conditions",
+          "speed": "uses the closed form instead of re-deriving the system"
+        }
+      },
+      "followUps": [
+        "Generalize the fair formula to arbitrary N and start i.",
+        "Flip the bias (p->1-p) — what happens to reach and to duration?",
+        "Why is the fair duration quadratic in the start while reach is linear?"
+      ]
+    },
+    {
+      "id": "tmpl-gamblers-ruin#N4-p2_5-i2-reach",
+      "tier": "brutal",
+      "fingerprint": "tmpl-gamblers-ruin:N=4,i=2,pDen=5,pNum=2,query=reach",
+      "template": {
+        "id": "tmpl-gamblers-ruin",
+        "params": {
+          "N": 4,
+          "pNum": 2,
+          "pDen": 5,
+          "i": 2,
+          "query": "reach"
+        }
+      },
+      "prompt": "Edge against you: +1 w.p. **2/5**, barriers 0 and 4, start **2**. Reach 4 first? Keep it an exact rational and locate the 13 in the (1-r^4) denominator.",
+      "source": "GB §5.1 p.54-55 + §5.2 p.59 (drunk-man 17/100, 1411) · WEB drunkard i/N & i(N-i) (Grinstead & Snell Ex.11.13-15)",
+      "engineCheck": {
+        "module": "src/engine/markov.ts",
+        "calls": [
+          "absorptionProbabilities(buildWalk(4,2,5),[0,4])[1][1]"
+        ],
+        "answer": "4/13",
+        "verified": true
+      },
+      "hidden": {
+        "answer": "4/13",
+        "approaches": [
+          "Reach: P_i = p*P_{i+1} + q*P_{i-1}, P_0=0, P_N=1 => fair i/N, biased (1-r^i)/(1-r^N), r=q/p.",
+          "Duration: D_i = 1 + p*D_{i+1} + q*D_{i-1}, D_0=D_N=0 => fair i(N-i)."
+        ],
+        "wrongTurns": [
+          "reach probability and expected duration are the same object",
+          "a fair game is 50/50 to win regardless of the starting stake",
+          "bias does not change the reach probability",
+          "duration is symmetric in the start even under bias"
+        ],
+        "hintLadder": [
+          "Set up a boundary-value problem on the 0-to-N walk: for a reach probability fix the bottom at zero and the top at one (no +1); for a duration fix both ends at zero with a +1 on every step.",
+          "Fair coin: reach is linear (i/N), duration is quadratic (i(N-i)). Biased coin: form the down/up ratio r=q/p and use reach=(1-r^i)/(1-r^N); the duration loses its left-right symmetry.",
+          "Substitute your start into the matching closed form (or solve the small system) and reduce — keep a reach a probability and a duration a step count; never swap one form for the other."
+        ],
+        "rubric": {
+          "correctness": "matches the exact reach or duration for (N,p,i)",
+          "approach": "boundary-value recurrence with correct boundaries (reach 0/1; duration 0/0 with +1)",
+          "rigor": "reach (probability) kept distinct from duration (steps); biased ratio r=q/p handled exactly",
+          "communication": "states the closed form and its boundary conditions",
+          "speed": "uses the closed form instead of re-deriving the system"
+        }
+      },
+      "followUps": [
+        "Generalize the fair formula to arbitrary N and start i.",
+        "Flip the bias (p->1-p) — what happens to reach and to duration?",
+        "Why is the fair duration quadratic in the start while reach is linear?"
+      ]
+    },
+    {
+      "id": "tmpl-gamblers-ruin#N4-p2_5-i2-duration",
+      "tier": "brutal",
+      "fingerprint": "tmpl-gamblers-ruin:N=4,i=2,pDen=5,pNum=2,query=duration",
+      "template": {
+        "id": "tmpl-gamblers-ruin",
+        "params": {
+          "N": 4,
+          "pNum": 2,
+          "pDen": 5,
+          "i": 2,
+          "query": "duration"
+        }
+      },
+      "prompt": "Same biased walk (p=2/5) on 0-4, **start 2**. Expected steps to absorption — an ugly rational. Explain why a biased duration is **not** symmetric in the start, unlike the fair case.",
+      "source": "GB §5.1 p.54-55 + §5.2 p.59 (drunk-man 17/100, 1411) · WEB drunkard i/N & i(N-i) (Grinstead & Snell Ex.11.13-15)",
+      "engineCheck": {
+        "module": "src/engine/markov.ts",
+        "calls": [
+          "expectedAbsorptionTime(buildWalk(4,2,5),[0,4])[1]"
+        ],
+        "answer": "50/13",
+        "verified": true
+      },
+      "hidden": {
+        "answer": "50/13",
+        "approaches": [
+          "Reach: P_i = p*P_{i+1} + q*P_{i-1}, P_0=0, P_N=1 => fair i/N, biased (1-r^i)/(1-r^N), r=q/p.",
+          "Duration: D_i = 1 + p*D_{i+1} + q*D_{i-1}, D_0=D_N=0 => fair i(N-i)."
+        ],
+        "wrongTurns": [
+          "reach probability and expected duration are the same object",
+          "a fair game is 50/50 to win regardless of the starting stake",
+          "bias does not change the reach probability",
+          "duration is symmetric in the start even under bias"
+        ],
+        "hintLadder": [
+          "Set up a boundary-value problem on the 0-to-N walk: for a reach probability fix the bottom at zero and the top at one (no +1); for a duration fix both ends at zero with a +1 on every step.",
+          "Fair coin: reach is linear (i/N), duration is quadratic (i(N-i)). Biased coin: form the down/up ratio r=q/p and use reach=(1-r^i)/(1-r^N); the duration loses its left-right symmetry.",
+          "Substitute your start into the matching closed form (or solve the small system) and reduce — keep a reach a probability and a duration a step count; never swap one form for the other."
+        ],
+        "rubric": {
+          "correctness": "matches the exact reach or duration for (N,p,i)",
+          "approach": "boundary-value recurrence with correct boundaries (reach 0/1; duration 0/0 with +1)",
+          "rigor": "reach (probability) kept distinct from duration (steps); biased ratio r=q/p handled exactly",
+          "communication": "states the closed form and its boundary conditions",
+          "speed": "uses the closed form instead of re-deriving the system"
+        }
+      },
+      "followUps": [
+        "Generalize the fair formula to arbitrary N and start i.",
+        "Flip the bias (p->1-p) — what happens to reach and to duration?",
+        "Why is the fair duration quadratic in the start while reach is linear?"
+      ]
+    },
+    {
+      "id": "tmpl-gamblers-ruin#N5-p2_3-i3-reach",
+      "tier": "brutal",
+      "fingerprint": "tmpl-gamblers-ruin:N=5,i=3,pDen=3,pNum=2,query=reach",
+      "template": {
+        "id": "tmpl-gamblers-ruin",
+        "params": {
+          "N": 5,
+          "pNum": 2,
+          "pDen": 3,
+          "i": 3,
+          "query": "reach"
+        }
+      },
+      "prompt": "Edge **for** you: +1 w.p. **2/3**, barriers 0 and 5, start **3**. Probability of reaching 5 first. Show the biased closed form and explain why a positive edge pushes reach well above 3/5.",
+      "source": "GB §5.1 p.54-55 + §5.2 p.59 (drunk-man 17/100, 1411) · WEB drunkard i/N & i(N-i) (Grinstead & Snell Ex.11.13-15)",
+      "engineCheck": {
+        "module": "src/engine/markov.ts",
+        "calls": [
+          "absorptionProbabilities(buildWalk(5,2,3),[0,5])[2][1]"
+        ],
+        "answer": "28/31",
+        "verified": true
+      },
+      "hidden": {
+        "answer": "28/31",
+        "approaches": [
+          "Reach: P_i = p*P_{i+1} + q*P_{i-1}, P_0=0, P_N=1 => fair i/N, biased (1-r^i)/(1-r^N), r=q/p.",
+          "Duration: D_i = 1 + p*D_{i+1} + q*D_{i-1}, D_0=D_N=0 => fair i(N-i)."
+        ],
+        "wrongTurns": [
+          "reach probability and expected duration are the same object",
+          "a fair game is 50/50 to win regardless of the starting stake",
+          "bias does not change the reach probability",
+          "duration is symmetric in the start even under bias"
+        ],
+        "hintLadder": [
+          "Set up a boundary-value problem on the 0-to-N walk: for a reach probability fix the bottom at zero and the top at one (no +1); for a duration fix both ends at zero with a +1 on every step.",
+          "Fair coin: reach is linear (i/N), duration is quadratic (i(N-i)). Biased coin: form the down/up ratio r=q/p and use reach=(1-r^i)/(1-r^N); the duration loses its left-right symmetry.",
+          "Substitute your start into the matching closed form (or solve the small system) and reduce — keep a reach a probability and a duration a step count; never swap one form for the other."
+        ],
+        "rubric": {
+          "correctness": "matches the exact reach or duration for (N,p,i)",
+          "approach": "boundary-value recurrence with correct boundaries (reach 0/1; duration 0/0 with +1)",
+          "rigor": "reach (probability) kept distinct from duration (steps); biased ratio r=q/p handled exactly",
+          "communication": "states the closed form and its boundary conditions",
+          "speed": "uses the closed form instead of re-deriving the system"
+        }
+      },
+      "followUps": [
+        "Generalize the fair formula to arbitrary N and start i.",
+        "Flip the bias (p->1-p) — what happens to reach and to duration?",
+        "Why is the fair duration quadratic in the start while reach is linear?"
+      ]
+    },
+    {
+      "id": "tmpl-gamblers-ruin#N6-p1_3-i4-reach",
+      "tier": "brutal",
+      "fingerprint": "tmpl-gamblers-ruin:N=6,i=4,pDen=3,pNum=1,query=reach",
+      "template": {
+        "id": "tmpl-gamblers-ruin",
+        "params": {
+          "N": 6,
+          "pNum": 1,
+          "pDen": 3,
+          "i": 4,
+          "query": "reach"
+        }
+      },
+      "prompt": "Edge against you: +1 w.p. **1/3**, barriers 0 and 6, start **4**. Reach 6 first? Note how even a high starting stake can't rescue reach against a persistent negative drift — quantify it exactly.",
+      "source": "GB §5.1 p.54-55 + §5.2 p.59 (drunk-man 17/100, 1411) · WEB drunkard i/N & i(N-i) (Grinstead & Snell Ex.11.13-15)",
+      "engineCheck": {
+        "module": "src/engine/markov.ts",
+        "calls": [
+          "absorptionProbabilities(buildWalk(6,1,3),[0,6])[3][1]"
+        ],
+        "answer": "5/21",
+        "verified": true
+      },
+      "hidden": {
+        "answer": "5/21",
+        "approaches": [
+          "Reach: P_i = p*P_{i+1} + q*P_{i-1}, P_0=0, P_N=1 => fair i/N, biased (1-r^i)/(1-r^N), r=q/p.",
+          "Duration: D_i = 1 + p*D_{i+1} + q*D_{i-1}, D_0=D_N=0 => fair i(N-i)."
+        ],
+        "wrongTurns": [
+          "reach probability and expected duration are the same object",
+          "a fair game is 50/50 to win regardless of the starting stake",
+          "bias does not change the reach probability",
+          "duration is symmetric in the start even under bias"
+        ],
+        "hintLadder": [
+          "Set up a boundary-value problem on the 0-to-N walk: for a reach probability fix the bottom at zero and the top at one (no +1); for a duration fix both ends at zero with a +1 on every step.",
+          "Fair coin: reach is linear (i/N), duration is quadratic (i(N-i)). Biased coin: form the down/up ratio r=q/p and use reach=(1-r^i)/(1-r^N); the duration loses its left-right symmetry.",
+          "Substitute your start into the matching closed form (or solve the small system) and reduce — keep a reach a probability and a duration a step count; never swap one form for the other."
+        ],
+        "rubric": {
+          "correctness": "matches the exact reach or duration for (N,p,i)",
+          "approach": "boundary-value recurrence with correct boundaries (reach 0/1; duration 0/0 with +1)",
+          "rigor": "reach (probability) kept distinct from duration (steps); biased ratio r=q/p handled exactly",
+          "communication": "states the closed form and its boundary conditions",
+          "speed": "uses the closed form instead of re-deriving the system"
+        }
+      },
+      "followUps": [
+        "Generalize the fair formula to arbitrary N and start i.",
+        "Flip the bias (p->1-p) — what happens to reach and to duration?",
+        "Why is the fair duration quadratic in the start while reach is linear?"
+      ]
+    },
+    {
+      "id": "tmpl-detailed-balance#weather-half-3q",
+      "tier": "hard",
+      "fingerprint": "tmpl-detailed-balance:chain=weather-half-3q",
+      "template": {
+        "id": "tmpl-detailed-balance",
+        "params": {
+          "chain": "weather-half-3q"
+        }
+      },
+      "prompt": "Two-state chain: A->A 1/2, B->B 3/4. **Without** solving the full eigen-system, use detailed balance to get the stationary vector in one line — and explain why **every** irreducible 2-state chain is automatically reversible.",
+      "source": "WEB (absent from GB): Ehrenfest stats.libretexts 16.8 · phys.libretexts 12.3",
+      "engineCheck": {
+        "module": "src/engine/markov.ts",
+        "calls": [
+          "detailedBalance(CHAINS['weather-half-3q'].P).pi"
+        ],
+        "answer": "1/3,2/3",
+        "verified": true
+      },
+      "hidden": {
+        "answer": "1/3,2/3",
+        "approaches": [
+          "Chain pi_{i+1} = pi_i * p_{i,i+1}/p_{i+1,i} from one end, then normalize sum(pi)=1 (telescopes to the binomial for Ehrenfest).",
+          "2-state: detailed balance is automatic; pi=(b/(a+b), a/(a+b))."
+        ],
+        "wrongTurns": [
+          "every chain is reversible / detailed balance always holds",
+          "you must solve the full piP=pi system; the balance shortcut is not allowed",
+          "detailed balance is identical to global balance piP=pi (it is strictly stronger)",
+          "forget to normalize the telescoped ratios to sum to 1"
+        ],
+        "hintLadder": [
+          "This chain is reversible, so skip the full solve: use detailed balance, pi_i*p_ij = pi_j*p_ji, on weather-half-3q.",
+          "Walk the balance equation along the birth-death ladder, expressing each state's share as a multiple of its neighbor's via the up/down probability ratio.",
+          "Telescope those ratios from one end and normalize so the shares sum to one — read off the (binomial) pattern rather than naming the entries."
+        ],
+        "rubric": {
+          "correctness": "matches the exact stationary vector of the reversible chain",
+          "approach": "uses detailed balance along the birth-death ladder, then normalizes",
+          "rigor": "confirms reversibility before using the shortcut; exact rationals",
+          "communication": "explains why detailed balance => stationary (flows cancel edge-by-edge)",
+          "speed": "telescopes the ladder rather than solving the full eigen-system"
+        }
+      },
+      "followUps": [
+        "Confirm your pi also satisfies global balance piP=pi.",
+        "Is the chain periodic? If so does P^n converge even though pi exists?",
+        "Generalize Ehrenfest to m balls (binomial C(m,i)/2^m)."
+      ]
+    },
+    {
+      "id": "tmpl-detailed-balance#ehrenfest-2",
+      "tier": "harder",
+      "fingerprint": "tmpl-detailed-balance:chain=ehrenfest-2",
+      "template": {
+        "id": "tmpl-detailed-balance",
+        "params": {
+          "chain": "ehrenfest-2"
+        }
+      },
+      "prompt": "Two balls, two urns; each tick move one random ball to the other urn. Using detailed balance **along the birth-death ladder** (not the full solve), give the long-run share of 0/1/2 balls in the left urn. Why is detailed balance guaranteed for any birth-death chain?",
+      "source": "WEB (absent from GB): Ehrenfest stats.libretexts 16.8 · phys.libretexts 12.3",
+      "engineCheck": {
+        "module": "src/engine/markov.ts",
+        "calls": [
+          "detailedBalance(CHAINS['ehrenfest-2'].P).pi"
+        ],
+        "answer": "1/4,1/2,1/4",
+        "verified": true
+      },
+      "hidden": {
+        "answer": "1/4,1/2,1/4",
+        "approaches": [
+          "Chain pi_{i+1} = pi_i * p_{i,i+1}/p_{i+1,i} from one end, then normalize sum(pi)=1 (telescopes to the binomial for Ehrenfest).",
+          "2-state: detailed balance is automatic; pi=(b/(a+b), a/(a+b))."
+        ],
+        "wrongTurns": [
+          "every chain is reversible / detailed balance always holds",
+          "you must solve the full piP=pi system; the balance shortcut is not allowed",
+          "detailed balance is identical to global balance piP=pi (it is strictly stronger)",
+          "forget to normalize the telescoped ratios to sum to 1"
+        ],
+        "hintLadder": [
+          "This chain is reversible, so skip the full solve: use detailed balance, pi_i*p_ij = pi_j*p_ji, on ehrenfest-2.",
+          "Walk the balance equation along the birth-death ladder, expressing each state's share as a multiple of its neighbor's via the up/down probability ratio.",
+          "Telescope those ratios from one end and normalize so the shares sum to one — read off the (binomial) pattern rather than naming the entries."
+        ],
+        "rubric": {
+          "correctness": "matches the exact stationary vector of the reversible chain",
+          "approach": "uses detailed balance along the birth-death ladder, then normalizes",
+          "rigor": "confirms reversibility before using the shortcut; exact rationals",
+          "communication": "explains why detailed balance => stationary (flows cancel edge-by-edge)",
+          "speed": "telescopes the ladder rather than solving the full eigen-system"
+        }
+      },
+      "followUps": [
+        "Confirm your pi also satisfies global balance piP=pi.",
+        "Is the chain periodic? If so does P^n converge even though pi exists?",
+        "Generalize Ehrenfest to m balls (binomial C(m,i)/2^m)."
+      ]
+    },
+    {
+      "id": "tmpl-detailed-balance#ehrenfest-3",
+      "tier": "harder",
+      "fingerprint": "tmpl-detailed-balance:chain=ehrenfest-3",
+      "template": {
+        "id": "tmpl-detailed-balance",
+        "params": {
+          "chain": "ehrenfest-3"
+        }
+      },
+      "prompt": "Three balls, two urns, same dynamics. Use the detailed-balance ladder to read the stationary vector, and identify the **binomial** pattern emerging in the numerators.",
+      "source": "WEB (absent from GB): Ehrenfest stats.libretexts 16.8 · phys.libretexts 12.3",
+      "engineCheck": {
+        "module": "src/engine/markov.ts",
+        "calls": [
+          "detailedBalance(CHAINS['ehrenfest-3'].P).pi"
+        ],
+        "answer": "1/8,3/8,3/8,1/8",
+        "verified": true
+      },
+      "hidden": {
+        "answer": "1/8,3/8,3/8,1/8",
+        "approaches": [
+          "Chain pi_{i+1} = pi_i * p_{i,i+1}/p_{i+1,i} from one end, then normalize sum(pi)=1 (telescopes to the binomial for Ehrenfest).",
+          "2-state: detailed balance is automatic; pi=(b/(a+b), a/(a+b))."
+        ],
+        "wrongTurns": [
+          "every chain is reversible / detailed balance always holds",
+          "you must solve the full piP=pi system; the balance shortcut is not allowed",
+          "detailed balance is identical to global balance piP=pi (it is strictly stronger)",
+          "forget to normalize the telescoped ratios to sum to 1"
+        ],
+        "hintLadder": [
+          "This chain is reversible, so skip the full solve: use detailed balance, pi_i*p_ij = pi_j*p_ji, on ehrenfest-3.",
+          "Walk the balance equation along the birth-death ladder, expressing each state's share as a multiple of its neighbor's via the up/down probability ratio.",
+          "Telescope those ratios from one end and normalize so the shares sum to one — read off the (binomial) pattern rather than naming the entries."
+        ],
+        "rubric": {
+          "correctness": "matches the exact stationary vector of the reversible chain",
+          "approach": "uses detailed balance along the birth-death ladder, then normalizes",
+          "rigor": "confirms reversibility before using the shortcut; exact rationals",
+          "communication": "explains why detailed balance => stationary (flows cancel edge-by-edge)",
+          "speed": "telescopes the ladder rather than solving the full eigen-system"
+        }
+      },
+      "followUps": [
+        "Confirm your pi also satisfies global balance piP=pi.",
+        "Is the chain periodic? If so does P^n converge even though pi exists?",
+        "Generalize Ehrenfest to m balls (binomial C(m,i)/2^m)."
+      ]
+    },
+    {
+      "id": "tmpl-detailed-balance#ehrenfest-4",
+      "tier": "brutal",
+      "fingerprint": "tmpl-detailed-balance:chain=ehrenfest-4",
+      "template": {
+        "id": "tmpl-detailed-balance",
+        "params": {
+          "chain": "ehrenfest-4"
+        }
+      },
+      "prompt": "Four balls, two urns. Give the **full** stationary vector via detailed balance and prove it is C(4,i)/2^4 — then state why diffusion concentrates near the half-full state.",
+      "source": "WEB (absent from GB): Ehrenfest stats.libretexts 16.8 · phys.libretexts 12.3",
+      "engineCheck": {
+        "module": "src/engine/markov.ts",
+        "calls": [
+          "detailedBalance(CHAINS['ehrenfest-4'].P).pi"
+        ],
+        "answer": "1/16,1/4,3/8,1/4,1/16",
+        "verified": true
+      },
+      "hidden": {
+        "answer": "1/16,1/4,3/8,1/4,1/16",
+        "approaches": [
+          "Chain pi_{i+1} = pi_i * p_{i,i+1}/p_{i+1,i} from one end, then normalize sum(pi)=1 (telescopes to the binomial for Ehrenfest).",
+          "2-state: detailed balance is automatic; pi=(b/(a+b), a/(a+b))."
+        ],
+        "wrongTurns": [
+          "every chain is reversible / detailed balance always holds",
+          "you must solve the full piP=pi system; the balance shortcut is not allowed",
+          "detailed balance is identical to global balance piP=pi (it is strictly stronger)",
+          "forget to normalize the telescoped ratios to sum to 1"
+        ],
+        "hintLadder": [
+          "This chain is reversible, so skip the full solve: use detailed balance, pi_i*p_ij = pi_j*p_ji, on ehrenfest-4.",
+          "Walk the balance equation along the birth-death ladder, expressing each state's share as a multiple of its neighbor's via the up/down probability ratio.",
+          "Telescope those ratios from one end and normalize so the shares sum to one — read off the (binomial) pattern rather than naming the entries."
+        ],
+        "rubric": {
+          "correctness": "matches the exact stationary vector of the reversible chain",
+          "approach": "uses detailed balance along the birth-death ladder, then normalizes",
+          "rigor": "confirms reversibility before using the shortcut; exact rationals",
+          "communication": "explains why detailed balance => stationary (flows cancel edge-by-edge)",
+          "speed": "telescopes the ladder rather than solving the full eigen-system"
+        }
+      },
+      "followUps": [
+        "Confirm your pi also satisfies global balance piP=pi.",
+        "Is the chain periodic? If so does P^n converge even though pi exists?",
+        "Generalize Ehrenfest to m balls (binomial C(m,i)/2^m)."
+      ]
+    },
+    {
+      "id": "tmpl-kac-return#clear-rainy-clear",
+      "tier": "hard",
+      "fingerprint": "tmpl-kac-return:chain=weather-clear-rainy,state=0",
+      "template": {
+        "id": "tmpl-kac-return",
+        "params": {
+          "chain": "weather-clear-rainy",
+          "state": 0
+        }
+      },
+      "prompt": "Clear/rainy chain (clear->clear 3/5; rainy->rainy 7/10). What is the mean number of days between consecutive **clear** days (first return to Clear)? Use Kac and explain its link to the stationary share.",
+      "source": "WEB (absent from GB): Kac's recurrence theorem; pi from Math.SE 3336273 (clear/rainy) & Rochester ECE440 HW5 #2 (cloudy-town)",
+      "engineCheck": {
+        "module": "src/engine/markov.ts",
+        "calls": [
+          "kacReturnTime(CHAINS['weather-clear-rainy'].P, 0)"
+        ],
+        "answer": "7/3",
+        "verified": true
+      },
+      "hidden": {
+        "answer": "7/3",
+        "approaches": [
+          "Solve piP=pi, take the asked state's component, return its reciprocal.",
+          "2-state: pi=(b/(a+b), a/(a+b)) then invert the chosen component."
+        ],
+        "wrongTurns": [
+          "mean return time equals the mean hitting time from some other fixed state",
+          "every state has the same return time",
+          "return time is 1/pi for the WHOLE chain rather than per-state",
+          "use the raw transition probability instead of the stationary share"
+        ],
+        "hintLadder": [
+          "Mean return time is a stationary-distribution question in disguise — first get the long-run share of state Clear in weather-clear-rainy.",
+          "Kac's theorem: the expected first return time to a state is the reciprocal of that state's stationary probability.",
+          "Compute the stationary share of state Clear, then take its reciprocal and reduce — derive the share, don't read it off the matrix."
+        ],
+        "rubric": {
+          "correctness": "matches the exact mean return time 1/pi_i for the named state",
+          "approach": "find the stationary share of the state, then reciprocate (Kac)",
+          "rigor": "uses the long-run time-share (not a hitting time from a fixed other state); exact rational",
+          "communication": "explains why a rarer state has a longer mean return time",
+          "speed": "one stationary component, then its reciprocal"
+        }
+      },
+      "followUps": [
+        "Compare two states' return times — which recurs faster and why?",
+        "Halve a state's pi — what happens to its return time?",
+        "Does periodicity change the mean return time? (No — still 1/pi_i.)"
+      ]
+    },
+    {
+      "id": "tmpl-kac-return#clear-rainy-rainy",
+      "tier": "harder",
+      "fingerprint": "tmpl-kac-return:chain=weather-clear-rainy,state=1",
+      "template": {
+        "id": "tmpl-kac-return",
+        "params": {
+          "chain": "weather-clear-rainy",
+          "state": 1
+        }
+      },
+      "prompt": "Same chain — mean gap between consecutive **rainy** days. Compute via 1/pi and explain why the more common state returns faster.",
+      "source": "WEB (absent from GB): Kac's recurrence theorem; pi from Math.SE 3336273 (clear/rainy) & Rochester ECE440 HW5 #2 (cloudy-town)",
+      "engineCheck": {
+        "module": "src/engine/markov.ts",
+        "calls": [
+          "kacReturnTime(CHAINS['weather-clear-rainy'].P, 1)"
+        ],
+        "answer": "7/4",
+        "verified": true
+      },
+      "hidden": {
+        "answer": "7/4",
+        "approaches": [
+          "Solve piP=pi, take the asked state's component, return its reciprocal.",
+          "2-state: pi=(b/(a+b), a/(a+b)) then invert the chosen component."
+        ],
+        "wrongTurns": [
+          "mean return time equals the mean hitting time from some other fixed state",
+          "every state has the same return time",
+          "return time is 1/pi for the WHOLE chain rather than per-state",
+          "use the raw transition probability instead of the stationary share"
+        ],
+        "hintLadder": [
+          "Mean return time is a stationary-distribution question in disguise — first get the long-run share of state Rainy in weather-clear-rainy.",
+          "Kac's theorem: the expected first return time to a state is the reciprocal of that state's stationary probability.",
+          "Compute the stationary share of state Rainy, then take its reciprocal and reduce — derive the share, don't read it off the matrix."
+        ],
+        "rubric": {
+          "correctness": "matches the exact mean return time 1/pi_i for the named state",
+          "approach": "find the stationary share of the state, then reciprocate (Kac)",
+          "rigor": "uses the long-run time-share (not a hitting time from a fixed other state); exact rational",
+          "communication": "explains why a rarer state has a longer mean return time",
+          "speed": "one stationary component, then its reciprocal"
+        }
+      },
+      "followUps": [
+        "Compare two states' return times — which recurs faster and why?",
+        "Halve a state's pi — what happens to its return time?",
+        "Does periodicity change the mean return time? (No — still 1/pi_i.)"
+      ]
+    },
+    {
+      "id": "tmpl-kac-return#cloudy-sunny",
+      "tier": "harder",
+      "fingerprint": "tmpl-kac-return:chain=cloudy-town,state=0",
+      "template": {
+        "id": "tmpl-kac-return",
+        "params": {
+          "chain": "cloudy-town",
+          "state": 0
+        }
+      },
+      "prompt": "Cloudy-town (sunny/cloudy/rainy, rows as given). Mean number of days between **sunny** days. Find the sunny stationary share first, then apply Kac, and say why sunny has the longest return time.",
+      "source": "WEB (absent from GB): Kac's recurrence theorem; pi from Math.SE 3336273 (clear/rainy) & Rochester ECE440 HW5 #2 (cloudy-town)",
+      "engineCheck": {
+        "module": "src/engine/markov.ts",
+        "calls": [
+          "kacReturnTime(CHAINS['cloudy-town'].P, 0)"
+        ],
+        "answer": "5",
+        "verified": true
+      },
+      "hidden": {
+        "answer": "5",
+        "approaches": [
+          "Solve piP=pi, take the asked state's component, return its reciprocal.",
+          "2-state: pi=(b/(a+b), a/(a+b)) then invert the chosen component."
+        ],
+        "wrongTurns": [
+          "mean return time equals the mean hitting time from some other fixed state",
+          "every state has the same return time",
+          "return time is 1/pi for the WHOLE chain rather than per-state",
+          "use the raw transition probability instead of the stationary share"
+        ],
+        "hintLadder": [
+          "Mean return time is a stationary-distribution question in disguise — first get the long-run share of state Sunny in cloudy-town.",
+          "Kac's theorem: the expected first return time to a state is the reciprocal of that state's stationary probability.",
+          "Compute the stationary share of state Sunny, then take its reciprocal and reduce — derive the share, don't read it off the matrix."
+        ],
+        "rubric": {
+          "correctness": "matches the exact mean return time 1/pi_i for the named state",
+          "approach": "find the stationary share of the state, then reciprocate (Kac)",
+          "rigor": "uses the long-run time-share (not a hitting time from a fixed other state); exact rational",
+          "communication": "explains why a rarer state has a longer mean return time",
+          "speed": "one stationary component, then its reciprocal"
+        }
+      },
+      "followUps": [
+        "Compare two states' return times — which recurs faster and why?",
+        "Halve a state's pi — what happens to its return time?",
+        "Does periodicity change the mean return time? (No — still 1/pi_i.)"
+      ]
+    },
+    {
+      "id": "tmpl-kac-return#cloudy-cloudy",
+      "tier": "harder",
+      "fingerprint": "tmpl-kac-return:chain=cloudy-town,state=1",
+      "template": {
+        "id": "tmpl-kac-return",
+        "params": {
+          "chain": "cloudy-town",
+          "state": 1
+        }
+      },
+      "prompt": "Cloudy-town — mean gap between **cloudy** days. Compute via 1/pi and contrast with the sunny return time.",
+      "source": "WEB (absent from GB): Kac's recurrence theorem; pi from Math.SE 3336273 (clear/rainy) & Rochester ECE440 HW5 #2 (cloudy-town)",
+      "engineCheck": {
+        "module": "src/engine/markov.ts",
+        "calls": [
+          "kacReturnTime(CHAINS['cloudy-town'].P, 1)"
+        ],
+        "answer": "5/2",
+        "verified": true
+      },
+      "hidden": {
+        "answer": "5/2",
+        "approaches": [
+          "Solve piP=pi, take the asked state's component, return its reciprocal.",
+          "2-state: pi=(b/(a+b), a/(a+b)) then invert the chosen component."
+        ],
+        "wrongTurns": [
+          "mean return time equals the mean hitting time from some other fixed state",
+          "every state has the same return time",
+          "return time is 1/pi for the WHOLE chain rather than per-state",
+          "use the raw transition probability instead of the stationary share"
+        ],
+        "hintLadder": [
+          "Mean return time is a stationary-distribution question in disguise — first get the long-run share of state Cloudy in cloudy-town.",
+          "Kac's theorem: the expected first return time to a state is the reciprocal of that state's stationary probability.",
+          "Compute the stationary share of state Cloudy, then take its reciprocal and reduce — derive the share, don't read it off the matrix."
+        ],
+        "rubric": {
+          "correctness": "matches the exact mean return time 1/pi_i for the named state",
+          "approach": "find the stationary share of the state, then reciprocate (Kac)",
+          "rigor": "uses the long-run time-share (not a hitting time from a fixed other state); exact rational",
+          "communication": "explains why a rarer state has a longer mean return time",
+          "speed": "one stationary component, then its reciprocal"
+        }
+      },
+      "followUps": [
+        "Compare two states' return times — which recurs faster and why?",
+        "Halve a state's pi — what happens to its return time?",
+        "Does periodicity change the mean return time? (No — still 1/pi_i.)"
+      ]
+    },
+    {
+      "id": "tmpl-kac-return#cloudy-rainy",
+      "tier": "brutal",
+      "fingerprint": "tmpl-kac-return:chain=cloudy-town,state=2",
+      "template": {
+        "id": "tmpl-kac-return",
+        "params": {
+          "chain": "cloudy-town",
+          "state": 2
+        }
+      },
+      "prompt": "Cloudy-town — mean gap between **rainy** days. Give the value and **explain why cloudy and rainy share the same mean return time** (what does that say about their stationary shares?).",
+      "source": "WEB (absent from GB): Kac's recurrence theorem; pi from Math.SE 3336273 (clear/rainy) & Rochester ECE440 HW5 #2 (cloudy-town)",
+      "engineCheck": {
+        "module": "src/engine/markov.ts",
+        "calls": [
+          "kacReturnTime(CHAINS['cloudy-town'].P, 2)"
+        ],
+        "answer": "5/2",
+        "verified": true
+      },
+      "hidden": {
+        "answer": "5/2",
+        "approaches": [
+          "Solve piP=pi, take the asked state's component, return its reciprocal.",
+          "2-state: pi=(b/(a+b), a/(a+b)) then invert the chosen component."
+        ],
+        "wrongTurns": [
+          "mean return time equals the mean hitting time from some other fixed state",
+          "every state has the same return time",
+          "return time is 1/pi for the WHOLE chain rather than per-state",
+          "use the raw transition probability instead of the stationary share"
+        ],
+        "hintLadder": [
+          "Mean return time is a stationary-distribution question in disguise — first get the long-run share of state Rainy in cloudy-town.",
+          "Kac's theorem: the expected first return time to a state is the reciprocal of that state's stationary probability.",
+          "Compute the stationary share of state Rainy, then take its reciprocal and reduce — derive the share, don't read it off the matrix."
+        ],
+        "rubric": {
+          "correctness": "matches the exact mean return time 1/pi_i for the named state",
+          "approach": "find the stationary share of the state, then reciprocate (Kac)",
+          "rigor": "uses the long-run time-share (not a hitting time from a fixed other state); exact rational",
+          "communication": "explains why a rarer state has a longer mean return time",
+          "speed": "one stationary component, then its reciprocal"
+        }
+      },
+      "followUps": [
+        "Compare two states' return times — which recurs faster and why?",
+        "Halve a state's pi — what happens to its return time?",
+        "Does periodicity change the mean return time? (No — still 1/pi_i.)"
+      ]
+    },
+    {
+      "id": "tmpl-pagerank#3cycle-d85_100",
+      "tier": "hard",
+      "fingerprint": "tmpl-pagerank:dDen=100,dNum=85,graph=pr-3cycle",
+      "template": {
+        "id": "tmpl-pagerank",
+        "params": {
+          "graph": "pr-3cycle",
+          "dNum": 85,
+          "dDen": 100
+        }
+      },
+      "prompt": "Three pages link in a cycle A->B->C->A. With the standard damping **d=0.85**, compute the PageRank vector and name the most important page. Explain the result in one sentence.",
+      "source": "WEB (absent from GB): theorempath.com (3-cycle) · practicaldsc.org (4-node) · Wikipedia PageRank + arXiv math/0612079 (damping)",
+      "engineCheck": {
+        "module": "src/engine/markov.ts",
+        "calls": [
+          "pagerank(GRAPHS['pr-3cycle'], reduce(85,100))"
+        ],
+        "answer": "1/3,1/3,1/3",
+        "verified": true
+      },
+      "hidden": {
+        "answer": "1/3,1/3,1/3",
+        "approaches": [
+          "Form G=d*M+(1-d)/n*J from the row-stochastic link matrix, solve piG=pi, sum(pi)=1.",
+          "If the graph is vertex-transitive (a pure cycle), argue by symmetry that pi is uniform for any d."
+        ],
+        "wrongTurns": [
+          "the page with the most in-links is automatically most important",
+          "changing the damping d changes the ranking of a symmetric graph",
+          "PageRank is not a Markov stationary distribution",
+          "dangling (no out-link) nodes can be left as all-zero rows"
+        ],
+        "hintLadder": [
+          "PageRank is just a stationary distribution: build the random-surfer matrix for pr-3cycle with damping d=85/100 and solve piG=pi.",
+          "G mixes the link-following matrix (weight d) with a uniform teleport (weight 1-d); on a fully symmetric graph both pieces are symmetric — think about what that forces.",
+          "Solve the stationary system of G and reduce (or invoke symmetry); rank by the resulting shares — never by raw in-link counts."
+        ],
+        "rubric": {
+          "correctness": "matches the exact PageRank vector for the graph and damping d",
+          "approach": "builds G=d*M+(1-d)/n*J and solves the stationary piG=pi",
+          "rigor": "handles dangling nodes (uniform row); exact rationals; ranks by the vector, not in-degree",
+          "communication": "explains PageRank as 'importance = where a random surfer spends time'",
+          "speed": "exploits symmetry (uniform answer) when present instead of solving blindly"
+        }
+      },
+      "followUps": [
+        "Rank all pages and name the most important — does it match in-degree?",
+        "Lower d toward 0 — what distribution do you approach, and why?",
+        "Redirect one link — predict which page gains rank."
+      ]
+    },
+    {
+      "id": "tmpl-pagerank#3cycle-d1_2",
+      "tier": "harder",
+      "fingerprint": "tmpl-pagerank:dDen=2,dNum=1,graph=pr-3cycle",
+      "template": {
+        "id": "tmpl-pagerank",
+        "params": {
+          "graph": "pr-3cycle",
+          "dNum": 1,
+          "dDen": 2
+        }
+      },
+      "prompt": "Same 3-cycle, now **d=1/2**. Does the ranking change versus d=0.85? Compute it and explain precisely why the damping is irrelevant for this graph.",
+      "source": "WEB (absent from GB): theorempath.com (3-cycle) · practicaldsc.org (4-node) · Wikipedia PageRank + arXiv math/0612079 (damping)",
+      "engineCheck": {
+        "module": "src/engine/markov.ts",
+        "calls": [
+          "pagerank(GRAPHS['pr-3cycle'], reduce(1,2))"
+        ],
+        "answer": "1/3,1/3,1/3",
+        "verified": true
+      },
+      "hidden": {
+        "answer": "1/3,1/3,1/3",
+        "approaches": [
+          "Form G=d*M+(1-d)/n*J from the row-stochastic link matrix, solve piG=pi, sum(pi)=1.",
+          "If the graph is vertex-transitive (a pure cycle), argue by symmetry that pi is uniform for any d."
+        ],
+        "wrongTurns": [
+          "the page with the most in-links is automatically most important",
+          "changing the damping d changes the ranking of a symmetric graph",
+          "PageRank is not a Markov stationary distribution",
+          "dangling (no out-link) nodes can be left as all-zero rows"
+        ],
+        "hintLadder": [
+          "PageRank is just a stationary distribution: build the random-surfer matrix for pr-3cycle with damping d=1/2 and solve piG=pi.",
+          "G mixes the link-following matrix (weight d) with a uniform teleport (weight 1-d); on a fully symmetric graph both pieces are symmetric — think about what that forces.",
+          "Solve the stationary system of G and reduce (or invoke symmetry); rank by the resulting shares — never by raw in-link counts."
+        ],
+        "rubric": {
+          "correctness": "matches the exact PageRank vector for the graph and damping d",
+          "approach": "builds G=d*M+(1-d)/n*J and solves the stationary piG=pi",
+          "rigor": "handles dangling nodes (uniform row); exact rationals; ranks by the vector, not in-degree",
+          "communication": "explains PageRank as 'importance = where a random surfer spends time'",
+          "speed": "exploits symmetry (uniform answer) when present instead of solving blindly"
+        }
+      },
+      "followUps": [
+        "Rank all pages and name the most important — does it match in-degree?",
+        "Lower d toward 0 — what distribution do you approach, and why?",
+        "Redirect one link — predict which page gains rank."
+      ]
+    },
+    {
+      "id": "tmpl-pagerank#4node-d1",
+      "tier": "harder",
+      "fingerprint": "tmpl-pagerank:dDen=1,dNum=1,graph=pr-4node",
+      "template": {
+        "id": "tmpl-pagerank",
+        "params": {
+          "graph": "pr-4node",
+          "dNum": 1,
+          "dDen": 1
+        }
+      },
+      "prompt": "Four pages: 1->2; 2->{1,4}; 3->{1,4}; 4->{1,2,3}. With **no damping (d=1)** rank all four pages and name the most important. Use this to **refute** 'the page with the most in-links wins'.",
+      "source": "WEB (absent from GB): theorempath.com (3-cycle) · practicaldsc.org (4-node) · Wikipedia PageRank + arXiv math/0612079 (damping)",
+      "engineCheck": {
+        "module": "src/engine/markov.ts",
+        "calls": [
+          "pagerank(GRAPHS['pr-4node'], reduce(1,1))"
+        ],
+        "answer": "4/13,5/13,1/13,3/13",
+        "verified": true
+      },
+      "hidden": {
+        "answer": "4/13,5/13,1/13,3/13",
+        "approaches": [
+          "Form G=d*M+(1-d)/n*J from the row-stochastic link matrix, solve piG=pi, sum(pi)=1.",
+          "If the graph is vertex-transitive (a pure cycle), argue by symmetry that pi is uniform for any d."
+        ],
+        "wrongTurns": [
+          "the page with the most in-links is automatically most important",
+          "changing the damping d changes the ranking of a symmetric graph",
+          "PageRank is not a Markov stationary distribution",
+          "dangling (no out-link) nodes can be left as all-zero rows"
+        ],
+        "hintLadder": [
+          "PageRank is just a stationary distribution: build the random-surfer matrix for pr-4node with damping d=1/1 and solve piG=pi.",
+          "G mixes the link-following matrix (weight d) with a uniform teleport (weight 1-d); on a fully symmetric graph both pieces are symmetric — think about what that forces.",
+          "Solve the stationary system of G and reduce (or invoke symmetry); rank by the resulting shares — never by raw in-link counts."
+        ],
+        "rubric": {
+          "correctness": "matches the exact PageRank vector for the graph and damping d",
+          "approach": "builds G=d*M+(1-d)/n*J and solves the stationary piG=pi",
+          "rigor": "handles dangling nodes (uniform row); exact rationals; ranks by the vector, not in-degree",
+          "communication": "explains PageRank as 'importance = where a random surfer spends time'",
+          "speed": "exploits symmetry (uniform answer) when present instead of solving blindly"
+        }
+      },
+      "followUps": [
+        "Rank all pages and name the most important — does it match in-degree?",
+        "Lower d toward 0 — what distribution do you approach, and why?",
+        "Redirect one link — predict which page gains rank."
+      ]
+    },
+    {
+      "id": "tmpl-pagerank#3node-d1_2",
+      "tier": "brutal",
+      "fingerprint": "tmpl-pagerank:dDen=2,dNum=1,graph=pr-3node",
+      "template": {
+        "id": "tmpl-pagerank",
+        "params": {
+          "graph": "pr-3node",
+          "dNum": 1,
+          "dDen": 2
+        }
+      },
+      "prompt": "Three pages: 1->{2,3}; 2->3; 3->1. With damping **d=1/2**, compute the full PageRank vector (ugly rationals) and rank the pages. Show the Google-matrix setup explicitly.",
+      "source": "WEB (absent from GB): theorempath.com (3-cycle) · practicaldsc.org (4-node) · Wikipedia PageRank + arXiv math/0612079 (damping)",
+      "engineCheck": {
+        "module": "src/engine/markov.ts",
+        "calls": [
+          "pagerank(GRAPHS['pr-3node'], reduce(1,2))"
+        ],
+        "answer": "14/39,10/39,5/13",
+        "verified": true
+      },
+      "hidden": {
+        "answer": "14/39,10/39,5/13",
+        "approaches": [
+          "Form G=d*M+(1-d)/n*J from the row-stochastic link matrix, solve piG=pi, sum(pi)=1.",
+          "If the graph is vertex-transitive (a pure cycle), argue by symmetry that pi is uniform for any d."
+        ],
+        "wrongTurns": [
+          "the page with the most in-links is automatically most important",
+          "changing the damping d changes the ranking of a symmetric graph",
+          "PageRank is not a Markov stationary distribution",
+          "dangling (no out-link) nodes can be left as all-zero rows"
+        ],
+        "hintLadder": [
+          "PageRank is just a stationary distribution: build the random-surfer matrix for pr-3node with damping d=1/2 and solve piG=pi.",
+          "G mixes the link-following matrix (weight d) with a uniform teleport (weight 1-d); on a fully symmetric graph both pieces are symmetric — think about what that forces.",
+          "Solve the stationary system of G and reduce (or invoke symmetry); rank by the resulting shares — never by raw in-link counts."
+        ],
+        "rubric": {
+          "correctness": "matches the exact PageRank vector for the graph and damping d",
+          "approach": "builds G=d*M+(1-d)/n*J and solves the stationary piG=pi",
+          "rigor": "handles dangling nodes (uniform row); exact rationals; ranks by the vector, not in-degree",
+          "communication": "explains PageRank as 'importance = where a random surfer spends time'",
+          "speed": "exploits symmetry (uniform answer) when present instead of solving blindly"
+        }
+      },
+      "followUps": [
+        "Rank all pages and name the most important — does it match in-degree?",
+        "Lower d toward 0 — what distribution do you approach, and why?",
+        "Redirect one link — predict which page gains rank."
+      ]
+    },
+    {
+      "id": "tmpl-pagerank#3cycle-d9_10",
+      "tier": "brutal",
+      "fingerprint": "tmpl-pagerank:dDen=10,dNum=9,graph=pr-3cycle",
+      "template": {
+        "id": "tmpl-pagerank",
+        "params": {
+          "graph": "pr-3cycle",
+          "dNum": 9,
+          "dDen": 10
+        }
+      },
+      "prompt": "The same 3-cycle at **d=9/10**. Rather than re-solving, **prove** the PageRank is uniform for **any** damping d, using the graph's symmetry — then confirm it matches the solved vector.",
+      "source": "WEB (absent from GB): theorempath.com (3-cycle) · practicaldsc.org (4-node) · Wikipedia PageRank + arXiv math/0612079 (damping)",
+      "engineCheck": {
+        "module": "src/engine/markov.ts",
+        "calls": [
+          "pagerank(GRAPHS['pr-3cycle'], reduce(9,10))"
+        ],
+        "answer": "1/3,1/3,1/3",
+        "verified": true
+      },
+      "hidden": {
+        "answer": "1/3,1/3,1/3",
+        "approaches": [
+          "Form G=d*M+(1-d)/n*J from the row-stochastic link matrix, solve piG=pi, sum(pi)=1.",
+          "If the graph is vertex-transitive (a pure cycle), argue by symmetry that pi is uniform for any d."
+        ],
+        "wrongTurns": [
+          "the page with the most in-links is automatically most important",
+          "changing the damping d changes the ranking of a symmetric graph",
+          "PageRank is not a Markov stationary distribution",
+          "dangling (no out-link) nodes can be left as all-zero rows"
+        ],
+        "hintLadder": [
+          "PageRank is just a stationary distribution: build the random-surfer matrix for pr-3cycle with damping d=9/10 and solve piG=pi.",
+          "G mixes the link-following matrix (weight d) with a uniform teleport (weight 1-d); on a fully symmetric graph both pieces are symmetric — think about what that forces.",
+          "Solve the stationary system of G and reduce (or invoke symmetry); rank by the resulting shares — never by raw in-link counts."
+        ],
+        "rubric": {
+          "correctness": "matches the exact PageRank vector for the graph and damping d",
+          "approach": "builds G=d*M+(1-d)/n*J and solves the stationary piG=pi",
+          "rigor": "handles dangling nodes (uniform row); exact rationals; ranks by the vector, not in-degree",
+          "communication": "explains PageRank as 'importance = where a random surfer spends time'",
+          "speed": "exploits symmetry (uniform answer) when present instead of solving blindly"
+        }
+      },
+      "followUps": [
+        "Rank all pages and name the most important — does it match in-degree?",
+        "Lower d toward 0 — what distribution do you approach, and why?",
+        "Redirect one link — predict which page gains rank."
+      ]
+    },
+    {
+      "id": "ff-classify-then-solve",
+      "tier": "brutal",
+      "fingerprint": "sem:68dce289aecb",
+      "prompt": "A chain lands on your desk with the labels torn off: a token sits on one of five pads 0-4; from any interior pad it slips to an adjacent pad with equal probability; pads 0 and 4 are **sticky** (once there it never leaves). BEFORE computing anything, classify the chain — is there a state it can never leave? — then answer the question that classification implies: starting on pads 1, 2, and 3, the probability the token ends on pad 4 rather than pad 0. Give the full vector and explain why 'the long-run share of the middle' is the **wrong** question here.",
+      "source": "WEB Grinstead & Snell Ex.11.13-15 (drunkard i/N) + classification GB §5.1 p.54-55",
+      "engineCheck": {
+        "module": "src/engine/markov.ts",
+        "calls": [
+          "classifyStates(drunkard-0to4)",
+          "absorptionProbabilities(drunkard-0to4,[0,4]) -> target-4 column for starts 1,2,3"
+        ],
+        "answer": "1/4,1/2,3/4",
+        "verified": true
+      },
+      "hidden": {
+        "answer": "1/4,1/2,3/4",
+        "approaches": [
+          "Classify first: pads 0 and 4 absorbing, 1-3 transient => ask absorption, not stationary. Solve a_i = 1/2 a_{i-1} + 1/2 a_{i+1}, a_0=0, a_4=1 => i/4.",
+          "Read the target-4 column of B=(I-Q)^-1 R for the three interior pads (the expected times here are 3,4,3, a separate question)."
+        ],
+        "wrongTurns": [
+          "it runs a while, so ask its long-run/stationary share",
+          "a symmetric walk is 50/50 to either end from any start",
+          "reach probability equals the expected number of steps",
+          "treat the sticky pads as ordinary states"
+        ],
+        "hintLadder": [
+          "First test for a state the chain can never leave — that single fork decides whether you set up piP=pi or (I-Q)^-1 R.",
+          "Two pads are absorbing, the three interior pads transient — so this is an absorption-probability question: pin the far pad to one and the near pad to zero, and write each interior pad as the average of its neighbors.",
+          "Solve that interior system for all three starts and reduce; report the vector and reject the stationary reading — once the token sticks there is no long-run interior share."
+        ],
+        "rubric": {
+          "correctness": "matches the exact absorption vector for starts 1,2,3",
+          "approach": "classifies absorbing-vs-ergodic first, then solves the implied absorption system",
+          "rigor": "rejects the stationary trap; boundaries 1/0 correct; exact rationals",
+          "communication": "explains why structure (a state you can't leave), not the story, picks the tool",
+          "speed": "sees i/N immediately for the symmetric case"
+        }
+      },
+      "followUps": [
+        "Now give the expected number of steps to stick from each start.",
+        "Make the slips biased — recompute the reach vector.",
+        "If both end pads were reflecting instead of sticky, which tool would you switch to?"
+      ]
+    },
+    {
+      "id": "ff-ehrenfest-periodic",
+      "tier": "brutal",
+      "fingerprint": "sem:3932c40e2d37",
+      "prompt": "Two boxes hold 2 balls total; each tick you pick one of the 2 balls uniformly and move it to the other box. A colleague says 'the chain converges, so just take the limit of P^n.' Give the long-run fraction of time the left box holds 0, 1, 2 balls, AND state the chain's **period** — then settle the dispute: does P^n actually converge? Say precisely which long-run statement is valid and which is not.",
+      "source": "WEB Ehrenfest stats.libretexts 16.8 (stationary) + periodicity",
+      "engineCheck": {
+        "module": "src/engine/markov.ts",
+        "calls": [
+          "stationaryDistribution(ehrenfest-2)",
+          "classifyStates(ehrenfest-2) -> period 2"
+        ],
+        "answer": "1/4,1/2,1/4",
+        "verified": true
+      },
+      "hidden": {
+        "answer": "1/4,1/2,1/4",
+        "approaches": [
+          "piP=pi (or detailed balance) gives the time-share; gcd of return-cycle lengths gives the period (here 2). The fraction-of-time exists (ergodic theorem) but P^n oscillates by parity, so it has no limit.",
+          "Note pi=C(2,i)/2^2 and that every return to a state takes an even number of steps."
+        ],
+        "wrongTurns": [
+          "a stationary distribution implies P^n converges",
+          "periodic chains have no stationary distribution",
+          "the time-average and the step-n distribution are the same thing",
+          "period is the number of states"
+        ],
+        "hintLadder": [
+          "Separate two different 'long-run' claims: the fraction of time in each state versus the distribution exactly at step n.",
+          "Get the time-share from piP=pi (or detailed balance); get the period from the gcd of return-cycle lengths — here every return takes an even number of steps.",
+          "Report the share and the period, then conclude the step-n matrix flips parity forever, so its limit doesn't exist even though the time-average does — state both, don't compute a fake limit."
+        ],
+        "rubric": {
+          "correctness": "matches the exact stationary share and the period",
+          "approach": "computes pi and the period and distinguishes time-average from P^n-limit",
+          "rigor": "denies P^n convergence for a periodic chain while affirming the time-share",
+          "communication": "crisply separates 'fraction of time' from 'distribution at step n'",
+          "speed": "uses the binomial/detailed-balance shortcut for pi"
+        }
+      },
+      "followUps": [
+        "Repeat for 3 balls — what is pi and is it still periodic?",
+        "What minimal change (a self-loop) would make P^n converge?",
+        "Compute the mean return time to the empty-left-box state."
+      ]
+    },
+    {
+      "id": "ff-cloudy-stationary-and-kac",
+      "tier": "brutal",
+      "fingerprint": "sem:5bd2a6a4c457",
+      "prompt": "A city's weather is a 3-state chain — sunny, cloudy, rainy: from sunny it never stays sunny (1/2 cloudy, 1/2 rainy); from cloudy it's 1/4 sunny, 1/2 cloudy, 1/4 rainy; from rainy it's 1/4 sunny, 1/4 cloudy, 1/2 rainy. Two desk questions: (a) the long-run fraction of sunny/cloudy/rainy days, and (b) the **mean number of days between consecutive sunny days**. Give both exactly and explain the relationship between them.",
+      "source": "WEB cloudy-town Rochester ECE440 HW5 #2 + Kac's theorem",
+      "engineCheck": {
+        "module": "src/engine/markov.ts",
+        "calls": [
+          "stationaryDistribution(cloudy-town)",
+          "kacReturnTime(cloudy-town,0)"
+        ],
+        "answer": "1/5,2/5,2/5",
+        "verified": true
+      },
+      "hidden": {
+        "answer": "1/5,2/5,2/5",
+        "approaches": [
+          "Solve piP=pi, sum(pi)=1 for the shares; Kac gives the sunny mean return time as the reciprocal of the sunny share (which is 5).",
+          "The return time is large exactly because the sunny share is the smallest."
+        ],
+        "wrongTurns": [
+          "the start day changes the long-run share",
+          "mean return time is the mean hitting time from a fixed other state",
+          "return time = 1/pi for the whole chain",
+          "rainy is the 'stuck' (absorbing) state"
+        ],
+        "hintLadder": [
+          "Both parts run through the stationary distribution — first solve piP=pi for the three shares.",
+          "For part (b), Kac's theorem makes the mean return time to sunny the reciprocal of the sunny stationary share — no separate hitting-time solve.",
+          "Compute the share vector, then invert the sunny component for (b), and explain that a rarer state has a longer return — derive both, state neither in advance."
+        ],
+        "rubric": {
+          "correctness": "matches the exact stationary vector and the sunny mean return time",
+          "approach": "one stationary solve feeds both the shares and (via Kac) the return time",
+          "rigor": "links 1/pi to the share; exact rationals; notes no absorbing state => ergodic",
+          "communication": "explains return time = reciprocal of share",
+          "speed": "reuses pi for Kac instead of a second system"
+        }
+      },
+      "followUps": [
+        "Mean return time to a rainy day — bigger or smaller, and why?",
+        "Does the answer change if it starts sunny? Why not?",
+        "Is this chain reversible? Check detailed balance."
+      ]
+    },
+    {
+      "id": "ff-oz-multistep-and-convergence",
+      "tier": "brutal",
+      "fingerprint": "sem:06d308faa93c",
+      "prompt": "Land of Oz weather (Rain, Nice, Snow): Rain->(1/2,1/4,1/4); Nice->(1/2,0,1/2); Snow->(1/4,1/4,1/2). (a) What is the probability it **snows exactly two days after a rainy day**? (b) Argue that as n->infinity **every row** of P^n approaches the **same** vector, and give that vector. Tie part (a)'s machinery to part (b)'s limit.",
+      "source": "WEB Land of Oz Grinstead & Snell Ch.11 Table 11.1; UC Davis dis6",
+      "engineCheck": {
+        "module": "src/engine/markov.ts",
+        "calls": [
+          "matrixPower(land-of-oz,2)[0][2]",
+          "stationaryDistribution(land-of-oz)"
+        ],
+        "answer": "3/8",
+        "verified": true
+      },
+      "hidden": {
+        "answer": "3/8",
+        "approaches": [
+          "Part (a): the (Rain,Snow) entry of P^2 — sum over the in-between day. Part (b): the chain is regular (a power is all-positive), so P^n -> 1*pi^T; find pi from piP=pi (it is 2/5,1/5,2/5).",
+          "Chapman-Kolmogorov for the 2-step; the regular-chain convergence theorem for the limit."
+        ],
+        "wrongTurns": [
+          "the 2-step prob is one path's product (forget to sum the middle day)",
+          "rows of P^n converge to different vectors depending on the start",
+          "raise the entry instead of the matrix",
+          "a periodic chain would also converge (this one is aperiodic — that matters)"
+        ],
+        "hintLadder": [
+          "Part (a) is one entry of the squared matrix; part (b) is what powers of P settle to — keep them separate but note both live in P^n.",
+          "For (a) sum over the intermediate day (Chapman-Kolmogorov); for (b) check the chain is regular (a power is strictly positive), which forces every row of P^n to the same stationary vector.",
+          "Read the (Rain,Snow) entry of P^2 and reduce, then solve piP=pi for the common limit row — derive each; the limit row is the stationary distribution, not a guess."
+        ],
+        "rubric": {
+          "correctness": "matches the exact 2-step entry and the limit vector",
+          "approach": "Chapman-Kolmogorov for (a), regular-chain limit for (b)",
+          "rigor": "justifies row-convergence via regularity/aperiodicity; exact rationals",
+          "communication": "connects 'forgetting the start' to the common limit row",
+          "speed": "one entry plus one stationary solve"
+        }
+      },
+      "followUps": [
+        "At what n is the row essentially converged? Compute P^3, P^4 and compare.",
+        "Why does aperiodicity matter for (b)?",
+        "Mean return time to a snowy day?"
+      ]
+    },
+    {
+      "id": "ff-absorb-prob-and-time",
+      "tier": "harder",
+      "fingerprint": "sem:cb4d0f46506e",
+      "prompt": "A trader's bankroll is $1 (between a $0 wipeout and a $3 cash-out); each round +$1 w.p. 2/3, -$1 w.p. 1/3 (they have an edge). Starting at $1, compute BOTH (a) the probability they cash out at $3 before being wiped out, AND (b) the expected number of rounds until the game ends. Show the **same** fundamental matrix yields both, and point to the **single** structural difference between the two computations.",
+      "source": "GB §5.1 p.54-55 (gambler's ruin 4/7)",
+      "engineCheck": {
+        "module": "src/engine/markov.ts",
+        "calls": [
+          "absorptionProbabilities(gambler-0to3-up2_3,[0,3]) -> [start $1][target $3]",
+          "expectedAbsorptionTime(gambler-0to3-up2_3,[0,3]) -> start $1"
+        ],
+        "answer": "4/7",
+        "verified": true
+      },
+      "hidden": {
+        "answer": "4/7",
+        "approaches": [
+          "Both come from N=(I-Q)^-1: B=NR (split, no +1) gives the cash-out probability; (I-Q)t=1 (the +1) gives the duration (which is 15/7).",
+          "First-step: a_1 = 1/3 a_0 + 2/3 a_2 (a_0=0, a_3=1) for (a); t_1 = 1 + 1/3 t_0 + 2/3 t_2 (t_0=t_3=0) for (b)."
+        ],
+        "wrongTurns": [
+          "reach probability and expected duration are the same object",
+          "the edge (up 2/3) breaks the formula",
+          "drop the +1 in the duration",
+          "the start doesn't change the cash-out probability"
+        ],
+        "hintLadder": [
+          "Both parts are first-step analysis on the same transient block — set up the interior equations once, then ask two different questions.",
+          "For the probability, the boundaries are one (cash out) and zero (wiped out) with **no** +1; for the time, the boundaries are zero at both ends **with** a +1 on every round.",
+          "Solve both small systems from $1 and reduce; the only structural difference is the +1 (present for time, absent for probability) — keep the edge probabilities 2/3 and 1/3 exact."
+        ],
+        "rubric": {
+          "correctness": "matches the exact cash-out probability and the exact expected duration",
+          "approach": "derives both from one fundamental matrix with correct boundaries",
+          "rigor": "keeps reach distinct from duration; handles the 2/3-1/3 bias exactly",
+          "communication": "names the +1 as the sole structural difference",
+          "speed": "reuses the interior block for both questions"
+        }
+      },
+      "followUps": [
+        "Recompute both from $2 instead of $1.",
+        "Make it a fair coin — how do both answers change?",
+        "What is the probability of being wiped out, and why does it complete the split?"
+      ]
+    }
+  ]
+}
