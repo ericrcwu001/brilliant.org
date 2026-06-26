@@ -1,0 +1,296 @@
+{
+  "lessonId": "lesson-markov-chains-9",
+  "courseId": "course-markov-chains",
+  "title": "PageRank",
+  "patternOptions": ["H"],
+  "milestoneId": "markov-chains-pagerank",
+  "unlocks": "lesson-markov-chains-10",
+  "schemaVersion": 1,
+  "beats": [
+    {
+      "beatId": "recall-no-champion",
+      "required": true,
+      "track": "both",
+      "prompt": "Match each concept to its role in the ranking-without-a-champion story.",
+      "interaction": {
+        "type": "retrievalGrid",
+        "pairs": [
+          {
+            "left": "Penney's non-transitive loop (every pattern has a beater)",
+            "right": "rank a whole field with no single champion"
+          },
+          {
+            "left": "The Bayes posterior, renormalized",
+            "right": "scores rescale to sum to 1 — a distribution"
+          },
+          {
+            "left": "A page with k out-links splits its rank",
+            "right": "1/k each — uniform out-links (the L2 ½/½ split)"
+          }
+        ]
+      },
+      "feedback": {
+        "correct": "Two moves you already own: rank a whole field with **no single champion** (Penney's non-transitive loop) and let the shares **renormalize to sum to 1** (the Bayes posterior). PageRank ranks pages by their long-run share of a random surfer's visits — a distribution, not standalone scores.",
+        "hints": [
+          "Warm-up — you ranked a no-champion field in Penney's (the non-transitive loop) and renormalized a posterior in Bayes. No PageRank computation yet.",
+          "Ranking doesn't need one undisputed winner, and the scores aren't independent numbers — they're a probability distribution that renormalizes to sum to 1 (the same move as the Bayes posterior). No page's score stands alone.",
+          "Penney's loop → rank without a champion; Bayes posterior → renormalize to 1; a page with k out-links → 1/k each."
+        ]
+      }
+    },
+    {
+      "beatId": "open-bet",
+      "required": true,
+      "track": "both",
+      "prompt": "Four web pages link like this: 1→2; 2→{1,4}; 3→{1,4}; 4→{1,2,3}. Counting only in-links, page 1 has three and page 2 has two. Which page does PageRank crown most important?",
+      "interaction": {
+        "type": "prediction",
+        "options": [
+          "Page 1 — it collects the most links (three)",
+          "Page 2",
+          "Page 4"
+        ]
+      },
+      "feedback": {
+        "byOption": {
+          "Page 1 — it collects the most links (three)": {
+            "note": "That's the in-link-count trap. Counting links, page 1 leads with three — but PageRank weighs each link by the importance of its sender, and page 1's single out-link pours all of its own rank into page 2. More links collected, fewer 'rank dollars' kept.",
+            "correct": false
+          },
+          "Page 2": {
+            "note": "Hold that instinct. Page 2 has only two in-links, but one of them is page 1's entire rank, funneled through page 1's single out-link. We'll prove page 2 wins 5/13 > 4/13.",
+            "correct": true
+          },
+          "Page 4": {
+            "note": "Page 4 is a hub with three out-links, but spreading its rank three ways dilutes each endorsement. It lands third (3/13), behind pages 2 and 1.",
+            "correct": false
+          }
+        },
+        "hints": [
+          "No wrong guess yet — commit and we'll weigh each link by its sender.",
+          "Most in-links doesn't win: a link's worth is the rank of the page that sent it, divided among that page's out-links.",
+          "Page 2 wins (5/13) — page 1's focused out-link crowns it."
+        ]
+      }
+    },
+    {
+      "beatId": "name-the-surfer",
+      "required": false,
+      "track": "A",
+      "prompt": "Read this just-in-time primer on the random surfer, damping, and the Google matrix — then continue.",
+      "interaction": {
+        "type": "primer",
+        "variant": "custom",
+        "title": "The random surfer, damping, and the Google matrix",
+        "body": "Model the web as a **random surfer**: each step she follows a uniformly random **out-link** with probability **`d`** (the **damping factor**), or **teleports** to a uniformly random page with probability **`1 − d`**. Stack the link choices into the row-stochastic **`M`** and the teleport into the all-ones **`J`**; the surfer's chain is the **Google matrix `G = d·M + (1−d)/n·J`**. A page's PageRank is nothing new — it's the **stationary distribution `π` of `G` (`πG = π`, `Σπ = 1`)** from L6: the long-run share of time the surfer spends there.",
+        "collapsible": true
+      },
+      "feedback": {
+        "correct": "Random surfer, teleport, damping `d`, Google matrix `G = d·M + (1−d)/n·J` — and PageRank `π` is just the stationary distribution of `G` from L6.",
+        "hints": [
+          "A surfer clicks a random out-link most of the time, and occasionally jumps to a random page.",
+          "Damping d = how often she follows a link; 1−d = how often she teleports. Teleport is what guarantees a unique answer.",
+          "PageRank π solves πG = π, Σπ = 1 — the L6 stationary distribution of the damped chain."
+        ]
+      }
+    },
+    {
+      "beatId": "weight-by-source",
+      "required": true,
+      "track": "both",
+      "prompt": "Tap the endorsement that carries more rank — page 1's single focused out-link, or page 4's three split out-links.",
+      "interaction": {
+        "type": "chainBoard",
+        "display": "diagram",
+        "matrix": [
+          [{"n":0,"d":1},{"n":1,"d":1},{"n":0,"d":1},{"n":0,"d":1}],
+          [{"n":1,"d":2},{"n":0,"d":1},{"n":0,"d":1},{"n":1,"d":2}],
+          [{"n":1,"d":2},{"n":0,"d":1},{"n":0,"d":1},{"n":1,"d":2}],
+          [{"n":1,"d":3},{"n":1,"d":3},{"n":1,"d":3},{"n":0,"d":1}]
+        ],
+        "labels": ["1","2","3","4"],
+        "task": "pagerank",
+        "damping": {"n":1,"d":1},
+        "headline": "2"
+      },
+      "feedback": {
+        "correct": "Count links and page 1 leads with three in-links. But PageRank weighs each link by its **sender's** rank, and page 1's **single** out-link funnels **all** of page 1's rank into page 2. That one focused endorsement outweighs page 4's three split ones, so page 2 ranks #1 (5/13 > 4/13). **Most in-links ≠ most important.**",
+        "hints": [
+          "Don't just count in-links — ask how important each sender is, and how many other pages it also points to.",
+          "Most in-links doesn't win. A link from a high-rank page that points only at you is worth more than a crowd of links from pages that spray their rank everywhere. Page 1 has 3 in-links, but its one out-link hands page 2 all of page 1's rank.",
+          "Tap page 1's single out-link to page 2 — it carries all of page 1's rank. Page 2 ranks #1."
+        ]
+      }
+    },
+    {
+      "beatId": "explore-damping",
+      "required": true,
+      "track": "both",
+      "prompt": "Drag the damping dial on the symmetric 3-cycle and watch what happens to π.",
+      "interaction": {
+        "type": "chainBoard",
+        "display": "stationary",
+        "matrix": [
+          [{"n":0,"d":1},{"n":1,"d":1},{"n":0,"d":1}],
+          [{"n":0,"d":1},{"n":0,"d":1},{"n":1,"d":1}],
+          [{"n":1,"d":1},{"n":0,"d":1},{"n":0,"d":1}]
+        ],
+        "labels": ["A","B","C"],
+        "task": "pagerank",
+        "damping": {"n":85,"d":100},
+        "interactive": true,
+        "headline": "1/3,1/3,1/3"
+      },
+      "hero": {
+        "slowFirst": true,
+        "structuralReadout": "A 3-cycle is symmetric, so the damped Google matrix `G = d·M + (1−d)/3·J` fixes `π = (1/3, 1/3, 1/3)` for every damping `d` — the dial never moves the ranking.",
+        "reducedMotionFinalFrame": true
+      },
+      "feedback": {
+        "correct": "Drag the damping dial anywhere from 0 to 1 and `π` never leaves **(1/3, 1/3, 1/3)**. The three pages are perfectly symmetric, so no amount of teleport can tilt the ranking — damping isn't there to bias a fair race, it's there to **guarantee a unique answer exists**.",
+        "hints": [
+          "Drag the damping dial and watch all three shares — and the Google-matrix mix d·M + (1−d)/n·J re-weight live.",
+          "Damping does NOT change a fair ranking. On this symmetric cycle every page is interchangeable, so π stays (1/3,1/3,1/3) for every d — damping exists to guarantee a unique π, not to bias one. (On an asymmetric graph it CAN shift the ranking — see the aside.)",
+          "By symmetry, πG = π = (1/3, 1/3, 1/3) for any d."
+        ]
+      }
+    },
+    {
+      "beatId": "confirm-symmetry",
+      "required": true,
+      "track": "both",
+      "prompt": "Enter the long-run visit shares π for the 3-cycle at each damping value.",
+      "interaction": {
+        "type": "answerEntry",
+        "fields": [
+          {
+            "id": "pi85",
+            "label": "π for the 3-cycle at d = 85/100 (shares of A, B, C)",
+            "accept": ["1/3,1/3,1/3","1/3, 1/3, 1/3","(1/3,1/3,1/3)"],
+            "placeholder": "e.g. 1/3,1/3,1/3"
+          },
+          {
+            "id": "pi50",
+            "label": "π at d = 1/2 (shares of A, B, C)",
+            "accept": ["1/3,1/3,1/3","1/3, 1/3, 1/3","(1/3,1/3,1/3)"]
+          }
+        ]
+      },
+      "feedback": {
+        "correct": "Different `d`, same `π`. At `d = 85/100` and at `d = 1/2` the symmetric 3-cycle gives the **same** (1/3, 1/3, 1/3) — symmetry makes the stationary distribution damping-invariant.",
+        "hints": [
+          "You just watched the dial; type what π was at each setting.",
+          "A different d does NOT force a different π. Damping only trades weight between links and teleport, but on a symmetric graph both are uniform — so π = (1/3,1/3,1/3) at every d.",
+          "Both settings give (1/3, 1/3, 1/3)."
+        ]
+      }
+    },
+    {
+      "beatId": "triplet-pagerank",
+      "required": true,
+      "track": "both",
+      "prompt": "Reveal each lens — solve, iterate, simulate. All three land on the same PageRank.",
+      "interaction": {
+        "type": "tripletReveal",
+        "value": "πG=π",
+        "lenses": [
+          {
+            "label": "Solve πG=π",
+            "body": "Form G = d·M + (1−d)/n·J and solve the L6 fixed point πG = π, Σπ = 1 — one linear system."
+          },
+          {
+            "label": "Iterate Gⁿ",
+            "body": "Start anywhere and apply G over and over; the distribution converges to π (L7 convergence — damping makes G regular)."
+          },
+          {
+            "label": "Simulate the surfer",
+            "body": "Turn one surfer loose for millions of clicks (follow a link w.p. d, teleport w.p. 1−d); the fraction of time on each page approaches π."
+          }
+        ],
+        "display": "cards"
+      },
+      "feedback": {
+        "correct": "Solve, iterate, or simulate — all three land on the **same `π`**. PageRank isn't a bespoke algorithm; it's the **stationary distribution of the damped surfer's chain (L6)**, made unique by damping (L7 convergence).",
+        "hints": [
+          "Reveal each lens — solve, iterate, simulate.",
+          "PageRank is NOT a brand-new algorithm. It's the stationary distribution πG = π you met in L6, on a chain you build from the link graph.",
+          "All three roads give the same π."
+        ]
+      }
+    },
+    {
+      "beatId": "damping-saves-sink",
+      "required": true,
+      "track": "both",
+      "prompt": "Toggle damping off then on for this dangling-node graph. With damping on, does a unique π exist?",
+      "interaction": {
+        "type": "chainBoard",
+        "display": "stationary",
+        "matrix": [
+          [{"n":0,"d":1},{"n":1,"d":1},{"n":0,"d":1}],
+          [{"n":0,"d":1},{"n":0,"d":1},{"n":1,"d":1}],
+          [{"n":0,"d":1},{"n":0,"d":1},{"n":0,"d":1}]
+        ],
+        "labels": ["1","2","3"],
+        "task": "pagerank",
+        "damping": {"n":85,"d":100},
+        "headline": "unique"
+      },
+      "feedback": {
+        "correct": "Without damping, page 3 is a **dangling node** — the surfer lands there with nowhere to click, so rank pools at the sink and no proper `π` exists. Switch damping on and the `(1−d)/n` teleport gives every page an escape: `G` becomes **regular** (irreducible + aperiodic), so a **unique** `π` exists — exactly L7's convergence condition.",
+        "hints": [
+          "Toggle damping off, then on. With it off, where does the surfer go once she reaches page 3?",
+          "PageRank does NOT work fine without damping. A dangling node (or a 2-cycle trap) is a rank sink: the surfer gets stuck, the chain is reducible, and π isn't unique. The teleport (1−d)/n makes every page reachable — irreducible + aperiodic = regular — so a single π exists.",
+          "With damping on, a unique π exists; without it, the sink breaks uniqueness."
+        ]
+      }
+    },
+    {
+      "beatId": "mastery-fourNode",
+      "required": true,
+      "track": "both",
+      "prompt": "Mastery challenge: compute the PageRank of all four pages, then rank them most → least important.",
+      "interaction": {
+        "type": "masteryChallenge",
+        "scenario": "Four pages link like this: **1→2; 2→{1,4}; 3→{1,4}; 4→{1,2,3}**. With damping \\(d = 1\\) (no teleport — the graph is strongly connected, so a unique \\(\\pi\\) exists) the surfer follows a uniformly random out-link. (i) Compute each page's PageRank. (ii) Rank the four pages, most → least important.",
+        "fields": [
+          {
+            "id": "scores",
+            "label": "PageRank of pages 1, 2, 3, 4",
+            "accept": ["4/13,5/13,1/13,3/13","4/13, 5/13, 1/13, 3/13","(4/13,5/13,1/13,3/13)"],
+            "placeholder": "e.g. 4/13,5/13,1/13,3/13"
+          },
+          {
+            "id": "rank",
+            "label": "Rank the pages (most → least important)",
+            "accept": ["2,1,4,3","2 > 1 > 4 > 3","2>1>4>3","2 1 4 3"]
+          }
+        ]
+      },
+      "interviewNote": "PageRank — a web of links recast as a Markov chain whose stationary distribution is the ranking — is the canonical 'Markov in the wild' interview story. Say it in one breath: build the row-stochastic link matrix `M`, damp it into `G = d·M + (1−d)/n·J` for irreducibility, and the ranking is the stationary `π` (`πG = π`).",
+      "feedback": {
+        "correct": "Solve \\(\\pi G = \\pi\\) at \\(d = 1\\) (no teleport — the graph is strongly connected, so a unique \\(\\pi\\) exists). Build the row-stochastic \\(M\\): page 1 → \\([0, 1, 0, 0]\\); page 2 → \\([\\tfrac{1}{2}, 0, 0, \\tfrac{1}{2}]\\); page 3 → \\([\\tfrac{1}{2}, 0, 0, \\tfrac{1}{2}]\\); page 4 → \\([\\tfrac{1}{3}, \\tfrac{1}{3}, \\tfrac{1}{3}, 0]\\). Solving \\(\\pi M = \\pi\\), \\(\\sum \\pi = 1\\): \\[ \\pi = \\left(\\frac{4}{13},\\;\\frac{5}{13},\\;\\frac{1}{13},\\;\\frac{3}{13}\\right), \\quad \\text{rank}\\; 2 > 1 > 4 > 3. \\] Page 1 has the **most** in-links (from pages 2, 3, 4) yet ranks second — its single out-link funnels **all** of its rank into page 2, crowning it \\(5/13 > 4/13\\).",
+        "hints": [
+          "Build the surfer's row-stochastic matrix (each page splits 1 over its out-links) and solve πG = π with Σπ = 1.",
+          "Don't crown page 1 for having the most in-links. Trace the rank: page 1's only out-link sends ALL of its rank to page 2, so page 2 (5/13) edges out page 1 (4/13).",
+          "π = (4/13, 5/13, 1/13, 3/13); rank 2 > 1 > 4 > 3."
+        ]
+      }
+    },
+    {
+      "beatId": "recap",
+      "required": true,
+      "track": "both",
+      "prompt": "Reveal the recap to review the core principle.",
+      "interaction": { "type": "recap" },
+      "feedback": {
+        "correct": "A page's importance is its long-run share of a random surfer's visits — the **stationary distribution `π` of the Google matrix `G = d·M + (1−d)/n·J`** (`πG = π`). PageRank is L6's stationary distribution wearing a web crown; **damping** just guarantees one unique answer exists.",
+        "hints": [
+          "Most in-links doesn't win: page 1 (three in-links) loses to page 2 because page 1's focused out-link hands page 2 all its rank — 5/13 > 4/13.",
+          "Damping doesn't tilt a fair ranking (the symmetric 3-cycle stays 1/3,1/3,1/3 at every d) — it guarantees a unique π by making G regular, rescuing dangling-node sinks.",
+          "Next up: Markov in the Wild — where these chains show up beyond the textbook."
+        ]
+      }
+    }
+  ]
+}

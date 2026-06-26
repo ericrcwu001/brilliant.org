@@ -1,0 +1,291 @@
+{
+  "lessonId": "lesson-markov-chains-7",
+  "courseId": "course-markov-chains",
+  "title": "Convergence",
+  "patternOptions": ["H"],
+  "milestoneId": "markov-chains-convergence",
+  "unlocks": "lesson-markov-chains-8",
+  "schemaVersion": 1,
+  "beats": [
+    {
+      "beatId": "recall-LLN",
+      "required": true,
+      "track": "both",
+      "prompt": "Quick recall — match each concept to what it means.",
+      "interaction": {
+        "type": "retrievalGrid",
+        "pairs": [
+          { "left": "Law of Large Numbers (EV-1)", "right": "long-run average → the expected value" },
+          { "left": "Markov property (L1)", "right": "only the present state sets the next step" },
+          { "left": "Stationary π (L6)", "right": "the long-run fraction of time in each state" },
+          { "left": "Ergodic theorem (today)", "right": "time-average = space-average = π" }
+        ]
+      },
+      "feedback": {
+        "correct": "Long-run frequency = expectation (the **LLN**), and only the present state sets the next step (**memoryless**). Put them together and you get today's headline — the **ergodic theorem**: time-average = space-average = π.",
+        "hints": [
+          "Warm-up — pull these from EV-1 (the Law of Large Numbers) and L1 (the Markov property).",
+          "LLN: a long-run average converges to the expected value — not luck or streaks. Memoryless: once you know the present, the past drops out.",
+          "Match each to its meaning; together they read time-average = space-average = π (the ergodic theorem)."
+        ]
+      }
+    },
+    {
+      "beatId": "open-bet",
+      "required": false,
+      "track": "both",
+      "prompt": "Ana starts the 2-state weather chain on a **clear** day; Ben starts on a **rainy** day. They each run the chain for many weeks. What happens to their long-run fraction of clear days?",
+      "interaction": {
+        "type": "prediction",
+        "options": [
+          "Stay different — Ana's head start sticks",
+          "Same number — the start washes out",
+          "It depends on the chain"
+        ]
+      },
+      "feedback": {
+        "byOption": {
+          "Stay different — Ana's head start sticks": {
+            "note": "That's the trap. For a regular chain every row of Pⁿ marches to the SAME vector — the start washes out.",
+            "correct": false
+          },
+          "Same number — the start washes out": {
+            "note": "Today's headline (for a regular chain like the weather): both starts land on (3/7, 4/7).",
+            "correct": true
+          },
+          "It depends on the chain": {
+            "note": "You're peeking at the twist — a PERIODIC chain can have π yet never settle. But a regular chain always forgets its start.",
+            "correct": false
+          }
+        },
+        "hints": [
+          "No wrong guess yet — commit and we'll run it.",
+          "For a regular chain the start can't stick: every row of Pⁿ converges to one π.",
+          "Weather: clear-start 3/5→12/25→…→3/7; rainy-start 3/10→39/100→…→3/7. Both reach (3/7, 4/7)."
+        ]
+      }
+    },
+    {
+      "beatId": "name-regular-ergodic",
+      "required": false,
+      "track": "A",
+      "prompt": "Read this just-in-time primer on regular, aperiodic, and ergodic chains — then continue.",
+      "interaction": {
+        "type": "primer",
+        "variant": "custom",
+        "title": "Regular, aperiodic, ergodic",
+        "body": "A chain is **regular** when some power `Pⁿ` has **all-positive** entries — equivalently it is **irreducible** (every state reaches every other) **and aperiodic** (no fixed period traps it). For a regular chain, **every row of `Pⁿ` marches to the same vector π** — it is **ergodic**, so it *forgets where it started*. (The catch, next: a **periodic** chain can have a π and still never converge.)",
+        "collapsible": true
+      },
+      "feedback": {
+        "correct": "Regular = some `Pⁿ` is all-positive (irreducible AND aperiodic). Regular ⇒ `Pⁿ → π`.",
+        "hints": [
+          "Regular is more than 'has a π' — it needs aperiodicity too.",
+          "Irreducible: every state reaches every other. Aperiodic: no fixed cycle length traps the chain.",
+          "Regular ⇔ some power Pⁿ is all-positive ⇔ Pⁿ → π (the chain forgets its start)."
+        ]
+      }
+    },
+    {
+      "beatId": "early-power",
+      "required": true,
+      "track": "both",
+      "prompt": "Using the weather chain, step to n = 2 and type the (Clear, Clear) entry of P².",
+      "interaction": {
+        "type": "chainBoard",
+        "display": "powers",
+        "task": "entry",
+        "matrix": [
+          [{"n": 3, "d": 5}, {"n": 2, "d": 5}],
+          [{"n": 3, "d": 10}, {"n": 7, "d": 10}]
+        ],
+        "labels": ["Clear", "Rainy"],
+        "step": 2,
+        "cell": {"row": 0, "col": 0},
+        "interactive": true,
+        "headline": "12/25"
+      },
+      "feedback": {
+        "correct": "(P²)_clear,clear = (3/5)(3/5) + (2/5)(3/10) = 9/25 + 3/25 = **12/25** = .48. A finite power is an exact rational — close to π_clear = 3/7 ≈ .4286, but **not equal yet**.",
+        "hints": [
+          "Square P: (P²)_clear,clear is the 'Clear' row dotted with the 'Clear' column.",
+          "A finite Pⁿ does NOT already equal π — 12/25 = .48 is still above the limit 3/7 ≈ .4286.",
+          "(3/5)(3/5) + (2/5)(3/10) = 9/25 + 3/25 = 12/25."
+        ]
+      }
+    },
+    {
+      "beatId": "explore-collapse",
+      "required": false,
+      "track": "both",
+      "prompt": "Step n up to 8 and watch every row of Pⁿ collapse onto one identical row.",
+      "interaction": {
+        "type": "chainBoard",
+        "display": "powers",
+        "matrix": [
+          [{"n": 3, "d": 5}, {"n": 2, "d": 5}],
+          [{"n": 3, "d": 10}, {"n": 7, "d": 10}]
+        ],
+        "labels": ["Clear", "Rainy"],
+        "step": 8,
+        "interactive": true,
+        "headline": "3/7,4/7"
+      },
+      "hero": {
+        "slowFirst": true,
+        "structuralReadout": "Every row of Pⁿ marches to the same π — weather → (3/7, 4/7), Land of Oz → (2/5, 1/5, 2/5). The start washes out.",
+        "reducedMotionFinalFrame": true
+      },
+      "feedback": {
+        "correct": "Iterate `Pⁿ` and watch every row collapse onto one identical row — the start washes out. Weather → (3/7, 4/7); Land of Oz's three rows → (2/5, 1/5, 2/5).",
+        "hints": [
+          "Step n up and watch the two rows.",
+          "Different start rows do NOT stay different — they march together.",
+          "By a handful of steps the clear-row and the rainy-row both read (3/7, 4/7)."
+        ]
+      }
+    },
+    {
+      "beatId": "model-ergodic",
+      "required": false,
+      "track": "both",
+      "prompt": "Three lenses converge on one fact: Pⁿ→π. Reveal each one.",
+      "interaction": {
+        "type": "tripletReveal",
+        "value": "Pⁿ→π",
+        "lenses": [
+          { "label": "Rows of Pⁿ", "body": "every row → the same π = (3/7, 4/7)" },
+          { "label": "Ergodic theorem", "body": "time-average = space-average = π" },
+          { "label": "Memorylessness (L1)", "body": "the present mix, not the history, fixes the long-run mix" }
+        ],
+        "display": "cards"
+      },
+      "feedback": {
+        "correct": "Three lenses, one fact: **regular ⇒ `Pⁿ → π`**. The *distribution* settles; the chain itself keeps hopping forever.",
+        "hints": [
+          "Reveal each lens.",
+          "Convergence does NOT mean the chain freezes — it keeps moving; what stabilizes is the long-run fraction of time in each state.",
+          "Rows of Pⁿ → π; time-average = space-average = π; it's L1 memorylessness at the distribution level."
+        ]
+      }
+    },
+    {
+      "beatId": "approach-pi",
+      "required": true,
+      "track": "both",
+      "prompt": "Watch the clear-start distribution march toward the stationary distribution π, then enter π_clear.",
+      "interaction": {
+        "type": "chainBoard",
+        "display": "distribution",
+        "task": "stationary",
+        "matrix": [
+          [{"n": 3, "d": 5}, {"n": 2, "d": 5}],
+          [{"n": 3, "d": 10}, {"n": 7, "d": 10}]
+        ],
+        "labels": ["Clear", "Rainy"],
+        "start": 0,
+        "cell": {"row": 0, "col": 0},
+        "interactive": true,
+        "headline": "3/7"
+      },
+      "feedback": {
+        "correct": "The limit row of Pⁿ is π = (3/7, 4/7), so π_clear = **3/7** ≈ .4286. The clear-start entry marches 3/5 → 12/25 → … → 3/7 — it *approaches* but never exactly equals π at any finite n.",
+        "hints": [
+          "The bars settle to π = stationaryDistribution(P); read the clear share.",
+          "The entry doesn't jump straight to π, and it never overshoots — it marches 3/5 → 12/25 → … → 3/7.",
+          "π_clear = (3/10)/(2/5 + 3/10) = (3/10)/(7/10) = 3/7."
+        ]
+      }
+    },
+    {
+      "beatId": "periodic-trap",
+      "required": true,
+      "track": "both",
+      "prompt": "Step through Pⁿ for the Ehrenfest m=2 chain. Does it converge to the stationary distribution π = (1/4, 1/2, 1/4)?",
+      "interaction": {
+        "type": "chainBoard",
+        "display": "powers",
+        "task": "classify",
+        "matrix": [
+          [{"n": 0, "d": 1}, {"n": 1, "d": 1}, {"n": 0, "d": 1}],
+          [{"n": 1, "d": 2}, {"n": 0, "d": 1}, {"n": 1, "d": 2}],
+          [{"n": 0, "d": 1}, {"n": 1, "d": 1}, {"n": 0, "d": 1}]
+        ],
+        "labels": ["0", "1", "2"],
+        "step": 8,
+        "interactive": true,
+        "headline": "oscillates"
+      },
+      "interviewNote": "'A stationary π exists' ≠ '`Pⁿ` converges.' The missing hypothesis is **aperiodicity** (regularity). Ehrenfest m=2 is the canonical counterexample: `πP = π` holds, yet `Pⁿ` oscillates with period 2. (Its **Cesàro/time-average** still equals π — convergence in the time-average sense — but the instantaneous `Pⁿ` does not settle.)",
+      "feedback": {
+        "correct": "Right. Ehrenfest m=2 is periodic (period 2): Pⁿ flips between two matrices and never settles, even though π = (1/4, 1/2, 1/4) satisfies πP = π. You also need aperiodicity (regularity).",
+        "hints": [
+          "A stationary π can exist without Pⁿ converging — check the period.",
+          "Ehrenfest m=2 has period 2: from an even state you only return in an even number of steps, so Pⁿ alternates.",
+          "π = (1/4, 1/2, 1/4) exists, but Pⁿ oscillates (P^odd = P, P^even = [[1/2,0,1/2],[0,1,0],[1/2,0,1/2]]) → does NOT converge."
+        ]
+      }
+    },
+    {
+      "beatId": "interleave-forgets",
+      "required": true,
+      "track": "both",
+      "prompt": "Sort each chain — does it **forget** its starting state, or **never forget**?",
+      "interaction": {
+        "type": "retrievalGrid",
+        "pairs": [
+          { "left": "2-state weather (regular)", "right": "Forgets the start → both rows of Pⁿ reach (3/7, 4/7)" },
+          { "left": "Land of Oz (regular)", "right": "Forgets the start → all rows reach (2/5, 1/5, 2/5)" },
+          { "left": "Gambler's ruin (walls at 0, N)", "right": "Never forgets — absorbed at a wall; the start sets the ruin odds" },
+          { "left": "Drunkard: home or bar (absorbing)", "right": "Never forgets — ends frozen at home or bar" }
+        ]
+      },
+      "feedback": {
+        "correct": "Regular chains **forget** the start (every row of Pⁿ → π). Absorbing chains **never forget** — once absorbed they're frozen, and the start fixes the odds. **Not every chain forgets**, and an absorbing chain does not settle to an interior π.",
+        "hints": [
+          "Two fates: ergodic (rows merge to one π) vs absorbing (frozen at a wall).",
+          "An absorbing chain does NOT settle to an interior π — it gets stuck; where you start sets the absorption odds.",
+          "Weather & Land of Oz → forget; gambler's ruin & drunkard → never forget."
+        ]
+      }
+    },
+    {
+      "beatId": "mastery-challenge",
+      "required": true,
+      "track": "both",
+      "prompt": "Mastery challenge: same chain, two starts — and a periodic bonus.",
+      "interaction": {
+        "type": "masteryChallenge",
+        "scenario": "Two forecasters run the same 2-state weather chain \\(P = [[3/5,2/5],[3/10,7/10]]\\) (Clear, Rainy). Ana starts on a **clear** day, Ben on a **rainy** day. They each let it run for weeks.",
+        "fields": [
+          { "id": "fromClear", "label": "Ana's long-run fraction of clear days (started clear)", "accept": ["3/7"] },
+          { "id": "fromRainy", "label": "Ben's long-run fraction of clear days (started rainy)", "accept": ["3/7"] },
+          { "id": "ehrenfest", "label": "Bonus — does Ehrenfest m=2 (π = (1/4,1/2,1/4)) converge as n→∞? (yes/no)", "accept": ["no"] }
+        ]
+      },
+      "feedback": {
+        "correct": "Both starts wash out to the SAME long run: from clear → \\(\\mathbf{3/7}\\), from rainy → \\(\\mathbf{3/7}\\) (finite check: \\(12/25\\) from clear, \\(39/100\\) from rainy, both → \\(3/7\\)). But Ehrenfest m=2 does **not** converge — \\(\\pi = (1/4, 1/2, 1/4)\\) exists yet \\(P^n\\) oscillates (period 2). Existence of \\(\\pi \\neq\\) convergence; you need regularity.",
+        "hints": [
+          "The weather chain is regular, so the start washes out — both rows of Pⁿ reach the same π. Ehrenfest m=2 has a π but is periodic.",
+          "A higher-probability start keeps NO long-run edge: clear-start and rainy-start both give long-run P(clear) = 3/7. And a stationary π alone does not force convergence — Ehrenfest m=2 oscillates.",
+          "From clear → 3/7; from rainy → 3/7; Ehrenfest m=2 converges? No."
+        ]
+      }
+    },
+    {
+      "beatId": "recap",
+      "required": false,
+      "track": "both",
+      "prompt": "Reveal the recap to review the core principle.",
+      "interaction": { "type": "recap" },
+      "feedback": {
+        "correct": "A **regular** chain (some Pⁿ all-positive ⇒ irreducible + aperiodic) forgets its start: every row of Pⁿ → π, so the long run is decided by P alone, never by X₀. A **periodic** chain can have a π and still oscillate forever.",
+        "hints": [
+          "Finite powers are exact rationals approaching π: 12/25, 39/100, … → 3/7. Both starts land on (3/7, 4/7).",
+          "Convergence is about the DISTRIBUTION, not the chain freezing — it keeps hopping; the fractions settle.",
+          "Next up (L8): when is a chain reversible? Detailed balance πᵢpᵢⱼ = πⱼpⱼᵢ."
+        ]
+      }
+    }
+  ]
+}

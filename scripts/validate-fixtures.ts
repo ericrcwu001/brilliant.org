@@ -15,7 +15,7 @@ import {
   SnapshotSchema,
 } from '../src/content/schema'
 import type { Beat, Course, Lesson } from '../src/content/schema'
-import { buildAutomaton, reduce as reduceRational } from '../src/engine/automaton'
+import { buildAutomaton, reduce as reduceRational, ratAdd, ratMul } from '../src/engine/automaton'
 import {
   nCk,
   nPk,
@@ -244,8 +244,41 @@ for (const lesson of lessons) {
         break
       }
       case 'absorption': {
-        const B = absorptionProbabilities(P, it.absorbing ?? [])
-        got = it.headline.includes(',') ? formatVector(B.flat()) : formatRational(B.flat()[0])
+        // Two reconciled reads (engine unchanged — both compose absorptionProbabilities):
+        //  • vector headline + `cell` → reach-a-target-wall COLUMN (L5 solve-matrix):
+        //    column `cell.col` of B = P(absorbed at that wall | each transient start).
+        //  • scalar headline + `cell` → RETURN probability of the home state `cell.row`
+        //    (L4 transient-vs-recurrent): make `home` absorbing, then
+        //    f_home = Σ_j P[home][j]·P(reach home before a wall | start j).
+        //  • no `cell` → generic flattened B (back-compat).
+        const walls = it.absorbing ?? []
+        if (it.cell && it.headline.includes(',')) {
+          const col = it.cell.col
+          const B = absorptionProbabilities(P, walls)
+          got = formatVector(B.map((bRow) => bRow[col]))
+        } else if (it.cell) {
+          const home = it.cell.row
+          const absorbing = [home, ...walls.filter((w) => w !== home)]
+          const Pmod = P.map((bRow, i) =>
+            i === home ? bRow.map((_, j) => ({ n: j === home ? 1 : 0, d: 1 })) : bRow,
+          )
+          const B = absorptionProbabilities(Pmod, absorbing)
+          const transient = P.map((_, i) => i).filter((i) => !absorbing.includes(i))
+          const rowOf = new Map(transient.map((s, idx) => [s, idx]))
+          let f: Rational = { n: 0, d: 1 }
+          for (let j = 0; j < P.length; j++) {
+            if (P[home][j].n === 0) continue
+            const g: Rational =
+              j === home ? { n: 1, d: 1 }
+              : absorbing.includes(j) ? { n: 0, d: 1 }
+              : B[rowOf.get(j)!][0]
+            f = ratAdd(f, ratMul(P[home][j], g))
+          }
+          got = formatRational(f)
+        } else {
+          const B = absorptionProbabilities(P, walls)
+          got = it.headline.includes(',') ? formatVector(B.flat()) : formatRational(B.flat()[0])
+        }
         break
       }
       case 'stationary': {

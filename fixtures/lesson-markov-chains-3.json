@@ -1,0 +1,291 @@
+{
+  "lessonId": "lesson-markov-chains-3",
+  "courseId": "course-markov-chains",
+  "title": "Multi-Step Transitions",
+  "patternOptions": ["H"],
+  "milestoneId": "markov-chains-multistep",
+  "unlocks": "lesson-markov-chains-4",
+  "schemaVersion": 1,
+  "beats": [
+    {
+      "beatId": "recall-total-prob",
+      "required": true,
+      "track": "both",
+      "prompt": "Quick recall — match each concept to what it does.",
+      "interaction": {
+        "type": "retrievalGrid",
+        "pairs": [
+          {
+            "left": "Condition on the first step (Penney's)",
+            "right": "split a multi-step chance by where step 1 lands"
+          },
+          {
+            "left": "Law of total probability (Bayes, count-the-defects)",
+            "right": "P(E) = Σᵢ P(E | caseᵢ)·P(caseᵢ)"
+          },
+          {
+            "left": "bayes.ts sequentialPosterior",
+            "right": "apply one step, then total-probability over where you land"
+          }
+        ]
+      },
+      "feedback": {
+        "correct": "A multi-step chance is not one product — you condition on the first step and sum over where you land. That's the law of total probability; net-new this lesson is that matrix powers do that summing automatically, at every step.",
+        "hints": [
+          "Warm-up from Penney's first-step analysis and Bayes — no pressure.",
+          "A multi-step chance isn't a single path's product: split on the first step and add the cases.",
+          "First-step split = total probability = the move Pⁿ automates."
+        ]
+      }
+    },
+    {
+      "beatId": "predict-two-day-snow",
+      "required": true,
+      "track": "both",
+      "prompt": "It rained today in the Land of Oz. Two days from now, what is the probability it is snowing?",
+      "interaction": {
+        "type": "prediction",
+        "options": [
+          "1/8 — it's the one story Rain→Nice→Snow",
+          "1/4 — that's P(Rain→Snow) in one day",
+          "1/16 — square the one-step chance",
+          "3/8 — add up all three two-day paths"
+        ]
+      },
+      "feedback": {
+        "byOption": {
+          "1/8 — it's the one story Rain→Nice→Snow": {
+            "note": "Rain→Nice→Snow is one way, worth 1/8 — but snow-in-two-days can also come Rain→Rain→Snow (1/8) and Rain→Snow→Snow (1/8). It's all three: 1/8+1/8+1/8 = 3/8.",
+            "correct": false
+          },
+          "1/4 — that's P(Rain→Snow) in one day": {
+            "note": "1/4 is the ONE-step chance. Two days means an intermediate day you must pass through and sum over — that's P², not P.",
+            "correct": false
+          },
+          "1/16 — square the one-step chance": {
+            "note": "(1/4)² = 1/16 is 'square each entry'. But (P²)ᵢⱼ is row·column — a sum of products, not a square.",
+            "correct": false
+          },
+          "3/8 — add up all three two-day paths": {
+            "note": "Right — sum the three Rain→Snow paths (each 1/8) → 3/8. (Pⁿ)ᵢⱼ is the bookkeeping that never lets you drop a path.",
+            "correct": true
+          }
+        },
+        "hints": [
+          "No wrong guess yet — commit and we'll trace the paths.",
+          "Snow in two days has more than one route — one path vs the sum.",
+          "Three paths, each 1/8 → 3/8."
+        ]
+      }
+    },
+    {
+      "beatId": "name-chapman-kolmogorov",
+      "required": false,
+      "track": "A",
+      "prompt": "Read this just-in-time primer on n-step probabilities and Chapman–Kolmogorov — then continue.",
+      "interaction": {
+        "type": "primer",
+        "variant": "custom",
+        "title": "n-step probabilities: Pⁿ and Chapman–Kolmogorov",
+        "body": "The chance of going from state i to state j in exactly n steps is a single entry of the matrix power: (Pⁿ)ᵢⱼ. It already adds up every length-n path from i to j, because matrix multiplication applies the law of total probability one step at a time. Chapman–Kolmogorov names this: Pᵐ⁺ⁿ = Pᵐ·Pⁿ — split an (m+n)-step trip at the intermediate state and sum over it.",
+        "collapsible": true
+      },
+      "feedback": {
+        "correct": "n-step transition probability = (Pⁿ)ᵢⱼ. Chapman–Kolmogorov: Pᵐ⁺ⁿ = Pᵐ·Pⁿ.",
+        "hints": [
+          "One step is P; n steps is Pⁿ.",
+          "(Pⁿ)ᵢⱼ already sums every length-n path i→j — that's Chapman–Kolmogorov.",
+          "Compose by multiplying (Pᵐ⁺ⁿ = Pᵐ Pⁿ), not by adding."
+        ]
+      }
+    },
+    {
+      "beatId": "warmup-two-step",
+      "required": true,
+      "track": "both",
+      "prompt": "Two-state weather: P(Clear→Clear) = 3/5, P(Clear→Rainy) = 2/5, P(Rainy→Clear) = 3/10, P(Rainy→Rainy) = 7/10. What is (P²)_{Clear,Clear} — the two-day chance of being Clear starting from Clear?",
+      "interaction": {
+        "type": "answerEntry",
+        "fields": [
+          {
+            "id": "cc",
+            "label": "(P²) Clear→Clear",
+            "accept": ["12/25"],
+            "placeholder": "e.g. 2/5"
+          }
+        ]
+      },
+      "feedback": {
+        "correct": "(P²)cc = (3/5·3/5) + (2/5·3/10) = 9/25 + 3/25 = 12/25. Two ways to be clear in two days: stay clear, or detour through rainy.",
+        "hints": [
+          "Two days Clear→Clear: list the ways the MIDDLE day could go.",
+          "(P²)cc isn't (3/5)² = 9/25 — that's only Clear→Clear→Clear; you dropped the via-rainy path.",
+          "Add Clear→Rainy→Clear (2/5·3/10 = 3/25): 9/25 + 3/25 = 12/25."
+        ]
+      }
+    },
+    {
+      "beatId": "explore-powers",
+      "required": true,
+      "track": "both",
+      "prompt": "Step n from 1 to 2 and watch each cell of P² fill as a sum of path-products.",
+      "interaction": {
+        "type": "chainBoard",
+        "display": "powers",
+        "matrix": [
+          [{"n":1,"d":2},{"n":1,"d":4},{"n":1,"d":4}],
+          [{"n":1,"d":2},{"n":0,"d":1},{"n":1,"d":2}],
+          [{"n":1,"d":4},{"n":1,"d":4},{"n":1,"d":2}]
+        ],
+        "labels": ["Rain","Nice","Snow"],
+        "task": "entry",
+        "step": 2,
+        "cell": {"row":0,"col":2},
+        "interactive": true,
+        "headline": "3/8"
+      },
+      "hero": {
+        "slowFirst": true,
+        "structuralReadout": "(P²)Rain,Snow = (½·¼) + (¼·½) + (¼·½) = 1/8+1/8+1/8 = 3/8 — three paths, one entry.",
+        "reducedMotionFinalFrame": true
+      },
+      "feedback": {
+        "correct": "Watch P¹ become P²: each entry fills as a sum of path-products, and every row still sums to 1. The Rain→Snow entry lands at 3/8 — the three two-day paths, added.",
+        "hints": [
+          "Step n from 1 to 2 and watch the Rain→Snow cell fill.",
+          "Pⁿ ≠ square each entry, and ≠ P+P — you compose by MULTIPLYING (P·P); squaring or adding breaks the row-sum-to-1 law.",
+          "Each (P²)ᵢⱼ = row i · column j; the Rain→Snow cell sums to 3/8."
+        ]
+      }
+    },
+    {
+      "beatId": "prove-two-day-snow",
+      "required": true,
+      "track": "both",
+      "prompt": "Now compute it exactly: what is (P²)_{Rain,Snow} — the probability of being in Snow two days after Rain?",
+      "interaction": {
+        "type": "answerEntry",
+        "fields": [
+          {
+            "id": "rs2",
+            "label": "(P²) Rain→Snow",
+            "accept": ["3/8"],
+            "placeholder": "e.g. 1/4"
+          }
+        ]
+      },
+      "feedback": {
+        "correct": "Decompose by the middle day: R→R→S (½·¼) + R→N→S (¼·½) + R→S→S (¼·½) = 1/8+1/8+1/8 = 3/8. The intermediate state is exactly what you sum over.",
+        "hints": [
+          "List the three middle days — the chain can pass through Rain, Nice, or Snow.",
+          "Don't stop at one path (1/8): Rain→Nice→Snow is just one of three two-day routes to snow.",
+          "1/8 + 1/8 + 1/8 = 3/8."
+        ]
+      }
+    },
+    {
+      "beatId": "read-another-entry",
+      "required": true,
+      "track": "both",
+      "prompt": "The P² grid for Land of Oz is shown. Tap the Rain→Rain cell to expand its path-products, then confirm the value.",
+      "interaction": {
+        "type": "chainBoard",
+        "display": "powers",
+        "matrix": [
+          [{"n":1,"d":2},{"n":1,"d":4},{"n":1,"d":4}],
+          [{"n":1,"d":2},{"n":0,"d":1},{"n":1,"d":2}],
+          [{"n":1,"d":4},{"n":1,"d":4},{"n":1,"d":2}]
+        ],
+        "labels": ["Rain","Nice","Snow"],
+        "task": "entry",
+        "step": 2,
+        "cell": {"row":0,"col":0},
+        "interactive": true,
+        "headline": "7/16"
+      },
+      "feedback": {
+        "correct": "(P²)Rain,Rain = (½·½) + (¼·½) + (¼·¼) = 1/4 + 1/8 + 1/16 = 7/16. Even the diagonal is a path-sum, not just 'stay put' — and row Rain of P² = (7/16, 3/16, 3/8) sums to 1.",
+        "hints": [
+          "Tap the Rain→Rain cell of P² and read what it sums.",
+          "The 2-step diagonal isn't only Rain→Rain→Rain (1/4): add the come-back paths Rain→Nice→Rain and Rain→Snow→Rain.",
+          "1/4 + 1/8 + 1/16 = 7/16."
+        ]
+      }
+    },
+    {
+      "beatId": "model-ck-three-ways",
+      "required": true,
+      "track": "both",
+      "prompt": "Reveal each of three lenses — they all converge on the same (P²)_{Rain,Snow}.",
+      "interaction": {
+        "type": "tripletReveal",
+        "value": "3/8",
+        "lenses": [
+          {
+            "label": "Sum over paths",
+            "body": "R→R→S + R→N→S + R→S→S = ½·¼ + ¼·½ + ¼·½ = 1/8+1/8+1/8 = 3/8"
+          },
+          {
+            "label": "Row × column",
+            "body": "(P²)Rain,Snow = (row Rain of P)·(col Snow of P) = [½,¼,¼]·[¼,½,½]ᵀ = 3/8"
+          },
+          {
+            "label": "One step of total probability",
+            "body": "P(Snow in 2 | Rain) = Σₖ P(Rain→k)·P(k→Snow) — condition on the middle day, then add (cf. bayes.ts sequentialPosterior)"
+          }
+        ],
+        "display": "cards"
+      },
+      "interviewNote": "The n-step transition probability is the (i,j) entry of Pⁿ — interviewers check that you sum over the intermediate state, not just multiply one path. (P²)ᵢⱼ = Σₖ pᵢₖpₖⱼ is the law of total probability with the middle step as the cases.",
+      "feedback": {
+        "correct": "Sum-over-paths, the row × column matrix product, and one-step total probability are the same computation — all land on (P²)Rain,Snow = 3/8.",
+        "hints": [
+          "Reveal each lens.",
+          "Matrix powers aren't a new trick — they're total probability, composed (the same move you used in Bayes).",
+          "All three roads give 3/8."
+        ]
+      }
+    },
+    {
+      "beatId": "mastery-three-day-snow",
+      "required": true,
+      "track": "both",
+      "prompt": "Mastery challenge — same Land of Oz chain. It rained today. What is the probability it is snowing in three days?",
+      "interaction": {
+        "type": "masteryChallenge",
+        "scenario": "Same Land of Oz chain. It **rained today**. Three days from now, what is the chance it is **snowing**? — i.e. \\((P^3)_{\\text{Rain},\\text{Snow}}\\).",
+        "fields": [
+          {
+            "id": "rs3",
+            "label": "\\(P(\\text{Snow in 3 days} \\mid \\text{Rain}) = (P^3)_{\\text{Rain},\\text{Snow}}\\)",
+            "accept": ["25/64"],
+            "placeholder": "e.g. 3/8"
+          }
+        ]
+      },
+      "feedback": {
+        "correct": "Let \\(P^n\\) do the summing: \\[ (P^3)_{R,S} = (P^2 \\cdot P)_{R,S} = \\frac{7}{16}\\cdot\\frac{1}{4} + \\frac{3}{16}\\cdot\\frac{1}{2} + \\frac{6}{16}\\cdot\\frac{1}{2} = \\frac{7}{64} + \\frac{6}{64} + \\frac{12}{64} = \\frac{25}{64} \\] The sum of all nine length-3 Rain→Snow paths.",
+        "hints": [
+          "Three days = one more step. Reuse the P² row for Rain you just found: (7/16, 3/16, 6/16).",
+          "Three steps isn't picking one 3-edge path — sum over BOTH intermediate days, or just do one more P·P.",
+          "7/16·¼ + 3/16·½ + 6/16·½ = 25/64."
+        ]
+      }
+    },
+    {
+      "beatId": "recap",
+      "required": true,
+      "track": "both",
+      "prompt": "Reveal the recap to review the core principle.",
+      "interaction": { "type": "recap" },
+      "feedback": {
+        "correct": "The chance of getting from i to j in n steps is one number — (Pⁿ)ᵢⱼ — and it already sums every length-n path, because matrix multiplication is the law of total probability applied one step at a time.",
+        "hints": [
+          "Two-day snow after rain is 3/8 — three paths of 1/8, not the single 1/8 story.",
+          "Every Pⁿ entry is a row·column path-sum; the rows always sum to 1.",
+          "Next up: keep multiplying and Pⁿ settles — the rows converge to one stationary distribution."
+        ]
+      }
+    }
+  ]
+}

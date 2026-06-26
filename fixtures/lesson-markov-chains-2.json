@@ -1,0 +1,275 @@
+{
+  "lessonId": "lesson-markov-chains-2",
+  "courseId": "course-markov-chains",
+  "title": "The Transition Matrix",
+  "patternOptions": ["H"],
+  "milestoneId": "markov-chains-matrix",
+  "unlocks": "lesson-markov-chains-3",
+  "schemaVersion": 1,
+  "beats": [
+    {
+      "beatId": "recall-rows-sum-to-1",
+      "required": true,
+      "track": "both",
+      "prompt": "Quick warm-up — match each starting state's exits to the forced complement.",
+      "interaction": {
+        "type": "retrievalGrid",
+        "pairs": [
+          { "left": "Fair coin: P(H) = 1/2 → P(T)", "right": "1/2" },
+          { "left": "Gambler: P(up) = 2/5 → P(down)", "right": "3/5" },
+          { "left": "Any state: total of its out-edges", "right": "1" }
+        ]
+      },
+      "feedback": {
+        "correct": "Those familiar splits — the fair coin's 1/2-1/2, the gambler's 2/5-3/5 — are exactly the **rows** of a transition matrix, and each one sums to 1.",
+        "hints": [
+          "Warm-up from Penney's / Gambler's Ruin — a state's exits, no pressure.",
+          "From where you are now you go somewhere next with certainty, so a state's outgoing probabilities are a full menu that must add to 1. A row summing to 9/10 means the chain vanishes a tenth of the time; 11/10 means it's in two places at once.",
+          "Fair coin: T = 1/2; gambler: down = 3/5; any state's out-edges total 1."
+        ]
+      }
+    },
+    {
+      "beatId": "predict-the-missing-edge",
+      "required": true,
+      "track": "both",
+      "prompt": "The Rainy row of the Clear/Rainy weather chain reads [3/10, ?]. What must the missing entry be?",
+      "interaction": {
+        "type": "prediction",
+        "options": [
+          "7/10 — forced by the row totaling 1",
+          "3/10 — the two out-edges must match",
+          "Can't tell — it depends on the weather"
+        ]
+      },
+      "feedback": {
+        "byOption": {
+          "7/10 — forced by the row totaling 1": {
+            "note": "Right — you never need the weather for the last entry. The Rainy row must total 1, so it's 1 − 3/10 = 7/10.",
+            "correct": true
+          },
+          "3/10 — the two out-edges must match": {
+            "note": "Out-edges only have to *sum* to 1, not match. From Rainy it's 3/10 to flip and 7/10 to stay — different numbers, same row.",
+            "correct": false
+          },
+          "Can't tell — it depends on the weather": {
+            "note": "You never need the story for the LAST entry — the row must total 1, so it's forced: ? = 1 − 3/10 = 7/10.",
+            "correct": false
+          }
+        },
+        "hints": [
+          "No wrong guess yet — commit and we'll check the row total.",
+          "The last entry never needs the story — the row must total 1, so it's forced; and the two out-edges don't have to match, only sum to 1.",
+          "1 − 3/10 = 7/10."
+        ]
+      }
+    },
+    {
+      "beatId": "name-the-matrix",
+      "required": false,
+      "track": "A",
+      "prompt": "Read this just-in-time primer on the transition matrix — then continue.",
+      "interaction": {
+        "type": "primer",
+        "variant": "custom",
+        "title": "The transition matrix",
+        "body": "Stack each state's outgoing probabilities as one **row** and you get the **transition matrix** `P`. The Clear row holds Clear's exits; the Rainy row holds Rainy's. Because you always go *somewhere* next, **every row sums to 1** (row-stochastic — Green Book p.53). The transition graph (Fig 5.1) is the same object drawn as arrows.",
+        "collapsible": true
+      },
+      "feedback": {
+        "correct": "Each state's exits, stacked into a row — that's `P`, and every row sums to 1.",
+        "hints": [
+          "Rows, not columns.",
+          "Row i = state i's outgoing probabilities (its arrows).",
+          "P[i][j] = the arrow i→j; every row totals 1."
+        ]
+      }
+    },
+    {
+      "beatId": "fill-the-row",
+      "required": true,
+      "track": "both",
+      "prompt": "The Clear row is [3/5, ?]. Fill in the missing entry so the row sums to 1.",
+      "interaction": {
+        "type": "answerEntry",
+        "fields": [
+          {
+            "id": "clear-flip",
+            "label": "Clear row is [3/5, ?] — fill P(Clear → Rainy)",
+            "accept": ["2/5"],
+            "placeholder": "e.g. 1/2"
+          }
+        ]
+      },
+      "feedback": {
+        "correct": "1 − 3/5 = **2/5**. The last entry is forced by the row summing to 1 — you need nothing about the weather.",
+        "hints": [
+          "The Clear row must total 1. What's left after 3/5?",
+          "You never need the story for the last entry — the row must total 1, so it's forced: ? = 1 − 3/5 = 2/5.",
+          "2/5."
+        ]
+      }
+    },
+    {
+      "beatId": "build-the-board",
+      "required": true,
+      "track": "both",
+      "prompt": "Drag any edge and watch its matrix cell mirror it — a node's two arrows always re-close to 1.",
+      "interaction": {
+        "type": "chainBoard",
+        "display": "diagram",
+        "task": "build",
+        "matrix": [
+          [{ "n": 3, "d": 5 }, { "n": 2, "d": 5 }],
+          [{ "n": 3, "d": 10 }, { "n": 7, "d": 10 }]
+        ],
+        "labels": ["Clear", "Rainy"],
+        "interactive": true,
+        "headline": "1"
+      },
+      "hero": {
+        "slowFirst": true,
+        "structuralReadout": "Every arrow Clear→Rainy you set IS the cell P[Clear][Rainy]; Clear's two arrows ARE its row, and that row always closes to 1.",
+        "reducedMotionFinalFrame": true
+      },
+      "feedback": {
+        "correct": "Drag any arrow and its matrix cell moves with it; a node's two arrows always re-close to 1 — the diagram and the grid are one object.",
+        "hints": [
+          "Drag an edge or step a split; watch the matrix cell mirror it.",
+          "They're one object in two outfits. Every arrow i→j labeled p IS the cell P[i][j]; all the arrows out of a node ARE that node's row. Drag an edge and the matrix moves with it.",
+          "Clear row [3/5, 2/5], Rainy row [3/10, 7/10] — each sums to 1."
+        ]
+      }
+    },
+    {
+      "beatId": "read-as-one",
+      "required": true,
+      "track": "both",
+      "prompt": "Reveal each of three lenses — diagram, matrix, and row-sum law — and watch them converge on one object P.",
+      "interaction": {
+        "type": "tripletReveal",
+        "value": "Σrow=1",
+        "lenses": [
+          { "label": "Diagram", "body": "Arrows out of each state, each labeled with a probability; one state's arrows fan out to total 1." },
+          { "label": "Matrix P", "body": "Stack each state's arrows as a row of the M×M grid P; the entry P[i][j] is exactly the arrow i→j." },
+          { "label": "Row-stochastic", "body": "Both pictures obey one law: every row of P sums to 1 — rows (a state's exits), not columns." }
+        ],
+        "display": "cards"
+      },
+      "interviewNote": "Row-stochastic — every row of P sums to 1 — is the first sanity check an interviewer expects you to state about a transition matrix.",
+      "feedback": {
+        "correct": "Diagram, grid, and the row-sum law are three views of **one** object `P` — and it's the **rows** (each state's exits) that sum to 1, never the columns.",
+        "hints": [
+          "Reveal each view — they describe the same P.",
+          "A row is ONE starting state's options, so it sums to 1. A column gathers arrows from different starting states into one destination — there's no reason that totals anything. (Row-stochastic is the Green Book convention, p.53.)",
+          "Diagram = matrix = row-stochastic: every row of P sums to 1."
+        ]
+      }
+    },
+    {
+      "beatId": "spot-the-invalid",
+      "required": true,
+      "track": "both",
+      "prompt": "Not every grid is a transition matrix — match each row to its verdict.",
+      "interaction": {
+        "type": "retrievalGrid",
+        "pairs": [
+          { "left": "Row [3/5, 2/5]", "right": "valid — sums to 1" },
+          { "left": "Row [3/10, 6/10]", "right": "invalid — sums to 9/10; fix 6/10 → 7/10" },
+          { "left": "Row [3/10, 7/10]", "right": "valid — sums to 1" }
+        ]
+      },
+      "feedback": {
+        "correct": "A grid is a transition matrix only if **every row sums to 1**. 3/10 + 6/10 = 9/10 fails — fix 6/10 → 7/10 to close the Rainy row.",
+        "hints": [
+          "Add each row across. Which one doesn't reach 1?",
+          "Not every grid of probabilities is a P — the only test is rows-sum-to-1. A row of 3/10 + 6/10 = 9/10 leaks a tenth of the probability, so the chain isn't valid.",
+          "[3/10, 6/10] sums to 9/10 → invalid; fix 6/10 → 7/10."
+        ]
+      }
+    },
+    {
+      "beatId": "build-from-story",
+      "required": true,
+      "track": "both",
+      "prompt": "'Sunny stays sunny 7 in 10 times; when it rains, it turns sunny 4 in 10 times.' Build the transition matrix — each sentence fills one row.",
+      "interaction": {
+        "type": "chainBoard",
+        "display": "matrix",
+        "task": "build",
+        "matrix": [
+          [{ "n": 7, "d": 10 }, { "n": 3, "d": 10 }],
+          [{ "n": 4, "d": 10 }, { "n": 6, "d": 10 }]
+        ],
+        "labels": ["Sunny", "Rainy"],
+        "interactive": true,
+        "headline": "1"
+      },
+      "feedback": {
+        "correct": "'Sunny stays sunny 7/10' is the diagonal P[Sunny][Sunny] = 7/10, leaving 3/10 to turn rainy; 'rainy→sunny 4/10' leaves 6/10 to stay rainy. **P = [[7/10, 3/10], [4/10, 6/10]]** — both rows sum to 1.",
+        "hints": [
+          "Each sentence fills one cell; the rest of that row is forced to total 1.",
+          "'Sunny stays sunny 7/10' is a real step Sunny→Sunny — it's the diagonal entry P[Sunny][Sunny] = 7/10, and it counts toward that row's sum like any other arrow.",
+          "[[7/10, 3/10], [4/10, 6/10]]."
+        ]
+      }
+    },
+    {
+      "beatId": "mastery-challenge",
+      "required": true,
+      "track": "both",
+      "prompt": "Mastery challenge — build the Land-of-Oz transition matrix and answer the two-step query.",
+      "interaction": {
+        "type": "masteryChallenge",
+        "scenario": "In the **Land of Oz** the weather is Rain, Nice, or Snow. They **never have two nice days in a row** — after a nice day it's a coin-flip between rain and snow. After rain or snow there's an even chance the next day is the **same**; when it does **change**, only half those changes are to a nice day (the other half swap rain↔snow). Build \\(P\\) (rows Rain, Nice, Snow) and verify every row sums to 1.",
+        "fields": [
+          {
+            "id": "nice-nice",
+            "label": "From the story, \\(P(\\text{Nice} \\to \\text{Nice})\\)",
+            "accept": ["0", "0/1"],
+            "placeholder": "e.g. 1/2"
+          },
+          {
+            "id": "snow-snow",
+            "label": "\\(P(\\text{Snow} \\to \\text{Snow})\\)",
+            "accept": ["1/2"]
+          },
+          {
+            "id": "rowsum",
+            "label": "Each of the three rows (Rain, Nice, Snow) sums to",
+            "accept": ["1", "1/1"]
+          },
+          {
+            "id": "seed",
+            "label": "Two steps: \\((P^2)_{\\text{Rain,Snow}}\\)",
+            "accept": ["3/8"],
+            "placeholder": "e.g. 1/2"
+          }
+        ]
+      },
+      "feedback": {
+        "correct": "Land-of-Oz \\(P = [[1/2,1/4,1/4],[1/2,0,1/2],[1/4,1/4,1/2]]\\) (Rain/Nice/Snow): \\(P(\\text{Nice} \\to \\text{Nice}) = 0\\), every row sums to 1, and two steps out \\((P^2)_{\\text{Rain,Snow}} = (1/2)(1/4) + (1/4)(1/2) + (1/4)(1/2) = \\mathbf{3/8}\\) — the exact chain L3 opens on.",
+        "hints": [
+          "Each sentence sets one row; the diagonal is 'stays the same,' and a row's last entry is forced to total 1.",
+          "A third state changes nothing about the law — every row is still one starting day's full menu, so the Rain, Nice, AND Snow rows each sum to 1 (even the Nice row, which is 1/2 + 0 + 1/2).",
+          "Nice→Nice = 0; Snow→Snow = 1/2; each row sums to 1; (P²)_Rain,Snow = 3/8."
+        ]
+      }
+    },
+    {
+      "beatId": "recap",
+      "required": true,
+      "track": "both",
+      "prompt": "Reveal the recap to review the core principle.",
+      "interaction": { "type": "recap" },
+      "feedback": {
+        "correct": "A transition matrix is the diagram rewritten: each state's exits stack into a row, and because you always go somewhere next, **every row sums to 1** — so the diagram and the matrix are one object.",
+        "hints": [
+          "Every arrow i→j labeled p IS the cell P[i][j]; a node's arrows ARE its row.",
+          "A missing entry is never free — it's 1 − (the rest).",
+          "Next up: multiply P by itself — where are you after two steps? (Pⁿ)."
+        ]
+      }
+    }
+  ]
+}

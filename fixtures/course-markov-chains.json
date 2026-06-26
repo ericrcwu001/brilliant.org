@@ -8,10 +8,141 @@
   "domain": "Probability",
   "domainOrder": 0,
   "order": 2,
-  "status": "coming_soon",
+  "status": "live",
   "tagline": "Where does a memoryless process settle?",
-  "accent": "ch1",
+  "accent": "ch3",
   "vizKey": "fourNode",
-  "lessons": [],
-  "roadmap": []
+  "lessons": [
+    {
+      "lessonId": "lesson-markov-chains-1",
+      "title": "The Markov Property",
+      "summary": "Only the present matters: a memoryless process reads the current state and discards the path.",
+      "milestoneId": "markov-chains-property",
+      "built": true,
+      "glyphKey": "P(·|now)",
+      "vizKey": "twoNode"
+    },
+    {
+      "lessonId": "lesson-markov-chains-2",
+      "title": "The Transition Matrix",
+      "summary": "Stack each state's exits into a row of P — and every row sums to 1.",
+      "milestoneId": "markov-chains-matrix",
+      "built": true,
+      "glyphKey": "Σrow=1",
+      "vizKey": "stateMachine"
+    },
+    {
+      "lessonId": "lesson-markov-chains-3",
+      "title": "Multi-Step Transitions",
+      "summary": "The chance of going i→j in n steps is one entry of Pⁿ — it sums every length-n path.",
+      "milestoneId": "markov-chains-multistep",
+      "built": true,
+      "glyphKey": "Pⁿ",
+      "vizKey": "fourNode"
+    },
+    {
+      "lessonId": "lesson-markov-chains-4",
+      "title": "Classifying States",
+      "summary": "Recurrent, transient, absorbing — structure, not arithmetic, decides where a chain ends up.",
+      "milestoneId": "markov-chains-classify",
+      "built": true,
+      "glyphKey": "R/T/A",
+      "vizKey": "stateMachine"
+    },
+    {
+      "lessonId": "lesson-markov-chains-5",
+      "title": "Hitting Times & Absorption",
+      "summary": "One fundamental matrix (I−Q)⁻¹ prices both the absorption split and the time to a wall.",
+      "milestoneId": "markov-chains-hitting",
+      "built": true,
+      "glyphKey": "(I−Q)⁻¹",
+      "vizKey": "randomWalk"
+    },
+    {
+      "lessonId": "lesson-markov-chains-6",
+      "title": "The Stationary Distribution",
+      "summary": "The long-run share of time in each state is the unique π solving πP=π, Σπ=1.",
+      "milestoneId": "markov-chains-stationary",
+      "built": true,
+      "glyphKey": "πP=π",
+      "vizKey": "fourNode"
+    },
+    {
+      "lessonId": "lesson-markov-chains-7",
+      "title": "Convergence",
+      "summary": "A regular chain forgets its start: every row of Pⁿ marches to the same π.",
+      "milestoneId": "markov-chains-convergence",
+      "built": true,
+      "glyphKey": "Pⁿ→π",
+      "vizKey": "twoNode"
+    },
+    {
+      "lessonId": "lesson-markov-chains-8",
+      "title": "Reversibility & Detailed Balance",
+      "summary": "When every edge balances (πᵢpᵢⱼ=πⱼpⱼᵢ) the chain is reversible and π telescopes out.",
+      "milestoneId": "markov-chains-reversible",
+      "built": true,
+      "glyphKey": "πᵢpᵢⱼ=πⱼpⱼᵢ",
+      "vizKey": "randomWalk"
+    },
+    {
+      "lessonId": "lesson-markov-chains-9",
+      "title": "PageRank",
+      "summary": "A page's importance is its long-run share of a random surfer's visits — stationary π of the Google matrix.",
+      "milestoneId": "markov-chains-pagerank",
+      "built": true,
+      "glyphKey": "PR",
+      "vizKey": "fourNode"
+    },
+    {
+      "lessonId": "lesson-markov-chains-10",
+      "title": "Markov in the Wild",
+      "summary": "One structural fork — absorbing or ergodic — picks the tool for every chain problem.",
+      "milestoneId": "markov-chains-wild",
+      "built": true,
+      "glyphKey": "mix",
+      "vizKey": "dice"
+    }
+  ],
+  "roadmap": [],
+  "chapters": [
+    {
+      "id": "ch-markov-chains-1",
+      "label": "The Memoryless Machine",
+      "accent": "ch1",
+      "lessonIds": [
+        "lesson-markov-chains-1",
+        "lesson-markov-chains-2",
+        "lesson-markov-chains-3"
+      ]
+    },
+    {
+      "id": "ch-markov-chains-2",
+      "label": "Reaching States",
+      "accent": "ch2",
+      "lessonIds": [
+        "lesson-markov-chains-4",
+        "lesson-markov-chains-5"
+      ]
+    },
+    {
+      "id": "ch-markov-chains-3",
+      "label": "The Long Run",
+      "accent": "ch3",
+      "lessonIds": [
+        "lesson-markov-chains-6",
+        "lesson-markov-chains-7",
+        "lesson-markov-chains-8"
+      ]
+    },
+    {
+      "id": "ch-markov-chains-4",
+      "label": "Ranking & Synthesis",
+      "accent": "ch4",
+      "lessonIds": [
+        "lesson-markov-chains-9",
+        "lesson-markov-chains-10"
+      ]
+    }
+  ]
 }
