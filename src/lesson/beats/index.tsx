@@ -98,6 +98,12 @@ export function BeatView(props: BeatProps) {
       return <WalkBoardBeat {...props} />
     case 'gamblerLedger':
       return <GamblerLedgerBeat {...props} />
+    // Expected Value concept (Wave-0 contract — stub slots routed to ContinueStub;
+    // real renderers land per-lesson in the build wave, replacing each case body).
+    case 'expectationScale':
+    case 'conditionalTree':
+    case 'couponCollectorSim':
+      return <ContinueStub {...props} />
     default:
       return <ContinueStub {...props} />
   }

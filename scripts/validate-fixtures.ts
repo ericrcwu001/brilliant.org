@@ -14,8 +14,18 @@ import {
   LessonSchema,
   SnapshotSchema,
 } from '../src/content/schema'
-import type { Beat, Lesson } from '../src/content/schema'
-import { buildAutomaton } from '../src/engine/automaton'
+import type { Beat, Course, Lesson } from '../src/content/schema'
+import { buildAutomaton, reduce } from '../src/engine/automaton'
+import {
+  expectedValue,
+  totalExpectation,
+  indicatorExpectation,
+  harmonic,
+  couponCollector,
+  distinctAfterDraws,
+  orderStatUniform,
+  noodleLoops,
+} from '../src/engine/expectation'
 
 const fixturesDir = join(dirname(fileURLToPath(import.meta.url)), '..', 'fixtures')
 
@@ -48,7 +58,7 @@ const lessons = lessonFiles.map((f) => validate(f, LessonSchema) as Lesson)
 const courseFiles = readdirSync(fixturesDir)
   .filter((f) => /^course-.*\.json$/.test(f))
   .sort()
-courseFiles.forEach((f) => validate(f, CourseSchema))
+const courses = courseFiles.map((f) => validate(f, CourseSchema) as Course)
 
 validate('example-snapshot.json', SnapshotSchema)
 validate('canonical.example.json', CanonicalRecurrenceSchema)
@@ -101,6 +111,13 @@ const GATED = new Set([
   'lesson-states-streaks', // L4
   'lesson-longer-patterns', // L5
   'lesson-overlap-shortcut', // L6
+  // Expected Value concept (Wave-0 contract).
+  'lesson-expected-value-1',
+  'lesson-expected-value-2',
+  'lesson-expected-value-3',
+  'lesson-expected-value-4',
+  'lesson-expected-value-5',
+  'lesson-expected-value-6',
 ])
 // L5 transfer lesson is the logged exception to the retrieval-opener rule.
 const NO_RETRIEVAL_OPENER = new Set(['lesson-longer-patterns'])
@@ -240,6 +257,13 @@ const MASTERY_LESSONS = new Set([
   'lesson-states-streaks',
   'lesson-longer-patterns',
   'lesson-overlap-shortcut',
+  // Expected Value concept (Wave-0 contract).
+  'lesson-expected-value-1',
+  'lesson-expected-value-2',
+  'lesson-expected-value-3',
+  'lesson-expected-value-4',
+  'lesson-expected-value-5',
+  'lesson-expected-value-6',
 ])
 for (const lesson of lessons) {
   if (!MASTERY_LESSONS.has(lesson.lessonId)) continue
@@ -264,5 +288,102 @@ for (const lesson of lessons) {
   }
   console.log(`✓ mastery-challenge gate: ${lesson.lessonId}`)
 }
+
+// ── 6. Expected-value engine self-check (Stage-2 math anchor for
+// course-expected-value). Asserts the frozen engine reproduces every Green-Book
+// headline number so the interface can't silently drift before the EV fixtures
+// land (per-fixture accept cross-checks land with the lessons in the build wave).
+{
+  const R = (n: number, d: number) => ({ n, d })
+  const eq = (a: { n: number; d: number }, b: { n: number; d: number }) =>
+    a.n === b.n && a.d === b.d
+  const ok = (label: string, cond: boolean) => {
+    if (!cond) fail(`expectation engine self-check failed: ${label}`)
+  }
+  const die = [1, 2, 3, 4, 5, 6].map((x) => ({ x: R(x, 1), p: R(1, 6) }))
+  ok('expectedValue(fairDie)=7/2', eq(expectedValue(die), R(7, 2)))
+  ok(
+    'totalExpectation(coin-die)=7/4',
+    eq(totalExpectation([{ p: R(1, 2), value: R(7, 2) }, { p: R(1, 2), value: R(0, 1) }]), R(7, 4)),
+  )
+  ok(
+    'totalExpectation(dice-game)=7',
+    eq(totalExpectation([{ p: R(1, 2), value: R(2, 1) }, { p: R(1, 2), restart: { add: R(5, 1) } }]), R(7, 1)),
+  )
+  ok('indicatorExpectation(1/13)=1/13', eq(indicatorExpectation(R(1, 13)), R(1, 13)))
+  ok('harmonic(6)=49/20', eq(harmonic(6), R(49, 20)))
+  ok('couponCollector(6)=147/10', eq(couponCollector(6), R(147, 10)))
+  ok('distinctAfterDraws(6,2)=11/6', eq(distinctAfterDraws(6, 2), R(11, 6)))
+  ok('orderStatUniform(500).max=500/501', eq(orderStatUniform(500).max, R(500, 501)))
+  ok('orderStatUniform(2).min=1/3', eq(orderStatUniform(2).min, R(1, 3)))
+  ok('noodleLoops(3)=23/15', eq(noodleLoops(3), R(23, 15)))
+  console.log('✓ expectation engine self-check (Stage-2 anchor)')
+}
+
+// ── 7. Chapters-coverage gate (live-concept hard requirement, ADR-0004). For
+// every course that declares chapters[]: each chapter lessonId must be a real
+// lesson node, appear in exactly one chapter, and (if built) have a fixture on
+// disk; and every built lesson node must be covered by some chapter.
+const fixtureLessonIds = new Set(lessons.map((l) => l.lessonId))
+for (const course of courses) {
+  if (!course.chapters || course.chapters.length === 0) continue
+  const nodeById = new Map(course.lessons.map((nd) => [nd.lessonId, nd]))
+  const seen = new Map<string, number>()
+  for (const ch of course.chapters) {
+    for (const id of ch.lessonIds) {
+      seen.set(id, (seen.get(id) ?? 0) + 1)
+      const node = nodeById.get(id)
+      if (!node) fail(`${course.courseId}: chapter "${ch.id}" lists ${id}, not a course.lessons[] node`)
+      if (node.built && !fixtureLessonIds.has(id)) {
+        fail(`${course.courseId}: chapter lessonId ${id} is built but has no lesson fixture on disk`)
+      }
+    }
+  }
+  for (const [id, count] of seen) {
+    if (count > 1) fail(`${course.courseId}: lessonId ${id} appears in ${count} chapters (must be exactly one)`)
+  }
+  for (const node of course.lessons) {
+    if (node.built && !seen.has(node.lessonId)) {
+      fail(`${course.courseId}: built lesson ${node.lessonId} is in no chapter (would render invisible)`)
+    }
+  }
+  console.log(`✓ chapters cover all built lessons: ${course.courseId}`)
+}
+
+// ── 8. Expected-value per-fixture engine cross-check (two-stage fact-check,
+// Stage 2; dormant until the EV fixtures land). For course-expected-value beats
+// whose engine inputs live in the fixture (conditionalTree cases, couponCollectorSim
+// n), recompute and compare any graded `accept`. Problem-specific answerEntry/
+// masteryChallenge accepts are cross-checked per lesson in the build wave.
+const reduceFrac = (s: string): string => {
+  const m = /^(-?\d+)\s*\/\s*(\d+)$/.exec(s.trim())
+  if (!m) return s.trim()
+  const r = reduce(Number(m[1]), Number(m[2]))
+  return `${r.n}/${r.d}`
+}
+let evChecked = 0
+for (const lesson of lessons) {
+  if (lesson.courseId !== 'course-expected-value') continue
+  for (const beat of lesson.beats) {
+    const it = beat.interaction
+    const where = `${lesson.lessonId}/${beat.beatId}`
+    if (it.type === 'conditionalTree' && it.accept) {
+      const r = totalExpectation(it.cases)
+      const want = `${r.n}/${r.d}`
+      if (!it.accept.map(reduceFrac).includes(want) && !it.accept.includes(String(r.n))) {
+        fail(`${where}: conditionalTree accept ${JSON.stringify(it.accept)} != totalExpectation=${want}`)
+      }
+      evChecked++
+    } else if (it.type === 'couponCollectorSim' && it.accept) {
+      const r = couponCollector(it.n)
+      const want = `${r.n}/${r.d}`
+      if (!it.accept.map(reduceFrac).includes(want) && !it.accept.includes(String(r.n))) {
+        fail(`${where}: couponCollectorSim accept ${JSON.stringify(it.accept)} != couponCollector(${it.n})=${want}`)
+      }
+      evChecked++
+    }
+  }
+}
+console.log(`✓ expectation per-fixture engine cross-check (${evChecked} beats)`)
 
 console.log('\nAll fixtures valid.')
