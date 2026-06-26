@@ -36,7 +36,7 @@
     {
       "lessonId": "lesson-first-heads",
       "title": "Watch the First Heads",
-      "summary": "Optional warm-up: flip until the first heads and see why E[H] = 2 — the gentle on-ramp to the flagship.",
+      "summary": "Optional warm-up: flip until the first heads and see why E[H] = 2",
       "milestoneId": "first-heads-found",
       "built": true,
       "optional": true,

@@ -1,0 +1,2715 @@
+{
+  "version": 1,
+  "kind": "interview-pack",
+  "courseId": "course-pattern-hitting-times",
+  "concept": "Pattern Hitting Times",
+  "greenBookAnchor": "Xinfeng Zhou, A Practical Guide to Quantitative Finance Interviews — §5.1 Gambler's Ruin (p.107–112); §5.2–5.3 Markov chains / hitting times / pattern probability (p.113–128); §5.4–5.5 Penney's Game + Conway leading numbers (p.129–136)",
+  "engineModule": "src/engine/automaton.ts",
+  "generator": "interviews/_build/build-pattern-hitting-times-pack.ts",
+  "note": "Dormant capstone asset: committed but NOT seeded/deployed. Every numeric answer is reproduced by the exact-rational PHT engines (automaton.ts / race.ts / walk.ts / correlation.ts).",
+  "counts": {
+    "total": 51,
+    "byTier": {
+      "hard": 8,
+      "harder": 28,
+      "brutal": 15
+    },
+    "templated": 48,
+    "freeForm": 3
+  },
+  "interviewerPrompt": "ROLE\nYou are a senior quantitative-research interviewer at a top trading desk (Jane Street / Citadel / IMC), a specialist in Markov chains, hitting times, and Penney's Game, running a live mock interview on PATTERN HITTING TIMES. Be professional, probing, and fair-but-pressured. You are interviewing one candidate, right now, on the single question below.\n\nTHE QUESTION (injected at runtime)\n- Prompt: {{prompt}}\n- Tier: {{tier}}  (hard | harder | brutal — calibrate your pressure and follow-up depth to the tier)\n- Source: {{source}}  (your context only; never read it aloud)\n\nPROTOCOL\n1. Ask the question once, faithfully from {{prompt}}, then stop and let the candidate drive. ONE question at a time.\n2. Make them think ALOUD. Push for the model first: \"What are the states? What's the random variable? What boundaries/recurrence?\" Reward an explicit setup.\n3. Probe, don't solve. Ask Socratic questions that test whether they've seen the edge this problem turns on (see EDGE CASES). Do NOT do the derivation for them.\n4. Release hints only when genuinely stuck or explicitly asked (see HINTS).\n5. After they COMMIT to a final answer, work the follow-up chain (see FOLLOW-UPS).\n6. Then close (see SCORING).\n\nEDGE CASES TO PROBE (PHT-specific traps that separate strong candidates — press the ones this question actually hinges on)\n- Wait ≠ win probability: a longer expected wait does NOT imply a higher win probability in a race (E[HHH]=14 > E[THH]=8 yet THH beats HHH 7/8 of the time). Candidates conflate these constantly.\n- Non-transitivity of Penney's Game: A beats B and B beats C does NOT imply A beats C; a cycle can beat any fixed sequence. Ask explicitly whether Penney's is transitive.\n- Self-overlap drives wait, not length: HHH waits longer than THH despite equal length because HHH has three self-borders (k=1,2,3) vs THH's one (k=3). Candidates assume longer pattern ⇒ longer wait.\n- Reach vs duration are different objects: P(reach N before 0 | start i) ≠ E[steps to absorption | start i]. A biased gambler mid-board may have low reach probability but a not-so-short expected duration.\n- Conway leading numbers are asymmetric: L(A,B) is the overlap of suffixes of A with prefixes of B; L(A,B) ≠ L(B,A) in general.\n- Gambler's-Ruin fair-coin structure: with p=1/2, reach[i] = i/N (linear) and duration[i] = i(N−i) (quadratic); a biased coin breaks both.\n- Martingale grounding for the overlap shortcut: the surviving-gamblers argument (each border length k contributes 2^k, total = E[wait] by fairness) is the PROOF, not just a formula. Candidates should state WHY Σ 2^k = E[T].\n\nHINTS — escalating, ONLY when stuck\nUse {{hidden.hintLadder}} = [nudge, stronger, near-reveal]. Release ONE rung at a time, in order, and only after a visible stuck-signal. The near-reveal points at the METHOD only — it must NOT state the final number.\n\nNO-ANSWER-LEAK (critical)\nBefore the candidate commits, NEVER state, approximate, confirm, deny, or \"narrow down\" the final answer, and NEVER reveal {{hidden.answer}}. Do not paste or paraphrase any part of the hidden record ({{hidden.answer}}, {{hidden.approaches}}, {{hidden.wrongTurns}}, {{hidden.hintLadder}}, {{hidden.rubric}}). If asked \"is that right?\" mid-solve, redirect (\"walk me through why\") rather than confirm.\n\nGROUNDING (critical)\nTreat {{hidden.answer}} and {{hidden.approaches}} as GROUND TRUTH — they were verified by this concept's exact-rational PHT engines (automaton.ts / race.ts / walk.ts / correlation.ts). The four engines are exact-rational; every PHT answer is a clean integer or rational. Do NOT re-derive the math; if your mental arithmetic conflicts with the hidden record, you are wrong. Accept ANY mathematically-equivalent exact form (an equal unreduced fraction, the clean decimal of an exact rational, or an equivalent unevaluated expression). Use {{hidden.wrongTurns}} to RECOGNIZE a misconception, not to lead the candidate into it. Grade ONLY against the rubric.\n\nFOLLOW-UPS — after they commit\nOnce a final answer is locked, ask {{followUps}} in order, one at a time (typical chain: bias the coin, generalize to N, change the dependence, or ask for the intuition). Each is its own mini-exchange, with the no-leak and hint rules still in force.\n\nSCORING — close the interview\nGive structured feedback, then a numeric score against {{hidden.rubric}}. Rate each axis 1–5 with one line of justification: correctness, approach, rigor, communication, speed. Then give an overall hire-signal read. Tie every judgment to the rubric's bar and cite the specific moment that earned or cost points.\n\nINJECTION NOTE\nAt runtime the live feature replaces every {{...}} placeholder above with the drawn question's fields; treat the filled-in values as the entire ground truth for this interview.",
+  "generatorPrompt": "ROLE\nYou generate ONE fresh, hard, real-quant-style PATTERN-HITTING-TIMES interview question on demand, to top up a pre-built pool without ever repeating one a student has seen. Every question must be (a) a realistic quant-interview question anchored to this concept's Green-Book topics, (b) engine-verifiable before it is served, and (c) structurally new versus an avoid-list. If you cannot satisfy all three, you REFUSE. Output is a single JSON object and nothing else.\n\nSCOPE — only these Green-Book Pattern-Hitting-Times topics\n- Expected flips until an H/T pattern appears (fair and biased coins; Markov hitting times).\n- Penney's Game win probability (Conway's leading numbers) and the second-mover counter.\n- Non-transitivity of the \"beats\" relation.\n- Gambler's Ruin: reach probability and expected duration (fair and biased).\n- The overlap / self-border shortcut E[wait] = Σ 2^k and its martingale proof.\n\nREAL-QUANT-STYLE (mandatory, hard fence — ADR-0005)\nModel every question on the actual quant-interview canon: coin-pattern waits, Penney's Game, gambler's ruin, the overlap shortcut. It must read like something genuinely asked on a Jane Street / Citadel / IMC desk. NEVER invent an arbitrary puzzle that merely happens to be engine-solvable.\n\nENGINE-VERIFY-BEFORE-SERVE — PHT engines and exact-rational ranges (second hard fence — ADR-0005)\nThe live feature will run ONE of these engines to verify your output; REJECT if it cannot verify. Put in engineCheck: module, calls (exact call(s) with concrete args), answer (the exact value the engine returns).\n\n1. src/engine/automaton.ts — buildAutomaton(pattern: string, p: number)\n   → .expectedTimes.E0: number (integer for p=1/2; for a biased coin use the exact first-step rational solve). Patterns: H/T, length 1–6. p ∈ (0,1).\n2. src/engine/race.ts — penneyOdds(a: string, b: string): { aBeatsB: Rational, bBeatsA: Rational }.\n   bestBeater(a: string): string — the Conway counter. conwayLeadingNumbers(a, b): { aa, ab, ba, bb }. winMatrix(patterns): Rational[][].\n3. src/engine/walk.ts — buildWalk(N: number, p: number): WalkModel\n   → .reachProb: Rational[] (index 0..N; [0]=0, [N]=1); .ruinProb = 1 − reachProb; .duration: Rational[] (index 0..N; [0]=[N]=0). N ∈ [2..50]; p = a/b with small a,b to avoid overflow (use p whose decimal terminates: 1/2, 1/4, 3/4, 1/5, 2/5, 3/5, 4/5).\n4. src/engine/correlation.ts — expectedWaitFair(pattern: string): number (exact integer = Σ 2^k over self-borders). autocorrelation(pattern): { bits, overlaps, sum }.\n\nHARD RANGE RULE: every graded answer must be an exact rational (n/d with integer n,d) or a plain integer. Never emit an irrational or a decimal approximation as the answer. For a biased coin, keep p a small-denominator rational so the wait stays exactly representable.\n\nAVOID-LIST / NO-OVERLAP\nYou are given avoidList: an array of fingerprints (the student's seen-set ∪ the global pool). Your fingerprint MUST NOT be in it. Fingerprint = \"<templateId>:<normalized-params>\" for a template (sort params canonically), or \"sem:<hash>\" for free-form. If the first candidate collides, change the structure or parameters until it is new, or REFUSE.\n\nOUTPUT SCHEMA (emit EXACTLY one JSON object — no prose, no code fences)\n{\n  \"tier\": \"hard | harder | brutal\",\n  \"fingerprint\": \"<templateId>:<normalized-params>  |  sem:<hash>\",\n  \"template\": { \"id\": \"<templateId>\", \"params\": { } },\n  \"prompt\": \"the question text shown to the candidate\",\n  \"source\": \"Green Book §5.x p.<n>  |  <real quant-interview source> (GB-anchored)\",\n  \"engineCheck\": { \"module\": \"src/engine/<engine>.ts\", \"calls\": [ \"exact call(s)\" ], \"answer\": \"<exact rational>\" },\n  \"hidden\": {\n    \"answer\": \"<exact answer; identical value to engineCheck.answer>\",\n    \"approaches\": [ \"accepted path 1\", \"alternate path 2\" ],\n    \"wrongTurns\": [ \"misconception 1\", \"misconception 2\" ],\n    \"hintLadder\": [ \"nudge\", \"stronger\", \"near-reveal\" ],\n    \"rubric\": { \"correctness\": \"...\", \"approach\": \"...\", \"rigor\": \"...\", \"communication\": \"...\", \"speed\": \"...\" }\n  },\n  \"followUps\": [ \"first follow-up\", \"second follow-up\" ]\n}\n\nFIELD RULES\n- tier: the floor is \"hard\". hintLadder: EXACTLY 3 rungs; the near-reveal points at METHOD/structure ONLY — it must NOT state the final number.\n- hidden.answer MUST equal engineCheck.answer exactly. followUps: a real chain (≥1).\n\nSELF-REJECTION\nIf you cannot produce a question that is simultaneously (a) real-quant-style + GB-anchored, (b) engine-verifiable in range, and (c) structurally new — output exactly:\n{ \"refusal\": true, \"reason\": \"<one line: not-anchored | not-engine-verifiable | out-of-range/irrational | no-new-fingerprint>\" }\nAn honest refusal beats an unverifiable or repeated question.",
+  "templates": [
+    {
+      "id": "tmpl-pattern-wait",
+      "title": "Expected flips to see a pattern (fair coin, Markov recurrence)",
+      "source": "Green Book §5.2–5.3 p.113–128",
+      "description": "E[flips] until an H/T pattern first appears, via the first-step state recurrence (KMP overlap).",
+      "engineModule": "src/engine/automaton.ts"
+    },
+    {
+      "id": "tmpl-biased-wait",
+      "title": "Expected flips to see a pattern (biased coin p ≠ 1/2)",
+      "source": "Green Book §5.2 p.113–120",
+      "description": "Same hitting-time recurrence with p/q weights; exact rationals via the first-step solve.",
+      "engineModule": "src/engine/automaton.ts"
+    },
+    {
+      "id": "tmpl-penney-race",
+      "title": "Penney's Game — exact win probability (Conway's leading numbers)",
+      "source": "Green Book §5.4–5.5 p.129–136",
+      "description": "Probability one pattern beats another on a shared fair stream; win prob ≠ expected wait.",
+      "engineModule": "src/engine/race.ts"
+    },
+    {
+      "id": "tmpl-second-mover",
+      "title": "Best counter in Penney's Game (second mover always wins)",
+      "source": "Green Book §5.4–5.5 p.129–136",
+      "description": "Construct bestBeater(a) and compute its win probability — the second mover always has an edge.",
+      "engineModule": "src/engine/race.ts"
+    },
+    {
+      "id": "tmpl-gamblers-ruin",
+      "title": "Gambler's Ruin — reach probability and expected duration",
+      "source": "Green Book §5.1 p.107–112",
+      "description": "Boundary-value problems on a 1-D walk: P(reach N before 0 | i) and E[steps to absorption | i].",
+      "engineModule": "src/engine/walk.ts"
+    },
+    {
+      "id": "tmpl-overlap-wait",
+      "title": "Overlap shortcut — E[wait] = Σ 2^k over self-borders",
+      "source": "Green Book §5.3 p.121–128",
+      "description": "Fair-coin wait via the martingale/self-border shortcut; cross-checks the Markov recurrence.",
+      "engineModule": "src/engine/correlation.ts"
+    }
+  ],
+  "questions": [
+    {
+      "id": "tmpl-pattern-wait#HT",
+      "tier": "hard",
+      "fingerprint": "tmpl-pattern-wait:pattern=HT",
+      "template": {
+        "id": "tmpl-pattern-wait",
+        "params": {
+          "pattern": "HT"
+        }
+      },
+      "prompt": "A fair coin is flipped repeatedly. What is the expected number of flips until the pattern HT first appears? Set up the state recurrence and solve it — and say why overlap, not length alone, controls the answer.",
+      "source": "Green Book §5.2–5.3 p.113–128; src/engine/automaton.test.ts",
+      "engineCheck": {
+        "module": "src/engine/automaton.ts",
+        "calls": [
+          "buildAutomaton('HT', 0.5).expectedTimes.E0"
+        ],
+        "answer": "4",
+        "verified": true
+      },
+      "hidden": {
+        "answer": "4",
+        "approaches": [
+          "Define E_i for each matched-prefix state of HT; first-step E_i = 1 + ½E_(next on H) + ½E_(next on T); solve back to E_∅.",
+          "Equivalently sum 2^k over the self-borders of HT (the overlap shortcut)."
+        ],
+        "wrongTurns": [
+          "longer pattern always waits longer",
+          "a mismatch always resets to the start",
+          "wait = 2^length",
+          "overlap is irrelevant to the wait"
+        ],
+        "hintLadder": [
+          "Track only the matched-prefix states of HT: one expected-time unknown E_i per state, with E_∅ the start and the full match absorbing.",
+          "First-step each state: E_i = 1 + p·E_(next on H) + q·E_(next on T), fair p=q. On a mismatch, KMP sends you to the longest border — not always back to ∅.",
+          "Solve the small linear system from the absorbing state back down to E_∅; the overlap structure (how far a mismatch falls back) is what sets the wait — read the fallback edges, do not guess."
+        ],
+        "rubric": {
+          "correctness": "matches the exact engine wait",
+          "approach": "first-step state recurrence over matched-prefix states",
+          "rigor": "mismatch falls back to the longest border (KMP), not always ∅",
+          "communication": "explains why overlap changes the wait",
+          "speed": "sets up and solves the small system cleanly"
+        }
+      },
+      "followUps": [
+        "Bias the coin to p ≠ 1/2 — how does the wait change?",
+        "Compare this pattern to one of equal length with different overlap — why do they differ?",
+        "Generalize: which length-n pattern waits the longest, and why?"
+      ]
+    },
+    {
+      "id": "tmpl-pattern-wait#HH",
+      "tier": "hard",
+      "fingerprint": "tmpl-pattern-wait:pattern=HH",
+      "template": {
+        "id": "tmpl-pattern-wait",
+        "params": {
+          "pattern": "HH"
+        }
+      },
+      "prompt": "A fair coin is flipped repeatedly. What is the expected number of flips until the pattern HH first appears? Set up the state recurrence and solve it — and say why overlap, not length alone, controls the answer.",
+      "source": "Green Book §5.2–5.3 p.113–128; src/engine/automaton.test.ts",
+      "engineCheck": {
+        "module": "src/engine/automaton.ts",
+        "calls": [
+          "buildAutomaton('HH', 0.5).expectedTimes.E0"
+        ],
+        "answer": "6",
+        "verified": true
+      },
+      "hidden": {
+        "answer": "6",
+        "approaches": [
+          "Define E_i for each matched-prefix state of HH; first-step E_i = 1 + ½E_(next on H) + ½E_(next on T); solve back to E_∅.",
+          "Equivalently sum 2^k over the self-borders of HH (the overlap shortcut)."
+        ],
+        "wrongTurns": [
+          "longer pattern always waits longer",
+          "a mismatch always resets to the start",
+          "wait = 2^length",
+          "overlap is irrelevant to the wait"
+        ],
+        "hintLadder": [
+          "Track only the matched-prefix states of HH: one expected-time unknown E_i per state, with E_∅ the start and the full match absorbing.",
+          "First-step each state: E_i = 1 + p·E_(next on H) + q·E_(next on T), fair p=q. On a mismatch, KMP sends you to the longest border — not always back to ∅.",
+          "Solve the small linear system from the absorbing state back down to E_∅; the overlap structure (how far a mismatch falls back) is what sets the wait — read the fallback edges, do not guess."
+        ],
+        "rubric": {
+          "correctness": "matches the exact engine wait",
+          "approach": "first-step state recurrence over matched-prefix states",
+          "rigor": "mismatch falls back to the longest border (KMP), not always ∅",
+          "communication": "explains why overlap changes the wait",
+          "speed": "sets up and solves the small system cleanly"
+        }
+      },
+      "followUps": [
+        "Bias the coin to p ≠ 1/2 — how does the wait change?",
+        "Compare this pattern to one of equal length with different overlap — why do they differ?",
+        "Generalize: which length-n pattern waits the longest, and why?"
+      ]
+    },
+    {
+      "id": "tmpl-pattern-wait#TH",
+      "tier": "hard",
+      "fingerprint": "tmpl-pattern-wait:pattern=TH",
+      "template": {
+        "id": "tmpl-pattern-wait",
+        "params": {
+          "pattern": "TH"
+        }
+      },
+      "prompt": "A fair coin is flipped repeatedly. What is the expected number of flips until the pattern TH first appears? Set up the state recurrence and solve it — and say why overlap, not length alone, controls the answer.",
+      "source": "Green Book §5.2–5.3 p.113–128; src/engine/automaton.test.ts",
+      "engineCheck": {
+        "module": "src/engine/automaton.ts",
+        "calls": [
+          "buildAutomaton('TH', 0.5).expectedTimes.E0"
+        ],
+        "answer": "4",
+        "verified": true
+      },
+      "hidden": {
+        "answer": "4",
+        "approaches": [
+          "Define E_i for each matched-prefix state of TH; first-step E_i = 1 + ½E_(next on H) + ½E_(next on T); solve back to E_∅.",
+          "Equivalently sum 2^k over the self-borders of TH (the overlap shortcut)."
+        ],
+        "wrongTurns": [
+          "longer pattern always waits longer",
+          "a mismatch always resets to the start",
+          "wait = 2^length",
+          "overlap is irrelevant to the wait"
+        ],
+        "hintLadder": [
+          "Track only the matched-prefix states of TH: one expected-time unknown E_i per state, with E_∅ the start and the full match absorbing.",
+          "First-step each state: E_i = 1 + p·E_(next on H) + q·E_(next on T), fair p=q. On a mismatch, KMP sends you to the longest border — not always back to ∅.",
+          "Solve the small linear system from the absorbing state back down to E_∅; the overlap structure (how far a mismatch falls back) is what sets the wait — read the fallback edges, do not guess."
+        ],
+        "rubric": {
+          "correctness": "matches the exact engine wait",
+          "approach": "first-step state recurrence over matched-prefix states",
+          "rigor": "mismatch falls back to the longest border (KMP), not always ∅",
+          "communication": "explains why overlap changes the wait",
+          "speed": "sets up and solves the small system cleanly"
+        }
+      },
+      "followUps": [
+        "Bias the coin to p ≠ 1/2 — how does the wait change?",
+        "Compare this pattern to one of equal length with different overlap — why do they differ?",
+        "Generalize: which length-n pattern waits the longest, and why?"
+      ]
+    },
+    {
+      "id": "tmpl-pattern-wait#TT",
+      "tier": "hard",
+      "fingerprint": "tmpl-pattern-wait:pattern=TT",
+      "template": {
+        "id": "tmpl-pattern-wait",
+        "params": {
+          "pattern": "TT"
+        }
+      },
+      "prompt": "A fair coin is flipped repeatedly. What is the expected number of flips until the pattern TT first appears? Set up the state recurrence and solve it — and say why overlap, not length alone, controls the answer.",
+      "source": "Green Book §5.2–5.3 p.113–128; src/engine/automaton.test.ts",
+      "engineCheck": {
+        "module": "src/engine/automaton.ts",
+        "calls": [
+          "buildAutomaton('TT', 0.5).expectedTimes.E0"
+        ],
+        "answer": "6",
+        "verified": true
+      },
+      "hidden": {
+        "answer": "6",
+        "approaches": [
+          "Define E_i for each matched-prefix state of TT; first-step E_i = 1 + ½E_(next on H) + ½E_(next on T); solve back to E_∅.",
+          "Equivalently sum 2^k over the self-borders of TT (the overlap shortcut)."
+        ],
+        "wrongTurns": [
+          "longer pattern always waits longer",
+          "a mismatch always resets to the start",
+          "wait = 2^length",
+          "overlap is irrelevant to the wait"
+        ],
+        "hintLadder": [
+          "Track only the matched-prefix states of TT: one expected-time unknown E_i per state, with E_∅ the start and the full match absorbing.",
+          "First-step each state: E_i = 1 + p·E_(next on H) + q·E_(next on T), fair p=q. On a mismatch, KMP sends you to the longest border — not always back to ∅.",
+          "Solve the small linear system from the absorbing state back down to E_∅; the overlap structure (how far a mismatch falls back) is what sets the wait — read the fallback edges, do not guess."
+        ],
+        "rubric": {
+          "correctness": "matches the exact engine wait",
+          "approach": "first-step state recurrence over matched-prefix states",
+          "rigor": "mismatch falls back to the longest border (KMP), not always ∅",
+          "communication": "explains why overlap changes the wait",
+          "speed": "sets up and solves the small system cleanly"
+        }
+      },
+      "followUps": [
+        "Bias the coin to p ≠ 1/2 — how does the wait change?",
+        "Compare this pattern to one of equal length with different overlap — why do they differ?",
+        "Generalize: which length-n pattern waits the longest, and why?"
+      ]
+    },
+    {
+      "id": "tmpl-pattern-wait#HHH",
+      "tier": "harder",
+      "fingerprint": "tmpl-pattern-wait:pattern=HHH",
+      "template": {
+        "id": "tmpl-pattern-wait",
+        "params": {
+          "pattern": "HHH"
+        }
+      },
+      "prompt": "A fair coin is flipped repeatedly. What is the expected number of flips until the pattern HHH first appears? Set up the state recurrence and solve it — and say why overlap, not length alone, controls the answer.",
+      "source": "Green Book §5.2–5.3 p.113–128; src/engine/automaton.test.ts",
+      "engineCheck": {
+        "module": "src/engine/automaton.ts",
+        "calls": [
+          "buildAutomaton('HHH', 0.5).expectedTimes.E0"
+        ],
+        "answer": "14",
+        "verified": true
+      },
+      "hidden": {
+        "answer": "14",
+        "approaches": [
+          "Define E_i for each matched-prefix state of HHH; first-step E_i = 1 + ½E_(next on H) + ½E_(next on T); solve back to E_∅.",
+          "Equivalently sum 2^k over the self-borders of HHH (the overlap shortcut)."
+        ],
+        "wrongTurns": [
+          "longer pattern always waits longer",
+          "a mismatch always resets to the start",
+          "wait = 2^length",
+          "overlap is irrelevant to the wait"
+        ],
+        "hintLadder": [
+          "Track only the matched-prefix states of HHH: one expected-time unknown E_i per state, with E_∅ the start and the full match absorbing.",
+          "First-step each state: E_i = 1 + p·E_(next on H) + q·E_(next on T), fair p=q. On a mismatch, KMP sends you to the longest border — not always back to ∅.",
+          "Solve the small linear system from the absorbing state back down to E_∅; the overlap structure (how far a mismatch falls back) is what sets the wait — read the fallback edges, do not guess."
+        ],
+        "rubric": {
+          "correctness": "matches the exact engine wait",
+          "approach": "first-step state recurrence over matched-prefix states",
+          "rigor": "mismatch falls back to the longest border (KMP), not always ∅",
+          "communication": "explains why overlap changes the wait",
+          "speed": "sets up and solves the small system cleanly"
+        }
+      },
+      "followUps": [
+        "Bias the coin to p ≠ 1/2 — how does the wait change?",
+        "Compare this pattern to one of equal length with different overlap — why do they differ?",
+        "Generalize: which length-n pattern waits the longest, and why?"
+      ]
+    },
+    {
+      "id": "tmpl-pattern-wait#HHT",
+      "tier": "harder",
+      "fingerprint": "tmpl-pattern-wait:pattern=HHT",
+      "template": {
+        "id": "tmpl-pattern-wait",
+        "params": {
+          "pattern": "HHT"
+        }
+      },
+      "prompt": "A fair coin is flipped repeatedly. What is the expected number of flips until the pattern HHT first appears? Set up the state recurrence and solve it — and say why overlap, not length alone, controls the answer.",
+      "source": "Green Book §5.2–5.3 p.113–128; src/engine/automaton.test.ts",
+      "engineCheck": {
+        "module": "src/engine/automaton.ts",
+        "calls": [
+          "buildAutomaton('HHT', 0.5).expectedTimes.E0"
+        ],
+        "answer": "8",
+        "verified": true
+      },
+      "hidden": {
+        "answer": "8",
+        "approaches": [
+          "Define E_i for each matched-prefix state of HHT; first-step E_i = 1 + ½E_(next on H) + ½E_(next on T); solve back to E_∅.",
+          "Equivalently sum 2^k over the self-borders of HHT (the overlap shortcut)."
+        ],
+        "wrongTurns": [
+          "longer pattern always waits longer",
+          "a mismatch always resets to the start",
+          "wait = 2^length",
+          "overlap is irrelevant to the wait"
+        ],
+        "hintLadder": [
+          "Track only the matched-prefix states of HHT: one expected-time unknown E_i per state, with E_∅ the start and the full match absorbing.",
+          "First-step each state: E_i = 1 + p·E_(next on H) + q·E_(next on T), fair p=q. On a mismatch, KMP sends you to the longest border — not always back to ∅.",
+          "Solve the small linear system from the absorbing state back down to E_∅; the overlap structure (how far a mismatch falls back) is what sets the wait — read the fallback edges, do not guess."
+        ],
+        "rubric": {
+          "correctness": "matches the exact engine wait",
+          "approach": "first-step state recurrence over matched-prefix states",
+          "rigor": "mismatch falls back to the longest border (KMP), not always ∅",
+          "communication": "explains why overlap changes the wait",
+          "speed": "sets up and solves the small system cleanly"
+        }
+      },
+      "followUps": [
+        "Bias the coin to p ≠ 1/2 — how does the wait change?",
+        "Compare this pattern to one of equal length with different overlap — why do they differ?",
+        "Generalize: which length-n pattern waits the longest, and why?"
+      ]
+    },
+    {
+      "id": "tmpl-pattern-wait#HTT",
+      "tier": "harder",
+      "fingerprint": "tmpl-pattern-wait:pattern=HTT",
+      "template": {
+        "id": "tmpl-pattern-wait",
+        "params": {
+          "pattern": "HTT"
+        }
+      },
+      "prompt": "A fair coin is flipped repeatedly. What is the expected number of flips until the pattern HTT first appears? Set up the state recurrence and solve it — and say why overlap, not length alone, controls the answer.",
+      "source": "Green Book §5.2–5.3 p.113–128; src/engine/automaton.test.ts",
+      "engineCheck": {
+        "module": "src/engine/automaton.ts",
+        "calls": [
+          "buildAutomaton('HTT', 0.5).expectedTimes.E0"
+        ],
+        "answer": "8",
+        "verified": true
+      },
+      "hidden": {
+        "answer": "8",
+        "approaches": [
+          "Define E_i for each matched-prefix state of HTT; first-step E_i = 1 + ½E_(next on H) + ½E_(next on T); solve back to E_∅.",
+          "Equivalently sum 2^k over the self-borders of HTT (the overlap shortcut)."
+        ],
+        "wrongTurns": [
+          "longer pattern always waits longer",
+          "a mismatch always resets to the start",
+          "wait = 2^length",
+          "overlap is irrelevant to the wait"
+        ],
+        "hintLadder": [
+          "Track only the matched-prefix states of HTT: one expected-time unknown E_i per state, with E_∅ the start and the full match absorbing.",
+          "First-step each state: E_i = 1 + p·E_(next on H) + q·E_(next on T), fair p=q. On a mismatch, KMP sends you to the longest border — not always back to ∅.",
+          "Solve the small linear system from the absorbing state back down to E_∅; the overlap structure (how far a mismatch falls back) is what sets the wait — read the fallback edges, do not guess."
+        ],
+        "rubric": {
+          "correctness": "matches the exact engine wait",
+          "approach": "first-step state recurrence over matched-prefix states",
+          "rigor": "mismatch falls back to the longest border (KMP), not always ∅",
+          "communication": "explains why overlap changes the wait",
+          "speed": "sets up and solves the small system cleanly"
+        }
+      },
+      "followUps": [
+        "Bias the coin to p ≠ 1/2 — how does the wait change?",
+        "Compare this pattern to one of equal length with different overlap — why do they differ?",
+        "Generalize: which length-n pattern waits the longest, and why?"
+      ]
+    },
+    {
+      "id": "tmpl-pattern-wait#HHHH",
+      "tier": "brutal",
+      "fingerprint": "tmpl-pattern-wait:pattern=HHHH",
+      "template": {
+        "id": "tmpl-pattern-wait",
+        "params": {
+          "pattern": "HHHH"
+        }
+      },
+      "prompt": "A fair coin is flipped repeatedly. What is the expected number of flips until the pattern HHHH first appears? Set up the state recurrence and solve it — and say why overlap, not length alone, controls the answer.",
+      "source": "Green Book §5.2–5.3 p.113–128; src/engine/automaton.test.ts",
+      "engineCheck": {
+        "module": "src/engine/automaton.ts",
+        "calls": [
+          "buildAutomaton('HHHH', 0.5).expectedTimes.E0"
+        ],
+        "answer": "30",
+        "verified": true
+      },
+      "hidden": {
+        "answer": "30",
+        "approaches": [
+          "Define E_i for each matched-prefix state of HHHH; first-step E_i = 1 + ½E_(next on H) + ½E_(next on T); solve back to E_∅.",
+          "Equivalently sum 2^k over the self-borders of HHHH (the overlap shortcut)."
+        ],
+        "wrongTurns": [
+          "longer pattern always waits longer",
+          "a mismatch always resets to the start",
+          "wait = 2^length",
+          "overlap is irrelevant to the wait"
+        ],
+        "hintLadder": [
+          "Track only the matched-prefix states of HHHH: one expected-time unknown E_i per state, with E_∅ the start and the full match absorbing.",
+          "First-step each state: E_i = 1 + p·E_(next on H) + q·E_(next on T), fair p=q. On a mismatch, KMP sends you to the longest border — not always back to ∅.",
+          "Solve the small linear system from the absorbing state back down to E_∅; the overlap structure (how far a mismatch falls back) is what sets the wait — read the fallback edges, do not guess."
+        ],
+        "rubric": {
+          "correctness": "matches the exact engine wait",
+          "approach": "first-step state recurrence over matched-prefix states",
+          "rigor": "mismatch falls back to the longest border (KMP), not always ∅",
+          "communication": "explains why overlap changes the wait",
+          "speed": "sets up and solves the small system cleanly"
+        }
+      },
+      "followUps": [
+        "Bias the coin to p ≠ 1/2 — how does the wait change?",
+        "Compare this pattern to one of equal length with different overlap — why do they differ?",
+        "Generalize: which length-n pattern waits the longest, and why?"
+      ]
+    },
+    {
+      "id": "tmpl-biased-wait#HH-p1_3",
+      "tier": "harder",
+      "fingerprint": "tmpl-biased-wait:pDen=3,pNum=1,pattern=HH",
+      "template": {
+        "id": "tmpl-biased-wait",
+        "params": {
+          "pattern": "HH",
+          "pNum": 1,
+          "pDen": 3
+        }
+      },
+      "prompt": "A biased coin shows heads with probability 1/3 (tails 2/3). What is the expected number of flips until HH first appears? Keep the answer an exact rational.",
+      "source": "Green Book §5.2 p.113–120; src/engine/automaton.ts (biased first-step solve)",
+      "engineCheck": {
+        "module": "src/engine/automaton.ts",
+        "calls": [
+          "first-step solve for 'HH' at p=1/3 (automaton prefixFunction + solveLinearSystem)"
+        ],
+        "answer": "12",
+        "verified": true
+      },
+      "hidden": {
+        "answer": "12",
+        "approaches": [
+          "First-step recurrence with weights p=1/3, q=2/3; solve the small system exactly.",
+          "For a repeated symbol the wait is 1/r + 1/r²; for a mixed pair it is 1/(p·q)."
+        ],
+        "wrongTurns": [
+          "use 1/2 weights even though the coin is biased",
+          "a repeated-symbol wait is 1/p (forgetting the +1/p²)",
+          "mixed-pair wait is 1/p not 1/(pq)",
+          "bias does not affect the wait"
+        ],
+        "hintLadder": [
+          "Weight the first step by the coin's bias: p for H and q = 1−p for T, not 1/2, for HH.",
+          "For a 2-symbol pattern, a repeated symbol gives a geometric wait 1/r + 1/r² in that symbol's probability r; a mixed pair gives 1/(p·q).",
+          "Write E with the p/q weights and solve the small system; the same overlap/fallback logic applies as in the fair case."
+        ],
+        "rubric": {
+          "correctness": "matches the exact biased-coin wait (rational)",
+          "approach": "first-step recurrence with p/q weights",
+          "rigor": "uses exact p, q = 1−p; keeps the rational exact",
+          "communication": "states the geometric structure of the wait",
+          "speed": "no decimal drift; clean fraction"
+        }
+      },
+      "followUps": [
+        "Restore a fair coin and compare — which way did the bias push the wait?",
+        "Which 2-pattern benefits most from this bias?",
+        "Generalize the repeated-symbol wait to a length-n run."
+      ]
+    },
+    {
+      "id": "tmpl-biased-wait#HH-p1_4",
+      "tier": "harder",
+      "fingerprint": "tmpl-biased-wait:pDen=4,pNum=1,pattern=HH",
+      "template": {
+        "id": "tmpl-biased-wait",
+        "params": {
+          "pattern": "HH",
+          "pNum": 1,
+          "pDen": 4
+        }
+      },
+      "prompt": "A biased coin shows heads with probability 1/4 (tails 3/4). What is the expected number of flips until HH first appears? Keep the answer an exact rational.",
+      "source": "Green Book §5.2 p.113–120; src/engine/automaton.ts (biased first-step solve)",
+      "engineCheck": {
+        "module": "src/engine/automaton.ts",
+        "calls": [
+          "first-step solve for 'HH' at p=1/4 (automaton prefixFunction + solveLinearSystem)"
+        ],
+        "answer": "20",
+        "verified": true
+      },
+      "hidden": {
+        "answer": "20",
+        "approaches": [
+          "First-step recurrence with weights p=1/4, q=3/4; solve the small system exactly.",
+          "For a repeated symbol the wait is 1/r + 1/r²; for a mixed pair it is 1/(p·q)."
+        ],
+        "wrongTurns": [
+          "use 1/2 weights even though the coin is biased",
+          "a repeated-symbol wait is 1/p (forgetting the +1/p²)",
+          "mixed-pair wait is 1/p not 1/(pq)",
+          "bias does not affect the wait"
+        ],
+        "hintLadder": [
+          "Weight the first step by the coin's bias: p for H and q = 1−p for T, not 1/2, for HH.",
+          "For a 2-symbol pattern, a repeated symbol gives a geometric wait 1/r + 1/r² in that symbol's probability r; a mixed pair gives 1/(p·q).",
+          "Write E with the p/q weights and solve the small system; the same overlap/fallback logic applies as in the fair case."
+        ],
+        "rubric": {
+          "correctness": "matches the exact biased-coin wait (rational)",
+          "approach": "first-step recurrence with p/q weights",
+          "rigor": "uses exact p, q = 1−p; keeps the rational exact",
+          "communication": "states the geometric structure of the wait",
+          "speed": "no decimal drift; clean fraction"
+        }
+      },
+      "followUps": [
+        "Restore a fair coin and compare — which way did the bias push the wait?",
+        "Which 2-pattern benefits most from this bias?",
+        "Generalize the repeated-symbol wait to a length-n run."
+      ]
+    },
+    {
+      "id": "tmpl-biased-wait#HT-p1_3",
+      "tier": "harder",
+      "fingerprint": "tmpl-biased-wait:pDen=3,pNum=1,pattern=HT",
+      "template": {
+        "id": "tmpl-biased-wait",
+        "params": {
+          "pattern": "HT",
+          "pNum": 1,
+          "pDen": 3
+        }
+      },
+      "prompt": "A biased coin shows heads with probability 1/3 (tails 2/3). What is the expected number of flips until HT first appears? Keep the answer an exact rational.",
+      "source": "Green Book §5.2 p.113–120; src/engine/automaton.ts (biased first-step solve)",
+      "engineCheck": {
+        "module": "src/engine/automaton.ts",
+        "calls": [
+          "first-step solve for 'HT' at p=1/3 (automaton prefixFunction + solveLinearSystem)"
+        ],
+        "answer": "9/2",
+        "verified": true
+      },
+      "hidden": {
+        "answer": "9/2",
+        "approaches": [
+          "First-step recurrence with weights p=1/3, q=2/3; solve the small system exactly.",
+          "For a repeated symbol the wait is 1/r + 1/r²; for a mixed pair it is 1/(p·q)."
+        ],
+        "wrongTurns": [
+          "use 1/2 weights even though the coin is biased",
+          "a repeated-symbol wait is 1/p (forgetting the +1/p²)",
+          "mixed-pair wait is 1/p not 1/(pq)",
+          "bias does not affect the wait"
+        ],
+        "hintLadder": [
+          "Weight the first step by the coin's bias: p for H and q = 1−p for T, not 1/2, for HT.",
+          "For a 2-symbol pattern, a repeated symbol gives a geometric wait 1/r + 1/r² in that symbol's probability r; a mixed pair gives 1/(p·q).",
+          "Write E with the p/q weights and solve the small system; the same overlap/fallback logic applies as in the fair case."
+        ],
+        "rubric": {
+          "correctness": "matches the exact biased-coin wait (rational)",
+          "approach": "first-step recurrence with p/q weights",
+          "rigor": "uses exact p, q = 1−p; keeps the rational exact",
+          "communication": "states the geometric structure of the wait",
+          "speed": "no decimal drift; clean fraction"
+        }
+      },
+      "followUps": [
+        "Restore a fair coin and compare — which way did the bias push the wait?",
+        "Which 2-pattern benefits most from this bias?",
+        "Generalize the repeated-symbol wait to a length-n run."
+      ]
+    },
+    {
+      "id": "tmpl-biased-wait#HT-p1_4",
+      "tier": "harder",
+      "fingerprint": "tmpl-biased-wait:pDen=4,pNum=1,pattern=HT",
+      "template": {
+        "id": "tmpl-biased-wait",
+        "params": {
+          "pattern": "HT",
+          "pNum": 1,
+          "pDen": 4
+        }
+      },
+      "prompt": "A biased coin shows heads with probability 1/4 (tails 3/4). What is the expected number of flips until HT first appears? Keep the answer an exact rational.",
+      "source": "Green Book §5.2 p.113–120; src/engine/automaton.ts (biased first-step solve)",
+      "engineCheck": {
+        "module": "src/engine/automaton.ts",
+        "calls": [
+          "first-step solve for 'HT' at p=1/4 (automaton prefixFunction + solveLinearSystem)"
+        ],
+        "answer": "16/3",
+        "verified": true
+      },
+      "hidden": {
+        "answer": "16/3",
+        "approaches": [
+          "First-step recurrence with weights p=1/4, q=3/4; solve the small system exactly.",
+          "For a repeated symbol the wait is 1/r + 1/r²; for a mixed pair it is 1/(p·q)."
+        ],
+        "wrongTurns": [
+          "use 1/2 weights even though the coin is biased",
+          "a repeated-symbol wait is 1/p (forgetting the +1/p²)",
+          "mixed-pair wait is 1/p not 1/(pq)",
+          "bias does not affect the wait"
+        ],
+        "hintLadder": [
+          "Weight the first step by the coin's bias: p for H and q = 1−p for T, not 1/2, for HT.",
+          "For a 2-symbol pattern, a repeated symbol gives a geometric wait 1/r + 1/r² in that symbol's probability r; a mixed pair gives 1/(p·q).",
+          "Write E with the p/q weights and solve the small system; the same overlap/fallback logic applies as in the fair case."
+        ],
+        "rubric": {
+          "correctness": "matches the exact biased-coin wait (rational)",
+          "approach": "first-step recurrence with p/q weights",
+          "rigor": "uses exact p, q = 1−p; keeps the rational exact",
+          "communication": "states the geometric structure of the wait",
+          "speed": "no decimal drift; clean fraction"
+        }
+      },
+      "followUps": [
+        "Restore a fair coin and compare — which way did the bias push the wait?",
+        "Which 2-pattern benefits most from this bias?",
+        "Generalize the repeated-symbol wait to a length-n run."
+      ]
+    },
+    {
+      "id": "tmpl-biased-wait#TH-p1_4",
+      "tier": "harder",
+      "fingerprint": "tmpl-biased-wait:pDen=4,pNum=1,pattern=TH",
+      "template": {
+        "id": "tmpl-biased-wait",
+        "params": {
+          "pattern": "TH",
+          "pNum": 1,
+          "pDen": 4
+        }
+      },
+      "prompt": "A biased coin shows heads with probability 1/4 (tails 3/4). What is the expected number of flips until TH first appears? Keep the answer an exact rational.",
+      "source": "Green Book §5.2 p.113–120; src/engine/automaton.ts (biased first-step solve)",
+      "engineCheck": {
+        "module": "src/engine/automaton.ts",
+        "calls": [
+          "first-step solve for 'TH' at p=1/4 (automaton prefixFunction + solveLinearSystem)"
+        ],
+        "answer": "16/3",
+        "verified": true
+      },
+      "hidden": {
+        "answer": "16/3",
+        "approaches": [
+          "First-step recurrence with weights p=1/4, q=3/4; solve the small system exactly.",
+          "For a repeated symbol the wait is 1/r + 1/r²; for a mixed pair it is 1/(p·q)."
+        ],
+        "wrongTurns": [
+          "use 1/2 weights even though the coin is biased",
+          "a repeated-symbol wait is 1/p (forgetting the +1/p²)",
+          "mixed-pair wait is 1/p not 1/(pq)",
+          "bias does not affect the wait"
+        ],
+        "hintLadder": [
+          "Weight the first step by the coin's bias: p for H and q = 1−p for T, not 1/2, for TH.",
+          "For a 2-symbol pattern, a repeated symbol gives a geometric wait 1/r + 1/r² in that symbol's probability r; a mixed pair gives 1/(p·q).",
+          "Write E with the p/q weights and solve the small system; the same overlap/fallback logic applies as in the fair case."
+        ],
+        "rubric": {
+          "correctness": "matches the exact biased-coin wait (rational)",
+          "approach": "first-step recurrence with p/q weights",
+          "rigor": "uses exact p, q = 1−p; keeps the rational exact",
+          "communication": "states the geometric structure of the wait",
+          "speed": "no decimal drift; clean fraction"
+        }
+      },
+      "followUps": [
+        "Restore a fair coin and compare — which way did the bias push the wait?",
+        "Which 2-pattern benefits most from this bias?",
+        "Generalize the repeated-symbol wait to a length-n run."
+      ]
+    },
+    {
+      "id": "tmpl-biased-wait#TT-p1_3",
+      "tier": "brutal",
+      "fingerprint": "tmpl-biased-wait:pDen=3,pNum=1,pattern=TT",
+      "template": {
+        "id": "tmpl-biased-wait",
+        "params": {
+          "pattern": "TT",
+          "pNum": 1,
+          "pDen": 3
+        }
+      },
+      "prompt": "A biased coin shows heads with probability 1/3 (tails 2/3). What is the expected number of flips until TT first appears? Keep the answer an exact rational.",
+      "source": "Green Book §5.2 p.113–120; src/engine/automaton.ts (biased first-step solve)",
+      "engineCheck": {
+        "module": "src/engine/automaton.ts",
+        "calls": [
+          "first-step solve for 'TT' at p=1/3 (automaton prefixFunction + solveLinearSystem)"
+        ],
+        "answer": "15/4",
+        "verified": true
+      },
+      "hidden": {
+        "answer": "15/4",
+        "approaches": [
+          "First-step recurrence with weights p=1/3, q=2/3; solve the small system exactly.",
+          "For a repeated symbol the wait is 1/r + 1/r²; for a mixed pair it is 1/(p·q)."
+        ],
+        "wrongTurns": [
+          "use 1/2 weights even though the coin is biased",
+          "a repeated-symbol wait is 1/p (forgetting the +1/p²)",
+          "mixed-pair wait is 1/p not 1/(pq)",
+          "bias does not affect the wait"
+        ],
+        "hintLadder": [
+          "Weight the first step by the coin's bias: p for H and q = 1−p for T, not 1/2, for TT.",
+          "For a 2-symbol pattern, a repeated symbol gives a geometric wait 1/r + 1/r² in that symbol's probability r; a mixed pair gives 1/(p·q).",
+          "Write E with the p/q weights and solve the small system; the same overlap/fallback logic applies as in the fair case."
+        ],
+        "rubric": {
+          "correctness": "matches the exact biased-coin wait (rational)",
+          "approach": "first-step recurrence with p/q weights",
+          "rigor": "uses exact p, q = 1−p; keeps the rational exact",
+          "communication": "states the geometric structure of the wait",
+          "speed": "no decimal drift; clean fraction"
+        }
+      },
+      "followUps": [
+        "Restore a fair coin and compare — which way did the bias push the wait?",
+        "Which 2-pattern benefits most from this bias?",
+        "Generalize the repeated-symbol wait to a length-n run."
+      ]
+    },
+    {
+      "id": "tmpl-biased-wait#HH-p2_5",
+      "tier": "brutal",
+      "fingerprint": "tmpl-biased-wait:pDen=5,pNum=2,pattern=HH",
+      "template": {
+        "id": "tmpl-biased-wait",
+        "params": {
+          "pattern": "HH",
+          "pNum": 2,
+          "pDen": 5
+        }
+      },
+      "prompt": "A biased coin shows heads with probability 2/5 (tails 3/5). What is the expected number of flips until HH first appears? Keep the answer an exact rational.",
+      "source": "Green Book §5.2 p.113–120; src/engine/automaton.ts (biased first-step solve)",
+      "engineCheck": {
+        "module": "src/engine/automaton.ts",
+        "calls": [
+          "first-step solve for 'HH' at p=2/5 (automaton prefixFunction + solveLinearSystem)"
+        ],
+        "answer": "35/4",
+        "verified": true
+      },
+      "hidden": {
+        "answer": "35/4",
+        "approaches": [
+          "First-step recurrence with weights p=2/5, q=3/5; solve the small system exactly.",
+          "For a repeated symbol the wait is 1/r + 1/r²; for a mixed pair it is 1/(p·q)."
+        ],
+        "wrongTurns": [
+          "use 1/2 weights even though the coin is biased",
+          "a repeated-symbol wait is 1/p (forgetting the +1/p²)",
+          "mixed-pair wait is 1/p not 1/(pq)",
+          "bias does not affect the wait"
+        ],
+        "hintLadder": [
+          "Weight the first step by the coin's bias: p for H and q = 1−p for T, not 1/2, for HH.",
+          "For a 2-symbol pattern, a repeated symbol gives a geometric wait 1/r + 1/r² in that symbol's probability r; a mixed pair gives 1/(p·q).",
+          "Write E with the p/q weights and solve the small system; the same overlap/fallback logic applies as in the fair case."
+        ],
+        "rubric": {
+          "correctness": "matches the exact biased-coin wait (rational)",
+          "approach": "first-step recurrence with p/q weights",
+          "rigor": "uses exact p, q = 1−p; keeps the rational exact",
+          "communication": "states the geometric structure of the wait",
+          "speed": "no decimal drift; clean fraction"
+        }
+      },
+      "followUps": [
+        "Restore a fair coin and compare — which way did the bias push the wait?",
+        "Which 2-pattern benefits most from this bias?",
+        "Generalize the repeated-symbol wait to a length-n run."
+      ]
+    },
+    {
+      "id": "tmpl-biased-wait#HT-p2_5",
+      "tier": "brutal",
+      "fingerprint": "tmpl-biased-wait:pDen=5,pNum=2,pattern=HT",
+      "template": {
+        "id": "tmpl-biased-wait",
+        "params": {
+          "pattern": "HT",
+          "pNum": 2,
+          "pDen": 5
+        }
+      },
+      "prompt": "A biased coin shows heads with probability 2/5 (tails 3/5). What is the expected number of flips until HT first appears? Keep the answer an exact rational.",
+      "source": "Green Book §5.2 p.113–120; src/engine/automaton.ts (biased first-step solve)",
+      "engineCheck": {
+        "module": "src/engine/automaton.ts",
+        "calls": [
+          "first-step solve for 'HT' at p=2/5 (automaton prefixFunction + solveLinearSystem)"
+        ],
+        "answer": "25/6",
+        "verified": true
+      },
+      "hidden": {
+        "answer": "25/6",
+        "approaches": [
+          "First-step recurrence with weights p=2/5, q=3/5; solve the small system exactly.",
+          "For a repeated symbol the wait is 1/r + 1/r²; for a mixed pair it is 1/(p·q)."
+        ],
+        "wrongTurns": [
+          "use 1/2 weights even though the coin is biased",
+          "a repeated-symbol wait is 1/p (forgetting the +1/p²)",
+          "mixed-pair wait is 1/p not 1/(pq)",
+          "bias does not affect the wait"
+        ],
+        "hintLadder": [
+          "Weight the first step by the coin's bias: p for H and q = 1−p for T, not 1/2, for HT.",
+          "For a 2-symbol pattern, a repeated symbol gives a geometric wait 1/r + 1/r² in that symbol's probability r; a mixed pair gives 1/(p·q).",
+          "Write E with the p/q weights and solve the small system; the same overlap/fallback logic applies as in the fair case."
+        ],
+        "rubric": {
+          "correctness": "matches the exact biased-coin wait (rational)",
+          "approach": "first-step recurrence with p/q weights",
+          "rigor": "uses exact p, q = 1−p; keeps the rational exact",
+          "communication": "states the geometric structure of the wait",
+          "speed": "no decimal drift; clean fraction"
+        }
+      },
+      "followUps": [
+        "Restore a fair coin and compare — which way did the bias push the wait?",
+        "Which 2-pattern benefits most from this bias?",
+        "Generalize the repeated-symbol wait to a length-n run."
+      ]
+    },
+    {
+      "id": "tmpl-penney-race#HHH-vs-THH",
+      "tier": "harder",
+      "fingerprint": "tmpl-penney-race:a=HHH,b=THH",
+      "template": {
+        "id": "tmpl-penney-race",
+        "params": {
+          "a": "HHH",
+          "b": "THH"
+        }
+      },
+      "prompt": "Two players race on ONE shared stream of fair coin flips: A wins if HHH appears first, B wins if THH appears first. What is the probability that B (THH) wins? Note the answer is NOT determined by the expected waits.",
+      "source": "Green Book §5.4–5.5 p.129–136; src/engine/race.test.ts",
+      "engineCheck": {
+        "module": "src/engine/race.ts",
+        "calls": [
+          "penneyOdds('HHH', 'THH').bBeatsA"
+        ],
+        "answer": "7/8",
+        "verified": true
+      },
+      "hidden": {
+        "answer": "7/8",
+        "approaches": [
+          "Conway leading numbers: L(A,A)=Σ2^(k−1) over self-overlaps of HHH, similarly L(A,B), L(B,A), L(B,B); P(B wins) = (L(A,A)−L(A,B)) / ((L(A,A)−L(A,B)) + (L(B,B)−L(B,A))).",
+          "Cross-check by simulating the shared stream — win frequency converges to the same value."
+        ],
+        "wrongTurns": [
+          "the pattern with the shorter expected wait always wins",
+          "Penney's game is transitive",
+          "win probability equals the wait ratio",
+          "L(x,y) = L(y,x)"
+        ],
+        "hintLadder": [
+          "Wait time and win probability are different objects — use Conway's leading numbers, not the expected waits.",
+          "Compute the four leading numbers L(A,A), L(A,B), L(B,A), L(B,B): for L(x,y) sum 2^(k−1) over k where the last k of x equals the first k of y.",
+          "Form odds(B beats A) = (L(A,A)−L(A,B)) : (L(B,B)−L(B,A)) and normalize to a probability; never substitute the expected waits for these."
+        ],
+        "rubric": {
+          "correctness": "matches the exact Conway odds",
+          "approach": "Conway's leading numbers, not expected waits",
+          "rigor": "leading numbers L(x,y) correctly defined (suffix of x vs prefix of y)",
+          "communication": "separates win probability from wait time",
+          "speed": "four leading numbers then the odds ratio"
+        }
+      },
+      "followUps": [
+        "Why does this hold even though the expected waits differ?",
+        "Is Penney's game transitive? Exhibit or rule out a beating cycle.",
+        "Does the second-mover advantage extend to length-4 patterns?"
+      ]
+    },
+    {
+      "id": "tmpl-penney-race#HH-vs-TH",
+      "tier": "harder",
+      "fingerprint": "tmpl-penney-race:a=HH,b=TH",
+      "template": {
+        "id": "tmpl-penney-race",
+        "params": {
+          "a": "HH",
+          "b": "TH"
+        }
+      },
+      "prompt": "Two players race on ONE shared stream of fair coin flips: A wins if HH appears first, B wins if TH appears first. What is the probability that B (TH) wins? Note the answer is NOT determined by the expected waits.",
+      "source": "Green Book §5.4–5.5 p.129–136; src/engine/race.test.ts",
+      "engineCheck": {
+        "module": "src/engine/race.ts",
+        "calls": [
+          "penneyOdds('HH', 'TH').bBeatsA"
+        ],
+        "answer": "3/4",
+        "verified": true
+      },
+      "hidden": {
+        "answer": "3/4",
+        "approaches": [
+          "Conway leading numbers: L(A,A)=Σ2^(k−1) over self-overlaps of HH, similarly L(A,B), L(B,A), L(B,B); P(B wins) = (L(A,A)−L(A,B)) / ((L(A,A)−L(A,B)) + (L(B,B)−L(B,A))).",
+          "Cross-check by simulating the shared stream — win frequency converges to the same value."
+        ],
+        "wrongTurns": [
+          "the pattern with the shorter expected wait always wins",
+          "Penney's game is transitive",
+          "win probability equals the wait ratio",
+          "L(x,y) = L(y,x)"
+        ],
+        "hintLadder": [
+          "Wait time and win probability are different objects — use Conway's leading numbers, not the expected waits.",
+          "Compute the four leading numbers L(A,A), L(A,B), L(B,A), L(B,B): for L(x,y) sum 2^(k−1) over k where the last k of x equals the first k of y.",
+          "Form odds(B beats A) = (L(A,A)−L(A,B)) : (L(B,B)−L(B,A)) and normalize to a probability; never substitute the expected waits for these."
+        ],
+        "rubric": {
+          "correctness": "matches the exact Conway odds",
+          "approach": "Conway's leading numbers, not expected waits",
+          "rigor": "leading numbers L(x,y) correctly defined (suffix of x vs prefix of y)",
+          "communication": "separates win probability from wait time",
+          "speed": "four leading numbers then the odds ratio"
+        }
+      },
+      "followUps": [
+        "Why does this hold even though the expected waits differ?",
+        "Is Penney's game transitive? Exhibit or rule out a beating cycle.",
+        "Does the second-mover advantage extend to length-4 patterns?"
+      ]
+    },
+    {
+      "id": "tmpl-penney-race#HH-vs-HT",
+      "tier": "harder",
+      "fingerprint": "tmpl-penney-race:a=HH,b=HT",
+      "template": {
+        "id": "tmpl-penney-race",
+        "params": {
+          "a": "HH",
+          "b": "HT"
+        }
+      },
+      "prompt": "Two players race on ONE shared stream of fair coin flips: A wins if HH appears first, B wins if HT appears first. What is the probability that B (HT) wins? Note the answer is NOT determined by the expected waits.",
+      "source": "Green Book §5.4–5.5 p.129–136; src/engine/race.test.ts",
+      "engineCheck": {
+        "module": "src/engine/race.ts",
+        "calls": [
+          "penneyOdds('HH', 'HT').bBeatsA"
+        ],
+        "answer": "1/2",
+        "verified": true
+      },
+      "hidden": {
+        "answer": "1/2",
+        "approaches": [
+          "Conway leading numbers: L(A,A)=Σ2^(k−1) over self-overlaps of HH, similarly L(A,B), L(B,A), L(B,B); P(B wins) = (L(A,A)−L(A,B)) / ((L(A,A)−L(A,B)) + (L(B,B)−L(B,A))).",
+          "Cross-check by simulating the shared stream — win frequency converges to the same value."
+        ],
+        "wrongTurns": [
+          "the pattern with the shorter expected wait always wins",
+          "Penney's game is transitive",
+          "win probability equals the wait ratio",
+          "L(x,y) = L(y,x)"
+        ],
+        "hintLadder": [
+          "Wait time and win probability are different objects — use Conway's leading numbers, not the expected waits.",
+          "Compute the four leading numbers L(A,A), L(A,B), L(B,A), L(B,B): for L(x,y) sum 2^(k−1) over k where the last k of x equals the first k of y.",
+          "Form odds(B beats A) = (L(A,A)−L(A,B)) : (L(B,B)−L(B,A)) and normalize to a probability; never substitute the expected waits for these."
+        ],
+        "rubric": {
+          "correctness": "matches the exact Conway odds",
+          "approach": "Conway's leading numbers, not expected waits",
+          "rigor": "leading numbers L(x,y) correctly defined (suffix of x vs prefix of y)",
+          "communication": "separates win probability from wait time",
+          "speed": "four leading numbers then the odds ratio"
+        }
+      },
+      "followUps": [
+        "Why does this hold even though the expected waits differ?",
+        "Is Penney's game transitive? Exhibit or rule out a beating cycle.",
+        "Does the second-mover advantage extend to length-4 patterns?"
+      ]
+    },
+    {
+      "id": "tmpl-penney-race#HHH-vs-HHT",
+      "tier": "harder",
+      "fingerprint": "tmpl-penney-race:a=HHH,b=HHT",
+      "template": {
+        "id": "tmpl-penney-race",
+        "params": {
+          "a": "HHH",
+          "b": "HHT"
+        }
+      },
+      "prompt": "Two players race on ONE shared stream of fair coin flips: A wins if HHH appears first, B wins if HHT appears first. What is the probability that B (HHT) wins? Note the answer is NOT determined by the expected waits.",
+      "source": "Green Book §5.4–5.5 p.129–136; src/engine/race.test.ts",
+      "engineCheck": {
+        "module": "src/engine/race.ts",
+        "calls": [
+          "penneyOdds('HHH', 'HHT').bBeatsA"
+        ],
+        "answer": "1/2",
+        "verified": true
+      },
+      "hidden": {
+        "answer": "1/2",
+        "approaches": [
+          "Conway leading numbers: L(A,A)=Σ2^(k−1) over self-overlaps of HHH, similarly L(A,B), L(B,A), L(B,B); P(B wins) = (L(A,A)−L(A,B)) / ((L(A,A)−L(A,B)) + (L(B,B)−L(B,A))).",
+          "Cross-check by simulating the shared stream — win frequency converges to the same value."
+        ],
+        "wrongTurns": [
+          "the pattern with the shorter expected wait always wins",
+          "Penney's game is transitive",
+          "win probability equals the wait ratio",
+          "L(x,y) = L(y,x)"
+        ],
+        "hintLadder": [
+          "Wait time and win probability are different objects — use Conway's leading numbers, not the expected waits.",
+          "Compute the four leading numbers L(A,A), L(A,B), L(B,A), L(B,B): for L(x,y) sum 2^(k−1) over k where the last k of x equals the first k of y.",
+          "Form odds(B beats A) = (L(A,A)−L(A,B)) : (L(B,B)−L(B,A)) and normalize to a probability; never substitute the expected waits for these."
+        ],
+        "rubric": {
+          "correctness": "matches the exact Conway odds",
+          "approach": "Conway's leading numbers, not expected waits",
+          "rigor": "leading numbers L(x,y) correctly defined (suffix of x vs prefix of y)",
+          "communication": "separates win probability from wait time",
+          "speed": "four leading numbers then the odds ratio"
+        }
+      },
+      "followUps": [
+        "Why does this hold even though the expected waits differ?",
+        "Is Penney's game transitive? Exhibit or rule out a beating cycle.",
+        "Does the second-mover advantage extend to length-4 patterns?"
+      ]
+    },
+    {
+      "id": "tmpl-penney-race#HTH-vs-HHT",
+      "tier": "brutal",
+      "fingerprint": "tmpl-penney-race:a=HTH,b=HHT",
+      "template": {
+        "id": "tmpl-penney-race",
+        "params": {
+          "a": "HTH",
+          "b": "HHT"
+        }
+      },
+      "prompt": "Two players race on ONE shared stream of fair coin flips: A wins if HTH appears first, B wins if HHT appears first. What is the probability that B (HHT) wins? Note the answer is NOT determined by the expected waits.",
+      "source": "Green Book §5.4–5.5 p.129–136; src/engine/race.test.ts",
+      "engineCheck": {
+        "module": "src/engine/race.ts",
+        "calls": [
+          "penneyOdds('HTH', 'HHT').bBeatsA"
+        ],
+        "answer": "2/3",
+        "verified": true
+      },
+      "hidden": {
+        "answer": "2/3",
+        "approaches": [
+          "Conway leading numbers: L(A,A)=Σ2^(k−1) over self-overlaps of HTH, similarly L(A,B), L(B,A), L(B,B); P(B wins) = (L(A,A)−L(A,B)) / ((L(A,A)−L(A,B)) + (L(B,B)−L(B,A))).",
+          "Cross-check by simulating the shared stream — win frequency converges to the same value."
+        ],
+        "wrongTurns": [
+          "the pattern with the shorter expected wait always wins",
+          "Penney's game is transitive",
+          "win probability equals the wait ratio",
+          "L(x,y) = L(y,x)"
+        ],
+        "hintLadder": [
+          "Wait time and win probability are different objects — use Conway's leading numbers, not the expected waits.",
+          "Compute the four leading numbers L(A,A), L(A,B), L(B,A), L(B,B): for L(x,y) sum 2^(k−1) over k where the last k of x equals the first k of y.",
+          "Form odds(B beats A) = (L(A,A)−L(A,B)) : (L(B,B)−L(B,A)) and normalize to a probability; never substitute the expected waits for these."
+        ],
+        "rubric": {
+          "correctness": "matches the exact Conway odds",
+          "approach": "Conway's leading numbers, not expected waits",
+          "rigor": "leading numbers L(x,y) correctly defined (suffix of x vs prefix of y)",
+          "communication": "separates win probability from wait time",
+          "speed": "four leading numbers then the odds ratio"
+        }
+      },
+      "followUps": [
+        "Why does this hold even though the expected waits differ?",
+        "Is Penney's game transitive? Exhibit or rule out a beating cycle.",
+        "Does the second-mover advantage extend to length-4 patterns?"
+      ]
+    },
+    {
+      "id": "tmpl-penney-race#HHT-vs-THH",
+      "tier": "brutal",
+      "fingerprint": "tmpl-penney-race:a=HHT,b=THH",
+      "template": {
+        "id": "tmpl-penney-race",
+        "params": {
+          "a": "HHT",
+          "b": "THH"
+        }
+      },
+      "prompt": "Two players race on ONE shared stream of fair coin flips: A wins if HHT appears first, B wins if THH appears first. What is the probability that B (THH) wins? Note the answer is NOT determined by the expected waits.",
+      "source": "Green Book §5.4–5.5 p.129–136; src/engine/race.test.ts",
+      "engineCheck": {
+        "module": "src/engine/race.ts",
+        "calls": [
+          "penneyOdds('HHT', 'THH').bBeatsA"
+        ],
+        "answer": "3/4",
+        "verified": true
+      },
+      "hidden": {
+        "answer": "3/4",
+        "approaches": [
+          "Conway leading numbers: L(A,A)=Σ2^(k−1) over self-overlaps of HHT, similarly L(A,B), L(B,A), L(B,B); P(B wins) = (L(A,A)−L(A,B)) / ((L(A,A)−L(A,B)) + (L(B,B)−L(B,A))).",
+          "Cross-check by simulating the shared stream — win frequency converges to the same value."
+        ],
+        "wrongTurns": [
+          "the pattern with the shorter expected wait always wins",
+          "Penney's game is transitive",
+          "win probability equals the wait ratio",
+          "L(x,y) = L(y,x)"
+        ],
+        "hintLadder": [
+          "Wait time and win probability are different objects — use Conway's leading numbers, not the expected waits.",
+          "Compute the four leading numbers L(A,A), L(A,B), L(B,A), L(B,B): for L(x,y) sum 2^(k−1) over k where the last k of x equals the first k of y.",
+          "Form odds(B beats A) = (L(A,A)−L(A,B)) : (L(B,B)−L(B,A)) and normalize to a probability; never substitute the expected waits for these."
+        ],
+        "rubric": {
+          "correctness": "matches the exact Conway odds",
+          "approach": "Conway's leading numbers, not expected waits",
+          "rigor": "leading numbers L(x,y) correctly defined (suffix of x vs prefix of y)",
+          "communication": "separates win probability from wait time",
+          "speed": "four leading numbers then the odds ratio"
+        }
+      },
+      "followUps": [
+        "Why does this hold even though the expected waits differ?",
+        "Is Penney's game transitive? Exhibit or rule out a beating cycle.",
+        "Does the second-mover advantage extend to length-4 patterns?"
+      ]
+    },
+    {
+      "id": "tmpl-penney-race#TTT-vs-HTT",
+      "tier": "brutal",
+      "fingerprint": "tmpl-penney-race:a=TTT,b=HTT",
+      "template": {
+        "id": "tmpl-penney-race",
+        "params": {
+          "a": "TTT",
+          "b": "HTT"
+        }
+      },
+      "prompt": "Two players race on ONE shared stream of fair coin flips: A wins if TTT appears first, B wins if HTT appears first. What is the probability that B (HTT) wins? Note the answer is NOT determined by the expected waits.",
+      "source": "Green Book §5.4–5.5 p.129–136; src/engine/race.test.ts",
+      "engineCheck": {
+        "module": "src/engine/race.ts",
+        "calls": [
+          "penneyOdds('TTT', 'HTT').bBeatsA"
+        ],
+        "answer": "7/8",
+        "verified": true
+      },
+      "hidden": {
+        "answer": "7/8",
+        "approaches": [
+          "Conway leading numbers: L(A,A)=Σ2^(k−1) over self-overlaps of TTT, similarly L(A,B), L(B,A), L(B,B); P(B wins) = (L(A,A)−L(A,B)) / ((L(A,A)−L(A,B)) + (L(B,B)−L(B,A))).",
+          "Cross-check by simulating the shared stream — win frequency converges to the same value."
+        ],
+        "wrongTurns": [
+          "the pattern with the shorter expected wait always wins",
+          "Penney's game is transitive",
+          "win probability equals the wait ratio",
+          "L(x,y) = L(y,x)"
+        ],
+        "hintLadder": [
+          "Wait time and win probability are different objects — use Conway's leading numbers, not the expected waits.",
+          "Compute the four leading numbers L(A,A), L(A,B), L(B,A), L(B,B): for L(x,y) sum 2^(k−1) over k where the last k of x equals the first k of y.",
+          "Form odds(B beats A) = (L(A,A)−L(A,B)) : (L(B,B)−L(B,A)) and normalize to a probability; never substitute the expected waits for these."
+        ],
+        "rubric": {
+          "correctness": "matches the exact Conway odds",
+          "approach": "Conway's leading numbers, not expected waits",
+          "rigor": "leading numbers L(x,y) correctly defined (suffix of x vs prefix of y)",
+          "communication": "separates win probability from wait time",
+          "speed": "four leading numbers then the odds ratio"
+        }
+      },
+      "followUps": [
+        "Why does this hold even though the expected waits differ?",
+        "Is Penney's game transitive? Exhibit or rule out a beating cycle.",
+        "Does the second-mover advantage extend to length-4 patterns?"
+      ]
+    },
+    {
+      "id": "tmpl-second-mover#HHH",
+      "tier": "harder",
+      "fingerprint": "tmpl-second-mover:a=HHH",
+      "template": {
+        "id": "tmpl-second-mover",
+        "params": {
+          "a": "HHH"
+        }
+      },
+      "prompt": "Your opponent announces the length-3 pattern HHH in a Penney's game on a fair coin, and you choose second. Pick the pattern that maximizes your win probability and state that probability exactly.",
+      "source": "Green Book §5.4–5.5 p.129–136; src/engine/race.ts (bestBeater + Conway odds)",
+      "engineCheck": {
+        "module": "src/engine/race.ts",
+        "calls": [
+          "penneyOdds('HHH', bestBeater('HHH')).bBeatsA"
+        ],
+        "answer": "7/8",
+        "verified": true
+      },
+      "hidden": {
+        "answer": "7/8",
+        "approaches": [
+          "Build the counter by bestBeater(HHH) = flip(HHH[1]) + HHH[0..n−2], then apply Conway's odds.",
+          "The construction guarantees a win probability strictly above 1/2 for every length-3 pattern."
+        ],
+        "wrongTurns": [
+          "copy the opponent shifted by one",
+          "mirror (flip every symbol of) the pattern",
+          "pick the pattern with the smallest wait",
+          "no counter can beat the announced pattern"
+        ],
+        "hintLadder": [
+          "The second mover can always name a pattern that beats the announced one — find that counter first.",
+          "Construct it by the rule bestBeater(a) = flip(a₂) followed by a₁…a_(n−1); then it is a standard Penney race.",
+          "Apply Conway's leading-number odds to (a, bestBeater(a)) to get the win probability; the counter always exceeds even money."
+        ],
+        "rubric": {
+          "correctness": "identifies the optimal counter and its exact win prob",
+          "approach": "bestBeater construction + Conway odds",
+          "rigor": "counter built by the rule, win prob > 1/2 shown",
+          "communication": "explains why the second mover always wins",
+          "speed": "constructs the counter immediately, then the odds"
+        }
+      },
+      "followUps": [
+        "Is there any length-3 pattern whose best counter wins by exactly even money?",
+        "Does a pattern ever beat its own bestBeater?",
+        "How large can the second-mover edge get for length-3 patterns?"
+      ]
+    },
+    {
+      "id": "tmpl-second-mover#HTH",
+      "tier": "harder",
+      "fingerprint": "tmpl-second-mover:a=HTH",
+      "template": {
+        "id": "tmpl-second-mover",
+        "params": {
+          "a": "HTH"
+        }
+      },
+      "prompt": "Your opponent announces the length-3 pattern HTH in a Penney's game on a fair coin, and you choose second. Pick the pattern that maximizes your win probability and state that probability exactly.",
+      "source": "Green Book §5.4–5.5 p.129–136; src/engine/race.ts (bestBeater + Conway odds)",
+      "engineCheck": {
+        "module": "src/engine/race.ts",
+        "calls": [
+          "penneyOdds('HTH', bestBeater('HTH')).bBeatsA"
+        ],
+        "answer": "2/3",
+        "verified": true
+      },
+      "hidden": {
+        "answer": "2/3",
+        "approaches": [
+          "Build the counter by bestBeater(HTH) = flip(HTH[1]) + HTH[0..n−2], then apply Conway's odds.",
+          "The construction guarantees a win probability strictly above 1/2 for every length-3 pattern."
+        ],
+        "wrongTurns": [
+          "copy the opponent shifted by one",
+          "mirror (flip every symbol of) the pattern",
+          "pick the pattern with the smallest wait",
+          "no counter can beat the announced pattern"
+        ],
+        "hintLadder": [
+          "The second mover can always name a pattern that beats the announced one — find that counter first.",
+          "Construct it by the rule bestBeater(a) = flip(a₂) followed by a₁…a_(n−1); then it is a standard Penney race.",
+          "Apply Conway's leading-number odds to (a, bestBeater(a)) to get the win probability; the counter always exceeds even money."
+        ],
+        "rubric": {
+          "correctness": "identifies the optimal counter and its exact win prob",
+          "approach": "bestBeater construction + Conway odds",
+          "rigor": "counter built by the rule, win prob > 1/2 shown",
+          "communication": "explains why the second mover always wins",
+          "speed": "constructs the counter immediately, then the odds"
+        }
+      },
+      "followUps": [
+        "Is there any length-3 pattern whose best counter wins by exactly even money?",
+        "Does a pattern ever beat its own bestBeater?",
+        "How large can the second-mover edge get for length-3 patterns?"
+      ]
+    },
+    {
+      "id": "tmpl-second-mover#HHT",
+      "tier": "harder",
+      "fingerprint": "tmpl-second-mover:a=HHT",
+      "template": {
+        "id": "tmpl-second-mover",
+        "params": {
+          "a": "HHT"
+        }
+      },
+      "prompt": "Your opponent announces the length-3 pattern HHT in a Penney's game on a fair coin, and you choose second. Pick the pattern that maximizes your win probability and state that probability exactly.",
+      "source": "Green Book §5.4–5.5 p.129–136; src/engine/race.ts (bestBeater + Conway odds)",
+      "engineCheck": {
+        "module": "src/engine/race.ts",
+        "calls": [
+          "penneyOdds('HHT', bestBeater('HHT')).bBeatsA"
+        ],
+        "answer": "3/4",
+        "verified": true
+      },
+      "hidden": {
+        "answer": "3/4",
+        "approaches": [
+          "Build the counter by bestBeater(HHT) = flip(HHT[1]) + HHT[0..n−2], then apply Conway's odds.",
+          "The construction guarantees a win probability strictly above 1/2 for every length-3 pattern."
+        ],
+        "wrongTurns": [
+          "copy the opponent shifted by one",
+          "mirror (flip every symbol of) the pattern",
+          "pick the pattern with the smallest wait",
+          "no counter can beat the announced pattern"
+        ],
+        "hintLadder": [
+          "The second mover can always name a pattern that beats the announced one — find that counter first.",
+          "Construct it by the rule bestBeater(a) = flip(a₂) followed by a₁…a_(n−1); then it is a standard Penney race.",
+          "Apply Conway's leading-number odds to (a, bestBeater(a)) to get the win probability; the counter always exceeds even money."
+        ],
+        "rubric": {
+          "correctness": "identifies the optimal counter and its exact win prob",
+          "approach": "bestBeater construction + Conway odds",
+          "rigor": "counter built by the rule, win prob > 1/2 shown",
+          "communication": "explains why the second mover always wins",
+          "speed": "constructs the counter immediately, then the odds"
+        }
+      },
+      "followUps": [
+        "Is there any length-3 pattern whose best counter wins by exactly even money?",
+        "Does a pattern ever beat its own bestBeater?",
+        "How large can the second-mover edge get for length-3 patterns?"
+      ]
+    },
+    {
+      "id": "tmpl-second-mover#TTT",
+      "tier": "harder",
+      "fingerprint": "tmpl-second-mover:a=TTT",
+      "template": {
+        "id": "tmpl-second-mover",
+        "params": {
+          "a": "TTT"
+        }
+      },
+      "prompt": "Your opponent announces the length-3 pattern TTT in a Penney's game on a fair coin, and you choose second. Pick the pattern that maximizes your win probability and state that probability exactly.",
+      "source": "Green Book §5.4–5.5 p.129–136; src/engine/race.ts (bestBeater + Conway odds)",
+      "engineCheck": {
+        "module": "src/engine/race.ts",
+        "calls": [
+          "penneyOdds('TTT', bestBeater('TTT')).bBeatsA"
+        ],
+        "answer": "7/8",
+        "verified": true
+      },
+      "hidden": {
+        "answer": "7/8",
+        "approaches": [
+          "Build the counter by bestBeater(TTT) = flip(TTT[1]) + TTT[0..n−2], then apply Conway's odds.",
+          "The construction guarantees a win probability strictly above 1/2 for every length-3 pattern."
+        ],
+        "wrongTurns": [
+          "copy the opponent shifted by one",
+          "mirror (flip every symbol of) the pattern",
+          "pick the pattern with the smallest wait",
+          "no counter can beat the announced pattern"
+        ],
+        "hintLadder": [
+          "The second mover can always name a pattern that beats the announced one — find that counter first.",
+          "Construct it by the rule bestBeater(a) = flip(a₂) followed by a₁…a_(n−1); then it is a standard Penney race.",
+          "Apply Conway's leading-number odds to (a, bestBeater(a)) to get the win probability; the counter always exceeds even money."
+        ],
+        "rubric": {
+          "correctness": "identifies the optimal counter and its exact win prob",
+          "approach": "bestBeater construction + Conway odds",
+          "rigor": "counter built by the rule, win prob > 1/2 shown",
+          "communication": "explains why the second mover always wins",
+          "speed": "constructs the counter immediately, then the odds"
+        }
+      },
+      "followUps": [
+        "Is there any length-3 pattern whose best counter wins by exactly even money?",
+        "Does a pattern ever beat its own bestBeater?",
+        "How large can the second-mover edge get for length-3 patterns?"
+      ]
+    },
+    {
+      "id": "tmpl-second-mover#HTT",
+      "tier": "brutal",
+      "fingerprint": "tmpl-second-mover:a=HTT",
+      "template": {
+        "id": "tmpl-second-mover",
+        "params": {
+          "a": "HTT"
+        }
+      },
+      "prompt": "Your opponent announces the length-3 pattern HTT in a Penney's game on a fair coin, and you choose second. Pick the pattern that maximizes your win probability and state that probability exactly.",
+      "source": "Green Book §5.4–5.5 p.129–136; src/engine/race.ts (bestBeater + Conway odds)",
+      "engineCheck": {
+        "module": "src/engine/race.ts",
+        "calls": [
+          "penneyOdds('HTT', bestBeater('HTT')).bBeatsA"
+        ],
+        "answer": "2/3",
+        "verified": true
+      },
+      "hidden": {
+        "answer": "2/3",
+        "approaches": [
+          "Build the counter by bestBeater(HTT) = flip(HTT[1]) + HTT[0..n−2], then apply Conway's odds.",
+          "The construction guarantees a win probability strictly above 1/2 for every length-3 pattern."
+        ],
+        "wrongTurns": [
+          "copy the opponent shifted by one",
+          "mirror (flip every symbol of) the pattern",
+          "pick the pattern with the smallest wait",
+          "no counter can beat the announced pattern"
+        ],
+        "hintLadder": [
+          "The second mover can always name a pattern that beats the announced one — find that counter first.",
+          "Construct it by the rule bestBeater(a) = flip(a₂) followed by a₁…a_(n−1); then it is a standard Penney race.",
+          "Apply Conway's leading-number odds to (a, bestBeater(a)) to get the win probability; the counter always exceeds even money."
+        ],
+        "rubric": {
+          "correctness": "identifies the optimal counter and its exact win prob",
+          "approach": "bestBeater construction + Conway odds",
+          "rigor": "counter built by the rule, win prob > 1/2 shown",
+          "communication": "explains why the second mover always wins",
+          "speed": "constructs the counter immediately, then the odds"
+        }
+      },
+      "followUps": [
+        "Is there any length-3 pattern whose best counter wins by exactly even money?",
+        "Does a pattern ever beat its own bestBeater?",
+        "How large can the second-mover edge get for length-3 patterns?"
+      ]
+    },
+    {
+      "id": "tmpl-second-mover#THH",
+      "tier": "brutal",
+      "fingerprint": "tmpl-second-mover:a=THH",
+      "template": {
+        "id": "tmpl-second-mover",
+        "params": {
+          "a": "THH"
+        }
+      },
+      "prompt": "Your opponent announces the length-3 pattern THH in a Penney's game on a fair coin, and you choose second. Pick the pattern that maximizes your win probability and state that probability exactly.",
+      "source": "Green Book §5.4–5.5 p.129–136; src/engine/race.ts (bestBeater + Conway odds)",
+      "engineCheck": {
+        "module": "src/engine/race.ts",
+        "calls": [
+          "penneyOdds('THH', bestBeater('THH')).bBeatsA"
+        ],
+        "answer": "2/3",
+        "verified": true
+      },
+      "hidden": {
+        "answer": "2/3",
+        "approaches": [
+          "Build the counter by bestBeater(THH) = flip(THH[1]) + THH[0..n−2], then apply Conway's odds.",
+          "The construction guarantees a win probability strictly above 1/2 for every length-3 pattern."
+        ],
+        "wrongTurns": [
+          "copy the opponent shifted by one",
+          "mirror (flip every symbol of) the pattern",
+          "pick the pattern with the smallest wait",
+          "no counter can beat the announced pattern"
+        ],
+        "hintLadder": [
+          "The second mover can always name a pattern that beats the announced one — find that counter first.",
+          "Construct it by the rule bestBeater(a) = flip(a₂) followed by a₁…a_(n−1); then it is a standard Penney race.",
+          "Apply Conway's leading-number odds to (a, bestBeater(a)) to get the win probability; the counter always exceeds even money."
+        ],
+        "rubric": {
+          "correctness": "identifies the optimal counter and its exact win prob",
+          "approach": "bestBeater construction + Conway odds",
+          "rigor": "counter built by the rule, win prob > 1/2 shown",
+          "communication": "explains why the second mover always wins",
+          "speed": "constructs the counter immediately, then the odds"
+        }
+      },
+      "followUps": [
+        "Is there any length-3 pattern whose best counter wins by exactly even money?",
+        "Does a pattern ever beat its own bestBeater?",
+        "How large can the second-mover edge get for length-3 patterns?"
+      ]
+    },
+    {
+      "id": "tmpl-gamblers-ruin#N4-p1_2-i1-reach",
+      "tier": "hard",
+      "fingerprint": "tmpl-gamblers-ruin:N=4,i=1,pDen=2,pNum=1,query=reach",
+      "template": {
+        "id": "tmpl-gamblers-ruin",
+        "params": {
+          "N": 4,
+          "pNum": 1,
+          "pDen": 2,
+          "i": 1,
+          "query": "reach"
+        }
+      },
+      "prompt": "A gambler does a fair random walk between absorbing barriers 0 (ruin) and 4 (win), stepping +1 with probability 1/2 and −1 otherwise. Starting at 1, what is the probability of reaching 4 before hitting 0?",
+      "source": "Green Book §5.1 p.107–112; src/engine/walk.test.ts",
+      "engineCheck": {
+        "module": "src/engine/walk.ts",
+        "calls": [
+          "buildWalk(4, 1/2).reachProb[1]"
+        ],
+        "answer": "1/4",
+        "verified": true
+      },
+      "hidden": {
+        "answer": "1/4",
+        "approaches": [
+          "Solve P_i = p·P_(i+1) + q·P_(i−1) with P_0 = 0, P_N = 1; fair coin gives P_i = i/N.",
+          "Biased: P_i = (1−r^i)/(1−r^N) with r = q/p."
+        ],
+        "wrongTurns": [
+          "reach probability and expected duration are the same object",
+          "fair-coin reach is 1/2 regardless of the start",
+          "duration is symmetric in the start even when biased",
+          "bias does not change the reach probability"
+        ],
+        "hintLadder": [
+          "Set up a boundary-value problem on positions 0..N: reach P_i with P_0=0, P_N=1, or duration D_i with D_0=D_N=0.",
+          "Fair coin: P_i = i/N (linear) and D_i = i·(N−i) (quadratic). Biased coin with ratio r = q/p: P_i = (1−r^i)/(1−r^N).",
+          "Plug the start i into the right closed form and keep reach (a probability) distinct from duration (a step count)."
+        ],
+        "rubric": {
+          "correctness": "matches the exact reach/duration value",
+          "approach": "boundary-value recurrence with correct boundaries",
+          "rigor": "reach (probability) kept distinct from duration (steps); biased ratio handled",
+          "communication": "states the closed form and its boundaries",
+          "speed": "plugs into the closed form without re-deriving"
+        }
+      },
+      "followUps": [
+        "Generalize the fair-coin formula to arbitrary N and start i.",
+        "Make the coin biased — does reach rise or fall from this start?",
+        "Why is the fair duration quadratic in the start while reach is linear?"
+      ]
+    },
+    {
+      "id": "tmpl-gamblers-ruin#N4-p1_2-i2-reach",
+      "tier": "hard",
+      "fingerprint": "tmpl-gamblers-ruin:N=4,i=2,pDen=2,pNum=1,query=reach",
+      "template": {
+        "id": "tmpl-gamblers-ruin",
+        "params": {
+          "N": 4,
+          "pNum": 1,
+          "pDen": 2,
+          "i": 2,
+          "query": "reach"
+        }
+      },
+      "prompt": "A gambler does a fair random walk between absorbing barriers 0 (ruin) and 4 (win), stepping +1 with probability 1/2 and −1 otherwise. Starting at 2, what is the probability of reaching 4 before hitting 0?",
+      "source": "Green Book §5.1 p.107–112; src/engine/walk.test.ts",
+      "engineCheck": {
+        "module": "src/engine/walk.ts",
+        "calls": [
+          "buildWalk(4, 1/2).reachProb[2]"
+        ],
+        "answer": "1/2",
+        "verified": true
+      },
+      "hidden": {
+        "answer": "1/2",
+        "approaches": [
+          "Solve P_i = p·P_(i+1) + q·P_(i−1) with P_0 = 0, P_N = 1; fair coin gives P_i = i/N.",
+          "Biased: P_i = (1−r^i)/(1−r^N) with r = q/p."
+        ],
+        "wrongTurns": [
+          "reach probability and expected duration are the same object",
+          "fair-coin reach is 1/2 regardless of the start",
+          "duration is symmetric in the start even when biased",
+          "bias does not change the reach probability"
+        ],
+        "hintLadder": [
+          "Set up a boundary-value problem on positions 0..N: reach P_i with P_0=0, P_N=1, or duration D_i with D_0=D_N=0.",
+          "Fair coin: P_i = i/N (linear) and D_i = i·(N−i) (quadratic). Biased coin with ratio r = q/p: P_i = (1−r^i)/(1−r^N).",
+          "Plug the start i into the right closed form and keep reach (a probability) distinct from duration (a step count)."
+        ],
+        "rubric": {
+          "correctness": "matches the exact reach/duration value",
+          "approach": "boundary-value recurrence with correct boundaries",
+          "rigor": "reach (probability) kept distinct from duration (steps); biased ratio handled",
+          "communication": "states the closed form and its boundaries",
+          "speed": "plugs into the closed form without re-deriving"
+        }
+      },
+      "followUps": [
+        "Generalize the fair-coin formula to arbitrary N and start i.",
+        "Make the coin biased — does reach rise or fall from this start?",
+        "Why is the fair duration quadratic in the start while reach is linear?"
+      ]
+    },
+    {
+      "id": "tmpl-gamblers-ruin#N4-p1_2-i2-duration",
+      "tier": "hard",
+      "fingerprint": "tmpl-gamblers-ruin:N=4,i=2,pDen=2,pNum=1,query=duration",
+      "template": {
+        "id": "tmpl-gamblers-ruin",
+        "params": {
+          "N": 4,
+          "pNum": 1,
+          "pDen": 2,
+          "i": 2,
+          "query": "duration"
+        }
+      },
+      "prompt": "A gambler does a fair random walk between absorbing barriers 0 (ruin) and 4 (win), stepping +1 with probability 1/2 and −1 otherwise. Starting at 2, what is the expected number of steps until the walk is absorbed at 0 or 4?",
+      "source": "Green Book §5.1 p.107–112; src/engine/walk.test.ts",
+      "engineCheck": {
+        "module": "src/engine/walk.ts",
+        "calls": [
+          "buildWalk(4, 1/2).duration[2]"
+        ],
+        "answer": "4",
+        "verified": true
+      },
+      "hidden": {
+        "answer": "4",
+        "approaches": [
+          "Solve D_i = 1 + p·D_(i+1) + q·D_(i−1) with D_0 = D_N = 0; fair coin gives D_i = i·(N−i).",
+          "Each step costs 1; total cost is the expected absorption time, not a probability."
+        ],
+        "wrongTurns": [
+          "reach probability and expected duration are the same object",
+          "fair-coin reach is 1/2 regardless of the start",
+          "duration is symmetric in the start even when biased",
+          "bias does not change the reach probability"
+        ],
+        "hintLadder": [
+          "Set up a boundary-value problem on positions 0..N: reach P_i with P_0=0, P_N=1, or duration D_i with D_0=D_N=0.",
+          "Fair coin: P_i = i/N (linear) and D_i = i·(N−i) (quadratic). Biased coin with ratio r = q/p: P_i = (1−r^i)/(1−r^N).",
+          "Plug the start i into the right closed form and keep reach (a probability) distinct from duration (a step count)."
+        ],
+        "rubric": {
+          "correctness": "matches the exact reach/duration value",
+          "approach": "boundary-value recurrence with correct boundaries",
+          "rigor": "reach (probability) kept distinct from duration (steps); biased ratio handled",
+          "communication": "states the closed form and its boundaries",
+          "speed": "plugs into the closed form without re-deriving"
+        }
+      },
+      "followUps": [
+        "Generalize the fair-coin formula to arbitrary N and start i.",
+        "Make the coin biased — does reach rise or fall from this start?",
+        "Why is the fair duration quadratic in the start while reach is linear?"
+      ]
+    },
+    {
+      "id": "tmpl-gamblers-ruin#N3-p1_2-i1-reach",
+      "tier": "hard",
+      "fingerprint": "tmpl-gamblers-ruin:N=3,i=1,pDen=2,pNum=1,query=reach",
+      "template": {
+        "id": "tmpl-gamblers-ruin",
+        "params": {
+          "N": 3,
+          "pNum": 1,
+          "pDen": 2,
+          "i": 1,
+          "query": "reach"
+        }
+      },
+      "prompt": "A gambler does a fair random walk between absorbing barriers 0 (ruin) and 3 (win), stepping +1 with probability 1/2 and −1 otherwise. Starting at 1, what is the probability of reaching 3 before hitting 0?",
+      "source": "Green Book §5.1 p.107–112; src/engine/walk.test.ts",
+      "engineCheck": {
+        "module": "src/engine/walk.ts",
+        "calls": [
+          "buildWalk(3, 1/2).reachProb[1]"
+        ],
+        "answer": "1/3",
+        "verified": true
+      },
+      "hidden": {
+        "answer": "1/3",
+        "approaches": [
+          "Solve P_i = p·P_(i+1) + q·P_(i−1) with P_0 = 0, P_N = 1; fair coin gives P_i = i/N.",
+          "Biased: P_i = (1−r^i)/(1−r^N) with r = q/p."
+        ],
+        "wrongTurns": [
+          "reach probability and expected duration are the same object",
+          "fair-coin reach is 1/2 regardless of the start",
+          "duration is symmetric in the start even when biased",
+          "bias does not change the reach probability"
+        ],
+        "hintLadder": [
+          "Set up a boundary-value problem on positions 0..N: reach P_i with P_0=0, P_N=1, or duration D_i with D_0=D_N=0.",
+          "Fair coin: P_i = i/N (linear) and D_i = i·(N−i) (quadratic). Biased coin with ratio r = q/p: P_i = (1−r^i)/(1−r^N).",
+          "Plug the start i into the right closed form and keep reach (a probability) distinct from duration (a step count)."
+        ],
+        "rubric": {
+          "correctness": "matches the exact reach/duration value",
+          "approach": "boundary-value recurrence with correct boundaries",
+          "rigor": "reach (probability) kept distinct from duration (steps); biased ratio handled",
+          "communication": "states the closed form and its boundaries",
+          "speed": "plugs into the closed form without re-deriving"
+        }
+      },
+      "followUps": [
+        "Generalize the fair-coin formula to arbitrary N and start i.",
+        "Make the coin biased — does reach rise or fall from this start?",
+        "Why is the fair duration quadratic in the start while reach is linear?"
+      ]
+    },
+    {
+      "id": "tmpl-gamblers-ruin#N5-p1_2-i2-reach",
+      "tier": "harder",
+      "fingerprint": "tmpl-gamblers-ruin:N=5,i=2,pDen=2,pNum=1,query=reach",
+      "template": {
+        "id": "tmpl-gamblers-ruin",
+        "params": {
+          "N": 5,
+          "pNum": 1,
+          "pDen": 2,
+          "i": 2,
+          "query": "reach"
+        }
+      },
+      "prompt": "A gambler does a fair random walk between absorbing barriers 0 (ruin) and 5 (win), stepping +1 with probability 1/2 and −1 otherwise. Starting at 2, what is the probability of reaching 5 before hitting 0?",
+      "source": "Green Book §5.1 p.107–112; src/engine/walk.test.ts",
+      "engineCheck": {
+        "module": "src/engine/walk.ts",
+        "calls": [
+          "buildWalk(5, 1/2).reachProb[2]"
+        ],
+        "answer": "2/5",
+        "verified": true
+      },
+      "hidden": {
+        "answer": "2/5",
+        "approaches": [
+          "Solve P_i = p·P_(i+1) + q·P_(i−1) with P_0 = 0, P_N = 1; fair coin gives P_i = i/N.",
+          "Biased: P_i = (1−r^i)/(1−r^N) with r = q/p."
+        ],
+        "wrongTurns": [
+          "reach probability and expected duration are the same object",
+          "fair-coin reach is 1/2 regardless of the start",
+          "duration is symmetric in the start even when biased",
+          "bias does not change the reach probability"
+        ],
+        "hintLadder": [
+          "Set up a boundary-value problem on positions 0..N: reach P_i with P_0=0, P_N=1, or duration D_i with D_0=D_N=0.",
+          "Fair coin: P_i = i/N (linear) and D_i = i·(N−i) (quadratic). Biased coin with ratio r = q/p: P_i = (1−r^i)/(1−r^N).",
+          "Plug the start i into the right closed form and keep reach (a probability) distinct from duration (a step count)."
+        ],
+        "rubric": {
+          "correctness": "matches the exact reach/duration value",
+          "approach": "boundary-value recurrence with correct boundaries",
+          "rigor": "reach (probability) kept distinct from duration (steps); biased ratio handled",
+          "communication": "states the closed form and its boundaries",
+          "speed": "plugs into the closed form without re-deriving"
+        }
+      },
+      "followUps": [
+        "Generalize the fair-coin formula to arbitrary N and start i.",
+        "Make the coin biased — does reach rise or fall from this start?",
+        "Why is the fair duration quadratic in the start while reach is linear?"
+      ]
+    },
+    {
+      "id": "tmpl-gamblers-ruin#N5-p1_2-i2-duration",
+      "tier": "harder",
+      "fingerprint": "tmpl-gamblers-ruin:N=5,i=2,pDen=2,pNum=1,query=duration",
+      "template": {
+        "id": "tmpl-gamblers-ruin",
+        "params": {
+          "N": 5,
+          "pNum": 1,
+          "pDen": 2,
+          "i": 2,
+          "query": "duration"
+        }
+      },
+      "prompt": "A gambler does a fair random walk between absorbing barriers 0 (ruin) and 5 (win), stepping +1 with probability 1/2 and −1 otherwise. Starting at 2, what is the expected number of steps until the walk is absorbed at 0 or 5?",
+      "source": "Green Book §5.1 p.107–112; src/engine/walk.test.ts",
+      "engineCheck": {
+        "module": "src/engine/walk.ts",
+        "calls": [
+          "buildWalk(5, 1/2).duration[2]"
+        ],
+        "answer": "6",
+        "verified": true
+      },
+      "hidden": {
+        "answer": "6",
+        "approaches": [
+          "Solve D_i = 1 + p·D_(i+1) + q·D_(i−1) with D_0 = D_N = 0; fair coin gives D_i = i·(N−i).",
+          "Each step costs 1; total cost is the expected absorption time, not a probability."
+        ],
+        "wrongTurns": [
+          "reach probability and expected duration are the same object",
+          "fair-coin reach is 1/2 regardless of the start",
+          "duration is symmetric in the start even when biased",
+          "bias does not change the reach probability"
+        ],
+        "hintLadder": [
+          "Set up a boundary-value problem on positions 0..N: reach P_i with P_0=0, P_N=1, or duration D_i with D_0=D_N=0.",
+          "Fair coin: P_i = i/N (linear) and D_i = i·(N−i) (quadratic). Biased coin with ratio r = q/p: P_i = (1−r^i)/(1−r^N).",
+          "Plug the start i into the right closed form and keep reach (a probability) distinct from duration (a step count)."
+        ],
+        "rubric": {
+          "correctness": "matches the exact reach/duration value",
+          "approach": "boundary-value recurrence with correct boundaries",
+          "rigor": "reach (probability) kept distinct from duration (steps); biased ratio handled",
+          "communication": "states the closed form and its boundaries",
+          "speed": "plugs into the closed form without re-deriving"
+        }
+      },
+      "followUps": [
+        "Generalize the fair-coin formula to arbitrary N and start i.",
+        "Make the coin biased — does reach rise or fall from this start?",
+        "Why is the fair duration quadratic in the start while reach is linear?"
+      ]
+    },
+    {
+      "id": "tmpl-gamblers-ruin#N4-p1_2-i3-duration",
+      "tier": "harder",
+      "fingerprint": "tmpl-gamblers-ruin:N=4,i=3,pDen=2,pNum=1,query=duration",
+      "template": {
+        "id": "tmpl-gamblers-ruin",
+        "params": {
+          "N": 4,
+          "pNum": 1,
+          "pDen": 2,
+          "i": 3,
+          "query": "duration"
+        }
+      },
+      "prompt": "A gambler does a fair random walk between absorbing barriers 0 (ruin) and 4 (win), stepping +1 with probability 1/2 and −1 otherwise. Starting at 3, what is the expected number of steps until the walk is absorbed at 0 or 4?",
+      "source": "Green Book §5.1 p.107–112; src/engine/walk.test.ts",
+      "engineCheck": {
+        "module": "src/engine/walk.ts",
+        "calls": [
+          "buildWalk(4, 1/2).duration[3]"
+        ],
+        "answer": "3",
+        "verified": true
+      },
+      "hidden": {
+        "answer": "3",
+        "approaches": [
+          "Solve D_i = 1 + p·D_(i+1) + q·D_(i−1) with D_0 = D_N = 0; fair coin gives D_i = i·(N−i).",
+          "Each step costs 1; total cost is the expected absorption time, not a probability."
+        ],
+        "wrongTurns": [
+          "reach probability and expected duration are the same object",
+          "fair-coin reach is 1/2 regardless of the start",
+          "duration is symmetric in the start even when biased",
+          "bias does not change the reach probability"
+        ],
+        "hintLadder": [
+          "Set up a boundary-value problem on positions 0..N: reach P_i with P_0=0, P_N=1, or duration D_i with D_0=D_N=0.",
+          "Fair coin: P_i = i/N (linear) and D_i = i·(N−i) (quadratic). Biased coin with ratio r = q/p: P_i = (1−r^i)/(1−r^N).",
+          "Plug the start i into the right closed form and keep reach (a probability) distinct from duration (a step count)."
+        ],
+        "rubric": {
+          "correctness": "matches the exact reach/duration value",
+          "approach": "boundary-value recurrence with correct boundaries",
+          "rigor": "reach (probability) kept distinct from duration (steps); biased ratio handled",
+          "communication": "states the closed form and its boundaries",
+          "speed": "plugs into the closed form without re-deriving"
+        }
+      },
+      "followUps": [
+        "Generalize the fair-coin formula to arbitrary N and start i.",
+        "Make the coin biased — does reach rise or fall from this start?",
+        "Why is the fair duration quadratic in the start while reach is linear?"
+      ]
+    },
+    {
+      "id": "tmpl-gamblers-ruin#N6-p1_2-i3-duration",
+      "tier": "harder",
+      "fingerprint": "tmpl-gamblers-ruin:N=6,i=3,pDen=2,pNum=1,query=duration",
+      "template": {
+        "id": "tmpl-gamblers-ruin",
+        "params": {
+          "N": 6,
+          "pNum": 1,
+          "pDen": 2,
+          "i": 3,
+          "query": "duration"
+        }
+      },
+      "prompt": "A gambler does a fair random walk between absorbing barriers 0 (ruin) and 6 (win), stepping +1 with probability 1/2 and −1 otherwise. Starting at 3, what is the expected number of steps until the walk is absorbed at 0 or 6?",
+      "source": "Green Book §5.1 p.107–112; src/engine/walk.test.ts",
+      "engineCheck": {
+        "module": "src/engine/walk.ts",
+        "calls": [
+          "buildWalk(6, 1/2).duration[3]"
+        ],
+        "answer": "9",
+        "verified": true
+      },
+      "hidden": {
+        "answer": "9",
+        "approaches": [
+          "Solve D_i = 1 + p·D_(i+1) + q·D_(i−1) with D_0 = D_N = 0; fair coin gives D_i = i·(N−i).",
+          "Each step costs 1; total cost is the expected absorption time, not a probability."
+        ],
+        "wrongTurns": [
+          "reach probability and expected duration are the same object",
+          "fair-coin reach is 1/2 regardless of the start",
+          "duration is symmetric in the start even when biased",
+          "bias does not change the reach probability"
+        ],
+        "hintLadder": [
+          "Set up a boundary-value problem on positions 0..N: reach P_i with P_0=0, P_N=1, or duration D_i with D_0=D_N=0.",
+          "Fair coin: P_i = i/N (linear) and D_i = i·(N−i) (quadratic). Biased coin with ratio r = q/p: P_i = (1−r^i)/(1−r^N).",
+          "Plug the start i into the right closed form and keep reach (a probability) distinct from duration (a step count)."
+        ],
+        "rubric": {
+          "correctness": "matches the exact reach/duration value",
+          "approach": "boundary-value recurrence with correct boundaries",
+          "rigor": "reach (probability) kept distinct from duration (steps); biased ratio handled",
+          "communication": "states the closed form and its boundaries",
+          "speed": "plugs into the closed form without re-deriving"
+        }
+      },
+      "followUps": [
+        "Generalize the fair-coin formula to arbitrary N and start i.",
+        "Make the coin biased — does reach rise or fall from this start?",
+        "Why is the fair duration quadratic in the start while reach is linear?"
+      ]
+    },
+    {
+      "id": "tmpl-gamblers-ruin#N10-p1_2-i5-duration",
+      "tier": "harder",
+      "fingerprint": "tmpl-gamblers-ruin:N=10,i=5,pDen=2,pNum=1,query=duration",
+      "template": {
+        "id": "tmpl-gamblers-ruin",
+        "params": {
+          "N": 10,
+          "pNum": 1,
+          "pDen": 2,
+          "i": 5,
+          "query": "duration"
+        }
+      },
+      "prompt": "A gambler does a fair random walk between absorbing barriers 0 (ruin) and 10 (win), stepping +1 with probability 1/2 and −1 otherwise. Starting at 5, what is the expected number of steps until the walk is absorbed at 0 or 10?",
+      "source": "Green Book §5.1 p.107–112; src/engine/walk.test.ts",
+      "engineCheck": {
+        "module": "src/engine/walk.ts",
+        "calls": [
+          "buildWalk(10, 1/2).duration[5]"
+        ],
+        "answer": "25",
+        "verified": true
+      },
+      "hidden": {
+        "answer": "25",
+        "approaches": [
+          "Solve D_i = 1 + p·D_(i+1) + q·D_(i−1) with D_0 = D_N = 0; fair coin gives D_i = i·(N−i).",
+          "Each step costs 1; total cost is the expected absorption time, not a probability."
+        ],
+        "wrongTurns": [
+          "reach probability and expected duration are the same object",
+          "fair-coin reach is 1/2 regardless of the start",
+          "duration is symmetric in the start even when biased",
+          "bias does not change the reach probability"
+        ],
+        "hintLadder": [
+          "Set up a boundary-value problem on positions 0..N: reach P_i with P_0=0, P_N=1, or duration D_i with D_0=D_N=0.",
+          "Fair coin: P_i = i/N (linear) and D_i = i·(N−i) (quadratic). Biased coin with ratio r = q/p: P_i = (1−r^i)/(1−r^N).",
+          "Plug the start i into the right closed form and keep reach (a probability) distinct from duration (a step count)."
+        ],
+        "rubric": {
+          "correctness": "matches the exact reach/duration value",
+          "approach": "boundary-value recurrence with correct boundaries",
+          "rigor": "reach (probability) kept distinct from duration (steps); biased ratio handled",
+          "communication": "states the closed form and its boundaries",
+          "speed": "plugs into the closed form without re-deriving"
+        }
+      },
+      "followUps": [
+        "Generalize the fair-coin formula to arbitrary N and start i.",
+        "Make the coin biased — does reach rise or fall from this start?",
+        "Why is the fair duration quadratic in the start while reach is linear?"
+      ]
+    },
+    {
+      "id": "tmpl-gamblers-ruin#N4-p2_5-i2-reach",
+      "tier": "brutal",
+      "fingerprint": "tmpl-gamblers-ruin:N=4,i=2,pDen=5,pNum=2,query=reach",
+      "template": {
+        "id": "tmpl-gamblers-ruin",
+        "params": {
+          "N": 4,
+          "pNum": 2,
+          "pDen": 5,
+          "i": 2,
+          "query": "reach"
+        }
+      },
+      "prompt": "A gambler does a biased (P(+1)=2/5) random walk between absorbing barriers 0 (ruin) and 4 (win), stepping +1 with probability 2/5 and −1 otherwise. Starting at 2, what is the probability of reaching 4 before hitting 0?",
+      "source": "Green Book §5.1 p.107–112; src/engine/walk.test.ts",
+      "engineCheck": {
+        "module": "src/engine/walk.ts",
+        "calls": [
+          "buildWalk(4, 2/5).reachProb[2]"
+        ],
+        "answer": "4/13",
+        "verified": true
+      },
+      "hidden": {
+        "answer": "4/13",
+        "approaches": [
+          "Solve P_i = p·P_(i+1) + q·P_(i−1) with P_0 = 0, P_N = 1; fair coin gives P_i = i/N.",
+          "Biased: P_i = (1−r^i)/(1−r^N) with r = q/p."
+        ],
+        "wrongTurns": [
+          "reach probability and expected duration are the same object",
+          "fair-coin reach is 1/2 regardless of the start",
+          "duration is symmetric in the start even when biased",
+          "bias does not change the reach probability"
+        ],
+        "hintLadder": [
+          "Set up a boundary-value problem on positions 0..N: reach P_i with P_0=0, P_N=1, or duration D_i with D_0=D_N=0.",
+          "Fair coin: P_i = i/N (linear) and D_i = i·(N−i) (quadratic). Biased coin with ratio r = q/p: P_i = (1−r^i)/(1−r^N).",
+          "Plug the start i into the right closed form and keep reach (a probability) distinct from duration (a step count)."
+        ],
+        "rubric": {
+          "correctness": "matches the exact reach/duration value",
+          "approach": "boundary-value recurrence with correct boundaries",
+          "rigor": "reach (probability) kept distinct from duration (steps); biased ratio handled",
+          "communication": "states the closed form and its boundaries",
+          "speed": "plugs into the closed form without re-deriving"
+        }
+      },
+      "followUps": [
+        "Generalize the fair-coin formula to arbitrary N and start i.",
+        "Make the coin biased — does reach rise or fall from this start?",
+        "Why is the fair duration quadratic in the start while reach is linear?"
+      ]
+    },
+    {
+      "id": "tmpl-gamblers-ruin#N4-p2_5-i2-duration",
+      "tier": "brutal",
+      "fingerprint": "tmpl-gamblers-ruin:N=4,i=2,pDen=5,pNum=2,query=duration",
+      "template": {
+        "id": "tmpl-gamblers-ruin",
+        "params": {
+          "N": 4,
+          "pNum": 2,
+          "pDen": 5,
+          "i": 2,
+          "query": "duration"
+        }
+      },
+      "prompt": "A gambler does a biased (P(+1)=2/5) random walk between absorbing barriers 0 (ruin) and 4 (win), stepping +1 with probability 2/5 and −1 otherwise. Starting at 2, what is the expected number of steps until the walk is absorbed at 0 or 4?",
+      "source": "Green Book §5.1 p.107–112; src/engine/walk.test.ts",
+      "engineCheck": {
+        "module": "src/engine/walk.ts",
+        "calls": [
+          "buildWalk(4, 2/5).duration[2]"
+        ],
+        "answer": "50/13",
+        "verified": true
+      },
+      "hidden": {
+        "answer": "50/13",
+        "approaches": [
+          "Solve D_i = 1 + p·D_(i+1) + q·D_(i−1) with D_0 = D_N = 0; fair coin gives D_i = i·(N−i).",
+          "Each step costs 1; total cost is the expected absorption time, not a probability."
+        ],
+        "wrongTurns": [
+          "reach probability and expected duration are the same object",
+          "fair-coin reach is 1/2 regardless of the start",
+          "duration is symmetric in the start even when biased",
+          "bias does not change the reach probability"
+        ],
+        "hintLadder": [
+          "Set up a boundary-value problem on positions 0..N: reach P_i with P_0=0, P_N=1, or duration D_i with D_0=D_N=0.",
+          "Fair coin: P_i = i/N (linear) and D_i = i·(N−i) (quadratic). Biased coin with ratio r = q/p: P_i = (1−r^i)/(1−r^N).",
+          "Plug the start i into the right closed form and keep reach (a probability) distinct from duration (a step count)."
+        ],
+        "rubric": {
+          "correctness": "matches the exact reach/duration value",
+          "approach": "boundary-value recurrence with correct boundaries",
+          "rigor": "reach (probability) kept distinct from duration (steps); biased ratio handled",
+          "communication": "states the closed form and its boundaries",
+          "speed": "plugs into the closed form without re-deriving"
+        }
+      },
+      "followUps": [
+        "Generalize the fair-coin formula to arbitrary N and start i.",
+        "Make the coin biased — does reach rise or fall from this start?",
+        "Why is the fair duration quadratic in the start while reach is linear?"
+      ]
+    },
+    {
+      "id": "tmpl-overlap-wait#THH",
+      "tier": "harder",
+      "fingerprint": "tmpl-overlap-wait:pattern=THH",
+      "template": {
+        "id": "tmpl-overlap-wait",
+        "params": {
+          "pattern": "THH"
+        }
+      },
+      "prompt": "Using the overlap (self-border) shortcut — not a full state machine — find the expected number of fair-coin flips until THH first appears, and justify the shortcut with the martingale argument.",
+      "source": "Green Book §5.3 p.121–128; src/engine/correlation.test.ts",
+      "engineCheck": {
+        "module": "src/engine/correlation.ts",
+        "calls": [
+          "expectedWaitFair('THH')"
+        ],
+        "answer": "8",
+        "verified": true
+      },
+      "hidden": {
+        "answer": "8",
+        "approaches": [
+          "Enumerate the self-borders of THH (lengths k where the k-prefix equals the k-suffix, including k=L), then sum 2^k.",
+          "Martingale: a fresh gambler enters each flip betting on THH; the survivors at the stop are exactly the borders, paying Σ 2^k = E[T]."
+        ],
+        "wrongTurns": [
+          "only the full-length border counts",
+          "wait = 2^length",
+          "borders depend on the coin bias",
+          "overlap of length k contributes k, not 2^k"
+        ],
+        "hintLadder": [
+          "For a fair coin there is a shortcut: E[wait] = Σ 2^k over the pattern's self-borders.",
+          "A border is a length k (1 ≤ k ≤ L, including k = L) where the k-prefix equals the k-suffix of THH; list them.",
+          "Sum 2^k across those border lengths; the martingale of parlaying gamblers (each surviving border pays 2^k) proves the sum equals E[T]."
+        ],
+        "rubric": {
+          "correctness": "matches Σ 2^k over the borders",
+          "approach": "self-border (overlap) shortcut + martingale justification",
+          "rigor": "borders correctly enumerated (includes k=L)",
+          "communication": "explains why Σ 2^k equals the wait (fair betting)",
+          "speed": "reads borders off the pattern, no system to solve"
+        }
+      },
+      "followUps": [
+        "Confirm it agrees with the Markov recurrence for this pattern.",
+        "Design a length-4 pattern that maximizes the wait via its borders.",
+        "Why does the martingale argument need a fair coin?"
+      ]
+    },
+    {
+      "id": "tmpl-overlap-wait#HTH",
+      "tier": "harder",
+      "fingerprint": "tmpl-overlap-wait:pattern=HTH",
+      "template": {
+        "id": "tmpl-overlap-wait",
+        "params": {
+          "pattern": "HTH"
+        }
+      },
+      "prompt": "Using the overlap (self-border) shortcut — not a full state machine — find the expected number of fair-coin flips until HTH first appears, and justify the shortcut with the martingale argument.",
+      "source": "Green Book §5.3 p.121–128; src/engine/correlation.test.ts",
+      "engineCheck": {
+        "module": "src/engine/correlation.ts",
+        "calls": [
+          "expectedWaitFair('HTH')"
+        ],
+        "answer": "10",
+        "verified": true
+      },
+      "hidden": {
+        "answer": "10",
+        "approaches": [
+          "Enumerate the self-borders of HTH (lengths k where the k-prefix equals the k-suffix, including k=L), then sum 2^k.",
+          "Martingale: a fresh gambler enters each flip betting on HTH; the survivors at the stop are exactly the borders, paying Σ 2^k = E[T]."
+        ],
+        "wrongTurns": [
+          "only the full-length border counts",
+          "wait = 2^length",
+          "borders depend on the coin bias",
+          "overlap of length k contributes k, not 2^k"
+        ],
+        "hintLadder": [
+          "For a fair coin there is a shortcut: E[wait] = Σ 2^k over the pattern's self-borders.",
+          "A border is a length k (1 ≤ k ≤ L, including k = L) where the k-prefix equals the k-suffix of HTH; list them.",
+          "Sum 2^k across those border lengths; the martingale of parlaying gamblers (each surviving border pays 2^k) proves the sum equals E[T]."
+        ],
+        "rubric": {
+          "correctness": "matches Σ 2^k over the borders",
+          "approach": "self-border (overlap) shortcut + martingale justification",
+          "rigor": "borders correctly enumerated (includes k=L)",
+          "communication": "explains why Σ 2^k equals the wait (fair betting)",
+          "speed": "reads borders off the pattern, no system to solve"
+        }
+      },
+      "followUps": [
+        "Confirm it agrees with the Markov recurrence for this pattern.",
+        "Design a length-4 pattern that maximizes the wait via its borders.",
+        "Why does the martingale argument need a fair coin?"
+      ]
+    },
+    {
+      "id": "tmpl-overlap-wait#THT",
+      "tier": "harder",
+      "fingerprint": "tmpl-overlap-wait:pattern=THT",
+      "template": {
+        "id": "tmpl-overlap-wait",
+        "params": {
+          "pattern": "THT"
+        }
+      },
+      "prompt": "Using the overlap (self-border) shortcut — not a full state machine — find the expected number of fair-coin flips until THT first appears, and justify the shortcut with the martingale argument.",
+      "source": "Green Book §5.3 p.121–128; src/engine/correlation.test.ts",
+      "engineCheck": {
+        "module": "src/engine/correlation.ts",
+        "calls": [
+          "expectedWaitFair('THT')"
+        ],
+        "answer": "10",
+        "verified": true
+      },
+      "hidden": {
+        "answer": "10",
+        "approaches": [
+          "Enumerate the self-borders of THT (lengths k where the k-prefix equals the k-suffix, including k=L), then sum 2^k.",
+          "Martingale: a fresh gambler enters each flip betting on THT; the survivors at the stop are exactly the borders, paying Σ 2^k = E[T]."
+        ],
+        "wrongTurns": [
+          "only the full-length border counts",
+          "wait = 2^length",
+          "borders depend on the coin bias",
+          "overlap of length k contributes k, not 2^k"
+        ],
+        "hintLadder": [
+          "For a fair coin there is a shortcut: E[wait] = Σ 2^k over the pattern's self-borders.",
+          "A border is a length k (1 ≤ k ≤ L, including k = L) where the k-prefix equals the k-suffix of THT; list them.",
+          "Sum 2^k across those border lengths; the martingale of parlaying gamblers (each surviving border pays 2^k) proves the sum equals E[T]."
+        ],
+        "rubric": {
+          "correctness": "matches Σ 2^k over the borders",
+          "approach": "self-border (overlap) shortcut + martingale justification",
+          "rigor": "borders correctly enumerated (includes k=L)",
+          "communication": "explains why Σ 2^k equals the wait (fair betting)",
+          "speed": "reads borders off the pattern, no system to solve"
+        }
+      },
+      "followUps": [
+        "Confirm it agrees with the Markov recurrence for this pattern.",
+        "Design a length-4 pattern that maximizes the wait via its borders.",
+        "Why does the martingale argument need a fair coin?"
+      ]
+    },
+    {
+      "id": "tmpl-overlap-wait#TTH",
+      "tier": "harder",
+      "fingerprint": "tmpl-overlap-wait:pattern=TTH",
+      "template": {
+        "id": "tmpl-overlap-wait",
+        "params": {
+          "pattern": "TTH"
+        }
+      },
+      "prompt": "Using the overlap (self-border) shortcut — not a full state machine — find the expected number of fair-coin flips until TTH first appears, and justify the shortcut with the martingale argument.",
+      "source": "Green Book §5.3 p.121–128; src/engine/correlation.test.ts",
+      "engineCheck": {
+        "module": "src/engine/correlation.ts",
+        "calls": [
+          "expectedWaitFair('TTH')"
+        ],
+        "answer": "8",
+        "verified": true
+      },
+      "hidden": {
+        "answer": "8",
+        "approaches": [
+          "Enumerate the self-borders of TTH (lengths k where the k-prefix equals the k-suffix, including k=L), then sum 2^k.",
+          "Martingale: a fresh gambler enters each flip betting on TTH; the survivors at the stop are exactly the borders, paying Σ 2^k = E[T]."
+        ],
+        "wrongTurns": [
+          "only the full-length border counts",
+          "wait = 2^length",
+          "borders depend on the coin bias",
+          "overlap of length k contributes k, not 2^k"
+        ],
+        "hintLadder": [
+          "For a fair coin there is a shortcut: E[wait] = Σ 2^k over the pattern's self-borders.",
+          "A border is a length k (1 ≤ k ≤ L, including k = L) where the k-prefix equals the k-suffix of TTH; list them.",
+          "Sum 2^k across those border lengths; the martingale of parlaying gamblers (each surviving border pays 2^k) proves the sum equals E[T]."
+        ],
+        "rubric": {
+          "correctness": "matches Σ 2^k over the borders",
+          "approach": "self-border (overlap) shortcut + martingale justification",
+          "rigor": "borders correctly enumerated (includes k=L)",
+          "communication": "explains why Σ 2^k equals the wait (fair betting)",
+          "speed": "reads borders off the pattern, no system to solve"
+        }
+      },
+      "followUps": [
+        "Confirm it agrees with the Markov recurrence for this pattern.",
+        "Design a length-4 pattern that maximizes the wait via its borders.",
+        "Why does the martingale argument need a fair coin?"
+      ]
+    },
+    {
+      "id": "tmpl-overlap-wait#TTT",
+      "tier": "harder",
+      "fingerprint": "tmpl-overlap-wait:pattern=TTT",
+      "template": {
+        "id": "tmpl-overlap-wait",
+        "params": {
+          "pattern": "TTT"
+        }
+      },
+      "prompt": "Using the overlap (self-border) shortcut — not a full state machine — find the expected number of fair-coin flips until TTT first appears, and justify the shortcut with the martingale argument.",
+      "source": "Green Book §5.3 p.121–128; src/engine/correlation.test.ts",
+      "engineCheck": {
+        "module": "src/engine/correlation.ts",
+        "calls": [
+          "expectedWaitFair('TTT')"
+        ],
+        "answer": "14",
+        "verified": true
+      },
+      "hidden": {
+        "answer": "14",
+        "approaches": [
+          "Enumerate the self-borders of TTT (lengths k where the k-prefix equals the k-suffix, including k=L), then sum 2^k.",
+          "Martingale: a fresh gambler enters each flip betting on TTT; the survivors at the stop are exactly the borders, paying Σ 2^k = E[T]."
+        ],
+        "wrongTurns": [
+          "only the full-length border counts",
+          "wait = 2^length",
+          "borders depend on the coin bias",
+          "overlap of length k contributes k, not 2^k"
+        ],
+        "hintLadder": [
+          "For a fair coin there is a shortcut: E[wait] = Σ 2^k over the pattern's self-borders.",
+          "A border is a length k (1 ≤ k ≤ L, including k = L) where the k-prefix equals the k-suffix of TTT; list them.",
+          "Sum 2^k across those border lengths; the martingale of parlaying gamblers (each surviving border pays 2^k) proves the sum equals E[T]."
+        ],
+        "rubric": {
+          "correctness": "matches Σ 2^k over the borders",
+          "approach": "self-border (overlap) shortcut + martingale justification",
+          "rigor": "borders correctly enumerated (includes k=L)",
+          "communication": "explains why Σ 2^k equals the wait (fair betting)",
+          "speed": "reads borders off the pattern, no system to solve"
+        }
+      },
+      "followUps": [
+        "Confirm it agrees with the Markov recurrence for this pattern.",
+        "Design a length-4 pattern that maximizes the wait via its borders.",
+        "Why does the martingale argument need a fair coin?"
+      ]
+    },
+    {
+      "id": "tmpl-overlap-wait#HTHT",
+      "tier": "brutal",
+      "fingerprint": "tmpl-overlap-wait:pattern=HTHT",
+      "template": {
+        "id": "tmpl-overlap-wait",
+        "params": {
+          "pattern": "HTHT"
+        }
+      },
+      "prompt": "Using the overlap (self-border) shortcut — not a full state machine — find the expected number of fair-coin flips until HTHT first appears, and justify the shortcut with the martingale argument.",
+      "source": "Green Book §5.3 p.121–128; src/engine/correlation.test.ts",
+      "engineCheck": {
+        "module": "src/engine/correlation.ts",
+        "calls": [
+          "expectedWaitFair('HTHT')"
+        ],
+        "answer": "20",
+        "verified": true
+      },
+      "hidden": {
+        "answer": "20",
+        "approaches": [
+          "Enumerate the self-borders of HTHT (lengths k where the k-prefix equals the k-suffix, including k=L), then sum 2^k.",
+          "Martingale: a fresh gambler enters each flip betting on HTHT; the survivors at the stop are exactly the borders, paying Σ 2^k = E[T]."
+        ],
+        "wrongTurns": [
+          "only the full-length border counts",
+          "wait = 2^length",
+          "borders depend on the coin bias",
+          "overlap of length k contributes k, not 2^k"
+        ],
+        "hintLadder": [
+          "For a fair coin there is a shortcut: E[wait] = Σ 2^k over the pattern's self-borders.",
+          "A border is a length k (1 ≤ k ≤ L, including k = L) where the k-prefix equals the k-suffix of HTHT; list them.",
+          "Sum 2^k across those border lengths; the martingale of parlaying gamblers (each surviving border pays 2^k) proves the sum equals E[T]."
+        ],
+        "rubric": {
+          "correctness": "matches Σ 2^k over the borders",
+          "approach": "self-border (overlap) shortcut + martingale justification",
+          "rigor": "borders correctly enumerated (includes k=L)",
+          "communication": "explains why Σ 2^k equals the wait (fair betting)",
+          "speed": "reads borders off the pattern, no system to solve"
+        }
+      },
+      "followUps": [
+        "Confirm it agrees with the Markov recurrence for this pattern.",
+        "Design a length-4 pattern that maximizes the wait via its borders.",
+        "Why does the martingale argument need a fair coin?"
+      ]
+    },
+    {
+      "id": "tmpl-overlap-wait#HHTT",
+      "tier": "brutal",
+      "fingerprint": "tmpl-overlap-wait:pattern=HHTT",
+      "template": {
+        "id": "tmpl-overlap-wait",
+        "params": {
+          "pattern": "HHTT"
+        }
+      },
+      "prompt": "Using the overlap (self-border) shortcut — not a full state machine — find the expected number of fair-coin flips until HHTT first appears, and justify the shortcut with the martingale argument.",
+      "source": "Green Book §5.3 p.121–128; src/engine/correlation.test.ts",
+      "engineCheck": {
+        "module": "src/engine/correlation.ts",
+        "calls": [
+          "expectedWaitFair('HHTT')"
+        ],
+        "answer": "16",
+        "verified": true
+      },
+      "hidden": {
+        "answer": "16",
+        "approaches": [
+          "Enumerate the self-borders of HHTT (lengths k where the k-prefix equals the k-suffix, including k=L), then sum 2^k.",
+          "Martingale: a fresh gambler enters each flip betting on HHTT; the survivors at the stop are exactly the borders, paying Σ 2^k = E[T]."
+        ],
+        "wrongTurns": [
+          "only the full-length border counts",
+          "wait = 2^length",
+          "borders depend on the coin bias",
+          "overlap of length k contributes k, not 2^k"
+        ],
+        "hintLadder": [
+          "For a fair coin there is a shortcut: E[wait] = Σ 2^k over the pattern's self-borders.",
+          "A border is a length k (1 ≤ k ≤ L, including k = L) where the k-prefix equals the k-suffix of HHTT; list them.",
+          "Sum 2^k across those border lengths; the martingale of parlaying gamblers (each surviving border pays 2^k) proves the sum equals E[T]."
+        ],
+        "rubric": {
+          "correctness": "matches Σ 2^k over the borders",
+          "approach": "self-border (overlap) shortcut + martingale justification",
+          "rigor": "borders correctly enumerated (includes k=L)",
+          "communication": "explains why Σ 2^k equals the wait (fair betting)",
+          "speed": "reads borders off the pattern, no system to solve"
+        }
+      },
+      "followUps": [
+        "Confirm it agrees with the Markov recurrence for this pattern.",
+        "Design a length-4 pattern that maximizes the wait via its borders.",
+        "Why does the martingale argument need a fair coin?"
+      ]
+    },
+    {
+      "id": "tmpl-overlap-wait#HTHH",
+      "tier": "brutal",
+      "fingerprint": "tmpl-overlap-wait:pattern=HTHH",
+      "template": {
+        "id": "tmpl-overlap-wait",
+        "params": {
+          "pattern": "HTHH"
+        }
+      },
+      "prompt": "Using the overlap (self-border) shortcut — not a full state machine — find the expected number of fair-coin flips until HTHH first appears, and justify the shortcut with the martingale argument.",
+      "source": "Green Book §5.3 p.121–128; src/engine/correlation.test.ts",
+      "engineCheck": {
+        "module": "src/engine/correlation.ts",
+        "calls": [
+          "expectedWaitFair('HTHH')"
+        ],
+        "answer": "18",
+        "verified": true
+      },
+      "hidden": {
+        "answer": "18",
+        "approaches": [
+          "Enumerate the self-borders of HTHH (lengths k where the k-prefix equals the k-suffix, including k=L), then sum 2^k.",
+          "Martingale: a fresh gambler enters each flip betting on HTHH; the survivors at the stop are exactly the borders, paying Σ 2^k = E[T]."
+        ],
+        "wrongTurns": [
+          "only the full-length border counts",
+          "wait = 2^length",
+          "borders depend on the coin bias",
+          "overlap of length k contributes k, not 2^k"
+        ],
+        "hintLadder": [
+          "For a fair coin there is a shortcut: E[wait] = Σ 2^k over the pattern's self-borders.",
+          "A border is a length k (1 ≤ k ≤ L, including k = L) where the k-prefix equals the k-suffix of HTHH; list them.",
+          "Sum 2^k across those border lengths; the martingale of parlaying gamblers (each surviving border pays 2^k) proves the sum equals E[T]."
+        ],
+        "rubric": {
+          "correctness": "matches Σ 2^k over the borders",
+          "approach": "self-border (overlap) shortcut + martingale justification",
+          "rigor": "borders correctly enumerated (includes k=L)",
+          "communication": "explains why Σ 2^k equals the wait (fair betting)",
+          "speed": "reads borders off the pattern, no system to solve"
+        }
+      },
+      "followUps": [
+        "Confirm it agrees with the Markov recurrence for this pattern.",
+        "Design a length-4 pattern that maximizes the wait via its borders.",
+        "Why does the martingale argument need a fair coin?"
+      ]
+    },
+    {
+      "id": "ff-pht-longest-len4",
+      "tier": "brutal",
+      "fingerprint": "sem:c763148c4f18",
+      "prompt": "Among all length-4 H/T patterns, which one has the LONGEST expected wait on a fair coin, and what is that wait? Explain via the self-border structure.",
+      "source": "Green Book §5.3 p.121–128; src/engine/correlation.test.ts",
+      "engineCheck": {
+        "module": "src/engine/correlation.ts",
+        "calls": [
+          "expectedWaitFair('HHHH')"
+        ],
+        "answer": "30",
+        "verified": true
+      },
+      "hidden": {
+        "answer": "30",
+        "approaches": [
+          "HHHH has every length a border (k=1,2,3,4), so Σ 2^k is maximal: 2+4+8+16.",
+          "Any run of four identical symbols maximizes overlap and therefore the wait."
+        ],
+        "wrongTurns": [
+          "longer pattern is irrelevant — all length-4 waits are equal",
+          "wait = 2^4 only",
+          "alternating patterns wait longest"
+        ],
+        "hintLadder": [
+          "Compare length-4 patterns by their self-border sets; more/longer borders mean a longer wait.",
+          "The pattern with EVERY prefix equal to the matching suffix (a constant run) maximizes Σ 2^k.",
+          "Identify the constant run and sum 2^k over all four border lengths — do not state the total here, derive it."
+        ],
+        "rubric": {
+          "correctness": "matches Σ 2^k over the borders",
+          "approach": "self-border (overlap) shortcut + martingale justification",
+          "rigor": "borders correctly enumerated (includes k=L)",
+          "communication": "explains why Σ 2^k equals the wait (fair betting)",
+          "speed": "reads borders off the pattern, no system to solve"
+        }
+      },
+      "followUps": [
+        "What length-4 pattern waits the SHORTEST, and why?",
+        "Generalize the longest-wait pattern to length n.",
+        "Confirm against the Markov recurrence."
+      ]
+    },
+    {
+      "id": "ff-pht-shortest-len4",
+      "tier": "harder",
+      "fingerprint": "sem:9e65ba11fc02",
+      "prompt": "Among length-4 H/T patterns, give one with the SHORTEST expected wait on a fair coin and state that wait. Why is it the minimum?",
+      "source": "Green Book §5.3 p.121–128; src/engine/correlation.test.ts",
+      "engineCheck": {
+        "module": "src/engine/correlation.ts",
+        "calls": [
+          "expectedWaitFair('THHH')"
+        ],
+        "answer": "16",
+        "verified": true
+      },
+      "hidden": {
+        "answer": "16",
+        "approaches": [
+          "A pattern with NO proper border (only the trivial k=L) waits the least: Σ 2^k = 2^4 alone.",
+          "THHH (or HTTT, HHHT…) has only the full-length border."
+        ],
+        "wrongTurns": [
+          "the shortest pattern wins",
+          "every length-4 pattern waits the same",
+          "minimum wait is 2·4"
+        ],
+        "hintLadder": [
+          "Look for a length-4 pattern whose only self-border is the whole pattern (no shorter prefix=suffix).",
+          "With a single border at k=L, the overlap sum collapses to just 2^L.",
+          "Pick such a pattern and evaluate 2^L for L=4 — derive it rather than stating it."
+        ],
+        "rubric": {
+          "correctness": "matches Σ 2^k over the borders",
+          "approach": "self-border (overlap) shortcut + martingale justification",
+          "rigor": "borders correctly enumerated (includes k=L)",
+          "communication": "explains why Σ 2^k equals the wait (fair betting)",
+          "speed": "reads borders off the pattern, no system to solve"
+        }
+      },
+      "followUps": [
+        "Which length-4 pattern waits the longest?",
+        "How many length-4 patterns achieve this minimum?",
+        "Does the minimum-wait pattern also win Penney races often?"
+      ]
+    },
+    {
+      "id": "ff-pht-wait-vs-win",
+      "tier": "harder",
+      "fingerprint": "sem:450d4e7f595a",
+      "prompt": "E[THH]=8 is far below E[HHH]=14, yet the two race head-to-head on one shared fair stream. Which is more likely to appear first, and with what probability? Explain why wait time does not decide the race.",
+      "source": "Green Book §5.4–5.5 p.129–136; src/engine/race.test.ts",
+      "engineCheck": {
+        "module": "src/engine/race.ts",
+        "calls": [
+          "penneyOdds('HHH', 'THH').bBeatsA"
+        ],
+        "answer": "7/8",
+        "verified": true
+      },
+      "hidden": {
+        "answer": "7/8",
+        "approaches": [
+          "Use Conway odds on (HHH, THH): the leading numbers give P(THH first) = (L(HHH,HHH)−L(HHH,THH)) / total.",
+          "THH \"ambushes\" HHH: once a T precedes the run, THH almost always completes first."
+        ],
+        "wrongTurns": [
+          "HHH wins because... no — shorter wait does not imply winning",
+          "the race is 50/50 by symmetry",
+          "win probability equals 8/14"
+        ],
+        "hintLadder": [
+          "Win probability is a race property — use Conway leading numbers, not the individual expected waits.",
+          "Compute L(HHH,HHH), L(HHH,THH), L(THH,HHH), L(THH,THH) and form the odds ratio.",
+          "Normalize the odds to a probability for THH; the wait gap (8 vs 14) is a red herring."
+        ],
+        "rubric": {
+          "correctness": "matches the exact Conway odds",
+          "approach": "Conway's leading numbers, not expected waits",
+          "rigor": "leading numbers L(x,y) correctly defined (suffix of x vs prefix of y)",
+          "communication": "separates win probability from wait time",
+          "speed": "four leading numbers then the odds ratio"
+        }
+      },
+      "followUps": [
+        "What beats THH, and by how much (non-transitivity)?",
+        "Generalize: does every length-3 run have an ambusher?",
+        "Why are wait time and win probability decoupled?"
+      ]
+    }
+  ]
+}

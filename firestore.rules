@@ -100,6 +100,20 @@ service cloud.firestore {
         allow read: if isOwner(uid);
         allow write: if false;
       }
+
+      // Interview subcollections — Cloud Functions only (Admin SDK bypasses rules).
+      match /interviews/{attemptId} {
+        allow read: if isOwner(uid);
+        allow write: if false;
+      }
+      match /interviewUsage/{day} {
+        allow read: if isOwner(uid);
+        allow write: if false;
+      }
+      match /interviewState/{conceptId} {
+        allow read: if isOwner(uid);
+        allow write: if false;
+      }
     }
   }
 }

@@ -1,0 +1,72 @@
+// Client wrappers for the capstone-interview Cloud Functions (ADR-0008).
+//
+// Mirrors src/progress/functions.ts: lazy getFns() handle, httpsCallable, unwrap
+// .data. mintInterviewToken enriches the IANA timezone client-side (the server
+// resolves the local day key for the daily quota), exactly like
+// recordQualifyingAction. The browser receives only an ephemeral ek_... token +
+// a single ClientQuestion (no hidden answers, no standing key).
+
+import { httpsCallable } from 'firebase/functions'
+import { getFns } from '../firebase/app'
+import type {
+  ClientQuestion,
+  Turn,
+  InterviewReport,
+  HireSignal,
+} from '../content/interviewPack'
+
+// Re-export the shared report/turn types so consumers import from one place.
+export type { ClientQuestion, Turn, InterviewReport, HireSignal }
+
+export type MintInterviewTokenInput = {
+  conceptId: string
+  mode?: 'voice' | 'text'
+  // timezone is injected below; not part of the caller-facing type.
+}
+
+export type MintInterviewTokenOutput = {
+  clientSecret: string // ek_... ephemeral key
+  expiresAt: number // unix seconds
+  model: string
+  attemptId: string
+  question: ClientQuestion
+  sessionCapSeconds: number
+  dailyRemainingSeconds: number
+}
+
+export type GradeInterviewInput = {
+  attemptId: string
+  conceptId: string
+  transcript: Turn[]
+  durationSec: number
+}
+
+export type GradeInterviewOutput = {
+  report: InterviewReport
+  attemptId: string
+}
+
+export async function mintInterviewToken(
+  input: MintInterviewTokenInput,
+): Promise<MintInterviewTokenOutput> {
+  const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone
+  const functions = await getFns()
+  const fn = httpsCallable<
+    MintInterviewTokenInput & { timezone: string },
+    MintInterviewTokenOutput
+  >(functions, 'mintInterviewToken')
+  const res = await fn({ ...input, timezone })
+  return res.data
+}
+
+export async function gradeInterview(
+  input: GradeInterviewInput,
+): Promise<GradeInterviewOutput> {
+  const functions = await getFns()
+  const fn = httpsCallable<GradeInterviewInput, GradeInterviewOutput>(
+    functions,
+    'gradeInterview',
+  )
+  const res = await fn(input)
+  return res.data
+}

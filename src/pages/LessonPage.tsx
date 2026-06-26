@@ -15,7 +15,7 @@ import { LessonPlayer } from '../lesson/LessonPlayer'
 import { loadTrack, type Track } from '../progress/track'
 import { loadProgress } from '../progress/progress'
 import type { Lesson, Snapshot } from '../content/schema'
-import { ROUTES, type NavigateFn } from './routes'
+import { ROUTES, interviewPath, type NavigateFn } from './routes'
 
 type LoadState =
   | { status: 'loading' }
@@ -93,6 +93,7 @@ export function LessonPage({
         track={effectiveTrack}
         review={state.completed}
         onExit={() => navigate(ROUTES.landing)}
+        onInterviewCta={() => navigate(interviewPath(state.lesson.courseId))}
       />
     )
   }
