@@ -1,0 +1,246 @@
+{
+  "lessonId": "lesson-optimal-stopping-1",
+  "courseId": "course-optimal-stopping",
+  "title": "No Going Back",
+  "patternOptions": ["H"],
+  "milestoneId": "optimal-stopping-no-going-back",
+  "unlocks": "lesson-optimal-stopping-2",
+  "schemaVersion": 1,
+  "beats": [
+    {
+      "beatId": "l1-recall",
+      "required": true,
+      "prompt": "Warm-up. Pick one item at random from a group. Match the group size to your chance of grabbing the single best one.",
+      "interaction": {
+        "type": "retrievalGrid",
+        "pairs": [
+          { "left": "1 of 2 at random", "right": "1/2" },
+          { "left": "1 of 3 at random", "right": "1/3" },
+          { "left": "1 of 4 at random", "right": "1/4" }
+        ]
+      },
+      "feedback": {
+        "correct": "Exactly — a blind pick of 1 from n lands the best with probability 1/n. Hold that number; it's the bar to beat.",
+        "hints": [
+          "Each item is equally likely to be the best, and you pick one — so the chance is 1 over the group size.",
+          "1 of 2 → 1/2; 1 of 3 → 1/3; the bigger the group, the smaller the chance.",
+          "Match: 2 → 1/2, 3 → 1/3, 4 → 1/4."
+        ]
+      }
+    },
+    {
+      "beatId": "l1-bet",
+      "required": true,
+      "prompt": "Three candidates interview in a random order. You must hire or pass the moment each finishes — no callbacks. If you ALWAYS hire the first candidate, how often do you end up with the best of the three?",
+      "interaction": {
+        "type": "prediction",
+        "options": ["1/3", "1/2", "2/3"]
+      },
+      "feedback": {
+        "byOption": {
+          "1/3": {
+            "note": "Right. The best candidate is equally likely to be 1st, 2nd, or 3rd. 'Hire the first' wins only when the best happens to arrive first — that's 1 case in 3.",
+            "correct": true
+          },
+          "1/2": {
+            "note": "Tempting, but hiring is not a coin flip. The best is in one of 3 equally likely positions; 'hire first' catches it only when it lands 1st — that's 1/3, not 1/2."
+          },
+          "2/3": {
+            "note": "Too high — 'hire first' ignores everyone after position 1, so it can only win when the best arrives first: 1 in 3."
+          }
+        }
+      }
+    },
+    {
+      "beatId": "l1-primer",
+      "required": false,
+      "track": "A",
+      "prompt": "The rules of the game, before we play.",
+      "interaction": {
+        "type": "primer",
+        "variant": "custom",
+        "title": "What makes this hard",
+        "body": "You meet candidates one at a time in a random order. After each one you know only how they RANK against those you've already seen — not their absolute score. You must accept or reject on the spot, and a rejection is final: no going back. You win only if you end up holding the single best of them all. That last rule — irrevocable choice — is what turns an easy ranking into a genuine puzzle.",
+        "collapsible": true
+      },
+      "feedback": {
+        "correct": "Keep those three constraints in mind: random order, relative ranks only, no take-backs.",
+        "hints": [
+          "You never see a candidate's true score — only how they compare to earlier ones.",
+          "Every rejection is permanent; you can't recall someone you passed on.",
+          "Read it, then tap Continue."
+        ]
+      }
+    },
+    {
+      "beatId": "l1-watch",
+      "required": true,
+      "prompt": "Watch 'hire the first' play out. The bars are the candidates' true quality (taller = better), revealed in arrival order. The ★ marks the actual best.",
+      "interaction": {
+        "type": "stoppingBoard",
+        "display": "sequence",
+        "n": 3,
+        "order": [2, 1, 3],
+        "cutoff": 1,
+        "interactive": false,
+        "headline": "miss"
+      },
+      "feedback": {
+        "correct": "'Hire the first' grabbed candidate #1 and walked away — never seeing that the best (★) was right behind. With no look-ahead, you're just guessing.",
+        "hints": [
+          "Cutoff 1 means you accept candidate #1 no matter what.",
+          "Candidate #1 here is only the 2nd-best; the best arrives at position 2 — too late.",
+          "Taking the first locks you in before you've seen the field."
+        ]
+      }
+    },
+    {
+      "beatId": "l1-explore",
+      "required": true,
+      "prompt": "Same 'hire the first' rule, a new random order — this time the best happens to arrive first. Drag the cutoff to feel how little control you have when you never look ahead.",
+      "interaction": {
+        "type": "stoppingBoard",
+        "display": "sequence",
+        "n": 3,
+        "order": [1, 3, 2],
+        "cutoff": 1,
+        "interactive": true,
+        "headline": "win"
+      },
+      "feedback": {
+        "correct": "A win — but only because the best landed in seat 1. 'Hire the first' wins exactly when the best is first, and that's 1 time in 3.",
+        "hints": [
+          "With cutoff 1 you always take whoever is first; you win iff that person is the best.",
+          "The best is equally likely to be in any of the 3 seats.",
+          "So 'hire first' succeeds 1/3 of the time — no better than a blind pick."
+        ]
+      }
+    },
+    {
+      "beatId": "l1-count",
+      "required": true,
+      "prompt": "Make it exact. List the 3 candidates in every possible arrival order. In how many of those orders does the best arrive FIRST — and so, what is 'hire the first' chance of winning?",
+      "interaction": {
+        "type": "answerEntry",
+        "fields": [
+          {
+            "id": "count",
+            "label": "Orders (out of 6) where the best is first",
+            "accept": ["2"],
+            "placeholder": "count"
+          },
+          {
+            "id": "prob",
+            "label": "P(hire-first lands the best)",
+            "accept": ["1/3"],
+            "placeholder": "a/b"
+          }
+        ]
+      },
+      "feedback": {
+        "correct": "There are 3! = 6 orders; in 2 of them the best is first (the other two slots can fill in 2! = 2 ways), so the chance is 2/6 = 1/3 — matching the blind pick exactly.",
+        "hints": [
+          "Three candidates have 3! = 6 equally likely arrival orders.",
+          "Fix the best in seat 1; the remaining two fill seats 2–3 in 2! = 2 ways.",
+          "2 winning orders out of 6 → 2/6 = 1/3."
+        ]
+      }
+    },
+    {
+      "beatId": "l1-model",
+      "required": true,
+      "comparison": true,
+      "introducesSymbol": "1/n",
+      "groundedBy": ["l1-recall", "l1-count"],
+      "interviewNote": "The interviewer's setup: n candidates, random order, relative ranks only, irrevocable accept/reject, win only on the single best. The key insight to state out loud is that ANY rule ignoring the candidates seen so far — take the first, take the last, take a fixed seat, take one at random — wins with probability exactly 1/n, because position of the best is uniform. Beating 1/n REQUIRES using the information from earlier candidates. That observation is the whole reason the threshold strategy (next lesson) exists.",
+      "prompt": "Three 'no-information' strategies, one number. Reveal how each does at finding the best of n.",
+      "interaction": {
+        "type": "tripletReveal",
+        "value": "1/n",
+        "display": "cards",
+        "lenses": [
+          { "label": "Take the first", "body": "Commit to candidate #1. Wins iff the best is in seat 1 → 1/n." },
+          { "label": "Take the last", "body": "Wait, then must take candidate #n. Wins iff the best is in seat n → 1/n." },
+          { "label": "Take a random seat", "body": "Pick a seat in advance, hire whoever lands there. Wins iff the best is there → 1/n." }
+        ]
+      },
+      "feedback": {
+        "correct": "All three tie at 1/n. None of them LOOKS at the candidates — and that's exactly why they can't beat a blind guess.",
+        "hints": [
+          "Each strategy commits to a position without using what it sees.",
+          "The best is equally likely to be in any single position, so any one fixed position wins 1/n.",
+          "To do better, a rule must react to the candidates it has already seen."
+        ]
+      }
+    },
+    {
+      "beatId": "l1-stakes",
+      "required": true,
+      "prompt": "Raise the stakes: 10 candidates now. What is 'hire the first' chance of landing the very best?",
+      "interaction": {
+        "type": "answerEntry",
+        "fields": [
+          {
+            "id": "p10",
+            "label": "P(best) with 10 candidates",
+            "accept": ["1/10"],
+            "placeholder": "a/b"
+          }
+        ]
+      },
+      "feedback": {
+        "correct": "1/10 — and with 100 candidates it's 1/100. The more there are, the worse a blind commitment gets. We need a rule that uses information.",
+        "hints": [
+          "Same logic as before: the best is equally likely to be in any of the 10 seats.",
+          "'Hire first' wins only when the best is in seat 1.",
+          "That's 1 in 10 = 1/10."
+        ]
+      }
+    },
+    {
+      "beatId": "l1-prove",
+      "required": true,
+      "prompt": "Prove you've got it.",
+      "interaction": {
+        "type": "masteryChallenge",
+        "scenario": "You will interview 4 candidates in random order and, stubbornly, decide in advance to hire the 2nd person you see — ignoring everyone else. (a) What is your chance of getting the best of the 4? (b) Could ANY rule that fixes a single seat in advance beat \\(\\frac{1}{4}\\)?",
+        "fields": [
+          {
+            "id": "prob",
+            "label": "P(best) hiring the fixed 2nd seat",
+            "accept": ["1/4"],
+            "placeholder": "a/b"
+          },
+          {
+            "id": "beats",
+            "label": "Can a fixed-seat rule beat 1/4? (yes/no)",
+            "accept": ["no"],
+            "placeholder": "yes / no"
+          }
+        ]
+      },
+      "feedback": {
+        "correct": "\\[ P(\\text{best in seat 2}) = \\frac{1}{4} \\] The best candidate is equally likely to occupy any of the 4 seats, so committing to seat 2 wins exactly \\(\\frac{1}{4}\\) of the time. The same holds for seat 1, 3, or 4 — every fixed-seat rule wins \\(\\frac{1}{n} = \\frac{1}{4}\\). No fixed seat can beat \\(\\frac{1}{4}\\); to do better you must USE the candidates you've already seen. That's the door we open next.",
+        "hints": [
+          "The best candidate's seat is uniform over the 4 positions.",
+          "Hiring a fixed seat wins exactly when the best lands in it: \\(\\frac{1}{4}\\).",
+          "Every fixed seat gives \\(\\frac{1}{4}\\), so none beats it — answers: \\(\\frac{1}{4}\\), no."
+        ]
+      }
+    },
+    {
+      "beatId": "l1-recap",
+      "required": true,
+      "prompt": "Close the loop.",
+      "interaction": { "type": "recap" },
+      "feedback": {
+        "correct": "Irrevocable choice caps every blind rule at 1/n. The only way up is to spend the early candidates as scouts. Next: Look, Then Leap — the strategy that smashes 1/n.",
+        "hints": [
+          "No-information rules all tie at 1/n.",
+          "Information from early candidates is the only lever.",
+          "Next lesson: reject a few on purpose, then pounce."
+        ]
+      }
+    }
+  ]
+}
