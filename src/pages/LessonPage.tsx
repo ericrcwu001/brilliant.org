@@ -9,7 +9,7 @@
 
 import { useEffect, useState } from 'react'
 import { useAuth } from '../auth/authContext'
-import { isQuantIntensity } from '../auth/track'
+import { isQuantIntensity, gatedOn } from '../auth/track'
 import { loadLessonFromFirestore, loadCourseFromFirestore, COURSE_ID } from '../content/loader'
 import { loadSnapshot } from '../lesson/snapshot'
 import { LessonPlayer } from '../lesson/LessonPlayer'
@@ -40,7 +40,7 @@ export function LessonPage({
   navigate: NavigateFn
   lessonId: string
 }) {
-  const { user, userDoc } = useAuth()
+  const { user, userDoc, flags } = useAuth()
   const [state, setState] = useState<LoadState>({ status: 'loading' })
   const [reloadNonce, setReloadNonce] = useState(0)
 
@@ -90,13 +90,19 @@ export function LessonPage({
   if (state.status === 'ready' && state.lessonId === lessonId && user) {
     // Effective track: per-concept calibrate ?? global default ?? 'B'.
     const effectiveTrack: Track = state.track ?? userDoc?.defaultTrack ?? 'B'
-    // Quant-intensity gate (README §4 / D2 / D9): ONE shared predicate, resolved
-    // here where both userDoc and the per-concept track are in scope, so a learner
-    // is never quant-gated in one surface and gentle in another. Fails GENTLE. Pass
-    // the per-concept track so it wins over defaultTrack (as :92 does). Drives both
-    // confidence capture (spec-02) and the difficulty governor (spec-21); the player
-    // stays userDoc-agnostic and never re-derives the gate from track/learningGoal.
-    const quantGate = isQuantIntensity(userDoc, { track: state.track ?? undefined })
+    const conceptProgress = { track: state.track ?? undefined } as Parameters<
+      typeof isQuantIntensity
+    >[1]
+    // Confidence capture (spec-02 / D6) gates on the plain quant-intensity helper
+    // (README §4; fails GENTLE) — it is NOT rollout-gated (not an aggressive
+    // behavior; spec-05 §3b note). Pass the per-concept track so it wins over
+    // defaultTrack (as :92 does).
+    const showConfidence = isQuantIntensity(userDoc, conceptProgress)
+    // The difficulty governor (spec-21 / D9) IS aggressive — rollout-gated
+    // DEFAULT-OFF via gatedOn (holdout cohort + the difficultyGovernor flag + the
+    // same intensity predicate). Off ⇒ scaffolding stays static (Track-A behavior)
+    // for everyone. The player stays userDoc-agnostic; it never re-derives the gate.
+    const quantGate = gatedOn('difficultyGovernor', userDoc, flags, conceptProgress)
     return (
       <LessonPlayer
         key={lessonId}
@@ -106,7 +112,7 @@ export function LessonPage({
         track={effectiveTrack}
         review={state.completed}
         badge={state.badge}
-        showConfidence={quantGate}
+        showConfidence={showConfidence}
         quantGate={quantGate}
         onExit={() => navigate(conceptPath(state.lesson.courseId))}
         onInterviewCta={() => navigate(interviewPath(state.lesson.courseId))}

@@ -36,6 +36,14 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    // Rollout config (spec-05, D17): the config/flags doc is Admin-seeded (like
+    // courses/lessons) so the client COULD fall back to reading it (Option B);
+    // client writes are denied — a learner must never flip a feature flag.
+    match /config/{doc} {
+      allow read: if request.auth != null;
+      allow write: if false;
+    }
+
     // User-owned data.
     match /users/{uid} {
       allow read: if isOwner(uid);
@@ -56,7 +64,7 @@ service cloud.firestore {
           'displayName', 'lastActiveAt',
           'learningGoal', 'comfortLevel', 'focusArea', 'pace',
           'defaultTrack', 'recommendedConceptId', 'onboardingCompletedAt',
-          'targetInterviewDate'
+          'targetInterviewDate', 'rolloutCohort'
         ])
         && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['displayName'])
             || validDisplayName(request.resource.data.displayName));

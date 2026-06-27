@@ -35,6 +35,7 @@ import {
   type InterviewReport,
 } from './interviewPack'
 import { drawQuestion } from './interviewDraw'
+import { loadServerFlags, serverGatedOn } from './flags'
 import { localDateInTimezone, isValidTimezone } from './streaks'
 import {
   scoreCalibration,
@@ -217,6 +218,24 @@ export const mintInterviewToken = onCall(
     const mode: 'voice' | 'text' = data.mode === 'text' ? 'text' : 'voice'
     // spec-22 §3.1: validate/clamp the client-supplied difficulty floor.
     const tierFloor = resolveTierFloor(data.tierFloor)
+    // spec-05 SERVER kill switch (D17 / R14): the brutal-mock floor is a flagged
+    // net-new behavior. The client gate in App.tsx is the UX default; this is the
+    // AUTHORITATIVE one — clamp the floor to 'hard' server-side unless
+    // config/flags.brutalMockFloor is on for this user's cohort, so flipping the kill
+    // stops brutal even for a stale client. Fail CLOSED to 'hard' on any read error.
+    let effectiveTierFloor = tierFloor
+    if (tierFloor !== 'hard') {
+      try {
+        const [serverFlags, userSnap] = await Promise.all([
+          loadServerFlags(),
+          db.doc(`users/${uid}`).get(),
+        ])
+        const cohort = userSnap.get('rolloutCohort') as 'treatment' | 'holdout' | undefined
+        if (!serverGatedOn('brutalMockFloor', cohort, serverFlags)) effectiveTierFloor = 'hard'
+      } catch {
+        effectiveTierFloor = 'hard'
+      }
+    }
 
     // 2 — resolve day from timezone
     const tz = isValidTimezone(data.timezone) ? data.timezone : FALLBACK_TZ
@@ -244,8 +263,8 @@ export const mintInterviewToken = onCall(
     // (e.g. EV: 13 brutal vs 58 total), so a heavy Track-B user can exhaust
     // brutal-only sooner — fall back once to 'hard' before throwing so the mock
     // degrades gracefully (R5) instead of dead-ending on "no questions".
-    let draw = drawQuestion(pack, seenQuestionIds, { tierFloor })
-    if (!draw && tierFloor !== 'hard') {
+    let draw = drawQuestion(pack, seenQuestionIds, { tierFloor: effectiveTierFloor })
+    if (!draw && effectiveTierFloor !== 'hard') {
       draw = drawQuestion(pack, seenQuestionIds, { tierFloor: 'hard' })
     }
     if (!draw) {

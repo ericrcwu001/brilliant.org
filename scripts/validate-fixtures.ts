@@ -155,7 +155,9 @@ function firstNestedArrayPath(v: unknown, path: string): string | null {
 // backfill lands; then this becomes unconditional (R4: foundation enforced for good).
 const VALID_METHOD_IDS = new Set(Object.keys(METHODS))
 {
-  const enforce = process.env.REQUIRE_SCHEMA_ID === '1' // ← delete this line + the `if (enforce)` guard at end of backfill
+  // spec-00 / Final-DoD: the method-tag gate is now HARD (the 187-beat backfill is
+  // complete + human-reviewed; R4 — foundation enforced for good). Every graded beat
+  // across all 54 lessons must carry a valid registry schemaId.
   const offenders: string[] = []
   for (const lesson of lessons) {
     for (const beat of lesson.beats) {
@@ -166,13 +168,9 @@ const VALID_METHOD_IDS = new Set(Object.keys(METHODS))
     }
   }
   if (offenders.length > 0) {
-    if (enforce) {
-      console.error('\n✗ method-tag gate:')
-      for (const o of offenders) console.error(`  - ${o}`)
-      process.exit(1)
-    } else {
-      console.warn(`⚠ method-tag gate (advisory; set REQUIRE_SCHEMA_ID=1 to enforce): ${offenders.length} graded beats missing/invalid schemaId`)
-    }
+    console.error('\n✗ method-tag gate:')
+    for (const o of offenders) console.error(`  - ${o}`)
+    process.exit(1)
   } else {
     console.log(`✓ method-tag gate: every graded beat carries a valid schemaId`)
   }
@@ -889,15 +887,15 @@ for (const lesson of lessons) {
 // ("heldOut schemaId == checkpoint method") is guarded by `if (checkpointSchema)`
 // and silently no-ops until every checkpoint carries a real schemaId.
 {
-  const requireTransfer = process.env.REQUIRE_TRANSFER === '1'
+  // spec-24 / Final-DoD: the transfer gate is now HARD (all 54 lessons authored;
+  // Issue #12 — flipped strictly AFTER the schemaId gate above). Every lesson must
+  // carry a well-formed held-out transfer beat (the Track-B gold gate).
   for (const lesson of lessons) {
     const beats = lesson.beats
     const heldOuts = beats.filter((b) => (b as { heldOut?: boolean }).heldOut === true)
-    // a) presence (advisory until the flag flips).
+    // a) presence (now enforced).
     if (heldOuts.length === 0) {
-      const msg = `${lesson.lessonId}: no held-out transfer beat (Track-B gold gate)`
-      if (requireTransfer) fail(msg)
-      else console.warn(`⚠ transfer gate (advisory; set REQUIRE_TRANSFER=1 to enforce): ${msg}`)
+      fail(`${lesson.lessonId}: no held-out transfer beat (Track-B gold gate)`)
     }
     // Checkpoint method = the lesson's masteryChallenge schemaId (fallback: last
     // graded beat's schemaId, for lesson-first-heads which has no masteryChallenge).

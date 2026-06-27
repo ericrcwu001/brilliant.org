@@ -12,7 +12,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { useAuth } from '../auth/authContext'
-import { isQuantIntensity } from '../auth/track'
+import { isQuantIntensity, gatedOn } from '../auth/track'
 import { loadDueQueue, type QueueItem } from '../lesson/queue'
 import { loadLessonFromFirestore } from '../content/firestoreLoader'
 import { subscribeProgressMap } from '../progress/progress'
@@ -42,10 +42,14 @@ async function loadHasAnyReviewCard(uid: string): Promise<boolean> {
 }
 
 export function DailyReviewPage({ navigate }: { navigate: NavigateFn }) {
-  const { user, userDoc } = useAuth()
-  // The quant-intensity gate — the ONLY gate computation (README §4 helper, never
-  // a bare defaultTrack === 'B'). Drives foils (D2) + the surface framing + D6.
+  const { user, userDoc, flags } = useAuth()
+  // The quant-intensity gate — drives foils (D2) + the surface framing + D6.
   const quantGate = isQuantIntensity(userDoc)
+  // The Daily Review surface is the aggressive net-new behavior — rollout-gated
+  // DEFAULT-OFF via gatedOn (holdout cohort + the dailyReviewQueue flag +
+  // intensity). Off ⇒ the /review route renders a neutral empty state (no queue
+  // load), so a deep-link can't surface the gated feature (spec-05 §3b).
+  const dailyReviewEnabled = gatedOn('dailyReviewQueue', userDoc, flags)
   // Gold-gate LABEL only (re-retrieve vs transfer copy); all GATING uses quantGate.
   const track = userDoc?.defaultTrack ?? 'A'
 
@@ -71,7 +75,7 @@ export function DailyReviewPage({ navigate }: { navigate: NavigateFn }) {
   // no-deck backfill can refresh it (the `reload` nonce).
   const [reload, setReload] = useState(0)
   useEffect(() => {
-    if (!user) return
+    if (!user || !dailyReviewEnabled) return // flag DEFAULT-OFF ⇒ no queue load
     let cancelled = false
     const uid = user.uid
     void (async () => {
@@ -110,7 +114,7 @@ export function DailyReviewPage({ navigate }: { navigate: NavigateFn }) {
     return () => {
       cancelled = true
     }
-  }, [user, quantGate, reload])
+  }, [user, dailyReviewEnabled, quantGate, reload])
 
   // No-deck backfill, automatic-once (§4.5 variant 2): when the learner has no
   // cards but HAS completed lessons, fire spec-01's backfill once, then reload.
@@ -137,6 +141,22 @@ export function DailyReviewPage({ navigate }: { navigate: NavigateFn }) {
   }, [hasAnyCards, hasCompletedLessons])
 
   if (!user) return <ReviewSkeleton />
+
+  // Flag DEFAULT-OFF (or holdout / Track A): the Daily Review surface is hidden.
+  // A direct /review deep-link gets a neutral empty state — the gated queue never
+  // surfaces (spec-05 §3b). No queue load ran, so there is nothing to show.
+  if (!dailyReviewEnabled) {
+    return (
+      <main className="ergo-review" aria-label="Daily Review">
+        <header className="ergo-review__topbar">
+          <span className="ergo-wordmark">Daily Review</span>
+        </header>
+        <section className="ergo-review__empty ergo-card">
+          <p className="ergo-review__empty-title">Nothing to review right now.</p>
+        </section>
+      </main>
+    )
+  }
 
   if (loadError) {
     return (

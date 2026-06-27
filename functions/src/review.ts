@@ -30,6 +30,7 @@ import {
   type SchedulingState,
 } from './scheduling'
 import { qualifiesForGoldMint } from './goldMint'
+import { loadServerFlags, serverGatedOn } from './flags'
 import {
   foldAttemptIntoTrend,
   MIN_CALIBRATION_N,
@@ -352,6 +353,13 @@ export async function submitReviewTx(
   answer: Record<string, string>,
   confidence: number | null,
   now: Date,
+  // spec-05 SERVER kill switch (D17 / R14): the gold-mint branch is the only
+  // Function-owned write gated by a flag. The callable passes
+  // serverGatedOn('goldMint', cohort, serverFlags) — DEFAULT-OFF when the flag is
+  // off or the backend is unreachable (fail-closed). Defaults true so the SM-2 /
+  // mint MECHANISM stays directly unit-testable (the default-off integration is
+  // asserted at the callable boundary + a goldMintEnabled:false test below).
+  goldMintEnabled = true,
 ): Promise<{
   graded: 'pass' | 'fail'
   next: SchedulingState
@@ -437,6 +445,7 @@ export async function submitReviewTx(
   const cardCreatedAt = card.createdAt as Timestamp | undefined
   const isTransfer = card.isTransfer === true
   if (
+    goldMintEnabled && // spec-05 server kill switch (DEFAULT-OFF at the callable)
     graded === 'pass' &&
     !alreadyGold &&
     cardCreatedAt != null &&
@@ -539,8 +548,37 @@ export const submitReview = onCall(
     }
 
     const now = new Date() // server now — R12; never a client timestamp
+
+    // spec-05 SERVER kill switch (D17 / R14): resolve the gold-mint gate BEFORE
+    // the tx. serverGatedOn consults the per-feature flag (config/flags.goldMint,
+    // fail-closed to OFF) + the user's persisted holdout cohort. DEFAULT-OFF:
+    // until an operator flips goldMint=true in config/flags, gold never mints — no
+    // error surfaced (silver still minted instantly by spec-11's earlier stage).
+    let goldMintEnabled = false
+    try {
+      const [serverFlags, userSnap] = await Promise.all([
+        loadServerFlags(),
+        db.doc(`users/${uid}`).get(),
+      ])
+      const cohort = userSnap.get('rolloutCohort') as
+        | 'treatment'
+        | 'holdout'
+        | undefined
+      goldMintEnabled = serverGatedOn('goldMint', cohort, serverFlags)
+    } catch {
+      goldMintEnabled = false // fail CLOSED — never mint on a flag-read error
+    }
+
     const result = await db.runTransaction((tx) =>
-      submitReviewTx(tx, uid, cardId, answer as Record<string, string>, confidence, now),
+      submitReviewTx(
+        tx,
+        uid,
+        cardId,
+        answer as Record<string, string>,
+        confidence,
+        now,
+        goldMintEnabled,
+      ),
     )
 
     // Fire the per-interval outcome event (spec-04 feed — UNTUNED) after commit.

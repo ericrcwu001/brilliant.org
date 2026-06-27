@@ -12,6 +12,7 @@ import {
   useCallback,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from 'react'
@@ -33,8 +34,11 @@ import {
   updateUserDisplayName,
   saveOnboardingProfile,
   saveTargetInterviewDate,
+  ensureRolloutCohort,
   type UserDoc,
 } from './userDoc'
+import { ALL_OFF, assignCohort, loadFlags, type Flags } from '../config/flags'
+import { setAnalyticsDimensions } from '../analytics/events'
 
 const googleProvider = new GoogleAuthProvider()
 
@@ -49,12 +53,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [authReady, setAuthReady] = useState(false)
   const [userDocResult, setUserDocResult] = useState<UserDocResult | null>(null)
+  // Rollout flags (spec-05). ALL_OFF until loadFlags resolves; fail-closed.
+  const [flags, setFlags] = useState<Flags>(ALL_OFF)
 
   useEffect(() => {
     return onAuthStateChanged(auth, (nextUser) => {
       setUser(nextUser)
       setAuthReady(true)
     })
+  }, [])
+
+  // Load rollout flags ONCE per session (cached in src/config/flags.ts). Fail-
+  // closed: loadFlags resolves to ALL_OFF on any error, so a surface never ships
+  // a gated feature ON because flags failed to load (R14).
+  useEffect(() => {
+    let cancelled = false
+    void loadFlags().then((f) => {
+      if (!cancelled) setFlags(f)
+    })
+    return () => {
+      cancelled = true
+    }
   }, [])
 
   // Load the profile whenever the signed-in user changes. State is only set from
@@ -87,6 +106,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const doc = await fetchUserDoc(current.uid)
     setUserDocResult({ uid: current.uid, doc })
   }, [])
+
+  // Cohort assignment + analytics dimension (spec-05 §3c/§3d). Runs once per
+  // signed-in uid after flags + userDoc resolve: assign-once a deterministic
+  // cohort (persists only when absent — never flips a user mid-study), then stamp
+  // that SAME value verbatim onto the analytics `cohort` dimension (no
+  // translation; spec-04 reads it, control arm = 'holdout'). Absent cohort ⇒ leave
+  // the dimension unset (spec-04 fail-absent excludes the learner).
+  const cohortDoneFor = useRef<string | null>(null)
+  useEffect(() => {
+    if (!user || !userDocReady || userDoc == null) return
+    const uid = user.uid
+    if (cohortDoneFor.current === uid) return
+    cohortDoneFor.current = uid
+    const desired = assignCohort(uid, flags.rolloutPercent)
+    void ensureRolloutCohort(uid, desired)
+      .then((cohort) => {
+        setAnalyticsDimensions({ cohort })
+        if (cohort !== userDoc.rolloutCohort) void refreshUserDoc()
+      })
+      .catch(() => {
+        // Best-effort: a write failure self-heals (deterministic bucket). Stamp
+        // the deterministic value so analytics is still sliceable this session.
+        setAnalyticsDimensions({ cohort: desired })
+      })
+  }, [user, userDocReady, userDoc, flags.rolloutPercent, refreshUserDoc])
 
   const createUserProfile = useCallback(
     async (displayName: string) => {
@@ -146,6 +190,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       authReady,
       userDoc,
       userDocReady,
+      flags,
       signUpWithEmail: async (email, password) => {
         await createUserWithEmailAndPassword(auth, email, password)
       },
@@ -168,6 +213,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       authReady,
       userDoc,
       userDocReady,
+      flags,
       createUserProfile,
       updateUserProfile,
       completeOnboarding,

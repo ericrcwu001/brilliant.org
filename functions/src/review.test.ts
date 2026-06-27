@@ -51,6 +51,7 @@ import {
   type ReviewLessonDoc,
   type ReviewOutcomeEvent,
 } from './review'
+import { serverGatedOn, ALL_OFF_SERVER } from './flags'
 
 // Minimal fake Transaction: get reads docStore by ref.path; set records the write
 // and updates the store (so a follow-up read in a later "transaction" sees it).
@@ -530,6 +531,45 @@ describe('spec-11/12 review-rep calibration fold', () => {
     expect(summary.n).toBe(2)
     // brierSum = 0.01 (correct@0.9) + 0.81 (wrong@0.9) = 0.82 over n=2 ⇒ 0.41
     expect(summary.brier).toBeCloseTo(0.41, 6)
+  })
+})
+
+// ── spec-05: gold-mint SERVER kill switch (D17 / R14) ──────────────────────────
+// submitReviewTx's last arg (goldMintEnabled) gates the spec-11 mint branch. The
+// callable computes it via serverGatedOn('goldMint', cohort, serverFlags), which
+// is DEFAULT-OFF (fail-closed). These assert the wiring: false ⇒ no mint even on a
+// qualifying delayed pass; true ⇒ mints (the un-gated mechanism, already covered).
+
+describe('spec-05 gold-mint kill switch (goldMintEnabled gate)', () => {
+  it('goldMintEnabled=false ⇒ a qualifying DELAYED pass does NOT mint (kill switch)', async () => {
+    seedForGold()
+    const tx = fakeTx()
+    await submitReviewTx(tx, 'u1', 'lesson-x__g1', { a: '1' }, null, NOW, false)
+    // The card still advances (SM-2), but gold is NOT minted — silver stays.
+    expect(progressGold()?.derived).toBeUndefined()
+    const card = docStore.get('users/u1/reviews/lesson-x__g1') as Record<string, unknown>
+    expect(card.lastResult).toBe('pass') // review still recorded
+  })
+
+  it('goldMintEnabled=true (or omitted) ⇒ the same pass DOES mint (flag-on path)', async () => {
+    seedForGold()
+    const tx = fakeTx()
+    await submitReviewTx(tx, 'u1', 'lesson-x__g1', { a: '1' }, null, NOW, true)
+    expect((progressGold()?.derived as { mastered?: boolean })?.mastered).toBe(true)
+  })
+})
+
+describe('spec-05 client flag ↔ server kill agree for goldMint', () => {
+  it('serverGatedOn goldMint is OFF by default and ON only for treatment + flag-on', () => {
+    // Server twin (the authoritative gold-mint kill) agrees with the client gate
+    // shape: default-off, holdout-off, treatment+flag-on ⇒ on.
+    expect(serverGatedOn('goldMint', 'treatment', ALL_OFF_SERVER)).toBe(false) // flag off
+    expect(
+      serverGatedOn('goldMint', 'holdout', { ...ALL_OFF_SERVER, goldMint: true }),
+    ).toBe(false) // holdout control
+    expect(
+      serverGatedOn('goldMint', 'treatment', { ...ALL_OFF_SERVER, goldMint: true }),
+    ).toBe(true) // treatment + on
   })
 })
 

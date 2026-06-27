@@ -18,7 +18,7 @@ import { lazy, Suspense, useCallback, useEffect, useState } from 'react'
 import { flushSync } from 'react-dom'
 import { AuthProvider } from './auth/AuthProvider'
 import { useAuth } from './auth/authContext'
-import { isQuantIntensity } from './auth/track'
+import { isQuantIntensity, gatedOn } from './auth/track'
 import {
   ROUTES,
   parseLessonId,
@@ -132,7 +132,7 @@ function GuardedRoutes({
   path: string
   navigate: NavigateFn
 }) {
-  const { user, authReady, userDoc, userDocReady } = useAuth()
+  const { user, authReady, userDoc, userDocReady, flags } = useAuth()
 
   const onboardingComplete = userDoc?.onboardingCompletedAt != null
   const booting = !authReady || (!!user && !userDocReady)
@@ -172,15 +172,21 @@ function GuardedRoutes({
       <InterviewPage
         navigate={navigate}
         conceptId={interviewConceptId}
-        // Confidence capture (spec-02 / D6) AND the track-gated brutal mock
-        // (spec-22 / D9) both gate on the single quant-intensity helper
-        // (README §4; fails GENTLE). No per-concept progress here, so the gate
-        // uses userDoc (defaultTrack ?? 'A') + learningGoal — do NOT inline the
-        // predicate (gate Issue #9). The report's calibration delta (spec-23 /
-        // D11) gates on the SAME helper.
+        // Confidence capture (spec-02 / D6) and the report's calibration delta
+        // (spec-23 / D11) gate on the single quant-intensity helper (README §4;
+        // fails GENTLE). They are NOT rollout-gated — confidence capture and the
+        // calibration computation are not aggressive behaviors (spec-05 §3b note).
+        // No per-concept progress here, so the gate uses userDoc (defaultTrack ??
+        // 'A') + learningGoal — do NOT inline the predicate (gate Issue #9).
         showConfidence={isQuantIntensity(userDoc)}
         showCalibration={isQuantIntensity(userDoc)}
-        tierFloor={isQuantIntensity(userDoc) ? 'brutal' : 'hard'}
+        // The brutal-mock tier floor (spec-22 / D9) is the ONE aggressive behavior
+        // here — rollout-gated DEFAULT-OFF via gatedOn (holdout cohort + the
+        // brutalMockFloor flag + the same intensity predicate). Off ⇒ 'hard' for
+        // everyone (the pre-plan default).
+        tierFloor={
+          gatedOn('brutalMockFloor', userDoc, flags) ? 'brutal' : 'hard'
+        }
       />
     )
 

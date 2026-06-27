@@ -36,10 +36,12 @@ function getAnalyticsInstance(): Promise<Analytics | null> {
 // taxonomy. Fail-absent: an unset dimension is OMITTED, never a guessed value.
 //
 //  - `cohort` enum is co-defined in README §4.5: 'treatment' | 'holdout' (the
-//    control arm is named 'holdout'; there is NO 'control' literal). It is set
-//    ONLY by spec-05's server-derived assignment (R12 — never from a spoofable
-//    client value); undefined until spec-05 stamps it, so spec-04's A-B read
-//    degrades to a single-cohort descriptive read pre-spec-05.
+//    control arm is named 'holdout'; there is NO 'control' literal). Stamped by
+//    spec-05's deterministic assignment (assignCohort hashes the server-issued
+//    auth uid — not a spoofable client value; R12) once per session in
+//    AuthProvider, VERBATIM (no translation). Left UNSET until assignment resolves,
+//    so spec-04's A-B read degrades to a single-cohort descriptive read (fail-absent
+//    excludes the learner rather than mislabeling them — spec-04 §3.4).
 //  - `track` reuses the existing isQuantIntensity track value (README §4 helper);
 //    set by the track context (spec-10/20). NOT re-derived here.
 let sessionDimensions: { cohort?: 'treatment' | 'holdout'; track?: 'A' | 'B' } = {}

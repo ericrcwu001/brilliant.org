@@ -32,6 +32,13 @@ export interface UserDoc {
   // Optional target interview date (YYYY-MM-DD; ADR-0009/D13). Client-writable,
   // non-progression profile field; drives SM-2 interview-date anchoring (spec-01).
   targetInterviewDate?: string
+  // Rollout cohort (spec-05, D17 / README §4.5). ONE enum 'treatment' | 'holdout'
+  // (no 'control' literal). Assigned ONCE (deterministic hash of uid vs
+  // rolloutPercent), then immutable so a user never flips mid-study (poisons
+  // spec-04's measurement). Client-writable (non-progression); the SAME value is
+  // stamped onto the analytics `cohort` dimension verbatim (spec-04 reads it,
+  // control arm = 'holdout').
+  rolloutCohort?: 'treatment' | 'holdout'
 }
 
 // Lenient schema: every field except displayName is optional so an older doc
@@ -48,6 +55,7 @@ export const UserDocSchema = z.object({
   recommendedConceptId: z.string().optional(),
   onboardingCompletedAt: z.unknown().optional(),
   targetInterviewDate: z.string().optional(),
+  rolloutCohort: z.enum(['treatment', 'holdout']).optional(),
 })
 
 // Returns the profile, or null when the user has authenticated but not yet
@@ -108,6 +116,27 @@ export async function saveTargetInterviewDate(
     targetInterviewDate: date === null ? deleteField() : date,
     lastActiveAt: serverTimestamp(),
   })
+}
+
+// Assign-once write of the rollout cohort (spec-05, D17). Persists the
+// deterministic assignment ONLY when the doc has no cohort yet — a second call
+// (or a raised rolloutPercent) never overwrites an existing cohort, so a user
+// never flips holdout↔treatment mid-study. Client-writable (non-progression,
+// in the rules update whitelist). Returns the cohort now on the doc (existing or
+// newly written). Best-effort: a write failure self-heals (the bucket is
+// deterministic, so the next load recomputes the same value).
+export async function ensureRolloutCohort(
+  uid: string,
+  cohort: 'treatment' | 'holdout',
+): Promise<'treatment' | 'holdout'> {
+  const db = await getDb()
+  const { doc, getDoc, updateDoc, serverTimestamp } = await import('firebase/firestore')
+  const ref = doc(db, USERS_COLLECTION, uid)
+  const snap = await getDoc(ref)
+  const existing = snap.exists() ? (snap.data().rolloutCohort as unknown) : undefined
+  if (existing === 'treatment' || existing === 'holdout') return existing
+  await updateDoc(ref, { rolloutCohort: cohort, lastActiveAt: serverTimestamp() })
+  return cohort
 }
 
 // Onboarding survey write: saves all 6 answer/derived fields plus timestamps,

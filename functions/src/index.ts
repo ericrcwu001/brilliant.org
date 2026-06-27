@@ -336,3 +336,7 @@ export { mintInterviewToken, gradeInterview } from './interview'
 // spec-01: spaced-review write-path callable (server-graded). Re-exported here so
 // initializeApp()/setGlobalOptions(...) above run before it registers.
 export { submitReview } from './review'
+
+// spec-05: learner-initiated cascade-delete of learning-science data (README §4.6).
+// Re-exported like the interview callables so it registers after initializeApp().
+export { deleteLearningData } from './privacy'

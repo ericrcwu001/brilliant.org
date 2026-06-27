@@ -6,7 +6,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { useAuth } from '../auth/authContext'
-import { isQuantIntensity } from '../auth/track'
+import { isQuantIntensity, gatedOn } from '../auth/track'
 import { loadCoursesFromFirestore } from '../content/firestoreLoader'
 import type { Course } from '../content/schema'
 import { subscribeProgressMap } from '../progress/progress'
@@ -38,7 +38,7 @@ async function loadHasAnyReviewCard(uid: string): Promise<boolean> {
 }
 
 export function ConceptCatalogPage({ navigate }: { navigate: NavigateFn }) {
-  const { user, userDoc } = useAuth()
+  const { user, userDoc, flags } = useAuth()
   const displayName = userDoc?.displayName ?? user?.displayName ?? 'there'
 
   const [courses, setCourses] = useState<Course[] | null>(null)
@@ -47,11 +47,14 @@ export function ConceptCatalogPage({ navigate }: { navigate: NavigateFn }) {
   const [loadError, setLoadError] = useState(false)
   const [resumeInterviewDone, setResumeInterviewDone] = useState(false)
 
-  // Daily Review hero state (spec-20 / D8). The hero's N + hasAnyCards both come
-  // from spec-10's loadDueQueue + the existence read; the model derivation is the
-  // pure buildHeroModel. quantGate is the single isQuantIntensity helper (gate
-  // Issue #9 — never a bare defaultTrack check); it only selects the hero's copy.
+  // Daily Review hero state (spec-20 / D8). quantGate is the single
+  // isQuantIntensity helper (gate Issue #9 — never a bare defaultTrack check); it
+  // only selects the hero's COPY (foils). The Daily Review SURFACE itself is the
+  // aggressive net-new behavior — rollout-gated DEFAULT-OFF via gatedOn (holdout
+  // cohort + the dailyReviewQueue flag + intensity). Off ⇒ no hero, catalog/home
+  // behave exactly as today (spec-05 §3b).
   const quantGate = isQuantIntensity(userDoc)
+  const dailyReviewEnabled = gatedOn('dailyReviewQueue', userDoc, flags)
   const [reviewHero, setReviewHero] = useState<DailyReviewHeroModel | null>(null)
   const [reviewReload, setReviewReload] = useState(0)
   const backfillFired = useRef(false)
@@ -87,7 +90,7 @@ export function ConceptCatalogPage({ navigate }: { navigate: NavigateFn }) {
   // subscribes to, and build the hero view-model via the pure buildHeroModel.
   // Best-effort — a failure leaves the hero hidden (the catalog is unaffected).
   useEffect(() => {
-    if (!user) return
+    if (!user || !dailyReviewEnabled) return // flag DEFAULT-OFF ⇒ no hero
     let cancelled = false
     const uid = user.uid
     void (async () => {
@@ -122,7 +125,7 @@ export function ConceptCatalogPage({ navigate }: { navigate: NavigateFn }) {
     // time; re-reading the queue on every progress tick is wasteful. reviewReload
     // re-runs it after a backfill.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user, quantGate, userDoc?.targetInterviewDate, reviewReload])
+  }, [user, dailyReviewEnabled, quantGate, userDoc?.targetInterviewDate, reviewReload])
 
   // No-deck backfill, automatic-once (§4.5): when the hero resolves to no-deck
   // (no cards, but completed lessons), fire spec-01's backfill once, then re-read.

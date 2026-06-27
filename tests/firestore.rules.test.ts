@@ -19,6 +19,7 @@ import {
   getDoc,
   setDoc,
   updateDoc,
+  deleteDoc,
   serverTimestamp,
 } from 'firebase/firestore'
 
@@ -141,6 +142,42 @@ describe('users/{uid} profile', () => {
         masteryStatus: 'mastered', // not in the update whitelist
       }),
     )
+  })
+
+  // spec-05: rolloutCohort is a client-writable, non-progression field (assign-once
+  // in the app; the rules just whitelist it).
+  it('allows the owner to set rolloutCohort (in the update whitelist)', async () => {
+    await seed('users/alice', { displayName: 'Alice', lastActiveAt: 'orig' })
+    await assertSucceeds(
+      updateDoc(doc(alice(), 'users/alice'), {
+        rolloutCohort: 'treatment',
+        lastActiveAt: serverTimestamp(),
+      }),
+    )
+  })
+
+  it('denies a userDoc client DELETE (cascade-delete is Admin-SDK-driven — §4.6)', async () => {
+    await seed('users/alice', { displayName: 'Alice', rolloutCohort: 'holdout' })
+    await assertFails(deleteDoc(doc(alice(), 'users/alice')))
+  })
+})
+
+describe('config/flags (Admin-seeded; spec-05)', () => {
+  it('allows any signed-in user to READ but DENIES client writes', async () => {
+    await seed('config/flags', { goldMint: false, rolloutPercent: 0 })
+    await assertSucceeds(getDoc(doc(alice(), 'config/flags')))
+    // A learner must never flip a feature flag from the client.
+    await assertFails(
+      setDoc(doc(alice(), 'config/flags'), { goldMint: true }),
+    )
+    await assertFails(
+      updateDoc(doc(alice(), 'config/flags'), { rolloutPercent: 100 }),
+    )
+  })
+
+  it('denies unauthenticated reads of config', async () => {
+    await seed('config/flags', { goldMint: false })
+    await assertFails(getDoc(doc(anon(), 'config/flags')))
   })
 })
 
