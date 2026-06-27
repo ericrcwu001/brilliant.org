@@ -67,3 +67,6 @@ firebase-export-*
 # material — kept local, never committed). Agents read these as the only
 # valid source of lesson problems.
 references/
+
+# Interview demo bot artifacts (audio, transcripts, reports — not committed).
+artifacts/

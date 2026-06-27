@@ -1,7 +1,6 @@
 # AI-generated quant-interview questions: allowed at runtime, but only grounded in real quant-style questions and engine-verified before serving
 
-**Status:** Accepted — the live "interview an AI quant interviewer" feature is **not yet built**; this
-decision binds the lesson factory's Interview Pack generation now, and the live feature when built.
+**Status:** Accepted — the live "interview an AI quant interviewer" feature is **built and committed on `main`** (the Functions runtime, Zod schema, and engine-verify gates exist); deploying it (functions + the `OPENAI_API_KEY` secret) is what activates it on a project. This decision binds the lesson factory's Interview Pack generation and the live feature alike.
 
 The lesson factory's **iron rule** is *never invent, and fact-check every number twice*: every problem
 is anchored to the Green Book and sourced (anchor-and-source), and every answer must be both stated by

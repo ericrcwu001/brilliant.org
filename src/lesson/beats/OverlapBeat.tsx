@@ -15,15 +15,7 @@ import { BeatShell } from '../BeatShell'
 import { resolveFeedback, useHintLadder } from '../feedback'
 import { StateGraph } from '../konva/StateGraph'
 import { useElementWidth } from '../konva/useElementWidth'
-
-// A pattern "keeps progress" on its near-miss when that edge self-loops rather
-// than resetting to the start (HT keeps, HH throws it away).
-function keepsProgress(a: Automaton): boolean {
-  const h = a.overlapHighlights[0]
-  if (!h) return false
-  const t = a.transitions.find((e) => e.from === h.from && e.on === h.on)
-  return !!t && t.kind !== 'reset'
-}
+import { keepsProgress } from '../grading'
 
 export function OverlapBeat(props: BeatProps) {
   const { beat, pattern, patternOptions, reducedMotion, density, isLast, onAdvance } =

@@ -1,21 +1,32 @@
-# Interview Packs (capstone AI quant interview — LIVE feature, ADR-0008)
+# Interview Packs (capstone AI quant interview — BUILT + committed, ADR-0008)
 
 At the end of each **macro concept (course)** the factory produces an **Interview Pack**: a large,
 engine-verified bank of HARD quant-interview questions + an AI **interviewer prompt** + a **generator
 prompt** for unlimited fresh, non-overlapping questions. The "interview an AI quant interviewer"
-feature is **live** (ADR-0008). The pack is consumed by `functions/src/interview.ts` via `loadPack`;
-the Zod schema is `src/content/interviewPack.ts`; `loadPack` strips a leading `course-` from the
-conceptId so the filename is always `course-<slug>.json`. Decision records:
+feature is **built and committed on `main`** (ADR-0008): the Functions runtime
+(`functions/src/interview.ts`), the Zod schema (`src/content/interviewPack.ts`), the question-draw +
+seen-set seam (`functions/src/interviewDraw.ts`), and the leak-guard all exist. The pack is consumed by
+`functions/src/interview.ts` via `loadPack` (`loadPack` strips a leading `course-` from the conceptId so
+the filename is always `course-<slug>.json`). It goes **live for a project only when functions are
+deployed there with the `OPENAI_API_KEY` secret set** — a secret-gated step the factory performs
+autonomously **only** when that precondition holds, and otherwise flags as a remaining human step (see
+`deploy.md`; HANDOFF.md lists the prod functions-deploy + secret-set as user-run remaining). Do not
+assume it is already deployed/active on any given project. Decision records:
 `docs/adr/0005-ai-interview-questions-grounded-and-engine-verified.md` and
-`docs/adr/0008-ai-capstone-interview-realtime-grounded.md`.
+`docs/adr/0008-ai-capstone-interview-realtime-grounded.md` (both ADR status lines predate the build and
+read "feature not yet built"; the code has since landed on `main`, but deploying it with the secret is
+what activates it).
 
 ## What's produced (per concept)
 
 `interviews/<courseId>.json` (canonical, versioned) + `interviews/<courseId>.md` (human-readable
-mirror). Committed on `main` with the concept; **not seeded to Firestore** (the seed glob only matches
-`lesson-*.json`/`course-*.json`). **Bundled into the live Functions runtime** at deploy time via the
-`firebase.json` predeploy hook (`scripts/copy-interview-packs.mjs`). The Zod schema already exists at
-`src/content/interviewPack.ts`; use it — do not define a separate schema.
+mirror). Committed on `main` with the concept; **not seeded to Firestore** — `scripts/seed-firestore.ts`
+globs **only** `fixtures/course-*.json` and then reads each course's lessons by **explicit node id**
+(`courses/{id}` + `lessons/{id}`); it never globs `lesson-*.json`, and nothing under `interviews/` is
+ever seeded. **Bundled into the deployed Functions runtime** at deploy time via the `firebase.json`
+predeploy hook (`scripts/copy-interview-packs.mjs`) — i.e. it reaches a project's Functions runtime only
+on a `--only … functions` deploy there (which is itself secret-gated; see `deploy.md`). The Zod schema
+already exists at `src/content/interviewPack.ts`; use it — do not define a separate schema.
 
 Contents:
 1. **Pre-loaded question pool** (large), built two ways:
@@ -83,7 +94,16 @@ Contents:
   "template": { "id": "...", "params": { ... } },                      // omitted for free-form
   "prompt": "the question shown to the candidate",
   "source": "Green Book p.<n> §<x>  |  <real quant-interview source> (GB-anchored to §<x>)",
-  "engineCheck": { "module": "src/engine/<topic>.ts", "answer": "<exact>", "verified": true },
+  // engineCheck is REQUIRED by InterviewPackSchema and ALL four fields are required
+  // (src/content/interviewPack.ts → QuestionSchema.engineCheck): module, calls, answer,
+  // verified. `calls` is the (non-empty) list of engine calls the verifier ran to
+  // reproduce `answer` — omitting it fails the schema (and validate-interview-packs.ts).
+  "engineCheck": {
+    "module": "src/engine/<topic>.ts",
+    "calls": ["expectedValue(DIE)"],   // string[] — the engine call(s) that reproduce `answer`
+    "answer": "<exact>",
+    "verified": true
+  },
   "hidden": {                                  // NEVER shown verbatim to the candidate
     "answer": "<exact>",
     "approaches": ["accepted path 1", "..."],
@@ -117,7 +137,7 @@ Stored as `generatorPrompt`. It must:
 - Take an **avoid-list** (the student's seen fingerprints + the global pool) and produce a question with
   a **new fingerprint** → guarantees "no overlap ever, per student."
 
-## No-overlap-per-student (live — implemented in `functions/src/interview.ts`)
+## No-overlap-per-student (implemented in committed code — `functions/src/interview.ts`)
 
 - Each question has a **structural fingerprint** (`templateId` + normalized params; a semantic signature
   for free-form) — catches reworded/parameter-trivial duplicates, not just exact text.
@@ -160,7 +180,12 @@ Run both mechanized gates before signing off:
 
 Built at the **end of the concept** (after lessons, reusing their engines). Its Scorecard is part of the
 **concept sign-off**; the **Slack FYI** notes the pack (question count + a link to the `.md`). When the
-concept **auto-ships** it is **merged to `main`** with the concept and **bundled into the live Functions
-runtime** when functions deploy (the `firebase.json` predeploy hook runs `scripts/copy-interview-packs.mjs`).
-Not seeded to Firestore. The loader (`functions/src/interview.ts`:`loadPack`), the Zod schema
-(`src/content/interviewPack.ts`), and the verify-before-serve + per-student seen-set seam already exist.
+concept **auto-ships** it is **merged to `main`** with the concept. It is **bundled into a project's
+Functions runtime only when functions deploy there** (the `firebase.json` predeploy hook runs
+`scripts/copy-interview-packs.mjs`), and that functions deploy is itself **gated on the `OPENAI_API_KEY`
+secret being set on the target project** (`deploy.md`): if the secret is set the factory deploys
+functions and the pack goes live there; if not, the factory ships hosting + firestore only and flags
+functions-deploy + secret-set as a remaining human step (matching HANDOFF.md). It is **never seeded to
+Firestore**. The loader (`functions/src/interview.ts`:`loadPack`), the Zod schema
+(`src/content/interviewPack.ts`), and the verify-before-serve + per-student seen-set seam already exist
+in committed code.

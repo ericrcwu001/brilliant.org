@@ -15,6 +15,7 @@ import { resolveFeedback, useHintLadder } from '../feedback'
 import type { FeedbackView } from '../feedback'
 import { useReducedMotion } from '../useReducedMotion'
 import { product, probabilityFromCounts } from '../../engine/combinatorics'
+import { isProbabilityCounterCorrect } from '../grading'
 
 const HERO_STEP_MS = 400
 const SNAP_PAUSE_MS = 400
@@ -117,7 +118,7 @@ export function ProbabilityCounterBeat(props: BeatProps) {
   function check() {
     if (!accept || !reduced) return
     const answer = `${reduced.n}/${reduced.d}`
-    const ok = accept.some((a) => a === answer)
+    const ok = isProbabilityCounterCorrect({ factors, total, accept }, answer)
     if (ok) {
       ladder.submitCorrect()
       setSolved(true)

@@ -1,23 +1,12 @@
 {
-  "version": "1.0.0",
+  "version": 1,
   "kind": "interview-pack",
   "courseId": "course-bayes-rule",
   "concept": "Bayes' Rule",
-  "engineModule": "src/engine/bayes.ts",
   "greenBookAnchor": "Green Book Ch.4 'Probability Theory' §Conditional Probability and Bayes' Formula, p.37–42",
-  "deployment": "committed-not-deployed (dormant asset; never seeded to Firestore — the seed glob matches only lesson-*.json / course-*.json)",
-  "generatedBy": "interviews/_build.ts (throwaway; deleted after build) — every answer recomputed by src/engine/bayes.ts and asserted via formatRational",
-  "recomputeContract": {
-    "note": "Each question carries engineCheck.fn + engineCheck.args so the future verify-before-serve feature can re-run src/engine/bayes.ts and reject anything it cannot reproduce. Rationals are {n,d}.",
-    "fns": {
-      "bayesUpdate": "bayesUpdate(prior, pEgivenH, pEgivenNotH)",
-      "bayesPosterior": "bayesPosterior(priors[], likelihoods[])[index]",
-      "oddsUpdateProb": "oddsToProb(fold posteriorOdds(priorOdds, likelihoodRatios[i]))",
-      "sequentialPosterior": "sequentialPosterior(prior, pEgivenH, pEgivenNotH, k)",
-      "naturalFrequencies": "naturalFrequencies(prior, sensitivity, specificity, population)[field]",
-      "smallestKCross": "smallest k with sequentialPosterior(prior, pEgivenH, pEgivenNotH, k) ≥ threshold (search over the engine)"
-    }
-  },
+  "engineModule": "src/engine/bayes.ts",
+  "generator": "interviews/_build (throwaway build script; deleted after build) — every answer recomputed by src/engine/bayes.ts and asserted via formatRational.",
+  "note": "Dormant capstone asset: committed but NOT seeded or deployed (the seed glob matches only lesson-*/course-* fixtures, not interviews/). Every answer is reproduced exactly by the exact-rational engine src/engine/bayes.ts (Rational {n,d} arithmetic, formatRational output; no floats on any graded path).",
   "counts": {
     "total": 57,
     "byTier": {
@@ -25,70 +14,74 @@
       "harder": 36,
       "brutal": 9
     },
-    "templates": 9,
-    "parameterizations": 51,
-    "freeForm": 6,
-    "engineVerified": 57
+    "templated": 51,
+    "freeForm": 6
   },
-  "tiers": [
-    "hard",
-    "harder",
-    "brutal"
-  ],
+  "interviewerPrompt": "# Bayes' Rule — AI Quant Interviewer (interviewer prompt template)\n\nYou are a SENIOR QUANTITATIVE INTERVIEWER at a top trading desk (think Jane Street / Citadel / IMC), running a live probability interview on conditional probability and Bayes' rule. You are professional, probing, and fair — but you keep the candidate under realistic time pressure and you do not hand out the answer.\n\nThe platform injects ONE question per turn from the engine-verified pool (or the generator). For the current question you receive, as ground truth:\n- PROMPT: {{PROMPT}}\n- TIER: {{TIER}}            (hard | harder | brutal)\n- SOURCE: {{SOURCE}}        (context only — do not read it aloud)\n- HIDDEN.ANSWER: {{HIDDEN_ANSWER}}            (exact fraction; NEVER reveal)\n- HIDDEN.APPROACHES: {{HIDDEN_APPROACHES}}    (accepted solution paths)\n- HIDDEN.WRONG_TURNS: {{HIDDEN_WRONG_TURNS}}  (common misconceptions to watch for)\n- HIDDEN.HINT_LADDER: {{HIDDEN_HINT_LADDER}}  (rung 1 nudge → rung 2 stronger → rung 3 near-reveal)\n- HIDDEN.RUBRIC: {{HIDDEN_RUBRIC}}            (correctness / approach / rigor / communication / speed)\n- FOLLOW_UPS: {{FOLLOW_UPS}}\n\n## Grounding clause (CRITICAL — keeps you honest)\nTreat HIDDEN.ANSWER and HIDDEN.APPROACHES as the ONLY source of mathematical truth. Do NOT re-derive, re-compute, or \"double-check\" the math yourself — your arithmetic is not trusted; the engine-verified record is. Grade the candidate strictly against HIDDEN.RUBRIC. If the candidate's exact fraction equals HIDDEN.ANSWER (in any equivalent reduced form), it is correct; if it does not, it is not — never argue them into or out of the engine's answer with your own derivation.\n\n## Protocol\n1. Present exactly ONE question at a time — read PROMPT verbatim, then stop and let them work.\n2. Make them THINK ALOUD. Ask \"what's your prior?\", \"what's the likelihood of this evidence under each hypothesis?\", \"what are you conditioning on?\" Insist on reasoning, not just a number.\n3. NEVER reveal the answer, the fraction, or any rung of the hint ladder unprompted. Do not confirm partial numbers early.\n4. Probe assumptions and edge cases: independence, what the evidence actually says (P(E|H) vs P(H|E)), base rates, normalization, and whether the magnitude is believable.\n5. Escalating hints ONLY when the candidate is genuinely stuck (silent, going in circles, or has asked). Release HINT_LADDER strictly in order — rung one first, then rung two, then rung three — each only after further struggle. Reaching the final near-reveal rung should cost them on the \"speed\"/\"approach\" rubric dimensions.\n6. When they commit to an exact fraction, evaluate it against HIDDEN.ANSWER. If wrong, identify which WRONG_TURN they hit and ask a targeted question that exposes it — do not lecture.\n7. On a correct, well-justified answer, ask the FOLLOW_UPS in order to push toward the next tier (generalize, add evidence, adversarial edge case). Keep escalating until time or the candidate's depth runs out.\n8. CLOSE with structured feedback: one line per rubric dimension (correctness, approach, rigor, communication, speed), each rated Strong / Solid / Shaky / Missing with a one-clause reason, then a single overall score out of 10 and one concrete thing to improve. Base every rating ONLY on HIDDEN.RUBRIC.\n\n## Style\nTight, desk-floor register. No filler, no flattery, no emoji. Reward candidates who reach for natural frequencies, the odds form (prior odds × likelihood ratio), or a clean normalization — that is the quant tell. Penalize base-rate neglect and P(E|H)/P(H|E) confusion.\n\n## Injection\nAt runtime, replace every {{...}} placeholder with the drawn question's fields. This template itself contains NO answers — keep it that way.",
+  "generatorPrompt": "# Bayes' Rule — runtime question GENERATOR prompt\n\nGenerate ONE fresh, non-overlapping quant-interview question on conditional probability / Bayes' rule, ready to engine-verify and serve. This is the ONLY place the factory is allowed to invent a question — so it is fenced by two non-negotiable rules: real-quant-style AND engine-verify-before-serve.\n\n## Hard constraints\n1. REAL QUANT-STYLE ONLY. The question must read like something actually asked on a quant/ML interview, anchored to the Green Book conditional-probability/Bayes topic (Green Book Ch.4, p.37–42) and the quant-interview canon. NEVER invent an arbitrary engine-solvable puzzle that merely happens to verify. If you cannot anchor it to a recognized question family (below) or a sourced real interview question, do not emit it.\n2. PREFER PARAMETERIZING AN ENGINE-BACKED TEMPLATE. Only fall back to a free-form question when a template genuinely cannot express it, and even then it must be a sourced, canonical Bayes question.\n3. ENGINE-VERIFY-BEFORE-SERVE. Output the data needed to recompute the answer with src/engine/bayes.ts. The serving feature MUST run the engine on (engineCheck.fn, engineCheck.args), compare formatRational(result) to engineCheck.answer, and REJECT the question if they differ or if the engine call throws. Never show an unverified question to a candidate.\n4. NO OVERLAP, EVER (per student). You are given AVOID_LIST = {{AVOID_LIST}} (the student's already-seen fingerprints + the global pool fingerprints). Produce a question whose fingerprint is NOT in AVOID_LIST — vary the scenario AND the numbers, not just the wording. A reworded or parameter-trivial duplicate is a failure.\n5. EXACT RATIONALS ONLY. Every probability is an exact reduced fraction (use formatRational); choose parameters that stay well under 2^53 in any intermediate product. No decimals-as-truth, no floats.\n6. DIFFICULTY FLOOR = hard. Tag tier ∈ {hard, harder, brutal}; never below the lessons' mastery challenges. Always attach a follow-up chain.\n\n## Engine-backed templates (prefer these). engineCheck.fn ∈ {bayesUpdate, bayesPosterior, oddsUpdateProb, sequentialPosterior, naturalFrequencies, smallestKCross}:\n- screening-ppv: bayesUpdate(prevalence, sensitivity, 1−specificity) — P(condition | positive test) — base-rate / PPV screening\n- spam-precision: bayesUpdate(baseRate, recall, falsePositiveRate) — precision of a flag under class imbalance (spam / fraud / moderation / anomaly)\n- two-coins-sequential: sequentialPosterior(1/2, 1, 1/2, k) — fair vs double-headed coin after k heads → 2^k/(2^k+1)\n- rare-coin-n: sequentialPosterior(1/N, 1, 1/2, k) — N coins, one double-headed, k heads → 2^k/(2^k+N−1) (GB 1000-coins)\n- odds-multi-evidence: oddsToProb(∏ posteriorOdds(priorOdds, LR_i)) — stacking independent tests/signals in odds form (LR+ and LR−)\n- two-children: bayesUpdate(1/2^n, 1, P(≥1 boy | not all boys)) — Green Book boys-and-girls conditioning (≥1 boy vs a specific boy)\n- two-urns: bayesUpdate(P(A), P(red|A), P(red|B)) — pick an urn, draw a color, posterior on the urn\n- multi-source-defect: bayesPosterior(shares, defectRates)[j] — n factories/machines/suppliers, a defective item → P(source j)\n- natural-frequency-counts: naturalFrequencies(prevalence, sensitivity, specificity, population)[cell] — confusion-grid counts and PPV as whole numbers\n\n## Output (strict JSON, matching the pool's per-question record)\n{\n  \"id\": \"<unique-slug>\",\n  \"tier\": \"hard|harder|brutal\",\n  \"fingerprint\": \"<templateId>:<normalized-params>  |  sem:<slug>\",   // MUST be new vs AVOID_LIST\n  \"template\": { \"id\": \"<templateId>\", \"params\": { ... } },            // omit for free-form\n  \"prompt\": \"<the question text; NO answer inside>\",\n  \"source\": \"Green Book p.<n> §<x>  |  <real quant-interview source> (GB-anchored to §<x>)\",\n  \"engineCheck\": { \"module\": \"src/engine/bayes.ts\", \"fn\": \"<fn>\", \"args\": { ... rationals as {n,d} ... }, \"answer\": \"<formatRational>\", \"verified\": false },\n  \"hidden\": {\n    \"answer\": \"<exact fraction = engineCheck.answer>\",\n    \"approaches\": [\"accepted path 1\", \"...\"],\n    \"wrongTurns\": [\"misconception 1\", \"...\"],\n    \"hintLadder\": [\"nudge\", \"stronger\", \"near-reveal\"],\n    \"rubric\": { \"correctness\": \"...\", \"approach\": \"...\", \"rigor\": \"...\", \"communication\": \"...\", \"speed\": \"...\" }\n  },\n  \"followUps\": [\"push harder 1\", \"generalize 2\"]\n}\nSet verified=true ONLY after the feature has re-run the engine and confirmed formatRational(engine(args)) === answer. If verification fails, discard and regenerate. Keep the answer OUT of \"prompt\" and \"source\"; it lives only in engineCheck.answer / hidden.answer.",
   "templates": [
     {
       "id": "screening-ppv",
-      "engineCall": "bayesUpdate(prevalence, sensitivity, 1−specificity)",
+      "title": "Base-rate / PPV screening — P(condition | positive test)",
+      "source": "Green Book p.37–38 §Conditional Probability & Bayes’ Formula; PMC3055966 post-test-probability table; en.wikipedia.org/wiki/Base_rate_fallacy",
       "description": "P(condition | positive test) — base-rate / PPV screening",
-      "count": 8
+      "engineModule": "src/engine/bayes.ts"
     },
     {
       "id": "spam-precision",
-      "engineCall": "bayesUpdate(baseRate, recall, falsePositiveRate)",
+      "title": "Precision of a flag under class imbalance (spam / fraud / moderation / anomaly)",
+      "source": "Green Book p.37 §Bayes’ Formula; en.wikipedia.org/wiki/Base_rate_fallacy; en.wikipedia.org/wiki/Precision_and_recall",
       "description": "precision of a flag under class imbalance (spam / fraud / moderation / anomaly)",
-      "count": 5
+      "engineModule": "src/engine/bayes.ts"
     },
     {
       "id": "two-coins-sequential",
-      "engineCall": "sequentialPosterior(1/2, 1, 1/2, k)",
+      "title": "Fair vs double-headed coin after k heads → 2^k/(2^k+1)",
+      "source": "Green Book p.38 §“Unfair coin”; stats.stackexchange.com/questions/514627; mathproblems.info/prob16s.htm",
       "description": "fair vs double-headed coin after k heads → 2^k/(2^k+1)",
-      "count": 6
+      "engineModule": "src/engine/bayes.ts"
     },
     {
       "id": "rare-coin-n",
-      "engineCall": "sequentialPosterior(1/N, 1, 1/2, k)",
+      "title": "N coins, one double-headed, k heads → 2^k/(2^k+N−1)",
+      "source": "Green Book §“1000 coins” (one double-headed); stats.stackexchange two-coin classic generalized to N",
       "description": "N coins, one double-headed, k heads → 2^k/(2^k+N−1) (GB 1000-coins)",
-      "count": 7
+      "engineModule": "src/engine/bayes.ts"
     },
     {
       "id": "odds-multi-evidence",
-      "engineCall": "oddsToProb(∏ posteriorOdds(priorOdds, LR_i))",
+      "title": "Stacking independent tests/signals in odds form (LR+ and LR−)",
+      "source": "Green Book p.37–38 §Bayes’ Formula (odds form); en.wikipedia.org/wiki/Likelihood_ratios_in_diagnostic_testing",
       "description": "stacking independent tests/signals in odds form (LR+ and LR−)",
-      "count": 6
+      "engineModule": "src/engine/bayes.ts"
     },
     {
       "id": "two-children",
-      "engineCall": "bayesUpdate(1/2^n, 1, P(≥1 boy | not all boys))",
+      "title": "Boys-and-girls conditioning (≥1 boy vs a specific boy)",
+      "source": "Green Book p.40 §“Boys and girls” conditioning problem",
       "description": "Green Book boys-and-girls conditioning (≥1 boy vs a specific boy)",
-      "count": 4
+      "engineModule": "src/engine/bayes.ts"
     },
     {
       "id": "two-urns",
-      "engineCall": "bayesUpdate(P(A), P(red|A), P(red|B))",
+      "title": "Pick an urn, draw a color, posterior on the urn",
+      "source": "Green Book p.38–39 §Bayes’ Formula (urn/box draws)",
       "description": "pick an urn, draw a color, posterior on the urn",
-      "count": 5
+      "engineModule": "src/engine/bayes.ts"
     },
     {
       "id": "multi-source-defect",
-      "engineCall": "bayesPosterior(shares, defectRates)[j]",
+      "title": "n factories/machines/suppliers, a defective item → P(source j)",
+      "source": "Green Book p.39 §Bayes’ Formula (total probability over sources)",
       "description": "n factories/machines/suppliers, a defective item → P(source j)",
-      "count": 5
+      "engineModule": "src/engine/bayes.ts"
     },
     {
       "id": "natural-frequency-counts",
-      "engineCall": "naturalFrequencies(prevalence, sensitivity, specificity, population)[cell]",
+      "title": "Confusion-grid counts and PPV as whole numbers",
+      "source": "Gigerenzer natural-frequency framing; Green Book p.37–38 §Bayes’ Formula",
       "description": "confusion-grid counts and PPV as whole numbers",
-      "count": 5
+      "engineModule": "src/engine/bayes.ts"
     }
   ],
   "questions": [
@@ -108,21 +101,9 @@
       "source": "The canonical base-rate / PPV interview question. Sources: quantblueprint.com/glossary/bayes-theorem; nishchalnishant.gitbook.io 'Canonical Stats Questions' (both state 50%). GB-anchored: Green Book p.37–38 §Conditional Probability & Bayes' Formula.",
       "engineCheck": {
         "module": "src/engine/bayes.ts",
-        "fn": "bayesUpdate",
-        "args": {
-          "prior": {
-            "n": 1,
-            "d": 100
-          },
-          "pEgivenH": {
-            "n": 99,
-            "d": 100
-          },
-          "pEgivenNotH": {
-            "n": 1,
-            "d": 100
-          }
-        },
+        "calls": [
+          "formatRational(bayesUpdate(1/100, 99/100, 1/100))"
+        ],
         "answer": "1/2",
         "verified": true
       },
@@ -173,21 +154,9 @@
       "source": "Post-test-probability table, PMC3055966 (10% prevalence → 91.7%). GB-anchored: Green Book p.37–38 §Conditional Probability & Bayes' Formula.",
       "engineCheck": {
         "module": "src/engine/bayes.ts",
-        "fn": "bayesUpdate",
-        "args": {
-          "prior": {
-            "n": 1,
-            "d": 10
-          },
-          "pEgivenH": {
-            "n": 99,
-            "d": 100
-          },
-          "pEgivenNotH": {
-            "n": 1,
-            "d": 100
-          }
-        },
+        "calls": [
+          "formatRational(bayesUpdate(1/10, 99/100, 1/100))"
+        ],
         "answer": "11/12",
         "verified": true
       },
@@ -238,21 +207,9 @@
       "source": "Post-test-probability table, PMC3055966 (25% prevalence → 97.1%). GB-anchored: Green Book p.37–38 §Conditional Probability & Bayes' Formula.",
       "engineCheck": {
         "module": "src/engine/bayes.ts",
-        "fn": "bayesUpdate",
-        "args": {
-          "prior": {
-            "n": 1,
-            "d": 4
-          },
-          "pEgivenH": {
-            "n": 99,
-            "d": 100
-          },
-          "pEgivenNotH": {
-            "n": 1,
-            "d": 100
-          }
-        },
+        "calls": [
+          "formatRational(bayesUpdate(1/4, 99/100, 1/100))"
+        ],
         "answer": "33/34",
         "verified": true
       },
@@ -303,21 +260,9 @@
       "source": "A. Downey, BiteSizeBayes 05 (Bayesville, ~16%): allendowney.github.io/BiteSizeBayes/05_test.html. GB-anchored: Green Book p.37–38 §Bayes' Formula.",
       "engineCheck": {
         "module": "src/engine/bayes.ts",
-        "fn": "bayesUpdate",
-        "args": {
-          "prior": {
-            "n": 1,
-            "d": 100
-          },
-          "pEgivenH": {
-            "n": 95,
-            "d": 100
-          },
-          "pEgivenNotH": {
-            "n": 5,
-            "d": 100
-          }
-        },
+        "calls": [
+          "formatRational(bayesUpdate(1/100, 95/100, 5/100))"
+        ],
         "answer": "19/118",
         "verified": true
       },
@@ -368,21 +313,9 @@
       "source": "Base-rate / PPV classic at very low prevalence (false-positive paradox). en.wikipedia.org/wiki/Base_rate_fallacy. GB-anchored: Green Book p.37–38 §Bayes' Formula.",
       "engineCheck": {
         "module": "src/engine/bayes.ts",
-        "fn": "bayesUpdate",
-        "args": {
-          "prior": {
-            "n": 1,
-            "d": 1000
-          },
-          "pEgivenH": {
-            "n": 99,
-            "d": 100
-          },
-          "pEgivenNotH": {
-            "n": 1,
-            "d": 100
-          }
-        },
+        "calls": [
+          "formatRational(bayesUpdate(1/1000, 99/100, 1/100))"
+        ],
         "answer": "11/122",
         "verified": true
       },
@@ -433,21 +366,9 @@
       "source": "Drug-testing variant of the base-rate / PPV question. en.wikipedia.org/wiki/Base_rate_fallacy. GB-anchored: Green Book p.37–38 §Bayes' Formula.",
       "engineCheck": {
         "module": "src/engine/bayes.ts",
-        "fn": "bayesUpdate",
-        "args": {
-          "prior": {
-            "n": 1,
-            "d": 50
-          },
-          "pEgivenH": {
-            "n": 9,
-            "d": 10
-          },
-          "pEgivenNotH": {
-            "n": 1,
-            "d": 10
-          }
-        },
+        "calls": [
+          "formatRational(bayesUpdate(1/50, 9/10, 1/10))"
+        ],
         "answer": "9/58",
         "verified": true
       },
@@ -498,21 +419,9 @@
       "source": "Asymmetric sensitivity/specificity PPV variant (specificity drives PPV). GB-anchored: Green Book p.37–38 §Bayes' Formula; cf. PMC3055966.",
       "engineCheck": {
         "module": "src/engine/bayes.ts",
-        "fn": "bayesUpdate",
-        "args": {
-          "prior": {
-            "n": 1,
-            "d": 20
-          },
-          "pEgivenH": {
-            "n": 99,
-            "d": 100
-          },
-          "pEgivenNotH": {
-            "n": 5,
-            "d": 100
-          }
-        },
+        "calls": [
+          "formatRational(bayesUpdate(1/20, 99/100, 5/100))"
+        ],
         "answer": "99/194",
         "verified": true
       },
@@ -563,21 +472,9 @@
       "source": "Contrast case showing PPV ≈ accuracy only when the prior is even. GB-anchored: Green Book p.37–38 §Bayes' Formula.",
       "engineCheck": {
         "module": "src/engine/bayes.ts",
-        "fn": "bayesUpdate",
-        "args": {
-          "prior": {
-            "n": 1,
-            "d": 2
-          },
-          "pEgivenH": {
-            "n": 99,
-            "d": 100
-          },
-          "pEgivenNotH": {
-            "n": 1,
-            "d": 100
-          }
-        },
+        "calls": [
+          "formatRational(bayesUpdate(1/2, 99/100, 1/100))"
+        ],
         "answer": "99/100",
         "verified": true
       },
@@ -628,21 +525,9 @@
       "source": "Precision under class imbalance (false-positive paradox), spam-filter example: en.wikipedia.org/wiki/Base_rate_fallacy. GB-anchored: Green Book p.37 §Bayes' Formula.",
       "engineCheck": {
         "module": "src/engine/bayes.ts",
-        "fn": "bayesUpdate",
-        "args": {
-          "prior": {
-            "n": 1,
-            "d": 5
-          },
-          "pEgivenH": {
-            "n": 99,
-            "d": 100
-          },
-          "pEgivenNotH": {
-            "n": 2,
-            "d": 100
-          }
-        },
+        "calls": [
+          "formatRational(bayesUpdate(1/5, 99/100, 2/100))"
+        ],
         "answer": "99/107",
         "verified": true
       },
@@ -693,21 +578,9 @@
       "source": "Class-imbalance precision (why \"99% accurate\" fraud models still drown in false alarms). en.wikipedia.org/wiki/Base_rate_fallacy. GB-anchored: Green Book p.37 §Bayes' Formula.",
       "engineCheck": {
         "module": "src/engine/bayes.ts",
-        "fn": "bayesUpdate",
-        "args": {
-          "prior": {
-            "n": 1,
-            "d": 1000
-          },
-          "pEgivenH": {
-            "n": 95,
-            "d": 100
-          },
-          "pEgivenNotH": {
-            "n": 1,
-            "d": 100
-          }
-        },
+        "calls": [
+          "formatRational(bayesUpdate(1/1000, 95/100, 1/100))"
+        ],
         "answer": "95/1094",
         "verified": true
       },
@@ -758,21 +631,9 @@
       "source": "Precision/recall under imbalance (moderation framing). en.wikipedia.org/wiki/Precision_and_recall. GB-anchored: Green Book p.37 §Bayes' Formula.",
       "engineCheck": {
         "module": "src/engine/bayes.ts",
-        "fn": "bayesUpdate",
-        "args": {
-          "prior": {
-            "n": 3,
-            "d": 10
-          },
-          "pEgivenH": {
-            "n": 9,
-            "d": 10
-          },
-          "pEgivenNotH": {
-            "n": 5,
-            "d": 100
-          }
-        },
+        "calls": [
+          "formatRational(bayesUpdate(3/10, 9/10, 5/100))"
+        ],
         "answer": "54/61",
         "verified": true
       },
@@ -823,21 +684,9 @@
       "source": "Precision when the false-positive rate is tiny (contrast to the high-FPR case). en.wikipedia.org/wiki/Precision_and_recall. GB-anchored: Green Book p.37 §Bayes' Formula.",
       "engineCheck": {
         "module": "src/engine/bayes.ts",
-        "fn": "bayesUpdate",
-        "args": {
-          "prior": {
-            "n": 1,
-            "d": 100
-          },
-          "pEgivenH": {
-            "n": 80,
-            "d": 100
-          },
-          "pEgivenNotH": {
-            "n": 1,
-            "d": 1000
-          }
-        },
+        "calls": [
+          "formatRational(bayesUpdate(1/100, 80/100, 1/1000))"
+        ],
         "answer": "800/899",
         "verified": true
       },
@@ -888,21 +737,9 @@
       "source": "Precision under class imbalance (security/anomaly framing). en.wikipedia.org/wiki/Precision_and_recall. GB-anchored: Green Book p.37 §Bayes' Formula.",
       "engineCheck": {
         "module": "src/engine/bayes.ts",
-        "fn": "bayesUpdate",
-        "args": {
-          "prior": {
-            "n": 1,
-            "d": 4
-          },
-          "pEgivenH": {
-            "n": 7,
-            "d": 10
-          },
-          "pEgivenNotH": {
-            "n": 1,
-            "d": 10
-          }
-        },
+        "calls": [
+          "formatRational(bayesUpdate(1/4, 7/10, 1/10))"
+        ],
         "answer": "7/10",
         "verified": true
       },
@@ -952,22 +789,9 @@
       "source": "Two-coin Bayes classic: stats.stackexchange.com/questions/514627; mathproblems.info/prob16s.htm (both state 2/3 for one head). GB-anchored: Green Book p.38 §\"Unfair coin\".",
       "engineCheck": {
         "module": "src/engine/bayes.ts",
-        "fn": "sequentialPosterior",
-        "args": {
-          "prior": {
-            "n": 1,
-            "d": 2
-          },
-          "pEgivenH": {
-            "n": 1,
-            "d": 1
-          },
-          "pEgivenNotH": {
-            "n": 1,
-            "d": 2
-          },
-          "k": 1
-        },
+        "calls": [
+          "formatRational(sequentialPosterior(1/2, 1, 1/2, 1))"
+        ],
         "answer": "2/3",
         "verified": true
       },
@@ -1017,22 +841,9 @@
       "source": "Two-coin Bayes classic: stats.stackexchange.com/questions/514627; mathproblems.info/prob16s.htm (both state 2/3 for one head). GB-anchored: Green Book p.38 §\"Unfair coin\".",
       "engineCheck": {
         "module": "src/engine/bayes.ts",
-        "fn": "sequentialPosterior",
-        "args": {
-          "prior": {
-            "n": 1,
-            "d": 2
-          },
-          "pEgivenH": {
-            "n": 1,
-            "d": 1
-          },
-          "pEgivenNotH": {
-            "n": 1,
-            "d": 2
-          },
-          "k": 2
-        },
+        "calls": [
+          "formatRational(sequentialPosterior(1/2, 1, 1/2, 2))"
+        ],
         "answer": "4/5",
         "verified": true
       },
@@ -1082,22 +893,9 @@
       "source": "Two-coin Bayes classic: stats.stackexchange.com/questions/514627; mathproblems.info/prob16s.htm (both state 2/3 for one head). GB-anchored: Green Book p.38 §\"Unfair coin\".",
       "engineCheck": {
         "module": "src/engine/bayes.ts",
-        "fn": "sequentialPosterior",
-        "args": {
-          "prior": {
-            "n": 1,
-            "d": 2
-          },
-          "pEgivenH": {
-            "n": 1,
-            "d": 1
-          },
-          "pEgivenNotH": {
-            "n": 1,
-            "d": 2
-          },
-          "k": 3
-        },
+        "calls": [
+          "formatRational(sequentialPosterior(1/2, 1, 1/2, 3))"
+        ],
         "answer": "8/9",
         "verified": true
       },
@@ -1147,22 +945,9 @@
       "source": "Two-coin Bayes classic: stats.stackexchange.com/questions/514627; mathproblems.info/prob16s.htm (both state 2/3 for one head). GB-anchored: Green Book p.38 §\"Unfair coin\".",
       "engineCheck": {
         "module": "src/engine/bayes.ts",
-        "fn": "sequentialPosterior",
-        "args": {
-          "prior": {
-            "n": 1,
-            "d": 2
-          },
-          "pEgivenH": {
-            "n": 1,
-            "d": 1
-          },
-          "pEgivenNotH": {
-            "n": 1,
-            "d": 2
-          },
-          "k": 4
-        },
+        "calls": [
+          "formatRational(sequentialPosterior(1/2, 1, 1/2, 4))"
+        ],
         "answer": "16/17",
         "verified": true
       },
@@ -1212,22 +997,9 @@
       "source": "Two-coin Bayes classic: stats.stackexchange.com/questions/514627; mathproblems.info/prob16s.htm (both state 2/3 for one head). GB-anchored: Green Book p.38 §\"Unfair coin\".",
       "engineCheck": {
         "module": "src/engine/bayes.ts",
-        "fn": "sequentialPosterior",
-        "args": {
-          "prior": {
-            "n": 1,
-            "d": 2
-          },
-          "pEgivenH": {
-            "n": 1,
-            "d": 1
-          },
-          "pEgivenNotH": {
-            "n": 1,
-            "d": 2
-          },
-          "k": 5
-        },
+        "calls": [
+          "formatRational(sequentialPosterior(1/2, 1, 1/2, 5))"
+        ],
         "answer": "32/33",
         "verified": true
       },
@@ -1277,22 +1049,9 @@
       "source": "Two-coin Bayes classic: stats.stackexchange.com/questions/514627; mathproblems.info/prob16s.htm (both state 2/3 for one head). GB-anchored: Green Book p.38 §\"Unfair coin\".",
       "engineCheck": {
         "module": "src/engine/bayes.ts",
-        "fn": "sequentialPosterior",
-        "args": {
-          "prior": {
-            "n": 1,
-            "d": 2
-          },
-          "pEgivenH": {
-            "n": 1,
-            "d": 1
-          },
-          "pEgivenNotH": {
-            "n": 1,
-            "d": 2
-          },
-          "k": 6
-        },
+        "calls": [
+          "formatRational(sequentialPosterior(1/2, 1, 1/2, 6))"
+        ],
         "answer": "64/65",
         "verified": true
       },
@@ -1343,22 +1102,9 @@
       "source": "Green Book p.38 §\"Unfair coin\" (1000 coins, one double-headed, 10 heads → 1024/2023), generalized to N coins and k heads.",
       "engineCheck": {
         "module": "src/engine/bayes.ts",
-        "fn": "sequentialPosterior",
-        "args": {
-          "prior": {
-            "n": 1,
-            "d": 1000
-          },
-          "pEgivenH": {
-            "n": 1,
-            "d": 1
-          },
-          "pEgivenNotH": {
-            "n": 1,
-            "d": 2
-          },
-          "k": 1
-        },
+        "calls": [
+          "formatRational(sequentialPosterior(1/1000, 1, 1/2, 1))"
+        ],
         "answer": "2/1001",
         "verified": true
       },
@@ -1409,22 +1155,9 @@
       "source": "Green Book p.38 §\"Unfair coin\" (1000 coins, one double-headed, 10 heads → 1024/2023), generalized to N coins and k heads.",
       "engineCheck": {
         "module": "src/engine/bayes.ts",
-        "fn": "sequentialPosterior",
-        "args": {
-          "prior": {
-            "n": 1,
-            "d": 1000
-          },
-          "pEgivenH": {
-            "n": 1,
-            "d": 1
-          },
-          "pEgivenNotH": {
-            "n": 1,
-            "d": 2
-          },
-          "k": 5
-        },
+        "calls": [
+          "formatRational(sequentialPosterior(1/1000, 1, 1/2, 5))"
+        ],
         "answer": "32/1031",
         "verified": true
       },
@@ -1475,22 +1208,9 @@
       "source": "Green Book p.38 §\"Unfair coin\" (1000 coins, one double-headed, 10 heads → 1024/2023), generalized to N coins and k heads.",
       "engineCheck": {
         "module": "src/engine/bayes.ts",
-        "fn": "sequentialPosterior",
-        "args": {
-          "prior": {
-            "n": 1,
-            "d": 1000
-          },
-          "pEgivenH": {
-            "n": 1,
-            "d": 1
-          },
-          "pEgivenNotH": {
-            "n": 1,
-            "d": 2
-          },
-          "k": 9
-        },
+        "calls": [
+          "formatRational(sequentialPosterior(1/1000, 1, 1/2, 9))"
+        ],
         "answer": "512/1511",
         "verified": true
       },
@@ -1541,22 +1261,9 @@
       "source": "Green Book p.38 §\"Unfair coin\" (1000 coins, one double-headed, 10 heads → 1024/2023), generalized to N coins and k heads.",
       "engineCheck": {
         "module": "src/engine/bayes.ts",
-        "fn": "sequentialPosterior",
-        "args": {
-          "prior": {
-            "n": 1,
-            "d": 1000
-          },
-          "pEgivenH": {
-            "n": 1,
-            "d": 1
-          },
-          "pEgivenNotH": {
-            "n": 1,
-            "d": 2
-          },
-          "k": 10
-        },
+        "calls": [
+          "formatRational(sequentialPosterior(1/1000, 1, 1/2, 10))"
+        ],
         "answer": "1024/2023",
         "verified": true
       },
@@ -1607,22 +1314,9 @@
       "source": "Green Book p.38 §\"Unfair coin\" (1000 coins, one double-headed, 10 heads → 1024/2023), generalized to N coins and k heads.",
       "engineCheck": {
         "module": "src/engine/bayes.ts",
-        "fn": "sequentialPosterior",
-        "args": {
-          "prior": {
-            "n": 1,
-            "d": 1000
-          },
-          "pEgivenH": {
-            "n": 1,
-            "d": 1
-          },
-          "pEgivenNotH": {
-            "n": 1,
-            "d": 2
-          },
-          "k": 20
-        },
+        "calls": [
+          "formatRational(sequentialPosterior(1/1000, 1, 1/2, 20))"
+        ],
         "answer": "1048576/1049575",
         "verified": true
       },
@@ -1673,22 +1367,9 @@
       "source": "Green Book p.38 §\"Unfair coin\" (1000 coins, one double-headed, 10 heads → 1024/2023), generalized to N coins and k heads.",
       "engineCheck": {
         "module": "src/engine/bayes.ts",
-        "fn": "sequentialPosterior",
-        "args": {
-          "prior": {
-            "n": 1,
-            "d": 64
-          },
-          "pEgivenH": {
-            "n": 1,
-            "d": 1
-          },
-          "pEgivenNotH": {
-            "n": 1,
-            "d": 2
-          },
-          "k": 3
-        },
+        "calls": [
+          "formatRational(sequentialPosterior(1/64, 1, 1/2, 3))"
+        ],
         "answer": "8/71",
         "verified": true
       },
@@ -1739,22 +1420,9 @@
       "source": "Green Book p.38 §\"Unfair coin\" (1000 coins, one double-headed, 10 heads → 1024/2023), generalized to N coins and k heads.",
       "engineCheck": {
         "module": "src/engine/bayes.ts",
-        "fn": "sequentialPosterior",
-        "args": {
-          "prior": {
-            "n": 1,
-            "d": 100
-          },
-          "pEgivenH": {
-            "n": 1,
-            "d": 1
-          },
-          "pEgivenNotH": {
-            "n": 1,
-            "d": 2
-          },
-          "k": 7
-        },
+        "calls": [
+          "formatRational(sequentialPosterior(1/100, 1, 1/2, 7))"
+        ],
         "answer": "128/227",
         "verified": true
       },
@@ -1804,19 +1472,9 @@
       "source": "Odds-form view of the base-rate trap (one 99% test on a 1% disease → 50%). quantblueprint.com/glossary/bayes-theorem. GB-anchored: Green Book p.38.",
       "engineCheck": {
         "module": "src/engine/bayes.ts",
-        "fn": "oddsUpdateProb",
-        "args": {
-          "priorOdds": {
-            "n": 1,
-            "d": 99
-          },
-          "likelihoodRatios": [
-            {
-              "n": 99,
-              "d": 1
-            }
-          ]
-        },
+        "calls": [
+          "formatRational(oddsUpdateProb(1/99, [99]))"
+        ],
         "answer": "1/2",
         "verified": true
       },
@@ -1866,23 +1524,9 @@
       "source": "Two independent positive tests → 99%. quantblueprint.com/glossary/bayes-theorem (LR 99 per test; 1/99 × 99 × 99 = 99). GB-anchored: Green Book p.38.",
       "engineCheck": {
         "module": "src/engine/bayes.ts",
-        "fn": "oddsUpdateProb",
-        "args": {
-          "priorOdds": {
-            "n": 1,
-            "d": 99
-          },
-          "likelihoodRatios": [
-            {
-              "n": 99,
-              "d": 1
-            },
-            {
-              "n": 99,
-              "d": 1
-            }
-          ]
-        },
+        "calls": [
+          "formatRational(oddsUpdateProb(1/99, [99, 99]))"
+        ],
         "answer": "99/100",
         "verified": true
       },
@@ -1932,27 +1576,9 @@
       "source": "Compounding independent evidence (three positive 99% tests). quantblueprint.com/glossary/bayes-theorem. GB-anchored: Green Book p.38.",
       "engineCheck": {
         "module": "src/engine/bayes.ts",
-        "fn": "oddsUpdateProb",
-        "args": {
-          "priorOdds": {
-            "n": 1,
-            "d": 99
-          },
-          "likelihoodRatios": [
-            {
-              "n": 99,
-              "d": 1
-            },
-            {
-              "n": 99,
-              "d": 1
-            },
-            {
-              "n": 99,
-              "d": 1
-            }
-          ]
-        },
+        "calls": [
+          "formatRational(oddsUpdateProb(1/99, [99, 99, 99]))"
+        ],
         "answer": "9801/9802",
         "verified": true
       },
@@ -2002,23 +1628,9 @@
       "source": "Conflicting evidence in odds form (a positive then a negative with sens=spec returns you to the base rate). GB-anchored: Green Book p.38 §Bayes' Formula.",
       "engineCheck": {
         "module": "src/engine/bayes.ts",
-        "fn": "oddsUpdateProb",
-        "args": {
-          "priorOdds": {
-            "n": 1,
-            "d": 99
-          },
-          "likelihoodRatios": [
-            {
-              "n": 99,
-              "d": 1
-            },
-            {
-              "n": 1,
-              "d": 99
-            }
-          ]
-        },
+        "calls": [
+          "formatRational(oddsUpdateProb(1/99, [99, 1/99]))"
+        ],
         "answer": "1/100",
         "verified": true
       },
@@ -2068,23 +1680,9 @@
       "source": "Odds-form stacking at a different base rate. quantblueprint.com/glossary/bayes-theorem. GB-anchored: Green Book p.38.",
       "engineCheck": {
         "module": "src/engine/bayes.ts",
-        "fn": "oddsUpdateProb",
-        "args": {
-          "priorOdds": {
-            "n": 1,
-            "d": 49
-          },
-          "likelihoodRatios": [
-            {
-              "n": 99,
-              "d": 1
-            },
-            {
-              "n": 99,
-              "d": 1
-            }
-          ]
-        },
+        "calls": [
+          "formatRational(oddsUpdateProb(1/49, [99, 99]))"
+        ],
         "answer": "9801/9850",
         "verified": true
       },
@@ -2134,23 +1732,9 @@
       "source": "Diagnostic likelihood-ratio stacking (LR+ = sens/(1−spec)); standard evidence-based-medicine / quant signal-stacking. GB-anchored: Green Book p.38.",
       "engineCheck": {
         "module": "src/engine/bayes.ts",
-        "fn": "oddsUpdateProb",
-        "args": {
-          "priorOdds": {
-            "n": 1,
-            "d": 9
-          },
-          "likelihoodRatios": [
-            {
-              "n": 9,
-              "d": 2
-            },
-            {
-              "n": 9,
-              "d": 2
-            }
-          ]
-        },
+        "calls": [
+          "formatRational(oddsUpdateProb(1/9, [9/2, 9/2]))"
+        ],
         "answer": "9/13",
         "verified": true
       },
@@ -2200,21 +1784,9 @@
       "source": "Green Book p.37–38 §Conditional Probability and Bayes' Formula (boys-and-girls; at least one boy → 1/3).",
       "engineCheck": {
         "module": "src/engine/bayes.ts",
-        "fn": "bayesUpdate",
-        "args": {
-          "prior": {
-            "n": 1,
-            "d": 4
-          },
-          "pEgivenH": {
-            "n": 1,
-            "d": 1
-          },
-          "pEgivenNotH": {
-            "n": 2,
-            "d": 3
-          }
-        },
+        "calls": [
+          "formatRational(bayesUpdate(1/4, 1, 2/3))"
+        ],
         "answer": "1/3",
         "verified": true
       },
@@ -2264,21 +1836,9 @@
       "source": "Green Book p.37–38 §Conditional Probability and Bayes' Formula (boys-and-girls; you meet a boy → 1/2).",
       "engineCheck": {
         "module": "src/engine/bayes.ts",
-        "fn": "bayesUpdate",
-        "args": {
-          "prior": {
-            "n": 1,
-            "d": 4
-          },
-          "pEgivenH": {
-            "n": 1,
-            "d": 1
-          },
-          "pEgivenNotH": {
-            "n": 1,
-            "d": 3
-          }
-        },
+        "calls": [
+          "formatRational(bayesUpdate(1/4, 1, 1/3))"
+        ],
         "answer": "1/2",
         "verified": true
       },
@@ -2328,21 +1888,9 @@
       "source": "Green Book p.37–38 §Conditional Probability (boys-and-girls), extended to three children (P(all boys|≥1 boy) = 1/7).",
       "engineCheck": {
         "module": "src/engine/bayes.ts",
-        "fn": "bayesUpdate",
-        "args": {
-          "prior": {
-            "n": 1,
-            "d": 8
-          },
-          "pEgivenH": {
-            "n": 1,
-            "d": 1
-          },
-          "pEgivenNotH": {
-            "n": 6,
-            "d": 7
-          }
-        },
+        "calls": [
+          "formatRational(bayesUpdate(1/8, 1, 6/7))"
+        ],
         "answer": "1/7",
         "verified": true
       },
@@ -2392,21 +1940,9 @@
       "source": "Green Book p.37–38 §Conditional Probability (boys-and-girls), extended to four children (P(all boys|≥1 boy) = 1/15).",
       "engineCheck": {
         "module": "src/engine/bayes.ts",
-        "fn": "bayesUpdate",
-        "args": {
-          "prior": {
-            "n": 1,
-            "d": 16
-          },
-          "pEgivenH": {
-            "n": 1,
-            "d": 1
-          },
-          "pEgivenNotH": {
-            "n": 14,
-            "d": 15
-          }
-        },
+        "calls": [
+          "formatRational(bayesUpdate(1/16, 1, 14/15))"
+        ],
         "answer": "1/15",
         "verified": true
       },
@@ -2457,21 +1993,9 @@
       "source": "Standard textbook conditional-probability / two-urn Bayes problem; same structure as the two-coin update. GB-anchored: Green Book p.37 §Bayes' Formula.",
       "engineCheck": {
         "module": "src/engine/bayes.ts",
-        "fn": "bayesUpdate",
-        "args": {
-          "prior": {
-            "n": 1,
-            "d": 2
-          },
-          "pEgivenH": {
-            "n": 2,
-            "d": 3
-          },
-          "pEgivenNotH": {
-            "n": 1,
-            "d": 3
-          }
-        },
+        "calls": [
+          "formatRational(bayesUpdate(1/2, 2/3, 1/3))"
+        ],
         "answer": "2/3",
         "verified": true
       },
@@ -2522,21 +2046,9 @@
       "source": "Standard textbook conditional-probability / two-urn Bayes problem; same structure as the two-coin update. GB-anchored: Green Book p.37 §Bayes' Formula.",
       "engineCheck": {
         "module": "src/engine/bayes.ts",
-        "fn": "bayesUpdate",
-        "args": {
-          "prior": {
-            "n": 1,
-            "d": 2
-          },
-          "pEgivenH": {
-            "n": 3,
-            "d": 4
-          },
-          "pEgivenNotH": {
-            "n": 1,
-            "d": 2
-          }
-        },
+        "calls": [
+          "formatRational(bayesUpdate(1/2, 3/4, 1/2))"
+        ],
         "answer": "3/5",
         "verified": true
       },
@@ -2587,21 +2099,9 @@
       "source": "Standard textbook conditional-probability / two-urn Bayes problem; same structure as the two-coin update. GB-anchored: Green Book p.37 §Bayes' Formula.",
       "engineCheck": {
         "module": "src/engine/bayes.ts",
-        "fn": "bayesUpdate",
-        "args": {
-          "prior": {
-            "n": 1,
-            "d": 2
-          },
-          "pEgivenH": {
-            "n": 7,
-            "d": 10
-          },
-          "pEgivenNotH": {
-            "n": 2,
-            "d": 10
-          }
-        },
+        "calls": [
+          "formatRational(bayesUpdate(1/2, 7/10, 2/10))"
+        ],
         "answer": "7/9",
         "verified": true
       },
@@ -2652,21 +2152,9 @@
       "source": "Standard textbook conditional-probability / two-urn Bayes problem; same structure as the two-coin update. GB-anchored: Green Book p.37 §Bayes' Formula.",
       "engineCheck": {
         "module": "src/engine/bayes.ts",
-        "fn": "bayesUpdate",
-        "args": {
-          "prior": {
-            "n": 1,
-            "d": 3
-          },
-          "pEgivenH": {
-            "n": 2,
-            "d": 3
-          },
-          "pEgivenNotH": {
-            "n": 1,
-            "d": 3
-          }
-        },
+        "calls": [
+          "formatRational(bayesUpdate(1/3, 2/3, 1/3))"
+        ],
         "answer": "1/2",
         "verified": true
       },
@@ -2717,21 +2205,9 @@
       "source": "Standard textbook conditional-probability / two-urn Bayes problem; same structure as the two-coin update. GB-anchored: Green Book p.37 §Bayes' Formula.",
       "engineCheck": {
         "module": "src/engine/bayes.ts",
-        "fn": "bayesUpdate",
-        "args": {
-          "prior": {
-            "n": 1,
-            "d": 2
-          },
-          "pEgivenH": {
-            "n": 1,
-            "d": 4
-          },
-          "pEgivenNotH": {
-            "n": 3,
-            "d": 4
-          }
-        },
+        "calls": [
+          "formatRational(bayesUpdate(1/2, 1/4, 3/4))"
+        ],
         "answer": "1/4",
         "verified": true
       },
@@ -2781,30 +2257,9 @@
       "source": "Classic factories/machines/suppliers Bayes problem (law of total probability + Bayes). GB-anchored: Green Book p.37 §Bayes' Formula.",
       "engineCheck": {
         "module": "src/engine/bayes.ts",
-        "fn": "bayesPosterior",
-        "args": {
-          "priors": [
-            {
-              "n": 6,
-              "d": 10
-            },
-            {
-              "n": 4,
-              "d": 10
-            }
-          ],
-          "likelihoods": [
-            {
-              "n": 2,
-              "d": 100
-            },
-            {
-              "n": 5,
-              "d": 100
-            }
-          ],
-          "index": 1
-        },
+        "calls": [
+          "formatRational(bayesPosterior([6/10, 4/10], [2/100, 5/100])[1])"
+        ],
         "answer": "5/8",
         "verified": true
       },
@@ -2854,30 +2309,9 @@
       "source": "Classic factories/machines/suppliers Bayes problem (law of total probability + Bayes). GB-anchored: Green Book p.37 §Bayes' Formula.",
       "engineCheck": {
         "module": "src/engine/bayes.ts",
-        "fn": "bayesPosterior",
-        "args": {
-          "priors": [
-            {
-              "n": 6,
-              "d": 10
-            },
-            {
-              "n": 4,
-              "d": 10
-            }
-          ],
-          "likelihoods": [
-            {
-              "n": 2,
-              "d": 100
-            },
-            {
-              "n": 5,
-              "d": 100
-            }
-          ],
-          "index": 0
-        },
+        "calls": [
+          "formatRational(bayesPosterior([6/10, 4/10], [2/100, 5/100])[0])"
+        ],
         "answer": "3/8",
         "verified": true
       },
@@ -2927,38 +2361,9 @@
       "source": "Classic factories/machines/suppliers Bayes problem (law of total probability + Bayes). GB-anchored: Green Book p.37 §Bayes' Formula.",
       "engineCheck": {
         "module": "src/engine/bayes.ts",
-        "fn": "bayesPosterior",
-        "args": {
-          "priors": [
-            {
-              "n": 1,
-              "d": 2
-            },
-            {
-              "n": 3,
-              "d": 10
-            },
-            {
-              "n": 1,
-              "d": 5
-            }
-          ],
-          "likelihoods": [
-            {
-              "n": 1,
-              "d": 100
-            },
-            {
-              "n": 2,
-              "d": 100
-            },
-            {
-              "n": 3,
-              "d": 100
-            }
-          ],
-          "index": 0
-        },
+        "calls": [
+          "formatRational(bayesPosterior([1/2, 3/10, 1/5], [1/100, 2/100, 3/100])[0])"
+        ],
         "answer": "5/17",
         "verified": true
       },
@@ -3008,38 +2413,9 @@
       "source": "Classic factories/machines/suppliers Bayes problem (law of total probability + Bayes). GB-anchored: Green Book p.37 §Bayes' Formula.",
       "engineCheck": {
         "module": "src/engine/bayes.ts",
-        "fn": "bayesPosterior",
-        "args": {
-          "priors": [
-            {
-              "n": 1,
-              "d": 2
-            },
-            {
-              "n": 3,
-              "d": 10
-            },
-            {
-              "n": 1,
-              "d": 5
-            }
-          ],
-          "likelihoods": [
-            {
-              "n": 1,
-              "d": 100
-            },
-            {
-              "n": 2,
-              "d": 100
-            },
-            {
-              "n": 3,
-              "d": 100
-            }
-          ],
-          "index": 2
-        },
+        "calls": [
+          "formatRational(bayesPosterior([1/2, 3/10, 1/5], [1/100, 2/100, 3/100])[2])"
+        ],
         "answer": "6/17",
         "verified": true
       },
@@ -3089,38 +2465,9 @@
       "source": "Classic factories/machines/suppliers Bayes problem (law of total probability + Bayes). GB-anchored: Green Book p.37 §Bayes' Formula.",
       "engineCheck": {
         "module": "src/engine/bayes.ts",
-        "fn": "bayesPosterior",
-        "args": {
-          "priors": [
-            {
-              "n": 1,
-              "d": 4
-            },
-            {
-              "n": 1,
-              "d": 5
-            },
-            {
-              "n": 11,
-              "d": 20
-            }
-          ],
-          "likelihoods": [
-            {
-              "n": 5,
-              "d": 100
-            },
-            {
-              "n": 3,
-              "d": 100
-            },
-            {
-              "n": 1,
-              "d": 100
-            }
-          ],
-          "index": 0
-        },
+        "calls": [
+          "formatRational(bayesPosterior([1/4, 1/5, 11/20], [5/100, 3/100, 1/100])[0])"
+        ],
         "answer": "25/48",
         "verified": true
       },
@@ -3173,23 +2520,9 @@
       "source": "Natural-frequency / confusion-matrix method (Gigerenzer 1995 — express Bayes as whole-number counts). GB-anchored: Green Book p.37–38 §Bayes' Formula.",
       "engineCheck": {
         "module": "src/engine/bayes.ts",
-        "fn": "naturalFrequencies",
-        "args": {
-          "prior": {
-            "n": 1,
-            "d": 100
-          },
-          "sensitivity": {
-            "n": 99,
-            "d": 100
-          },
-          "specificity": {
-            "n": 99,
-            "d": 100
-          },
-          "population": 10000,
-          "field": "fp"
-        },
+        "calls": [
+          "formatRational(naturalFrequencies(1/100, 99/100, 99/100, 10000).fp)"
+        ],
         "answer": "99",
         "verified": true
       },
@@ -3242,23 +2575,9 @@
       "source": "Natural-frequency / confusion-matrix method (Gigerenzer 1995 — express Bayes as whole-number counts). GB-anchored: Green Book p.37–38 §Bayes' Formula.",
       "engineCheck": {
         "module": "src/engine/bayes.ts",
-        "fn": "naturalFrequencies",
-        "args": {
-          "prior": {
-            "n": 1,
-            "d": 100
-          },
-          "sensitivity": {
-            "n": 99,
-            "d": 100
-          },
-          "specificity": {
-            "n": 99,
-            "d": 100
-          },
-          "population": 10000,
-          "field": "ppv"
-        },
+        "calls": [
+          "formatRational(naturalFrequencies(1/100, 99/100, 99/100, 10000).ppv)"
+        ],
         "answer": "1/2",
         "verified": true
       },
@@ -3311,23 +2630,9 @@
       "source": "Natural-frequency / confusion-matrix method (Gigerenzer 1995 — express Bayes as whole-number counts). GB-anchored: Green Book p.37–38 §Bayes' Formula.",
       "engineCheck": {
         "module": "src/engine/bayes.ts",
-        "fn": "naturalFrequencies",
-        "args": {
-          "prior": {
-            "n": 1,
-            "d": 100
-          },
-          "sensitivity": {
-            "n": 99,
-            "d": 100
-          },
-          "specificity": {
-            "n": 99,
-            "d": 100
-          },
-          "population": 10000,
-          "field": "tn"
-        },
+        "calls": [
+          "formatRational(naturalFrequencies(1/100, 99/100, 99/100, 10000).tn)"
+        ],
         "answer": "9801",
         "verified": true
       },
@@ -3380,23 +2685,9 @@
       "source": "Natural-frequency / confusion-matrix method (Gigerenzer 1995 — express Bayes as whole-number counts). GB-anchored: Green Book p.37–38 §Bayes' Formula.",
       "engineCheck": {
         "module": "src/engine/bayes.ts",
-        "fn": "naturalFrequencies",
-        "args": {
-          "prior": {
-            "n": 1,
-            "d": 10
-          },
-          "sensitivity": {
-            "n": 99,
-            "d": 100
-          },
-          "specificity": {
-            "n": 99,
-            "d": 100
-          },
-          "population": 10000,
-          "field": "fp"
-        },
+        "calls": [
+          "formatRational(naturalFrequencies(1/10, 99/100, 99/100, 10000).fp)"
+        ],
         "answer": "90",
         "verified": true
       },
@@ -3449,23 +2740,9 @@
       "source": "Natural-frequency / confusion-matrix method (Gigerenzer 1995 — express Bayes as whole-number counts). GB-anchored: Green Book p.37–38 §Bayes' Formula.",
       "engineCheck": {
         "module": "src/engine/bayes.ts",
-        "fn": "naturalFrequencies",
-        "args": {
-          "prior": {
-            "n": 1,
-            "d": 100
-          },
-          "sensitivity": {
-            "n": 9,
-            "d": 10
-          },
-          "specificity": {
-            "n": 9,
-            "d": 10
-          },
-          "population": 100000,
-          "field": "ppv"
-        },
+        "calls": [
+          "formatRational(naturalFrequencies(1/100, 9/10, 9/10, 100000).ppv)"
+        ],
         "answer": "1/12",
         "verified": true
       },
@@ -3508,21 +2785,9 @@
       "source": "Tversky & Kahneman (1980/1982), the taxicab base-rate problem. en.wikipedia.org/wiki/Base_rate_fallacy. GB-anchored: Green Book p.37 §Bayes' Formula.",
       "engineCheck": {
         "module": "src/engine/bayes.ts",
-        "fn": "bayesUpdate",
-        "args": {
-          "prior": {
-            "n": 15,
-            "d": 100
-          },
-          "pEgivenH": {
-            "n": 80,
-            "d": 100
-          },
-          "pEgivenNotH": {
-            "n": 20,
-            "d": 100
-          }
-        },
+        "calls": [
+          "formatRational(bayesUpdate(15/100, 80/100, 20/100))"
+        ],
         "answer": "12/29",
         "verified": true
       },
@@ -3565,25 +2830,9 @@
       "source": "Green Book p.38 §\"Unfair coin\" (solve 2^k > 999 ⇒ k = 10; the 10th head is the one that crosses ½).",
       "engineCheck": {
         "module": "src/engine/bayes.ts",
-        "fn": "smallestKCross",
-        "args": {
-          "prior": {
-            "n": 1,
-            "d": 1000
-          },
-          "pEgivenH": {
-            "n": 1,
-            "d": 1
-          },
-          "pEgivenNotH": {
-            "n": 1,
-            "d": 2
-          },
-          "threshold": {
-            "n": 1,
-            "d": 2
-          }
-        },
+        "calls": [
+          "formatRational(smallestKCross(1/1000, 1, 1/2, 1/2))"
+        ],
         "answer": "10",
         "verified": true
       },
@@ -3626,25 +2875,9 @@
       "source": "Green Book p.38 §\"Unfair coin\", extended (solve 2^k/(2^k+999) ≥ 99/100 ⇒ 2^k ≥ 98,901 ⇒ k = 17).",
       "engineCheck": {
         "module": "src/engine/bayes.ts",
-        "fn": "smallestKCross",
-        "args": {
-          "prior": {
-            "n": 1,
-            "d": 1000
-          },
-          "pEgivenH": {
-            "n": 1,
-            "d": 1
-          },
-          "pEgivenNotH": {
-            "n": 1,
-            "d": 2
-          },
-          "threshold": {
-            "n": 99,
-            "d": 100
-          }
-        },
+        "calls": [
+          "formatRational(smallestKCross(1/1000, 1, 1/2, 99/100))"
+        ],
         "answer": "17",
         "verified": true
       },
@@ -3687,21 +2920,9 @@
       "source": "Prosecutor's fallacy / cold-hit DNA Bayes problem. en.wikipedia.org/wiki/Prosecutor%27s_fallacy. GB-anchored: Green Book p.37 §Bayes' Formula.",
       "engineCheck": {
         "module": "src/engine/bayes.ts",
-        "fn": "bayesUpdate",
-        "args": {
-          "prior": {
-            "n": 1,
-            "d": 10001
-          },
-          "pEgivenH": {
-            "n": 1,
-            "d": 1
-          },
-          "pEgivenNotH": {
-            "n": 1,
-            "d": 1000000
-          }
-        },
+        "calls": [
+          "formatRational(bayesUpdate(1/10001, 1, 1/1000000))"
+        ],
         "answer": "100/101",
         "verified": true
       },
@@ -3744,38 +2965,9 @@
       "source": "Monty Hall problem (host's action is informative). Green Book p.40 (Monty Hall → 2/3); en.wikipedia.org/wiki/Monty_Hall_problem.",
       "engineCheck": {
         "module": "src/engine/bayes.ts",
-        "fn": "bayesPosterior",
-        "args": {
-          "priors": [
-            {
-              "n": 1,
-              "d": 3
-            },
-            {
-              "n": 1,
-              "d": 3
-            },
-            {
-              "n": 1,
-              "d": 3
-            }
-          ],
-          "likelihoods": [
-            {
-              "n": 1,
-              "d": 2
-            },
-            {
-              "n": 1,
-              "d": 1
-            },
-            {
-              "n": 0,
-              "d": 1
-            }
-          ],
-          "index": 1
-        },
+        "calls": [
+          "formatRational(bayesPosterior([1/3, 1/3, 1/3], [1/2, 1, 0])[1])"
+        ],
         "answer": "2/3",
         "verified": true
       },
@@ -3818,38 +3010,9 @@
       "source": "Bertrand's box / three-card paradox. en.wikipedia.org/wiki/Bertrand%27s_box_paradox. GB-anchored: Green Book p.37 §Bayes' Formula.",
       "engineCheck": {
         "module": "src/engine/bayes.ts",
-        "fn": "bayesPosterior",
-        "args": {
-          "priors": [
-            {
-              "n": 1,
-              "d": 3
-            },
-            {
-              "n": 1,
-              "d": 3
-            },
-            {
-              "n": 1,
-              "d": 3
-            }
-          ],
-          "likelihoods": [
-            {
-              "n": 1,
-              "d": 1
-            },
-            {
-              "n": 1,
-              "d": 2
-            },
-            {
-              "n": 0,
-              "d": 1
-            }
-          ],
-          "index": 0
-        },
+        "calls": [
+          "formatRational(bayesPosterior([1/3, 1/3, 1/3], [1, 1/2, 0])[0])"
+        ],
         "answer": "2/3",
         "verified": true
       },
@@ -3868,7 +3031,7 @@
         "hintLadder": [
           "Think in faces, not cards: how many black faces are there, and which card are they on?",
           "BB can show black two ways; BW only one — weight accordingly.",
-          "P(BB | black face) = (1) ÷ (1 + 1/2 + 0) over the priors = 2/3."
+          "Give each box its equal prior, weight by how readily it shows a black face (BB once over, BW half, WW never), then divide BB's weighted term by the sum of all three — normalize, don't read the count off directly."
         ],
         "rubric": {
           "correctness": "Lands on the exact posterior 2/3 as a reduced fraction (not a decimal-only guess, not an off-by-normalization value).",
@@ -3884,7 +3047,5 @@
         "Generalize to n cards with mixed face colors."
       ]
     }
-  ],
-  "interviewerPrompt": "# Bayes' Rule — AI Quant Interviewer (interviewer prompt template)\n\nYou are a SENIOR QUANTITATIVE INTERVIEWER at a top trading desk (think Jane Street / Citadel / IMC), running a live probability interview on conditional probability and Bayes' rule. You are professional, probing, and fair — but you keep the candidate under realistic time pressure and you do not hand out the answer.\n\nThe platform injects ONE question per turn from the engine-verified pool (or the generator). For the current question you receive, as ground truth:\n- PROMPT: {{PROMPT}}\n- TIER: {{TIER}}            (hard | harder | brutal)\n- SOURCE: {{SOURCE}}        (context only — do not read it aloud)\n- HIDDEN.ANSWER: {{HIDDEN_ANSWER}}            (exact fraction; NEVER reveal)\n- HIDDEN.APPROACHES: {{HIDDEN_APPROACHES}}    (accepted solution paths)\n- HIDDEN.WRONG_TURNS: {{HIDDEN_WRONG_TURNS}}  (common misconceptions to watch for)\n- HIDDEN.HINT_LADDER: {{HIDDEN_HINT_LADDER}}  (rung 1 nudge → rung 2 stronger → rung 3 near-reveal)\n- HIDDEN.RUBRIC: {{HIDDEN_RUBRIC}}            (correctness / approach / rigor / communication / speed)\n- FOLLOW_UPS: {{FOLLOW_UPS}}\n\n## Grounding clause (CRITICAL — keeps you honest)\nTreat HIDDEN.ANSWER and HIDDEN.APPROACHES as the ONLY source of mathematical truth. Do NOT re-derive, re-compute, or \"double-check\" the math yourself — your arithmetic is not trusted; the engine-verified record is. Grade the candidate strictly against HIDDEN.RUBRIC. If the candidate's exact fraction equals HIDDEN.ANSWER (in any equivalent reduced form), it is correct; if it does not, it is not — never argue them into or out of the engine's answer with your own derivation.\n\n## Protocol\n1. Present exactly ONE question at a time — read PROMPT verbatim, then stop and let them work.\n2. Make them THINK ALOUD. Ask \"what's your prior?\", \"what's the likelihood of this evidence under each hypothesis?\", \"what are you conditioning on?\" Insist on reasoning, not just a number.\n3. NEVER reveal the answer, the fraction, or any rung of the hint ladder unprompted. Do not confirm partial numbers early.\n4. Probe assumptions and edge cases: independence, what the evidence actually says (P(E|H) vs P(H|E)), base rates, normalization, and whether the magnitude is believable.\n5. Escalating hints ONLY when the candidate is genuinely stuck (silent, going in circles, or has asked). Release HINT_LADDER strictly in order — rung one first, then rung two, then rung three — each only after further struggle. Reaching the final near-reveal rung should cost them on the \"speed\"/\"approach\" rubric dimensions.\n6. When they commit to an exact fraction, evaluate it against HIDDEN.ANSWER. If wrong, identify which WRONG_TURN they hit and ask a targeted question that exposes it — do not lecture.\n7. On a correct, well-justified answer, ask the FOLLOW_UPS in order to push toward the next tier (generalize, add evidence, adversarial edge case). Keep escalating until time or the candidate's depth runs out.\n8. CLOSE with structured feedback: one line per rubric dimension (correctness, approach, rigor, communication, speed), each rated Strong / Solid / Shaky / Missing with a one-clause reason, then a single overall score out of 10 and one concrete thing to improve. Base every rating ONLY on HIDDEN.RUBRIC.\n\n## Style\nTight, desk-floor register. No filler, no flattery, no emoji. Reward candidates who reach for natural frequencies, the odds form (prior odds × likelihood ratio), or a clean normalization — that is the quant tell. Penalize base-rate neglect and P(E|H)/P(H|E) confusion.\n\n## Injection\nAt runtime, replace every {{...}} placeholder with the drawn question's fields. This template itself contains NO answers — keep it that way.",
-  "generatorPrompt": "# Bayes' Rule — runtime question GENERATOR prompt\n\nGenerate ONE fresh, non-overlapping quant-interview question on conditional probability / Bayes' rule, ready to engine-verify and serve. This is the ONLY place the factory is allowed to invent a question — so it is fenced by two non-negotiable rules: real-quant-style AND engine-verify-before-serve.\n\n## Hard constraints\n1. REAL QUANT-STYLE ONLY. The question must read like something actually asked on a quant/ML interview, anchored to the Green Book conditional-probability/Bayes topic (Green Book Ch.4, p.37–42) and the quant-interview canon. NEVER invent an arbitrary engine-solvable puzzle that merely happens to verify. If you cannot anchor it to a recognized question family (below) or a sourced real interview question, do not emit it.\n2. PREFER PARAMETERIZING AN ENGINE-BACKED TEMPLATE. Only fall back to a free-form question when a template genuinely cannot express it, and even then it must be a sourced, canonical Bayes question.\n3. ENGINE-VERIFY-BEFORE-SERVE. Output the data needed to recompute the answer with src/engine/bayes.ts. The serving feature MUST run the engine on (engineCheck.fn, engineCheck.args), compare formatRational(result) to engineCheck.answer, and REJECT the question if they differ or if the engine call throws. Never show an unverified question to a candidate.\n4. NO OVERLAP, EVER (per student). You are given AVOID_LIST = {{AVOID_LIST}} (the student's already-seen fingerprints + the global pool fingerprints). Produce a question whose fingerprint is NOT in AVOID_LIST — vary the scenario AND the numbers, not just the wording. A reworded or parameter-trivial duplicate is a failure.\n5. EXACT RATIONALS ONLY. Every probability is an exact reduced fraction (use formatRational); choose parameters that stay well under 2^53 in any intermediate product. No decimals-as-truth, no floats.\n6. DIFFICULTY FLOOR = hard. Tag tier ∈ {hard, harder, brutal}; never below the lessons' mastery challenges. Always attach a follow-up chain.\n\n## Engine-backed templates (prefer these). engineCheck.fn ∈ {bayesUpdate, bayesPosterior, oddsUpdateProb, sequentialPosterior, naturalFrequencies, smallestKCross}:\n- screening-ppv: bayesUpdate(prevalence, sensitivity, 1−specificity) — P(condition | positive test) — base-rate / PPV screening\n- spam-precision: bayesUpdate(baseRate, recall, falsePositiveRate) — precision of a flag under class imbalance (spam / fraud / moderation / anomaly)\n- two-coins-sequential: sequentialPosterior(1/2, 1, 1/2, k) — fair vs double-headed coin after k heads → 2^k/(2^k+1)\n- rare-coin-n: sequentialPosterior(1/N, 1, 1/2, k) — N coins, one double-headed, k heads → 2^k/(2^k+N−1) (GB 1000-coins)\n- odds-multi-evidence: oddsToProb(∏ posteriorOdds(priorOdds, LR_i)) — stacking independent tests/signals in odds form (LR+ and LR−)\n- two-children: bayesUpdate(1/2^n, 1, P(≥1 boy | not all boys)) — Green Book boys-and-girls conditioning (≥1 boy vs a specific boy)\n- two-urns: bayesUpdate(P(A), P(red|A), P(red|B)) — pick an urn, draw a color, posterior on the urn\n- multi-source-defect: bayesPosterior(shares, defectRates)[j] — n factories/machines/suppliers, a defective item → P(source j)\n- natural-frequency-counts: naturalFrequencies(prevalence, sensitivity, specificity, population)[cell] — confusion-grid counts and PPV as whole numbers\n\n## Output (strict JSON, matching the pool's per-question record)\n{\n  \"id\": \"<unique-slug>\",\n  \"tier\": \"hard|harder|brutal\",\n  \"fingerprint\": \"<templateId>:<normalized-params>  |  sem:<slug>\",   // MUST be new vs AVOID_LIST\n  \"template\": { \"id\": \"<templateId>\", \"params\": { ... } },            // omit for free-form\n  \"prompt\": \"<the question text; NO answer inside>\",\n  \"source\": \"Green Book p.<n> §<x>  |  <real quant-interview source> (GB-anchored to §<x>)\",\n  \"engineCheck\": { \"module\": \"src/engine/bayes.ts\", \"fn\": \"<fn>\", \"args\": { ... rationals as {n,d} ... }, \"answer\": \"<formatRational>\", \"verified\": false },\n  \"hidden\": {\n    \"answer\": \"<exact fraction = engineCheck.answer>\",\n    \"approaches\": [\"accepted path 1\", \"...\"],\n    \"wrongTurns\": [\"misconception 1\", \"...\"],\n    \"hintLadder\": [\"nudge\", \"stronger\", \"near-reveal\"],\n    \"rubric\": { \"correctness\": \"...\", \"approach\": \"...\", \"rigor\": \"...\", \"communication\": \"...\", \"speed\": \"...\" }\n  },\n  \"followUps\": [\"push harder 1\", \"generalize 2\"]\n}\nSet verified=true ONLY after the feature has re-run the engine and confirmed formatRational(engine(args)) === answer. If verification fails, discard and regenerate. Keep the answer OUT of \"prompt\" and \"source\"; it lives only in engineCheck.answer / hidden.answer."
+  ]
 }

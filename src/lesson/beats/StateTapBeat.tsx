@@ -13,6 +13,7 @@ import { resolveFeedback, useHintLadder } from '../feedback'
 import { StateGraph } from '../konva/StateGraph'
 import { useElementWidth } from '../konva/useElementWidth'
 import { stateTapHint } from '../stateTapHints'
+import { isStateTapCorrect } from '../grading'
 
 const key = (from: string, on: 'H' | 'T') => `${from}-${on}`
 
@@ -52,9 +53,7 @@ export function StateTapBeat(props: BeatProps) {
     ladder.view.kind === 'hint' ? (ladder.view.level as 1 | 2 | 3) : 0
 
   function check() {
-    const allCorrect = transitions.every(
-      (t) => picks[key(t.from, t.on)] === correctOf(t.from, t.on),
-    )
+    const allCorrect = isStateTapCorrect({ transitions }, automaton, picks)
     if (allCorrect) {
       ladder.submitCorrect()
       setSolved(true)

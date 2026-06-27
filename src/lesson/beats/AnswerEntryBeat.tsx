@@ -7,10 +7,7 @@ import { useState } from 'react'
 import type { BeatProps } from './types'
 import { BeatShell } from '../BeatShell'
 import { resolveFeedback, useHintLadder } from '../feedback'
-
-// Normalize for comparison: trim, lowercase, strip all whitespace. Authors list
-// each accepted form explicitly (e.g. ["1/2", "0.5"]) since these don't unify.
-const norm = (s: string) => s.trim().toLowerCase().replace(/\s+/g, '')
+import { norm, gradeAcceptFields } from '../grading'
 
 export function AnswerEntryBeat(props: BeatProps) {
   const { beat, pattern, isLast, onAdvance } = props
@@ -34,9 +31,7 @@ export function AnswerEntryBeat(props: BeatProps) {
   const allFilled = fields.every((f) => (values[f.id] ?? '').trim() !== '')
 
   function check() {
-    const ok = fields.every((f) =>
-      f.accept.map(norm).includes(norm(values[f.id] ?? '')),
-    )
+    const ok = gradeAcceptFields(fields, values)
     if (ok) {
       ladder.submitCorrect()
       setSolved(true)

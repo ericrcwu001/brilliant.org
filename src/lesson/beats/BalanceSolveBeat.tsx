@@ -11,8 +11,8 @@ import { resolveFeedback } from '../feedback'
 import type { FeedbackView } from '../FeedbackStrip'
 import type { CanonicalRecurrence, StateId } from '../../engine/types'
 import { balanceModel } from './balanceModel'
+import { isBalanceSolved } from '../grading'
 
-const EPSILON = 0.001
 const MAX_TILT_DEG = 26
 
 // ── Display helpers ──────────────────────────────────────────────────────────
@@ -79,7 +79,7 @@ export function BalanceSolveBeat({
   const leftVal = candidate
   const rhsVal = rhsAt(candidate)
   const diff = leftVal - rhsVal
-  const isBalanced = Math.abs(diff) < EPSILON
+  const isBalanced = isBalanceSolved({ interaction: { solveState: interaction?.solveState } }, automaton, candidate)
 
   // Tilt angle: proportional to (left − rhs), scaled by domain span, clamped.
   const span = max - min || 1

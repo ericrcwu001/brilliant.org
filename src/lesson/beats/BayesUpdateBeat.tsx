@@ -15,6 +15,7 @@ import {
 } from '../../engine/bayes'
 import { ratSub } from '../../engine/automaton'
 import type { Rational } from '../../engine/types'
+import { isBayesUpdateCorrect, bayesFocalCount } from '../grading'
 
 const ONE: Rational = { n: 1, d: 1 }
 
@@ -357,11 +358,8 @@ function TreeSmallDisplay({
   onAdvance: () => void
   props: BeatProps
 }) {
-  const priors = ix.priors ?? [{ n: 1, d: 2 }, { n: 1, d: 2 }]
-  const likelihoods = ix.likelihoods ?? [{ n: 1, d: 1 }, { n: 1, d: 2 }]
   const population = ix.population ?? 3
-  const post = bayesPosterior(priors, likelihoods)
-  const focalCount = Math.round((post[0].n / post[0].d) * population)
+  const focalCount = bayesFocalCount({ hero: beat.hero, interaction: ix })
 
   const [tapped, setTapped] = useState<Set<number>>(new Set())
   const [solved, setSolved] = useState(false)
@@ -391,9 +389,7 @@ function TreeSmallDisplay({
 
   function check() {
     // Correct iff exactly the first focalCount icons are all tapped.
-    const correct =
-      tapped.size === focalCount &&
-      Array.from({ length: focalCount }, (_, i) => i).every((i) => tapped.has(i))
+    const correct = isBayesUpdateCorrect({ hero: beat.hero, interaction: ix }, tapped)
     if (correct) {
       ladder.submitCorrect()
       setSolved(true)

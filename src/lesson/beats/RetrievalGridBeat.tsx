@@ -10,6 +10,7 @@ import type { BeatProps } from './types'
 import { BeatShell } from '../BeatShell'
 import { resolveFeedback, useHintLadder } from '../feedback'
 import { SPRING } from '../../motion/tokens'
+import { isRetrievalGridCorrect } from '../grading'
 
 type DraggableTileProps = {
   className: string
@@ -123,7 +124,7 @@ export function RetrievalGridBeat(props: BeatProps) {
   const allAssigned = pairs.every((_, i) => assign[i] != null)
 
   function check() {
-    const ok = pairs.every((p, i) => assign[i] === p.right)
+    const ok = isRetrievalGridCorrect({ pairs }, assign)
     if (ok) {
       ladder.submitCorrect()
       setSolved(true)

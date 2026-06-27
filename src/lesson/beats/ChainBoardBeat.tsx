@@ -21,80 +21,30 @@ import {
   formatVector,
 } from '../../engine/markov'
 import type { Rational } from '../../engine/types'
-import { reduce, ratAdd, ratMul } from '../../engine/automaton'
+import { ratAdd } from '../../engine/automaton'
 import { ChainGraph } from '../konva/ChainGraph'
 import { chapterColor } from '../chapters'
+import {
+  parseFrac,
+  isChainBoardCorrect,
+} from '../grading'
 
 type ChainIx = Extract<BeatProps['beat']['interaction'], { type: 'chainBoard' }>
 
 const GRAPH_W = 320
 const GRAPH_H = 160
 
-// ── Utility: argmax over a Rational array (EXACT — no floats on a graded path) ─
+// ── Module-level helpers (re-exported for back-compat with existing tests) ────
+// These live in grading.ts; re-exported here so test imports keep working.
 // eslint-disable-next-line react-refresh/only-export-components
-export function argmax(v: Rational[]): number {
-  let best = 0
-  for (let i = 1; i < v.length; i++) {
-    // v[i] > v[best]  ⇔  v[i].n·v[best].d > v[best].n·v[i].d  (exact cross-multiply)
-    if (v[i].n * v[best].d > v[best].n * v[i].d) best = i
-  }
-  return best
-}
+export { parseFrac, argmax, returnProbability, periodicVerdict } from '../grading'
 
 // ── Shared percent helper (bar widths only) ───────────────────────────────────
 function pct(r: Rational): number {
   return r.d === 0 ? 0 : Math.min(100, Math.round((r.n / r.d) * 100))
 }
 
-// ── Module-level helpers (exported for the interaction test) ──────────────────
-
-// Normalize a typed answer (mirrors AnswerEntryBeat).
-const normAns = (s: string) => s.trim().toLowerCase().replace(/\s+/g, '')
-
-// Return probability of `home` (a transient state): make `home` absorbing, then
-// f_home = Σ_j P[home][j]·P(reach home before a wall | start j). Composes the
-// engine's absorptionProbabilities — markov.ts is NOT modified.
-// eslint-disable-next-line react-refresh/only-export-components
-export function returnProbability(P: Rational[][], home: number, walls: number[]): Rational {
-  const n = P.length
-  const absorbing = [home, ...walls.filter((w) => w !== home)]
-  const Pmod = P.map((row, i) =>
-    i === home ? row.map((_, j) => ({ n: j === home ? 1 : 0, d: 1 })) : row,
-  )
-  const B = absorptionProbabilities(Pmod, absorbing)
-  const transient = P.map((_, i) => i).filter((i) => !absorbing.includes(i))
-  const rowOf = new Map(transient.map((s, idx) => [s, idx]))
-  let f: Rational = { n: 0, d: 1 }
-  for (let j = 0; j < n; j++) {
-    if (P[home][j].n === 0) continue
-    const g: Rational =
-      j === home
-        ? { n: 1, d: 1 }
-        : absorbing.includes(j)
-          ? { n: 0, d: 1 }
-          : B[rowOf.get(j)!][0]
-    f = ratAdd(f, ratMul(P[home][j], g))
-  }
-  return f
-}
-
-// Verdict for the periodic-trap classify task.
-// eslint-disable-next-line react-refresh/only-export-components
-export function periodicVerdict(P: Rational[][]): 'oscillates' | 'converges' {
-  const cls = classifyStates(P)
-  const recPeriod = (cls.find((c) => c.kind !== 'transient') ?? cls[0]).period
-  return recPeriod > 1 ? 'oscillates' : 'converges'
-}
-
-// Parse a typed fraction "a/b" (or integer "a") → reduced Rational; null if unparseable. EXPORTED for the test.
-// eslint-disable-next-line react-refresh/only-export-components
-export function parseFrac(s: string): Rational | null {
-  const t = s.trim()
-  const m = /^(-?\d+)\s*\/\s*(\d+)$/.exec(t)
-  if (m) { const d = Number(m[2]); return d === 0 ? null : reduce(Number(m[1]), d) }
-  if (/^-?\d+$/.test(t)) return { n: Number(t), d: 1 }
-  return null
-}
+// Local eqRat used by MatrixDisplay build grading via isChainBoardCorrect.
 const eqRat = (a: Rational, b: Rational) => a.n * b.d === b.n * a.d
 
 // ── DiagramDisplay ────────────────────────────────────────────────────────────
@@ -201,22 +151,18 @@ function DiagramDisplay({
   }
 
   // ── Graded path ────────────────────────────────────────────────────────────
-  const { task, cell, absorbing: absorbingStates, damping } = ix
-  const defaultDamping: Rational = damping ?? { n: 85, d: 100 }
+  const { task, cell, absorbing: absorbingStates } = ix
 
   function check() {
     let correct = false
     if (task === 'entry' && cell && tappedEdge) {
-      correct = tappedEdge.from === cell.row && tappedEdge.to === cell.col
+      correct = isChainBoardCorrect(beat, { kind: 'edge', from: tappedEdge.from, to: tappedEdge.to })
     } else if (task === 'classify') {
-      const classes = classifyStates(P)
-      correct = classes.every((sc) => nodeClass[sc.index] === sc.kind)
+      correct = isChainBoardCorrect(beat, { kind: 'nodeClasses', classes: nodeClass })
     } else if (task === 'pagerank') {
-      const pr = pagerank(P, defaultDamping)
-      correct = tappedNode !== null && tappedNode === argmax(pr)
+      correct = tappedNode !== null && isChainBoardCorrect(beat, { kind: 'node', index: tappedNode })
     } else if (task === 'absorption') {
-      const f = returnProbability(P, cell?.row ?? 0, absorbingStates ?? [])
-      correct = normAns(absInput) === normAns(formatRational(f))
+      correct = isChainBoardCorrect(beat, { kind: 'text', value: absInput })
     }
     if (correct) {
       ladder.submitCorrect()
@@ -471,9 +417,7 @@ function MatrixDisplay({
     const canCheck = allFilled && allRowsOne
 
     const check = () => {
-      const correct = parsed.every((row, i) =>
-        row.every((c, j) => c !== null && eqRat(c as Rational, P[i][j])),
-      )
+      const correct = isChainBoardCorrect(beat, { kind: 'matrix', cells: parsed })
       if (correct) { ladder.submitCorrect(); setSolved(true) } else { ladder.submitWrong() }
     }
 
@@ -670,10 +614,10 @@ function PowersDisplay({
 
   function check() {
     if (ix.task === 'classify') {
-      const correct = verdict !== null && verdict === periodicVerdict(P)
+      const correct = verdict !== null && isChainBoardCorrect(beat, { kind: 'verdict', value: verdict })
       if (correct) { ladder.submitCorrect(); setSolved(true) } else { ladder.submitWrong() }
     } else if (tappedCell && cell) {
-      const correct = tappedCell.row === cell.row && tappedCell.col === cell.col
+      const correct = isChainBoardCorrect(beat, { kind: 'cell', row: tappedCell.row, col: tappedCell.col })
       if (correct) { ladder.submitCorrect(); setSolved(true) } else { ladder.submitWrong() }
     }
   }
@@ -875,7 +819,7 @@ function DistributionDisplay({
   const target = formatRational(stationary[cellRow])
 
   function check() {
-    const correct = normAns(shareInput) === normAns(target)
+    const correct = isChainBoardCorrect(beat, { kind: 'text', value: shareInput })
     if (correct) { ladder.submitCorrect(); setSolved(true) } else { ladder.submitWrong() }
   }
 
@@ -1032,7 +976,7 @@ function StationaryDisplay({
   if (isPageRank) {
     const prBars = pagerank(P, liveDamping)
     const check = () => {
-      const correct = tappedChoice !== null && tappedChoice === (ix.headline === 'unique')
+      const correct = tappedChoice !== null && isChainBoardCorrect(beat, { kind: 'bool', value: tappedChoice })
       if (correct) { ladder.submitCorrect(); setSolved(true) } else { ladder.submitWrong() }
     }
     const primary = solved
@@ -1086,10 +1030,8 @@ function StationaryDisplay({
 
   const check = () => {
     const correct = reversibleChoice
-      ? (tappedChoice !== null && tappedChoice === db.reversible)
-      : vectorMode
-      ? normAns(piInput) === normAns(formatVector(db.pi))
-      : normAns(piInput) === normAns(formatRational(db.pi[col]))
+      ? (tappedChoice !== null && isChainBoardCorrect(beat, { kind: 'bool', value: tappedChoice }))
+      : isChainBoardCorrect(beat, { kind: 'text', value: piInput })
     if (correct) { ladder.submitCorrect(); setSolved(true) } else { ladder.submitWrong() }
   }
   const interacted = reversibleChoice ? tappedChoice !== null : piInput.trim() !== ''

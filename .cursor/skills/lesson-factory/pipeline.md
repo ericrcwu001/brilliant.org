@@ -15,6 +15,13 @@ ships autonomously).
   `firebase` auth, auto-generate `.env.dev`, dev-routes flag, seed credentials (ADC), and resolve the
   dev URL. Idempotent; if any **credential login is missing, the Manager Slack-DMs the user the exact
   terminal commands** and pauses until they reply.
+- **`OPENAI_API_KEY` secret preflight — HARD-gates every functions deploy.** Before any functions deploy
+  to a project `<p>`, hard-check the secret: `firebase functions:secrets:access OPENAI_API_KEY --project <p>`.
+  **Set** → include `functions` in that project's deploy (the predeploy hook bundles the interview pack and
+  the live interview activates). **Absent** → deploy `--only hosting,firestore` only and flag
+  functions-deploy + secret-set as a **remaining human step** (matches HANDOFF.md); **never** silently
+  deploy functions without it (that ships a `mintInterviewToken` that errors at runtime). Full rule +
+  commands: `deploy.md` → "OPENAI_API_KEY secret — HARD preflight".
 - Confirm this repo is clean and on `main`. **Keep it on `main` for the entire run** — never
   `git switch` this checkout. Create the concept branch in a **worktree outside the repo** and work
   there: `git worktree add -b concept/<slug> ../lf-<slug> main`. All concept-level artifacts, builds,

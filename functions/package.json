@@ -10,7 +10,8 @@
     "build": "tsc",
     "build:watch": "tsc --watch",
     "test": "vitest run",
-    "serve": "npm run build && firebase emulators:start --only functions"
+    "serve": "npm run build && firebase emulators:start --only functions",
+    "interview:demo": "tsx scripts/interview-demo-bot.ts"
   },
   "dependencies": {
     "firebase-admin": "^13.10.0",
@@ -19,7 +20,10 @@
   },
   "devDependencies": {
     "@types/node": "^22.10.0",
+    "@types/ws": "^8",
+    "tsx": "^4",
     "typescript": "^5.7.3",
-    "vitest": "^4.1.9"
+    "vitest": "^4.1.9",
+    "ws": "^8"
   }
 }

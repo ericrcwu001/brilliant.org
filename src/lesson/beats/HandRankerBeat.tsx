@@ -12,6 +12,7 @@ import type { BeatProps } from './types'
 import { BeatShell } from '../BeatShell'
 import { resolveFeedback, useHintLadder } from '../feedback'
 import { probabilityFromCounts } from '../../engine/combinatorics'
+import { correctRanking, isHandRankerCorrect } from '../grading'
 
 // Deterministic seeded shuffle — returns a permutation of [0..n-1] driven by
 // the beatId string so the initial display order is stable across server/client.
@@ -49,13 +50,7 @@ export function HandRankerBeat(props: BeatProps) {
   const order = hr?.order ?? 'rarestFirst'
 
   // Engine-correct order: sort by favorable ascending (rarestFirst) or descending.
-  const correctOrder = hands
-    .map((_, i) => i)
-    .sort((a, b) =>
-      order === 'rarestFirst'
-        ? hands[a]!.favorable - hands[b]!.favorable
-        : hands[b]!.favorable - hands[a]!.favorable,
-    )
+  const hrIx = { hands, total, order }
 
   // Seeded-shuffled source pile so initial display ≠ correct answer.
   const displayOrder = seededShuffle(hands.length, beat.beatId)
@@ -84,12 +79,12 @@ export function HandRankerBeat(props: BeatProps) {
   const allFilled = ranking.every((r) => r !== null)
 
   function gradeRanking(r: (number | null)[]) {
-    const isCorrect = r.every((idx, slot) => idx === correctOrder[slot])
+    const isCorrect = isHandRankerCorrect(hrIx, r)
     if (isCorrect) {
       ladder.submitCorrect()
       setSolved(true)
       setLiveMsg(
-        `Correct! ${correctOrder.map((i) => hands[i]!.label).join(', ')}`,
+        `Correct! ${correctRanking(hrIx).map((i) => hands[i]!.label).join(', ')}`,
       )
     } else {
       ladder.submitWrong()

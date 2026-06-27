@@ -8,8 +8,7 @@ import type { BeatProps } from './types'
 import { BeatShell } from '../BeatShell'
 import { resolveFeedback, useHintLadder } from '../feedback'
 import { MathText, mathToPlain } from '../MathText'
-
-const norm = (s: string) => s.trim().toLowerCase().replace(/\s+/g, '')
+import { norm, gradeAcceptFields } from '../grading'
 
 export function MasteryChallengeBeat(props: BeatProps) {
   const { beat, pattern, isLast, onAdvance } = props
@@ -33,9 +32,7 @@ export function MasteryChallengeBeat(props: BeatProps) {
   const allFilled = fields.every((f) => (values[f.id] ?? '').trim() !== '')
 
   function check() {
-    const ok = fields.every((f) =>
-      f.accept.map(norm).includes(norm(values[f.id] ?? '')),
-    )
+    const ok = gradeAcceptFields(fields, values)
     if (ok) {
       ladder.submitCorrect()
       setSolved(true)

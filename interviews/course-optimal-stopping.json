@@ -2769,7 +2769,7 @@
         "hintLadder": [
           "Write the large-n success as a function of the skip fraction x = r/n.",
           "It is approximately x·ln(1/x). Maximize it.",
-          "The maximizer and the maximum value are both 1/e ≈ 0.368."
+          "Both the maximizer and the maximum value come out equal: differentiate x·ln(1/x), set the derivative to zero, and solve for x — the optimal success probability equals that same x."
         ],
         "rubric": {
           "correctness": "matches the engine value exactly (exact rational or the stated integer cutoff)",

@@ -12,6 +12,7 @@ import { resolveFeedback, useHintLadder } from '../feedback'
 import type { FeedbackView } from '../feedback'
 import { useReducedMotion } from '../useReducedMotion'
 import { unionSize, inclusionExclusion } from '../../engine/combinatorics'
+import { isVennCounterCorrect } from '../grading'
 
 const HERO_DURATION_MS = 600
 const VENN_R = 38
@@ -158,7 +159,7 @@ export function VennCounterBeat(props: BeatProps) {
 
   // === Graded check ===
   function check() {
-    const ok = accept!.some((acc) => acc === String(union))
+    const ok = isVennCounterCorrect({ accept }, union)
     if (ok) {
       ladder.submitCorrect()
       setSolved(true)

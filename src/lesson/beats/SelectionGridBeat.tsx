@@ -11,8 +11,7 @@ import { BeatShell } from '../BeatShell'
 import { resolveFeedback, useHintLadder } from '../feedback'
 import { useReducedMotion } from '../useReducedMotion'
 import { nCk, nPk, factorial } from '../../engine/combinatorics'
-
-const norm = (s: string) => s.trim().toLowerCase().replace(/\s+/g, '')
+import { isSelectionGridCorrect } from '../grading'
 
 export function SelectionGridBeat(props: BeatProps) {
   const { beat, pattern, isLast, onAdvance } = props
@@ -82,7 +81,7 @@ export function SelectionGridBeat(props: BeatProps) {
   }
 
   function submit() {
-    const ok = accept!.map(norm).includes(norm(count))
+    const ok = isSelectionGridCorrect({ n, k, order, accept }, count)
     if (ok) {
       ladder.submitCorrect()
       setSolved(true)

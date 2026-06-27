@@ -10,15 +10,10 @@ import type { BeatProps } from './types'
 import { BeatShell } from '../BeatShell'
 import { resolveFeedback, useHintLadder } from '../feedback'
 import { product } from '../../engine/combinatorics'
+import { isCountingTreeCorrect } from '../grading'
 
 // Mirrors --dur-tell (600 ms) from tokens.generated.ts — used for hero step cadence.
 const HERO_STEP_MS = 600
-
-// Normalize for numeric comparison: strip commas, spaces, and leading zeros.
-const normNum = (s: string): string => {
-  const stripped = s.replace(/[,\s]/g, '')
-  return stripped.replace(/^0+(\d)/, '$1') || stripped || '0'
-}
 
 interface ConnectorProps {
   parentCount: number
@@ -153,7 +148,7 @@ export function CountingTreeBeat(props: BeatProps) {
   }
 
   function check() {
-    const ok = accept!.some((a) => normNum(a) === normNum(value))
+    const ok = isCountingTreeCorrect({ levels, accept }, value)
     if (ok) {
       ladder.submitCorrect()
       setSolved(true)

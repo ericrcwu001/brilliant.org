@@ -176,6 +176,11 @@ spawn its child, the skill **hard-stops** and tells the user it cannot run in th
 - The Interview Pack is **committed and bundled into the live Functions runtime** when functions deploy
   (predeploy hook). It is not seeded to Firestore. Deploying only `--only hosting,firestore` skips
   the predeploy hook and does not update the live interview runtime (`interview-packs.md`, ADR-0008).
+- **Functions deploy is secret-gated.** Never deploy the interview Functions without the
+  `OPENAI_API_KEY` secret set on the target project — hard-check it first
+  (`firebase functions:secrets:access OPENAI_API_KEY --project <p>`); if absent, deploy
+  `--only hosting,firestore` and flag functions-deploy + secret-set as a remaining human step
+  (matches HANDOFF.md). The preflight rule lives in `pipeline.md` step-0 and `deploy.md`.
 - Keep the KMP/probability engine and any new engine **pure, dependency-free, exact** (no floats).
 - If a concept can't be Green-Book-anchored, or a beat genuinely resists being made interactive
   after honest attempts, the Manager escalates to the user — it does not fabricate or ship.

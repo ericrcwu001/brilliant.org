@@ -50,9 +50,9 @@ const TOKEN_TTL_SECONDS = 600 // expires_after.seconds at mint (>= session cap)
 // the attempt doc under the Firestore 1 MiB limit (CWE-770).
 const MAX_TRANSCRIPT_TURNS = 400
 const MAX_TRANSCRIPT_CHARS = 100_000
-const REALTIME_MODEL = 'gpt-realtime-2'
-const REALTIME_VOICE = 'marin'
-const GRADER_MODEL = 'gpt-5.5' // pin a snapshot for production
+export const REALTIME_MODEL = 'gpt-realtime-2'
+export const REALTIME_VOICE = 'marin'
+export const GRADER_MODEL = 'gpt-5.5' // pin a snapshot for production
 
 const FALLBACK_TZ = 'UTC'
 
@@ -135,7 +135,7 @@ const VOICE_CONVERSATION_GUIDE = `# Personality and Tone
 # Variety
 - Vary your acknowledgments and phrasing across turns ("Right." "Go on." "Okay.") to avoid sounding repetitive.`
 
-function buildLiveInstructions(pack: InterviewPack, question: Question): string {
+export function buildLiveInstructions(pack: InterviewPack, question: Question): string {
   const r = question.hidden.rubric
   return [
     VOICE_CONVERSATION_GUIDE,
@@ -324,7 +324,7 @@ interface GradeInterviewOutput {
 
 // JSON Schema for the grader's Structured Output (strict: every property in
 // `required`, additionalProperties:false everywhere). Mirrors InterviewReport.
-const INTERVIEW_REPORT_SCHEMA = {
+export const INTERVIEW_REPORT_SCHEMA = {
   type: 'object',
   properties: {
     dimensions: {
@@ -374,7 +374,7 @@ export function extractGradeJson(data: { output?: unknown; output_text?: unknown
   return ''
 }
 
-function buildGraderPrompt(question: Question, transcript: Turn[]): string {
+export function buildGraderPrompt(question: Question, transcript: Turn[]): string {
   const turns = transcript.map((t) => `[${t.role}] ${t.text}`).join('\n')
   return [
     'You are a rigorous technical interview evaluator.',

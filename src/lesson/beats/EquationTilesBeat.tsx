@@ -24,6 +24,7 @@ import {
   type RowDiagnosis,
 } from '../equationDiagnosis'
 import { Tooltip } from '../../ui/Tooltip'
+import { correctFill } from '../grading'
 
 type Rational = { n: number; d: number }
 
@@ -139,14 +140,8 @@ function slotTemplate(target: CanonicalRecurrence): SlotKind[] {
   return slots
 }
 
-// One valid canonical-order fill, used for the level-3 reveal and the
-// first-differing-slot glow.
-function correctFill(target: CanonicalRecurrence): string[] {
-  const out: string[] = [`const:${target.constant}`]
-  for (const term of target.terms) out.push(`prob:${ratStr(term.coeff)}`, `var:${term.var}`)
-  return out
-}
-
+// One valid canonical-order fill is now imported from grading.ts (correctFill).
+// targetStatic and prefilledSlotTip still use the local ratStr helper.
 function targetStatic(target: CanonicalRecurrence): string {
   const parts: string[] = []
   if (target.terms.length === 0 || target.constant !== 0) parts.push(String(target.constant))

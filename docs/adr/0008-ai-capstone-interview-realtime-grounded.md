@@ -1,6 +1,6 @@
 # AI capstone interview: OpenAI Realtime (browser-direct via ephemeral token), grounded in authored packs
 
-**Status:** Accepted — feature not yet built. Extends ADR-0005 (interview questions must be grounded + engine-verified).
+**Status:** Accepted — built and committed on `main`; deploy (functions + the `OPENAI_API_KEY` secret) pending per HANDOFF. Extends ADR-0005 (interview questions must be grounded + engine-verified).
 
 The per-concept **capstone interview** (a spoken AI quant mock-interview taken once after a concept's lessons are done — see `CONTEXT.md`) is built on the **OpenAI Realtime speech-to-speech API** rather than a turn-based STT → chat → TTS pipeline. The browser connects **directly** to OpenAI using a **short-lived ephemeral token** minted by a Cloud Function; the standing `OPENAI_API_KEY` never leaves the server (a Functions secret). The interviewer is grounded in a per-concept, engine-verified **interview pack** injected as hidden ground truth (it asks from the verified bank + qualitative follow-ups only, never inventing numeric problems); **grading is a separate server-side LLM pass** over the transcript that writes the report. The interview is **optional** and does not gate the medallion or unlocks.
 
