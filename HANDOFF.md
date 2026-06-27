@@ -4,7 +4,11 @@
 
 ## Cursor Cloud env setup (2026-06-27, COMMITTED on branch)
 
-Set up the Cloud Agent dev environment. Deps install via the startup update script (`npm install` root + `functions/`). Documented the full local run loop in `AGENTS.md` → `## Cursor Cloud specific instructions`: create gitignored `.env.development` (placeholder Firebase config + `VITE_USE_EMULATORS=true`), build functions (`npm run build --prefix functions`), `npx firebase emulators:start` (Java present), `npm run seed`, `npm run dev` (:5173). Verified end-to-end in this env: `vitest` 1112/1112 green; emulators + seed OK; signed up a fresh account through the Auth emulator and interacted with the Pattern Hitting Times lesson (MCQ feedback + Flip state-machine sim). `npm run lint` fails only on pre-existing `interviews/_build/*.ts` errors (not setup-related).
+Set up the Cloud Agent dev environment for **manual browser testing**. Update script: `npm ci` (root). Documented two run paths in `AGENTS.md` → `## Cursor Cloud specific instructions`:
+- **Fast path (no Firebase/Java):** `./node_modules/.bin/vite`, then browser-test the `/dev/home` Study Desk harness and `/dev/lesson/:id` (bundled fixtures; `/dev/*` skips `<AuthProvider>` in `App.tsx`). Verified live with no emulator running — both render and are interactive (scenario switcher works; lesson MCQ feedback + pattern-preview respond), no fatal console errors.
+- **Full path (auth/Firestore/Functions):** needs Java + `npm ci --prefix functions` + build functions, then `npx firebase emulators:start` → `npm run seed` → `npm run dev`.
+
+Gitignored `.env.development` placeholder values are required because `src/firebase/app.ts` runs `initializeApp`/`getAuth` at import. `vitest` 1112/1112 green; `npm run lint` fails only on pre-existing `interviews/_build/*.ts` errors (not setup-related).
 
 ## Interview Caption/Transcript UI Redesign (2026-06-26, NOT COMMITTED)
 
