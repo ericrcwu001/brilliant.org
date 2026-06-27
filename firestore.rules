@@ -123,6 +123,14 @@ service cloud.firestore {
         allow read: if isOwner(uid);
         allow write: if false;
       }
+
+      // Calibration trend (spec-12) — Cloud Functions only (Admin SDK bypasses
+      // rules). It feeds the celebrated Track-B score so it must be trusted; the
+      // client only reads `summary` by id (no query, no index).
+      match /calibration/{docId} {
+        allow read: if isOwner(uid);
+        allow write: if false;
+      }
     }
   }
 }

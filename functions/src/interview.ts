@@ -36,6 +36,16 @@ import {
 } from './interviewPack'
 import { drawQuestion } from './interviewDraw'
 import { localDateInTimezone, isValidTimezone } from './streaks'
+import {
+  scoreCalibration,
+  foldAttemptIntoTrend,
+  isCorrect,
+  MIN_CALIBRATION_N,
+  type CalibrationItem,
+  type CalibrationFormat,
+  type CalibrationResult,
+  type TrendSums,
+} from './calibration'
 
 const OPENAI_API_KEY = defineSecret('OPENAI_API_KEY')
 
@@ -320,6 +330,41 @@ interface GradeInterviewInput {
 interface GradeInterviewOutput {
   report: InterviewReport
   attemptId: string
+  // spec-12: the per-attempt calibration (Brier + predicted-vs-measured delta).
+  // RETURNED (not only written) so spec-23's report renders from this value rather
+  // than re-reading the attempt doc (README §4.5, gate Issue #10). When the attempt
+  // captured no confidence (Track A), this is the all-null zero-n result.
+  calibration: CalibrationResult
+}
+
+// Recompute the convenience denormals on a running-sum bucket (pooled or per-format)
+// after a fold (spec-12 §3.3). Brier/overconfidence/reliable are derived from the
+// sums so the client renders without dividing.
+function denormSums(s: TrendSums): {
+  n: number
+  brierSum: number
+  confidenceSum: number
+  correctSum: number
+  brier: number
+  meanConfidence: number
+  accuracy: number
+  overconfidence: number
+  reliable: boolean
+} {
+  const brier = s.brierSum / s.n
+  const meanConfidence = s.confidenceSum / s.n
+  const accuracy = s.correctSum / s.n
+  return {
+    n: s.n,
+    brierSum: s.brierSum,
+    confidenceSum: s.confidenceSum,
+    correctSum: s.correctSum,
+    brier,
+    meanConfidence,
+    accuracy,
+    overconfidence: meanConfidence - accuracy,
+    reliable: s.n >= MIN_CALIBRATION_N,
+  }
 }
 
 // JSON Schema for the grader's Structured Output (strict: every property in
@@ -468,20 +513,46 @@ export const gradeInterview = onCall(
     if (!report.hireSignal || !report.dimensions || typeof report.dimensions !== 'object')
       throw new HttpsError('internal', 'Grader returned an incomplete report')
 
-    // 5 — transaction: finalize attempt + seen-set + usage (reads before writes)
+    // 4b — calibration (spec-12). Build CalibrationItem[] from the transcript:
+    // each candidate turn carrying a finite spec-02 `confidence`. correct is
+    // binarized from the single per-attempt correctness dimension (isCorrect,
+    // NOT hireSignal — survives D11). hard = the drawn question's tier !== 'hard'.
+    // Every interview item is `voice` (gate #7, §3.2a) — keeps the interview delta
+    // separable from in-lesson typein/binary captures. Computed HERE (function body,
+    // not inside the tx closure) so `cal` survives to the return (gate Issue #10).
+    const correct = isCorrect(report.dimensions.correctness?.score ?? 0)
+    const hard = question.tier !== 'hard'
+    const calItems: CalibrationItem[] = transcript
+      .filter((t) => t.role === 'candidate' && Number.isFinite(t.confidence))
+      .map((t) => ({
+        confidence: t.confidence as number,
+        correct,
+        hard,
+        format: 'voice' as CalibrationFormat,
+      }))
+    const cal = scoreCalibration(calItems)
+
+    // 5 — transaction: finalize attempt + seen-set + usage + calibration trend
+    // (reads before writes).
     const stateRef = db.doc(`users/${uid}/interviewState/${conceptId}`)
     const usageRef = db.doc(`users/${uid}/interviewUsage/${usageDay}`)
+    const summaryRef = db.doc(`users/${uid}/calibration/summary`)
 
     await db.runTransaction(async (tx) => {
       const stateSnap = await tx.get(stateRef)
       const usageSnap = await tx.get(usageRef)
+      // Read the calibration trend BEFORE any write (only when this attempt has
+      // confidence to fold — Track A folds nothing).
+      const summarySnap = cal.n > 0 ? await tx.get(summaryRef) : null
 
       const seenIds: string[] = (stateSnap.data()?.seenQuestionIds ?? []) as string[]
       const prevSeconds = (usageSnap.data()?.secondsUsed ?? 0) as number
       const prevCount = (usageSnap.data()?.sessionCount ?? 0) as number
       const cappedDuration = Math.min(durationSec, SESSION_CAP_SECONDS)
 
-      // Write 1: finalize attempt (audio is NEVER stored)
+      // Write 1: finalize attempt (audio is NEVER stored). The per-attempt
+      // calibration block is added ONLY when cal.n > 0 (Track-A null-safe — no
+      // confidence ⇒ no block, no trend fold; spec-12 §3.2).
       tx.set(
         attemptRef,
         {
@@ -490,6 +561,7 @@ export const gradeInterview = onCall(
           report,
           hireSignal: report.hireSignal,
           durationSec: cappedDuration,
+          ...(cal.n > 0 ? { calibration: cal } : {}),
           gradedAt: FieldValue.serverTimestamp(),
           updatedAt: FieldValue.serverTimestamp(),
         },
@@ -519,8 +591,50 @@ export const gradeInterview = onCall(
         },
         { merge: true },
       )
+
+      // Write 4 (spec-12 §3.3): fold this attempt's items into the cross-concept
+      // calibration trend doc — same pure fold the Daily-Review reps use (running
+      // mean == batch mean across both sources). Only when cal.n > 0; summarySnap
+      // was read in the read phase above. Denormals recomputed pooled + per-format.
+      if (cal.n > 0 && summarySnap) {
+        const prior = (summarySnap.data() ?? {}) as {
+          n?: number
+          brierSum?: number
+          confidenceSum?: number
+          correctSum?: number
+          byFormat?: Partial<Record<CalibrationFormat, TrendSums>>
+        }
+        const folded = foldAttemptIntoTrend(
+          {
+            n: prior.n ?? 0,
+            brierSum: prior.brierSum ?? 0,
+            confidenceSum: prior.confidenceSum ?? 0,
+            correctSum: prior.correctSum ?? 0,
+            byFormat: prior.byFormat,
+          },
+          calItems,
+        )
+        const byFormatDenorm: Partial<Record<CalibrationFormat, ReturnType<typeof denormSums>>> = {}
+        for (const f of Object.keys(folded.byFormat) as CalibrationFormat[]) {
+          byFormatDenorm[f] = denormSums(folded.byFormat[f] as TrendSums)
+        }
+        tx.set(
+          summaryRef,
+          {
+            ...denormSums({
+              n: folded.n,
+              brierSum: folded.brierSum,
+              confidenceSum: folded.confidenceSum,
+              correctSum: folded.correctSum,
+            }),
+            byFormat: byFormatDenorm,
+            updatedAt: FieldValue.serverTimestamp(),
+          },
+          { merge: true },
+        )
+      }
     })
 
-    return { report, attemptId }
+    return { report, attemptId, calibration: cal }
   },
 )

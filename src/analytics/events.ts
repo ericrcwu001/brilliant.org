@@ -200,4 +200,13 @@ export const analytics = {
     conceptId: string
     stage: 'mint' | 'connect' | 'grade'
   }) => track('interview_error', p),
+  // Calibration scored after a graded interview attempt returns (spec-12 / D6).
+  // `n`/`brier`/`overconfidence` are the per-attempt voice-bucket signal; fired by
+  // the client when gradeInterview returns its `calibration`. Passive — no-op in dev.
+  calibrationComputed: (p: {
+    conceptId: string
+    n: number
+    brier: number | null
+    overconfidence: number | null
+  }) => track('calibration_computed', p),
 }

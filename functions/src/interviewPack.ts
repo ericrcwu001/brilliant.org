@@ -147,6 +147,11 @@ export interface Turn {
   text: string
   ts: number // unix ms
   final: boolean
+  // Self-reported confidence on a candidate answer (spec-02 / D6). [0.5,1.0]
+  // (ConfidenceRating's CONFIDENCE_SCALE). Optional; present only when the
+  // quant-intensity gate is on. spec-12 reads transcript[i].confidence for
+  // per-attempt calibration. Mirror of src/content/interviewPack.ts Turn.
+  confidence?: number
 }
 
 // ── Projections (built explicitly so no field is ever forgotten or leaked) ─────
