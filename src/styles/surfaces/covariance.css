@@ -1,0 +1,313 @@
+/* ── CovarianceBoardBeat — joint pmf, scatter, corrVectors (concept-covariance)
+   Tokens only; no raw hex. All chapter accent resolves through var(--accent) /
+   var(--accent-tint) which the lesson shell injects as var(--ch5) for covariance
+   lessons (see shell.css .lesson[data-ch='ch5'] rule — mirrors ch5 assignment
+   already assumed by combinatorics-1.css).
+   Classes: covboard__* / covboard--*  */
+
+/* ── Root container ────────────────────────────────────────────────────────── */
+
+.covboard {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s3);
+}
+
+/* ── Readout strip (Cov, E[XY], sign chip) ────────────────────────────────── */
+
+.covboard__readout {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s2) var(--s3);
+  align-items: center;
+  padding: var(--s2) var(--s3);
+  background: var(--ergo-surface-2);
+  border-radius: var(--r-md);
+  font-family: var(--font-mono);
+  font-size: calc(13px * var(--fs));
+  font-variant-numeric: tabular-nums;
+  color: var(--ergo-ink-2);
+}
+
+.covboard__stat {
+  white-space: nowrap;
+}
+
+/* Sign chip: + / 0 / − with a glyph AND a word, never color-only */
+.covboard__sign-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s1);
+  padding: var(--s1) var(--s2);
+  border-radius: var(--r-pill);
+  font-size: calc(12px * var(--fs));
+  font-weight: 600;
+  border: 1px solid transparent;
+}
+
+.covboard__sign-chip--pos {
+  background: var(--accent-tint);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.covboard__sign-chip--neg {
+  background: var(--ergo-surface-2);
+  border-color: var(--ergo-line-2);
+  color: var(--ergo-ink-2);
+}
+
+.covboard__sign-chip--zero {
+  background: var(--ergo-surface);
+  border-color: var(--ergo-line);
+  color: var(--ergo-ink-3);
+}
+
+/* ── Joint PMF table ───────────────────────────────────────────────────────── */
+
+.covboard__table-wrap {
+  overflow-x: auto;
+  border-radius: var(--r-md);
+  border: 1px solid var(--ergo-line);
+}
+
+.covboard__table {
+  border-collapse: collapse;
+  min-width: 100%;
+  table-layout: auto;
+}
+
+.covboard__th {
+  padding: var(--s2) var(--s3);
+  font-family: var(--font-mono);
+  font-size: calc(12px * var(--fs));
+  font-weight: 600;
+  color: var(--ergo-ink-2);
+  background: var(--ergo-surface-2);
+  border: 1px solid var(--ergo-line);
+  text-align: center;
+  white-space: nowrap;
+}
+
+.covboard__th--corner {
+  font-size: calc(11px * var(--fs));
+  color: var(--ergo-ink-3);
+}
+
+.covboard__th--x,
+.covboard__th--y {
+  min-width: 44px;
+  position: relative;
+}
+
+/* Marginal bars on column headers (X-marginal) */
+.covboard__margbar-wrap {
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  height: 32px;
+  margin-bottom: var(--s1);
+}
+
+.covboard__margbar-wrap--y {
+  height: auto;
+  width: 32px;
+  align-items: center;
+  margin-bottom: 0;
+  margin-right: var(--s1);
+}
+
+.covboard__margbar--x {
+  width: 14px;
+  min-height: 2px;
+  background: var(--accent-tint);
+  border: 1px solid var(--accent);
+  border-radius: var(--r-xs) var(--r-xs) 0 0;
+}
+
+.covboard__margbar--y {
+  height: 14px;
+  min-width: 2px;
+  background: var(--accent-tint);
+  border: 1px solid var(--accent);
+  border-radius: var(--r-xs) 0 0 var(--r-xs);
+}
+
+.covboard__td {
+  padding: 0;
+  border: 1px solid var(--ergo-line);
+  text-align: center;
+}
+
+/* Cell button — 44×44px tap target */
+.covboard__cell-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-width: 44px;
+  min-height: 44px;
+  padding: var(--s2);
+  border: none;
+  background: transparent;
+  color: var(--accent);
+  font-family: var(--font-mono);
+  font-size: calc(13px * var(--fs));
+  cursor: pointer;
+  border-radius: 0;
+  transition:
+    background var(--dur-micro) var(--ease-out),
+    color var(--dur-micro) var(--ease-out);
+}
+
+.covboard__cell-btn:hover {
+  background: var(--accent-tint);
+}
+
+.covboard__cell-btn:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+  z-index: 1;
+  position: relative;
+}
+
+.covboard__cell-val {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  min-height: 44px;
+  padding: var(--s2);
+  font-family: var(--font-mono);
+  font-size: calc(13px * var(--fs));
+  color: var(--ergo-ink-2);
+}
+
+/* ── Hint line ────────────────────────────────────────────────────────────── */
+
+.covboard__hint {
+  font-size: calc(12px * var(--fs));
+  color: var(--ergo-ink-3);
+  margin: 0;
+}
+
+/* ── Scatter SVG ──────────────────────────────────────────────────────────── */
+
+.covboard--scatter .covboard__svg-wrap,
+.covboard--corrvectors .covboard__svg-wrap {
+  background: var(--ergo-surface);
+  border: 1px solid var(--ergo-line);
+  border-radius: var(--r-md);
+  overflow: hidden;
+}
+
+.covboard__svg {
+  display: block;
+  width: 100%;
+  max-width: 340px;
+  height: auto;
+}
+
+.covboard__axis {
+  stroke: var(--ergo-line-2);
+  stroke-width: 1;
+}
+
+.covboard__trendline {
+  stroke: var(--accent);
+  stroke-width: 1.5;
+  stroke-dasharray: 5 3;
+  opacity: 0.6;
+}
+
+.covboard__point {
+  fill: var(--accent);
+  transition: cx var(--dur-base) var(--ease-out), cy var(--dur-base) var(--ease-out);
+}
+
+/* ── CorrVectors SVG ──────────────────────────────────────────────────────── */
+
+.covboard__origin {
+  fill: var(--ergo-ink-2);
+}
+
+.covboard__vector {
+  stroke: var(--accent);
+  stroke-linecap: round;
+}
+
+.covboard__vlabel {
+  fill: var(--accent);
+  font-family: var(--font-sans);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.covboard__numberline {
+  stroke: var(--ergo-ink-3);
+  stroke-width: 1;
+}
+
+.covboard__nl-label {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  fill: var(--ergo-ink-3);
+}
+
+/* Attainable range bracket */
+.covboard__bracket {
+  fill: var(--accent);
+  border-radius: var(--r-xs);
+}
+
+/* Live ρ dot */
+.covboard__rhodot {
+  fill: var(--accent);
+  transition: cx var(--dur-base) var(--ease-out);
+}
+
+.covboard__rho-val {
+  fill: var(--accent);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 600;
+}
+
+/* ── Slider control ────────────────────────────────────────────────────────── */
+
+.covboard__control {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s2);
+  font-size: calc(13px * var(--fs));
+  font-family: var(--font-mono);
+  color: var(--ergo-ink-2);
+}
+
+.covboard__control input[type='range'] {
+  width: 100%;
+  min-height: 44px;
+  cursor: pointer;
+  accent-color: var(--accent);
+}
+
+/* ── Reduced-motion overrides ──────────────────────────────────────────────── */
+
+@media (prefers-reduced-motion: reduce) {
+  .covboard__margbar--x,
+  .covboard__margbar--y {
+    transition: none;
+  }
+
+  .covboard__cell-btn {
+    transition: none;
+  }
+
+  .covboard__point {
+    transition: none;
+  }
+
+  .covboard__rhodot {
+    transition: none;
+  }
+}

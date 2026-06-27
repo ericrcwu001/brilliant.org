@@ -16,6 +16,8 @@
 .lesson[data-ch='ch2'] { --accent: var(--ch2); --accent-tint: var(--ch2-tint); --accent-glow: rgba(13,148,136,.18); }
 .lesson[data-ch='ch3'] { --accent: var(--ch3); --accent-tint: var(--ch3-tint); --accent-glow: rgba(240,88,74,.18); }
 .lesson[data-ch='ch4'] { --accent: var(--ch4); --accent-tint: var(--ch4-tint); --accent-glow: rgba(224,152,46,.14); }
+/* ch5 — covariance (violet #7c5cf0 = 124,92,240). combinatorics-1.css already assumes this rule exists. */
+.lesson[data-ch='ch5'] { --accent: var(--ch5); --accent-tint: var(--ch5-tint); --accent-glow: rgba(124,92,240,.18); }
 
 .lesson {
   display: flex;
