@@ -1,0 +1,379 @@
+{
+  "lessonId": "lesson-game-theory-5",
+  "courseId": "course-game-theory",
+  "title": "Sequential Games & Backward Induction",
+  "patternOptions": ["H"],
+  "milestoneId": "game-theory-sequential",
+  "unlocks": "lesson-game-theory-6",
+  "schemaVersion": 1,
+  "beats": [
+    {
+      "beatId": "l5-recall",
+      "required": true,
+      "prompt": "Warm up: match each idea to its answer.",
+      "interaction": {
+        "type": "retrievalGrid",
+        "pairs": [
+          { "left": "Prisoner's Dilemma, one shot", "right": "(Defect, Defect)" },
+          { "left": "Going second in Penney's can win", "right": "7 to 1" },
+          { "left": "Solve a sequential game from the", "right": "end" }
+        ]
+      },
+      "feedback": {
+        "correct": "Right. Today: when players move in turn, solve the game tree from the end — subgame-perfect equilibrium.",
+        "hints": [
+          "One-shot Prisoner's Dilemma has a unique dominant-strategy equilibrium: both defect.",
+          "Penney's second-mover advantage reaches up to 7-to-1 odds.",
+          "The key idea in sequential games: fold the tree from the last move back to the root."
+        ]
+      }
+    },
+    {
+      "beatId": "l5-bet",
+      "required": true,
+      "prompt": "Five pirates find 100 gold coins. The most senior proposes how to split them; if ≥50% vote yes the proposal passes (the senior breaks ties). Pirates are rational, greedy, and self-preserving — an indifferent pirate votes NO. How many coins does the senior pirate keep?",
+      "interaction": {
+        "type": "prediction",
+        "options": ["About 20 (fair-ish)", "0 (thrown overboard)", "98"]
+      },
+      "feedback": {
+        "byOption": {
+          "About 20 (fair-ish)": {
+            "note": "Intuitive but wrong. With backward induction the senior engineers a coalition of exactly two cheap votes while keeping the lion's share."
+          },
+          "0 (thrown overboard)": {
+            "note": "Not quite — the senior uses backward induction to guarantee survival AND maximum coins by bribing exactly two pirates for 1 coin each."
+          },
+          "98": {
+            "note": "Yes — backward induction shows the senior needs only 2 additional votes. The cheapest are pirates 3 and 5, who would each get 0 if this proposal fails, so 1 coin apiece suffices. Senior keeps 98.",
+            "correct": true
+          }
+        }
+      }
+    },
+    {
+      "beatId": "l5-primer",
+      "required": false,
+      "track": "A",
+      "prompt": "One definition before the tree.",
+      "interaction": {
+        "type": "primer",
+        "variant": "custom",
+        "title": "Backward induction & subgame-perfect equilibrium",
+        "body": "In a sequential game, solve the LAST decision first: the player there picks whatever maximises their own payoff. Roll that result back to the previous decision node and repeat — each player anticipates every future reply. The resulting strategy profile is the subgame-perfect equilibrium (SPE): every threat and promise is credible because every continuation is optimal.",
+        "collapsible": true
+      },
+      "feedback": {
+        "correct": "Keep that in mind: start at the leaves, fold back to the root. The pirate game is backward induction at scale.",
+        "hints": [
+          "Solve the last move first, then fold back one step at a time.",
+          "A credible threat is one the player would actually carry out — backward induction enforces this.",
+          "Read and tap Continue."
+        ]
+      }
+    },
+    {
+      "beatId": "l5-win",
+      "required": true,
+      "prompt": "An entrant (Player 1) considers entering a market. If it enters, the incumbent (Player 2) can Fight or Accommodate. Solve the tree by backward induction to find the subgame-perfect equilibrium.",
+      "interaction": {
+        "type": "gameTree",
+        "root": {
+          "kind": "decision",
+          "player": 0,
+          "moves": [
+            {
+              "label": "Enter",
+              "child": {
+                "kind": "decision",
+                "player": 1,
+                "moves": [
+                  {
+                    "label": "Fight",
+                    "child": {
+                      "kind": "leaf",
+                      "payoff": [{ "n": -1, "d": 1 }, { "n": -1, "d": 1 }]
+                    }
+                  },
+                  {
+                    "label": "Accommodate",
+                    "child": {
+                      "kind": "leaf",
+                      "payoff": [{ "n": 2, "d": 1 }, { "n": 1, "d": 1 }]
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "label": "Stay out",
+              "child": {
+                "kind": "leaf",
+                "payoff": [{ "n": 0, "d": 1 }, { "n": 3, "d": 1 }]
+              }
+            }
+          ]
+        },
+        "players": ["Player 1", "Player 2"],
+        "headline": "2,1"
+      },
+      "feedback": {
+        "correct": "Correct. The incumbent's threat to Fight is not credible: if entry occurs, Accommodate (1 > −1) is optimal. Knowing this, the entrant enters. SPE: (Enter, Accommodate) = (2,1).",
+        "hints": [
+          "Start at the incumbent's node: Fight pays −1, Accommodate pays 1 — pick Accommodate.",
+          "Roll back to the entrant: Enter leads to (2,1), Stay out gives (0,3) — entrant gets 2 vs 0, so Enter.",
+          "SPE path: Enter → Accommodate, payoff (2,1). The 'fight' threat is empty."
+        ]
+      },
+      "hero": {
+        "slowFirst": true,
+        "structuralReadout": "Fold right: Accommodate beats Fight for the incumbent → entrant enters → (2,1).",
+        "reducedMotionFinalFrame": true
+      }
+    },
+    {
+      "beatId": "l5-scaffold",
+      "required": false,
+      "track": "A",
+      "prompt": "One-step tree: Player 1 can move A or B. Tap to fold by backward induction.",
+      "interaction": {
+        "type": "gameTree",
+        "root": {
+          "kind": "decision",
+          "player": 0,
+          "moves": [
+            {
+              "label": "A",
+              "child": {
+                "kind": "leaf",
+                "payoff": [{ "n": 3, "d": 1 }, { "n": 0, "d": 1 }]
+              }
+            },
+            {
+              "label": "B",
+              "child": {
+                "kind": "leaf",
+                "payoff": [{ "n": 1, "d": 1 }, { "n": 0, "d": 1 }]
+              }
+            }
+          ]
+        },
+        "players": ["Player 1", "Player 2"],
+        "headline": "3,0"
+      },
+      "feedback": {
+        "correct": "Player 1 picks A (3 > 1). SPE payoff: (3,0).",
+        "hints": [
+          "Player 1 compares A (payoff 3) to B (payoff 1).",
+          "Pick the higher payoff: A.",
+          "SPE = A, payoff (3,0)."
+        ]
+      }
+    },
+    {
+      "beatId": "l5-explore",
+      "required": true,
+      "prompt": "The centipede game: at each turn the active player can Take (ending the game) or Pass (handing control to the other player, who faces a doubled pot). Both would gain more by passing — but do they? Fold by backward induction.",
+      "interaction": {
+        "type": "gameTree",
+        "root": {
+          "kind": "decision",
+          "player": 0,
+          "moves": [
+            {
+              "label": "Take",
+              "child": {
+                "kind": "leaf",
+                "payoff": [{ "n": 1, "d": 1 }, { "n": 0, "d": 1 }]
+              }
+            },
+            {
+              "label": "Pass",
+              "child": {
+                "kind": "decision",
+                "player": 1,
+                "moves": [
+                  {
+                    "label": "Take",
+                    "child": {
+                      "kind": "leaf",
+                      "payoff": [{ "n": 0, "d": 1 }, { "n": 2, "d": 1 }]
+                    }
+                  },
+                  {
+                    "label": "Pass",
+                    "child": {
+                      "kind": "decision",
+                      "player": 0,
+                      "moves": [
+                        {
+                          "label": "Take",
+                          "child": {
+                            "kind": "leaf",
+                            "payoff": [{ "n": 3, "d": 1 }, { "n": 0, "d": 1 }]
+                          }
+                        },
+                        {
+                          "label": "Pass",
+                          "child": {
+                            "kind": "decision",
+                            "player": 1,
+                            "moves": [
+                              {
+                                "label": "Take",
+                                "child": {
+                                  "kind": "leaf",
+                                  "payoff": [{ "n": 0, "d": 1 }, { "n": 4, "d": 1 }]
+                                }
+                              },
+                              {
+                                "label": "Pass",
+                                "child": {
+                                  "kind": "leaf",
+                                  "payoff": [{ "n": 2, "d": 1 }, { "n": 2, "d": 1 }]
+                                }
+                              }
+                            ]
+                          }
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "players": ["Player 1", "Player 2"],
+        "headline": "1,0"
+      },
+      "feedback": {
+        "correct": "SPE: Take immediately, payoff (1,0). Fold from the right: D→Take (4>2); C→Take (3>0); B→Take (2>0); A→Take (1>0). Both would be better at (2,2) — rational play unravels cooperation from the end.",
+        "hints": [
+          "Start at node D (Player 2): Take gives 4, Pass gives 2 — Take.",
+          "Roll back to C (Player 1): Take gives 3; Pass leads to D where P1 gets 0 — Take.",
+          "B (Player 2): Take gives 2; Pass leads to C where P2 gets 0 — Take. Then A: Take (1) beats Pass (P1 gets 0 at B's SPE)."
+        ]
+      },
+      "hero": {
+        "slowFirst": true,
+        "structuralReadout": "Fold right-to-left: D→Take, C→Take, B→Take, A→Take — rational play never cooperates.",
+        "reducedMotionFinalFrame": true
+      }
+    },
+    {
+      "beatId": "l5-model",
+      "required": true,
+      "prompt": "Three lenses on backward induction. What is the key phrase?",
+      "interaction": {
+        "type": "tripletReveal",
+        "value": "fold from the end",
+        "display": "cards",
+        "lenses": [
+          {
+            "label": "SPE vs Nash",
+            "body": "Every Nash equilibrium is self-consistent, but some rely on non-credible threats (e.g. 'I'll fight if you enter'). SPE rules those out by requiring optimality at every subgame — backward induction implements this automatically."
+          },
+          {
+            "label": "Anticipate the future",
+            "body": "Backward induction doesn't mean 'grab now'. It means reason all the way to the last move, then act given what you know every future player will do. The centipede game shows the tragic result: rational logic unravels cooperation."
+          },
+          {
+            "label": "The pirate logic",
+            "body": "The senior pirate buys the cheapest coalition of votes. Pirates who would get 0 in the fallback game accept 1 coin. This is backward induction at scale: the senior knows the fallback allocation for every sub-game of 2, 3, 4 pirates before proposing."
+          }
+        ]
+      },
+      "feedback": {
+        "correct": "Fold from the end: SPE rules out non-credible threats (vs Nash), backward induction tracks all future play (not just immediate greed), and the pirate game buys votes at the marginal price set by each sub-game.",
+        "hints": [
+          "SPE vs Nash: credible threats only — 'Fight' is Nash-consistent but not SPE if Accommodate is better.",
+          "Anticipate: reason to the last node first, then roll back — not just one step ahead.",
+          "Pirate logic: the sub-game of k pirates determines the price of each vote in the full 5-pirate game."
+        ]
+      }
+    },
+    {
+      "beatId": "l5-apply",
+      "required": true,
+      "interviewNote": "Green Book p.3 'Screwy pirates': 5 pirates, 100 gold, ≥50% votes (proposer breaks ties), indifferent pirates vote NO. The senior (pirate 1) needs 2 additional votes. Pirates 3 and 5 each get 0 in the 4-pirate fallback, so 1 coin each is sufficient. Senior keeps 100 − 2 = 98. General pattern: with 2n+1 pirates and C coins, the senior keeps C − n (buying n votes at 1 coin each from every other-position pirate who alternates getting 0 in the fallback). `pirateGame(5,100)` = [98,0,1,0,1] (senior→junior). Some printed tables show a different vector — verify by deriving the sub-games yourself.",
+      "prompt": "Five pirates, 100 gold coins. The senior proposes; ≥50% vote yes (proposer breaks ties); an indifferent pirate votes NO. Apply backward induction.",
+      "interaction": {
+        "type": "answerEntry",
+        "fields": [
+          {
+            "id": "keep",
+            "label": "Coins the senior pirate keeps",
+            "accept": ["98"],
+            "placeholder": "?"
+          },
+          {
+            "id": "junior",
+            "label": "Coins the most-junior pirate gets",
+            "accept": ["1"],
+            "placeholder": "?"
+          }
+        ]
+      },
+      "feedback": {
+        "correct": "Senior keeps 98, most-junior gets 1. pirateGame(5,100) = [98,0,1,0,1]. The senior buys pirates 3 and 5 (who each get 0 in the 4-pirate fallback) with 1 coin each.",
+        "hints": [
+          "Build from the bottom: 1 pirate keeps all 100; 2 pirates, the senior auto-passes (own vote ≥50%) and keeps 100.",
+          "3 pirates: senior needs 1 more vote; junior gets 0 in the 2-pirate fallback — bribe with 1 coin; senior keeps 99.",
+          "5 pirates: senior needs 2 more votes; cheapest are pirates 3 and 5 (each 0 in the 4-pirate fallback). Bribe at 1 each → senior keeps 98."
+        ]
+      }
+    },
+    {
+      "beatId": "l5-prove",
+      "required": true,
+      "prompt": "Apply the same backward-induction logic to two new problems.",
+      "interaction": {
+        "type": "masteryChallenge",
+        "scenario": "**Pirate game — 3 pirates, 100 gold (Green Book p.3).** The senior (pirate 1) needs \\(\\lceil 3/2 \\rceil - 1 = 1\\) additional vote. The cheapest: pirate 3, who would get 0 in the 2-pirate fallback (the senior auto-wins with 2 pirates). Bribe pirate 3 with 1 coin. Senior keeps \\(100 - 1 = 99\\). \\[ \\text{pirateGame}(3, 100) = [99, 0, 1]. \\] **Tiger \\& sheep — 100 tigers, 1 sheep (Green Book p.4).** A tiger that eats the sheep becomes a sheep itself. With \\(n\\) tigers: if \\(n\\) is odd, the first tiger eats (it leaves an even number of tigers facing a new sheep — so it will be safe). If \\(n\\) is even, no tiger eats (eating would leave an odd count, and the new sheep gets eaten next). 100 is even, so the sheep is not eaten.",
+        "fields": [
+          {
+            "id": "keep3",
+            "label": "Pirate game (3 pirates, 100 gold): coins the senior keeps",
+            "accept": ["99"],
+            "placeholder": "?"
+          },
+          {
+            "id": "bribe",
+            "label": "Coins the one bribed junior gets",
+            "accept": ["1"],
+            "placeholder": "?"
+          },
+          {
+            "id": "sheep",
+            "label": "Tiger & sheep (100 tigers, 1 sheep): is the sheep eaten? (yes/no)",
+            "accept": ["no"],
+            "placeholder": "yes or no"
+          }
+        ]
+      },
+      "feedback": {
+        "correct": "pirateGame(3,100) = [99,0,1]: senior buys the junior's vote for 1 coin. tigerSheepEaten(100) = false: 100 is even, so no tiger dares eat the sheep (it would face 99 hungry tigers in an odd-tiger game where it gets eaten).",
+        "hints": [
+          "3 pirates: 1 additional vote needed. The junior gets 0 in the 2-pirate sub-game — 1 coin buys the vote. Senior keeps 100 − 1 = 99.",
+          "Tiger & sheep: base cases — 1 tiger eats (safe); 2 tigers: eating leaves 1 tiger facing a new sheep and that tiger eats — so the first tiger doesn't eat. Odd=eaten, even=safe.",
+          "100 tigers is even: the sheep is not eaten. Enter 'no'."
+        ]
+      }
+    },
+    {
+      "beatId": "l5-recap",
+      "required": true,
+      "prompt": "What you built.",
+      "interaction": { "type": "recap" },
+      "feedback": {
+        "correct": "Sequential games are solved by folding from the end (backward induction). The result — the subgame-perfect equilibrium — rules out non-credible threats. The pirate game shows how anticipating every future sub-game converts a seemingly dangerous position into a near-total win. Next: when the game is about position rather than payoffs, the same 'fold from the end' logic produces winning and losing positions — impartial games and Nim (L6).",
+        "hints": [
+          "Fold from the end: solve the last decision, roll it back.",
+          "SPE demands credibility at every subgame — Nash alone does not.",
+          "Bridge: L6 — impartial games and Nim use the same winning/losing-position logic."
+        ]
+      }
+    }
+  ]
+}

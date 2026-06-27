@@ -1,0 +1,245 @@
+{
+  "lessonId": "lesson-game-theory-2",
+  "courseId": "course-game-theory",
+  "title": "Nash Equilibrium",
+  "patternOptions": ["H"],
+  "milestoneId": "game-theory-nash",
+  "unlocks": "lesson-game-theory-3",
+  "schemaVersion": 1,
+  "beats": [
+    {
+      "beatId": "l2-recall",
+      "required": true,
+      "prompt": "Warm up: match each term to its definition.",
+      "interaction": {
+        "type": "retrievalGrid",
+        "pairs": [
+          { "left": "dominant strategy", "right": "best regardless of the opponent" },
+          { "left": "Prisoner's Dilemma outcome", "right": "(Defect, Defect)" },
+          { "left": "a cell no one wants to leave", "right": "Nash equilibrium" }
+        ]
+      },
+      "feedback": {
+        "correct": "Good recall. Today: when no dominant strategy exists, we find the cell nobody wants to leave — the Nash equilibrium.",
+        "hints": [
+          "A dominant strategy beats every opponent response — it is best no matter what the opponent does.",
+          "In the Prisoner's Dilemma both players confess, landing at (Defect, Defect) — the only stable outcome.",
+          "A Nash equilibrium is a cell where neither player gains by switching alone — nobody wants to leave."
+        ]
+      }
+    },
+    {
+      "beatId": "l2-bet",
+      "required": true,
+      "prompt": "Two hunters can team up to catch a stag (big reward) or hunt alone for a hare (small, safe reward). Stag requires both; hare succeeds alone. Payoffs (row player, column player): (Stag, Stag) = (3, 3); (Stag, Hare) = (0, 1); (Hare, Stag) = (1, 0); (Hare, Hare) = (1, 1). How many stable, self-enforcing outcomes does this game have?",
+      "interaction": {
+        "type": "prediction",
+        "options": ["0", "1", "2"]
+      },
+      "feedback": {
+        "byOption": {
+          "0": {
+            "note": "There are stable outcomes. At (Stag, Stag) neither hunter wants to switch to Hare unilaterally (3 > 1). At (Hare, Hare) neither wants to switch to Stag alone (0 < 1). Two self-enforcing cells exist."
+          },
+          "1": {
+            "note": "Not just one. (Stag, Stag) is self-enforcing: if your partner hunts Stag, your best response is also Stag (3 > 1). But (Hare, Hare) is also self-enforcing: if your partner hunts Hare, switching to Stag alone earns 0 — worse than 1. Both are Nash equilibria."
+          },
+          "2": {
+            "note": "Yes — (Stag, Stag) and (Hare, Hare) are both stable. In each, neither hunter benefits from deviating alone. This game has two pure Nash equilibria.",
+            "correct": true
+          }
+        }
+      }
+    },
+    {
+      "beatId": "l2-primer",
+      "required": false,
+      "track": "A",
+      "prompt": "Two definitions before the grid.",
+      "interaction": {
+        "type": "primer",
+        "variant": "custom",
+        "title": "Best response and Nash equilibrium",
+        "body": "Your best response is the strategy that maximizes your payoff given what your opponent is doing — the best row for a given column, or the best column for a given row. A Nash equilibrium is a strategy profile where BOTH players are simultaneously best-responding: neither player can improve by switching alone. Equivalently, it is a cell that is a mutual best response — a cell no one wants to leave.",
+        "collapsible": true
+      },
+      "feedback": {
+        "correct": "Hold onto that: Nash equilibrium = mutual best response = nobody wants to deviate alone.",
+        "hints": [
+          "Best response: given the opponent's strategy, the highest-payoff reply.",
+          "Nash: BOTH players are best-responding at once — mutual, not one-sided.",
+          "Read and tap Continue."
+        ]
+      }
+    },
+    {
+      "beatId": "l2-win",
+      "required": true,
+      "prompt": "Stag Hunt: tap each row and column header to mark best responses. A cell doubly marked — by both players — is a Nash equilibrium.",
+      "interaction": {
+        "type": "payoffMatrix",
+        "rows": ["Stag", "Hare"],
+        "cols": ["Stag", "Hare"],
+        "rowPlayer": "Hunter A",
+        "colPlayer": "Hunter B",
+        "task": "bestResponse",
+        "interactive": true,
+        "matrix": [
+          { "cells": [ { "row": { "n": 3, "d": 1 }, "col": { "n": 3, "d": 1 } }, { "row": { "n": 0, "d": 1 }, "col": { "n": 1, "d": 1 } } ] },
+          { "cells": [ { "row": { "n": 1, "d": 1 }, "col": { "n": 0, "d": 1 } }, { "row": { "n": 1, "d": 1 }, "col": { "n": 1, "d": 1 } } ] }
+        ]
+      },
+      "feedback": {
+        "correct": "Best responses: if the other hunts Stag, your best response is Stag (3 > 1); if the other hunts Hare, your best response is Hare (1 > 0). The doubly-marked cells — (Stag, Stag) and (Hare, Hare) — are the two Nash equilibria.",
+        "hints": [
+          "Tap the Stag column: Hunter A gets 3 (Stag) vs 1 (Hare) — best response is Stag.",
+          "Tap the Hare column: Hunter A gets 0 (Stag) vs 1 (Hare) — best response is Hare.",
+          "Doubly-marked cells (best response for both players) are Nash equilibria: (Stag, Stag) and (Hare, Hare)."
+        ]
+      },
+      "hero": {
+        "slowFirst": true,
+        "structuralReadout": "Best response to Stag is Stag (3>1); to Hare is Hare (1>0) — two doubly-marked cells, two Nash equilibria.",
+        "reducedMotionFinalFrame": true
+      }
+    },
+    {
+      "beatId": "l2-scaffold",
+      "required": false,
+      "track": "A",
+      "prompt": "Coordination game: two colleagues want to meet at one of two locations. Tap the single pure Nash equilibrium — the cell where neither person gains from showing up elsewhere.",
+      "interaction": {
+        "type": "payoffMatrix",
+        "rows": ["Meet A", "Meet B"],
+        "cols": ["Meet A", "Meet B"],
+        "rowPlayer": "Alice",
+        "colPlayer": "Bob",
+        "task": "nash",
+        "matrix": [
+          { "cells": [ { "row": { "n": 3, "d": 1 }, "col": { "n": 3, "d": 1 } }, { "row": { "n": 1, "d": 1 }, "col": { "n": 2, "d": 1 } } ] },
+          { "cells": [ { "row": { "n": 2, "d": 1 }, "col": { "n": 1, "d": 1 } }, { "row": { "n": 0, "d": 1 }, "col": { "n": 0, "d": 1 } } ] }
+        ],
+        "headline": "0,0"
+      },
+      "feedback": {
+        "correct": "(Meet A, Meet A) is the unique Nash equilibrium. At (Meet A, Meet A) both earn 3; switching to Meet B unilaterally drops your payoff to 2 or 1. (Meet B, Meet B) is not stable: either player could earn 2 by switching to A instead of 0.",
+        "hints": [
+          "At (Meet A, Meet A): Alice earns 3. If she switches to Meet B, she earns 2 — no incentive.",
+          "At (Meet A, Meet A): Bob earns 3. Switching to Meet B gives him 2 — no incentive either.",
+          "At (Meet B, Meet B): Alice earns 0. Switching to Meet A gives her 2 — she would deviate. Not stable."
+        ]
+      }
+    },
+    {
+      "beatId": "l2-explore",
+      "required": true,
+      "prompt": "Back to Stag Hunt. Tap ALL pure Nash equilibrium cells — every cell that nobody would leave unilaterally.",
+      "interaction": {
+        "type": "payoffMatrix",
+        "rows": ["Stag", "Hare"],
+        "cols": ["Stag", "Hare"],
+        "rowPlayer": "Hunter A",
+        "colPlayer": "Hunter B",
+        "task": "nash",
+        "matrix": [
+          { "cells": [ { "row": { "n": 3, "d": 1 }, "col": { "n": 3, "d": 1 } }, { "row": { "n": 0, "d": 1 }, "col": { "n": 1, "d": 1 } } ] },
+          { "cells": [ { "row": { "n": 1, "d": 1 }, "col": { "n": 0, "d": 1 } }, { "row": { "n": 1, "d": 1 }, "col": { "n": 1, "d": 1 } } ] }
+        ],
+        "headline": "0,0;1,1"
+      },
+      "feedback": {
+        "correct": "Both (Stag, Stag) and (Hare, Hare) are pure Nash equilibria. At (Stag, Stag) neither hunter gains by switching to Hare (1 < 3). At (Hare, Hare) neither gains by switching to Stag (0 < 1). Two equilibria, no dominant strategy.",
+        "hints": [
+          "Test (Stag, Stag): if Hunter A switches to Hare, payoff drops from 3 to 1. No incentive to deviate — stable.",
+          "Test (Hare, Hare): if Hunter A switches to Stag, payoff drops from 1 to 0. No incentive to deviate — also stable.",
+          "Test (Stag, Hare): Hunter B earns 1. If B switches to Stag, payoff rises to 3 — B would deviate. Not stable. Tap (0,0) and (1,1)."
+        ]
+      },
+      "hero": {
+        "slowFirst": true,
+        "structuralReadout": "Two cells survive the deviation test: (Stag, Stag) and (Hare, Hare) — both are Nash equilibria.",
+        "reducedMotionFinalFrame": true
+      }
+    },
+    {
+      "beatId": "l2-model",
+      "required": true,
+      "prompt": "Stag Hunt has two equilibria. Which one will rational players reach? Tap each lens to see three ways to analyze the choice.",
+      "interaction": {
+        "type": "tripletReveal",
+        "value": "(Stag, Stag)",
+        "display": "cards",
+        "lenses": [
+          { "label": "Payoff-dominant", "body": "(Stag, Stag) = (3, 3) gives both players higher payoffs than (Hare, Hare) = (1, 1). If both hunters trust each other to coordinate on the better outcome, they both earn more. Payoff dominance selects (Stag, Stag)." },
+          { "label": "Risk-dominant", "body": "Hunting Hare guarantees at least 1 regardless of what the other player does. Hunting Stag alone earns 0 — a painful miss. A risk-averse hunter who is uncertain about the other's choice prefers the safe option. Risk dominance selects (Hare, Hare)." },
+          { "label": "Equilibrium selection", "body": "Neither criterion dominates on all dimensions: (Stag, Stag) is payoff-dominant but risky; (Hare, Hare) is safe but inefficient. Selecting between them requires a focal point — pre-game communication, social norms, reputation, or repeated interaction. Theory alone cannot predict which equilibrium emerges." }
+        ]
+      },
+      "feedback": {
+        "correct": "(Stag, Stag) is payoff-dominant — both players prefer it when they trust each other to coordinate. (Hare, Hare) is risk-dominant — safer when you are uncertain. Equilibrium selection depends on context, culture, or coordination devices outside the stage-game payoffs.",
+        "hints": [
+          "Payoff-dominant: the equilibrium that gives the highest payoff to everyone if they coordinate on it.",
+          "Risk-dominant: the equilibrium that is safest to play when you are uncertain about the other player's choice.",
+          "Focal point (Schelling point): a salient feature — communication, convention, or prior experience — that makes one equilibrium the obvious choice."
+        ]
+      }
+    },
+    {
+      "beatId": "l2-interleave",
+      "required": true,
+      "interviewNote": "Interviewers often ask 'how many Nash equilibria does this game have?' Solve it by the best-response method: mark each player's best-response arrows, then count the doubly-marked cells. If no cell is doubly marked, there are no pure NE and players must mix (L3). The three canonical counts are 1 (Prisoner's Dilemma), 2 (Stag Hunt, coordination games), and 0 (Matching Pennies).",
+      "prompt": "Match each game to its number of pure Nash equilibria.",
+      "interaction": {
+        "type": "retrievalGrid",
+        "pairs": [
+          { "left": "Prisoner's Dilemma", "right": "1" },
+          { "left": "Stag Hunt", "right": "2" },
+          { "left": "Matching Pennies", "right": "0" }
+        ]
+      },
+      "feedback": {
+        "correct": "Prisoner's Dilemma: one NE — (Defect, Defect) — because Defect is strictly dominant for both players. Stag Hunt: two NE, no dominant strategy, two stable coordinations. Matching Pennies: zero pure NE — each player always wants to switch to surprise the other, so no pure cell is stable (requires a mixed equilibrium, L3).",
+        "hints": [
+          "PD: Defect strictly dominates Cooperate for both → the unique NE is (Defect, Defect).",
+          "Stag Hunt: no dominant strategy; both diagonal cells are mutually best responses.",
+          "Matching Pennies: whatever pure strategy one player picks, the other wants to switch — no doubly-marked cell exists."
+        ]
+      }
+    },
+    {
+      "beatId": "l2-prove",
+      "required": true,
+      "prompt": "Lock in the method with a new game.",
+      "interaction": {
+        "type": "masteryChallenge",
+        "scenario": "Two drivers approach each other on a narrow road. Each can Swerve or go Straight. Payoffs (row player, column player): \\((\\text{Swerve},\\text{Swerve})=(4,4)\\), \\((\\text{Swerve},\\text{Straight})=(2,5)\\), \\((\\text{Straight},\\text{Swerve})=(5,2)\\), \\((\\text{Straight},\\text{Straight})=(1,1)\\). Apply the best-response method.",
+        "fields": [
+          { "id": "count", "label": "Number of pure Nash equilibria", "accept": ["2"], "placeholder": "?" },
+          { "id": "straight", "label": "Payoff to the driver who goes Straight while the other Swerves", "accept": ["5"], "placeholder": "?" }
+        ]
+      },
+      "feedback": {
+        "correct": "Best responses: if the other Swerves, going Straight pays \\(5 > 4\\) — so best response to Swerve is Straight; if the other goes Straight, Swerving pays \\(2 > 1\\) — so best response to Straight is Swerve. The two doubly-marked cells are \\((\\text{Swerve},\\text{Straight})\\) and \\((\\text{Straight},\\text{Swerve})\\) — the driver who goes Straight while the other Swerves earns \\(5\\). \\[ \\text{NE}_1 = (\\text{Swerve},\\text{Straight}),\\quad \\text{NE}_2 = (\\text{Straight},\\text{Swerve}). \\]",
+        "hints": [
+          "If the other player Swerves: compare your payoffs — Swerve earns 4, Straight earns 5. Best response is Straight.",
+          "If the other player goes Straight: compare — Swerve earns 2, Straight earns 1. Best response is Swerve.",
+          "Mark the arrows: (Swerve, Straight) and (Straight, Swerve) are both doubly marked — two pure Nash equilibria."
+        ]
+      }
+    },
+    {
+      "beatId": "l2-recap",
+      "required": true,
+      "prompt": "What you built.",
+      "interaction": { "type": "recap" },
+      "feedback": {
+        "correct": "A Nash equilibrium is a mutual best response — a cell where neither player gains by switching alone. Find all pure NE by the best-response method: mark each player's best responses and count the doubly-marked cells. Some games have 1 (Prisoner's Dilemma), 2 (Stag Hunt, Chicken), or 0 (Matching Pennies) pure NE. When none exist in pure strategies, players must mix — that is L3.",
+        "hints": [
+          "Nash: each player is simultaneously best-responding to the other's strategy.",
+          "Best-response method: mark arrows for each player, count mutual intersections.",
+          "Bridge: L3 — when no pure NE exists, look for a mixed-strategy equilibrium."
+        ]
+      }
+    }
+  ]
+}
