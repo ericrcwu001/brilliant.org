@@ -3,6 +3,7 @@
 // done(report) → error. Mounts <Orb> for audio-reactive visuals and
 // <InterviewReportView> when the session ends.
 
+import { useEffect, useRef, useState } from 'react'
 import type { NavigateFn } from '../pages/routes'
 import type { RealtimeTransport } from '../interview/useRealtimeInterview'
 import { useRealtimeInterview } from '../interview/useRealtimeInterview'
@@ -29,6 +30,7 @@ export function InterviewPage({
     status,
     transcript,
     isAiSpeaking,
+    userSpeaking,
     remoteStream,
     secondsLeft,
     error,
@@ -37,6 +39,55 @@ export function InterviewPage({
     start,
     stop,
   } = useRealtimeInterview(conceptId, _transport)
+
+  const audioRef = useRef<HTMLAudioElement | null>(null)
+  const [audioBlocked, setAudioBlocked] = useState(false)
+
+  // Auto-scroll the transcript to the newest caption, but only while the user is
+  // already at the bottom — any scroll up (to re-read) detaches and we stop
+  // yanking until they return to the bottom.
+  const transcriptRef = useRef<HTMLOListElement | null>(null)
+  const stickToBottomRef = useRef(true)
+  const lastScrollTopRef = useRef(0)
+
+  useEffect(() => {
+    const el = transcriptRef.current
+    if (el && stickToBottomRef.current) {
+      el.scrollTop = el.scrollHeight
+    }
+  }, [transcript])
+
+  function handleTranscriptScroll() {
+    const el = transcriptRef.current
+    if (!el) return
+    const atBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 8
+    // Treat any upward movement as intent to re-read; re-arm only at the bottom.
+    if (el.scrollTop < lastScrollTopRef.current - 1) stickToBottomRef.current = false
+    if (atBottom) stickToBottomRef.current = true
+    lastScrollTopRef.current = el.scrollTop
+    el.dataset.scrolled = el.scrollTop > 4 ? 'true' : 'false'
+  }
+
+  useEffect(() => {
+    const el = audioRef.current
+    if (!el || !remoteStream) return
+    el.srcObject = remoteStream
+    el.play()
+      .then(() => setAudioBlocked(false))
+      .catch((err) => {
+        console.error('[iv] remote audio play blocked', err)
+        setAudioBlocked(true)
+      })
+  }, [remoteStream, status])
+
+  // Barge-in duck: pause playback the instant the user talks over the AI so the
+  // interruption feels immediate; resume when they stop.
+  useEffect(() => {
+    const el = audioRef.current
+    if (!el) return
+    if (userSpeaking && isAiSpeaking) el.pause()
+    else if (!userSpeaking) el.play().catch(() => {})
+  }, [userSpeaking, isAiSpeaking])
 
   function handleBack() {
     navigate(conceptPath(conceptId))
@@ -60,10 +111,11 @@ export function InterviewPage({
           <span />
         </header>
         <div className="iv-ready">
+          <p className="iv-ready__eyebrow">Capstone</p>
           <h1 className="iv-ready__title">Capstone Interview</h1>
           <p className="iv-ready__note">
             You'll speak with an AI interviewer about{' '}
-            {conceptId.replace(/^course-/, '').replace(/-/g, ' ')}.
+            <span className="iv-concept">{conceptId.replace(/^course-/, '').replace(/-/g, ' ')}</span>.
             The session lasts up to 8 minutes.
           </p>
           {!rtcAvailable && (
@@ -230,7 +282,7 @@ export function InterviewPage({
 
   const isWarning = secondsLeft <= 60
   return (
-    <div className="iv-page">
+    <div className="iv-page iv-page--live">
       <header className="iv-topbar">
         <button
           type="button"
@@ -242,7 +294,6 @@ export function InterviewPage({
         </button>
         <span
           className={`iv-countdown${isWarning ? ' iv-countdown--warning' : ''}`}
-          aria-live="polite"
           aria-label={`Time remaining: ${formatMmSs(secondsLeft)}`}
         >
           {formatMmSs(secondsLeft)}
@@ -256,27 +307,62 @@ export function InterviewPage({
         </button>
       </header>
 
+      <audio ref={audioRef} autoPlay playsInline />
+
       <div className="iv-live">
-        {/* Orb — decorative, audio-reactive. The Orb renders its own .iv-orb container. */}
-        <Orb remoteStream={remoteStream} isAiSpeaking={isAiSpeaking} />
+        {/* Stage: compact Orb presence + a live speaking/listening status. */}
+        <div className="iv-stage">
+          {/* Orb — decorative, audio-reactive. Renders its own .iv-orb container. */}
+          <Orb remoteStream={remoteStream} isAiSpeaking={isAiSpeaking} />
+
+          <p className="iv-status" data-speaking={isAiSpeaking}>
+            <span className="iv-status__dot" aria-hidden="true" />
+            {isAiSpeaking ? 'Interviewer speaking' : 'Listening'}
+          </p>
+
+          {audioBlocked && (
+            <button
+              type="button"
+              className="btn btn--primary"
+              onClick={() => {
+                audioRef.current
+                  ?.play()
+                  .then(() => setAudioBlocked(false))
+                  .catch(() => {})
+              }}
+            >
+              Tap to enable sound
+            </button>
+          )}
+        </div>
 
         <ol
           className="iv-transcript"
+          ref={transcriptRef}
+          onScroll={handleTranscriptScroll}
+          tabIndex={0}
+          role="log"
           aria-live="polite"
           aria-label="Interview transcript"
         >
           {transcript.map((turn, i) => (
-            <li key={i} data-role={turn.role}>
+            <li
+              key={i}
+              data-role={turn.role}
+              data-pending={turn.final ? undefined : 'true'}
+              /* Don't announce streaming partials token-by-token; the finalized
+                 turn is announced once when it replaces the pending one. */
+              aria-live={turn.final ? undefined : 'off'}
+            >
               <span className="iv-turn-role">
                 {turn.role === 'interviewer' ? 'Interviewer' : 'You'}
               </span>
-              <span className={turn.final ? '' : 'iv-turn--pending'}>
+              <span className={`iv-turn-text${turn.final ? '' : ' iv-turn--pending'}`}>
                 {turn.text}
               </span>
             </li>
           ))}
         </ol>
-
       </div>
     </div>
   )

@@ -54,6 +54,7 @@ export interface UseRealtimeInterviewReturn {
   status:          InterviewStatus
   transcript:      Turn[]
   isAiSpeaking:    boolean
+  userSpeaking:    boolean
   remoteStream:    MediaStream | null
   secondsLeft:     number
   error:           InterviewError | null
@@ -78,6 +79,7 @@ export function useRealtimeInterview(
   const [status, setStatus] = useState<InterviewStatus>('idle')
   const [transcript, setTranscript] = useState<Turn[]>([])
   const [isAiSpeaking, setIsAiSpeaking] = useState(false)
+  const [userSpeaking, setUserSpeaking] = useState(false)
   const [remoteStream, setRemoteStream] = useState<MediaStream | null>(null)
   const [secondsLeft, setSecondsLeft] = useState(SESSION_CAP_SECONDS)
   const [error, setError] = useState<InterviewError | null>(null)
@@ -95,22 +97,24 @@ export function useRealtimeInterview(
   const pcRef                = useRef<RTCPeerConnection | null>(null)
   const dcRef                = useRef<RTCDataChannel | null>(null)
   const transportCloseRef    = useRef<(() => void) | null>(null)
-  const audioElRef           = useRef<HTMLAudioElement | null>(null)
+  const sendRawRef           = useRef<((json: string) => void) | null>(null)
+  const responseRequestedRef = useRef(false)
   const countdownRef         = useRef<ReturnType<typeof setInterval> | null>(null)
   // In-progress (non-final) partial text per role.
   const inProgressRef        = useRef<Record<string, string>>({})
+  // Barge-in bookkeeping: the in-flight assistant item + when its audio started,
+  // so we can tell the model how much the user actually heard on interruption.
+  const assistantItemIdRef   = useRef<string | null>(null)
+  const audioStartedAtRef    = useRef<number>(0)
 
   function setStatusSafe(s: InterviewStatus) {
     statusRef.current = s
     setStatus(s)
   }
 
-  function attachRemoteStream(stream: MediaStream | null) {
+  function updateRemoteStream(stream: MediaStream | null) {
+    remoteStreamRef.current = stream
     setRemoteStream(stream)
-    if (audioElRef.current && stream) {
-      audioElRef.current.srcObject = stream
-      audioElRef.current.play().catch(() => {})
-    }
   }
 
   // ── Transcript helpers ────────────────────────────────────────────────────
@@ -169,6 +173,14 @@ export function useRealtimeInterview(
 
   // ── Event handler ────────────────────────────────────────────────────────
 
+  function requestInterviewerGreeting() {
+    // With semantic_vad the model only auto-responds AFTER the user speaks, so
+    // we must explicitly open the first turn or the interviewer never greets.
+    if (responseRequestedRef.current) return
+    responseRequestedRef.current = true
+    sendRawRef.current?.(JSON.stringify({ type: 'response.create' }))
+  }
+
   function handleEvent(event: Record<string, unknown>) {
     const type = event.type as string
 
@@ -182,14 +194,17 @@ export function useRealtimeInterview(
         break
 
       case 'response.output_audio_transcript.delta':
+        if (typeof event.item_id === 'string') assistantItemIdRef.current = event.item_id
         appendToInProgressTurn('interviewer', event.delta as string)
         break
 
       case 'response.output_audio_transcript.done':
+        if (typeof event.item_id === 'string') assistantItemIdRef.current = event.item_id
         finalizeTurn('interviewer', event.transcript as string)
         break
 
       case 'output_audio_buffer.started':
+        audioStartedAtRef.current = Date.now()
         isAiSpeakingRef.current = true
         setIsAiSpeaking(true)
         break
@@ -197,6 +212,33 @@ export function useRealtimeInterview(
       case 'output_audio_buffer.stopped':
         isAiSpeakingRef.current = false
         setIsAiSpeaking(false)
+        assistantItemIdRef.current = null
+        break
+
+      case 'input_audio_buffer.speech_started':
+        setUserSpeaking(true)
+        // Barge-in: trim the assistant item to what was actually heard so the
+        // model's context matches reality and it resumes coherently.
+        if (isAiSpeakingRef.current && assistantItemIdRef.current) {
+          sendRawRef.current?.(
+            JSON.stringify({
+              type: 'conversation.item.truncate',
+              item_id: assistantItemIdRef.current,
+              content_index: 0,
+              audio_end_ms: Math.max(0, Date.now() - audioStartedAtRef.current),
+            }),
+          )
+        }
+        console.debug('[iv] speech_started — server is receiving mic audio')
+        break
+
+      case 'input_audio_buffer.speech_stopped':
+        setUserSpeaking(false)
+        console.debug('[iv] speech_stopped')
+        break
+
+      case 'error':
+        console.error('[iv] server error event', event)
         break
 
       case 'session.created':
@@ -208,7 +250,13 @@ export function useRealtimeInterview(
           startCountdown()
           // Sync the remoteStream into React state now that we're live.
           setRemoteStream(remoteStreamRef.current)
+          // Open the first turn so the interviewer speaks the question aloud.
+          requestInterviewerGreeting()
         }
+        break
+
+      default:
+        console.debug('[iv] event', type)
         break
     }
   }
@@ -219,6 +267,7 @@ export function useRealtimeInterview(
     if (statusRef.current !== 'idle' && statusRef.current !== 'error') return
 
     setError(null)
+    responseRequestedRef.current = false
     setStatusSafe('minting')
 
     // 1. Mint ephemeral token.
@@ -245,11 +294,22 @@ export function useRealtimeInterview(
     let micStream: MediaStream | null = null
     if (!_transport) {
       try {
-        micStream = await navigator.mediaDevices.getUserMedia({ audio: true })
+        micStream = await navigator.mediaDevices.getUserMedia({
+          audio: {
+            echoCancellation: true,
+            noiseSuppression: true,
+            autoGainControl: true,
+          },
+        })
       } catch (err) {
         setError({ stage: 'awaitingMic', err })
         setStatusSafe('error')
         return
+      }
+      const micTrack = micStream.getAudioTracks()[0]
+      if (micTrack) {
+        micTrack.enabled = true
+        console.debug('[iv] mic track ready', micTrack.readyState, 'enabled', micTrack.enabled)
       }
     }
     micStreamRef.current = micStream
@@ -264,13 +324,6 @@ export function useRealtimeInterview(
     // 3. Connect.
     setStatusSafe('connecting')
 
-    // Lazily create a detached audio element for remote stream playback.
-    if (typeof Audio !== 'undefined' && !audioElRef.current) {
-      const a = new Audio()
-      a.autoplay = true
-      audioElRef.current = a
-    }
-
     try {
       if (_transport) {
         // Dev/test path: use injected transport.
@@ -279,9 +332,9 @@ export function useRealtimeInterview(
           micStream,
           handleEvent,
         )
-        remoteStreamRef.current   = result.remoteStream
+        sendRawRef.current        = result.sendRaw
         transportCloseRef.current = result.close
-        if (result.remoteStream) attachRemoteStream(result.remoteStream)
+        if (result.remoteStream) updateRemoteStream(result.remoteStream)
       } else {
         // Production path: real WebRTC.
         if (typeof RTCPeerConnection === 'undefined') {
@@ -290,23 +343,57 @@ export function useRealtimeInterview(
         const pc = new RTCPeerConnection()
         pcRef.current = pc
 
+        pc.onconnectionstatechange = () => {
+          console.debug('[iv] connectionState', pc.connectionState)
+          if (
+            pc.connectionState === 'failed' &&
+            (statusRef.current === 'connecting' || statusRef.current === 'live')
+          ) {
+            void analytics.interviewError({ conceptId, stage: 'connect' })
+            setError({ stage: 'connect', err: new Error('peer connection failed') })
+            setStatusSafe('error')
+            cleanup()
+          }
+        }
+        pc.oniceconnectionstatechange = () => {
+          console.debug('[iv] iceConnectionState', pc.iceConnectionState)
+        }
+
         pc.ontrack = (e) => {
-          remoteStreamRef.current = e.streams[0]
-          attachRemoteStream(e.streams[0])
+          console.debug('[iv] ontrack', e.track.kind)
+          updateRemoteStream(e.streams[0] ?? null)
         }
 
         if (micStream) {
-          pc.addTrack(micStream.getTracks()[0])
+          const micTrack = micStream.getAudioTracks()[0]
+          if (micTrack) pc.addTrack(micTrack, micStream)
         }
 
         const dc = pc.createDataChannel('oai-events')
         dcRef.current = dc
+        sendRawRef.current = (json: string) => {
+          try {
+            dc.send(json)
+          } catch (err) {
+            console.error('[iv] dc.send failed', err)
+          }
+        }
+        dc.onopen  = () => console.debug('[iv] data channel open')
+        dc.onerror = (e) => console.error('[iv] data channel error', e)
         dc.onmessage = (e) => {
-          handleEvent(JSON.parse(e.data as string) as Record<string, unknown>)
+          let parsed: Record<string, unknown>
+          try {
+            parsed = JSON.parse(e.data as string) as Record<string, unknown>
+          } catch (err) {
+            console.error('[iv] failed to parse event', err, e.data)
+            return
+          }
+          handleEvent(parsed)
         }
 
         const offer = await pc.createOffer()
         await pc.setLocalDescription(offer)
+        console.debug('[iv] senders', pc.getSenders().map((s) => s.track?.kind))
         const sdpRes = await fetch('https://api.openai.com/v1/realtime/calls', {
           method: 'POST',
           body:   offer.sdp,
@@ -315,7 +402,12 @@ export function useRealtimeInterview(
             'Content-Type': 'application/sdp',
           },
         })
-        await pc.setRemoteDescription({ type: 'answer', sdp: await sdpRes.text() })
+        if (!sdpRes.ok) {
+          const body = await sdpRes.text()
+          throw new Error(`SDP exchange failed: ${sdpRes.status} ${body}`)
+        }
+        const answerSdp = await sdpRes.text()
+        await pc.setRemoteDescription({ type: 'answer', sdp: answerSdp })
       }
     } catch (err) {
       void analytics.interviewError({ conceptId, stage: 'connect' })
@@ -370,17 +462,13 @@ export function useRealtimeInterview(
   function cleanup() {
     transportCloseRef.current?.()
     transportCloseRef.current = null
+    sendRawRef.current = null
     dcRef.current?.close()
     dcRef.current = null
     micStreamRef.current?.getTracks().forEach((t) => t.stop())
     micStreamRef.current = null
     pcRef.current?.close()
     pcRef.current = null
-    if (audioElRef.current) {
-      audioElRef.current.pause()
-      audioElRef.current.srcObject = null
-      audioElRef.current = null
-    }
   }
 
   useEffect(() => {
@@ -394,6 +482,7 @@ export function useRealtimeInterview(
     status,
     transcript,
     isAiSpeaking,
+    userSpeaking,
     remoteStream,
     secondsLeft,
     error,
