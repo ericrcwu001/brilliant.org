@@ -1,0 +1,238 @@
+{
+  "lessonId": "lesson-game-theory-3",
+  "courseId": "course-game-theory",
+  "title": "Mixed Strategies",
+  "patternOptions": ["H"],
+  "milestoneId": "game-theory-mixed",
+  "unlocks": "lesson-game-theory-4",
+  "schemaVersion": 1,
+  "beats": [
+    {
+      "beatId": "l3-recall",
+      "required": true,
+      "prompt": "Warm up: match each idea to its answer.",
+      "interaction": {
+        "type": "retrievalGrid",
+        "pairs": [
+          { "left": "Matching Pennies: # of pure equilibria", "right": "0" },
+          { "left": "No pure best move ⇒ you must", "right": "randomize" },
+          { "left": "Rock-Paper-Scissors champion", "right": "none" }
+        ]
+      },
+      "feedback": {
+        "correct": "Right. Today: when no pure equilibrium exists, the only stable strategy is to randomize — and the indifference principle tells you exactly how.",
+        "hints": [
+          "Matching Pennies has no cell where both players are simultaneously best-responding — 0 pure equilibria.",
+          "When no single move dominates, randomizing prevents the opponent from exploiting you.",
+          "In Rock-Paper-Scissors every deterministic pattern can be beaten — no champion, only the uniform mix."
+        ]
+      }
+    },
+    {
+      "beatId": "l3-bet",
+      "required": true,
+      "prompt": "Two equally skilled players compete at Rock-Paper-Scissors. What is the optimal strategy?",
+      "interaction": {
+        "type": "prediction",
+        "options": ["Always Rock", "Counter your last loss", "Each ⅓ at random"]
+      },
+      "feedback": {
+        "byOption": {
+          "Always Rock": {
+            "note": "Any fixed move is exploitable: the opponent plays Paper every time."
+          },
+          "Counter your last loss": {
+            "note": "This rule is also a pattern — the opponent can learn it in a few rounds and exploit it."
+          },
+          "Each ⅓ at random": {
+            "note": "Correct. Any deterministic or patterned strategy can be identified and exploited. Mixing uniformly is the unique Nash equilibrium — it makes you completely unexploitable.",
+            "correct": true
+          }
+        }
+      }
+    },
+    {
+      "beatId": "l3-primer",
+      "required": false,
+      "track": "A",
+      "prompt": "One principle before the matrix.",
+      "interaction": {
+        "type": "primer",
+        "variant": "custom",
+        "title": "The indifference principle",
+        "body": "In a mixed Nash equilibrium each player randomizes so the opponent earns the same expected payoff from every pure strategy they mix over. That equal-payoff condition — indifference — pins the exact mixing probabilities. If any pure option were strictly better, the opponent would play it exclusively and the equilibrium would unravel.",
+        "collapsible": true
+      },
+      "feedback": {
+        "correct": "Key insight: you mix to make the OPPONENT indifferent, not to maximize your own payoff directly.",
+        "hints": [
+          "Indifference: opponent's expected payoff must be equal across all options they mix.",
+          "If one option paid more, the opponent would never mix — they'd just play that option.",
+          "Mixing probabilities are pinned by solving those equal-payoff equations."
+        ]
+      }
+    },
+    {
+      "beatId": "l3-win",
+      "required": true,
+      "prompt": "Matching Pennies: both players choose Heads or Tails simultaneously. Row wins (+1) when they match; Column wins (+1) when they differ. Drag the Heads probability — watch the two expected-payoff lines converge. What is the optimal mixing probability and the game value?",
+      "interaction": {
+        "type": "payoffMatrix",
+        "rows": ["Heads", "Tails"],
+        "cols": ["Heads", "Tails"],
+        "rowPlayer": "Row",
+        "colPlayer": "Column",
+        "task": "mix",
+        "zeroSum": true,
+        "matrix": [
+          { "cells": [ { "row": { "n": 1, "d": 1 }, "col": { "n": -1, "d": 1 } }, { "row": { "n": -1, "d": 1 }, "col": { "n": 1, "d": 1 } } ] },
+          { "cells": [ { "row": { "n": -1, "d": 1 }, "col": { "n": 1, "d": 1 } }, { "row": { "n": 1, "d": 1 }, "col": { "n": -1, "d": 1 } } ] }
+        ],
+        "headline": "0"
+      },
+      "feedback": {
+        "correct": "Both players mix ½ Heads, ½ Tails. The game value is 0 — perfectly fair. Symmetry forces the 50/50 split; any deviation is immediately exploitable.",
+        "hints": [
+          "Set up Column's indifference: Row's payoff vs Heads = 1·p + (−1)·(1−p); vs Tails = (−1)·p + 1·(1−p). Set equal.",
+          "Solving: 2p − 1 = 1 − 2p → 4p = 2 → p = 1/2.",
+          "Plug p = 1/2 back in to find the value: 1·(1/2) + (−1)·(1/2) = 0."
+        ]
+      },
+      "hero": {
+        "slowFirst": true,
+        "structuralReadout": "Indifference at p = 1/2 — expected payoff is 0 from either pure strategy.",
+        "reducedMotionFinalFrame": true
+      }
+    },
+    {
+      "beatId": "l3-scaffold",
+      "required": false,
+      "track": "A",
+      "prompt": "Rock-Paper-Scissors has three symmetric pure strategies. By the same indifference principle, what probability should you put on EACH move?",
+      "interaction": {
+        "type": "answerEntry",
+        "fields": [
+          { "id": "rps", "label": "Rock-Paper-Scissors equilibrium: probability on EACH move?", "accept": ["1/3"], "placeholder": "fraction" }
+        ]
+      },
+      "feedback": {
+        "correct": "1/3 each. Symmetry: weighting any move more heavily lets the opponent play its counter exclusively. Equal weights make the opponent indifferent across all three — game value 0.",
+        "hints": [
+          "Symmetry: Rock, Paper, and Scissors all have the same payoff structure by rotation.",
+          "If any one move had a higher probability, the opponent always plays its counter — no equilibrium.",
+          "Setting all three equal at 1/3 satisfies the indifference condition for every option."
+        ]
+      }
+    },
+    {
+      "beatId": "l3-explore",
+      "required": true,
+      "prompt": "Two-finger Morra (zero-sum): each player shows 1 or 2 fingers simultaneously. Row earns the sum when they match (Show 1 vs Show 1 = +2; Show 2 vs Show 2 = +4) and pays the sum when they differ (either mismatch = −3 for Row). The payoffs are asymmetric, so the indifference crossing is no longer at ½. What is Row's optimal mix and the game value?",
+      "interaction": {
+        "type": "payoffMatrix",
+        "rows": ["Show 1", "Show 2"],
+        "cols": ["Show 1", "Show 2"],
+        "rowPlayer": "Row",
+        "colPlayer": "Column",
+        "task": "mix",
+        "zeroSum": true,
+        "matrix": [
+          { "cells": [ { "row": { "n": 2, "d": 1 }, "col": { "n": -2, "d": 1 } }, { "row": { "n": -3, "d": 1 }, "col": { "n": 3, "d": 1 } } ] },
+          { "cells": [ { "row": { "n": -3, "d": 1 }, "col": { "n": 3, "d": 1 } }, { "row": { "n": 4, "d": 1 }, "col": { "n": -4, "d": 1 } } ] }
+        ],
+        "headline": "-1/12"
+      },
+      "feedback": {
+        "correct": "Row mixes 7/12 on Show 1, 5/12 on Show 2. The game value is −1/12: Column has a slight structural edge. Asymmetric payoffs push the crossing well away from 50/50.",
+        "hints": [
+          "Set Column's indifference: Row's payoff vs Show 1 = 2p − 3(1−p); vs Show 2 = −3p + 4(1−p). Set equal.",
+          "Solving: 5p − 3 = −7p + 4 → 12p = 7 → p = 7/12.",
+          "The value: 2·(7/12) − 3·(5/12) = 14/12 − 15/12 = −1/12."
+        ]
+      },
+      "hero": {
+        "slowFirst": true,
+        "structuralReadout": "Indifference at p = 7/12 — game value −1/12 regardless of column play.",
+        "reducedMotionFinalFrame": true
+      }
+    },
+    {
+      "beatId": "l3-model",
+      "required": true,
+      "prompt": "Three lenses on what mixing achieves. Predict the key phrase, then reveal each card.",
+      "interaction": {
+        "type": "tripletReveal",
+        "value": "mix to stay unexploitable",
+        "display": "cards",
+        "lenses": [
+          { "label": "Unpredictability", "body": "A deterministic strategy is a pattern — patterns get exploited. Randomizing removes all information an opponent can act on." },
+          { "label": "Indifference (opponent can't exploit)", "body": "You choose your mix so the opponent earns the same expected payoff from every reply. If they can't prefer one response over another, they can't profit by shifting." },
+          { "label": "Value (what you guarantee)", "body": "The mixing probabilities lock in an expected payoff regardless of what the opponent does. This floor is the game value — the guarantee in any zero-sum game." }
+        ]
+      },
+      "feedback": {
+        "correct": "Mixing serves all three goals: you become unpredictable, the opponent can't exploit any response, and you secure the game value no matter what they do.",
+        "hints": [
+          "Unpredictability: no pattern means nothing for the opponent to act on.",
+          "Indifference: mix so the opponent earns the same expected payoff from every reply.",
+          "Value: the expected payoff guaranteed by the equilibrium mix — revisited as minimax in L4."
+        ]
+      }
+    },
+    {
+      "beatId": "l3-apply",
+      "required": true,
+      "interviewNote": "Two real-world examples: (1) Poker bluffing — at a pot-size bet the optimal bluff frequency is 1/3. Bluff less and opponents never fold; bluff more and they always call. The indifference condition pins it exactly. (2) Penalty kicks — Palacios-Huerta showed professional kickers and goalkeepers play close to the minimax mixed equilibrium, with success rates equalizing across strategies: a rare field confirmation of mixed Nash play.",
+      "prompt": "Battle of the Sexes: you prefer Opera (payoffs (3, 2) when you coordinate there) and your partner prefers Football (payoffs (2, 3) when you coordinate there). Miscoordination pays (0, 0). In the mixed Nash equilibrium, what probability do you put on YOUR preferred venue (Opera)?",
+      "interaction": {
+        "type": "answerEntry",
+        "fields": [
+          { "id": "p", "label": "Probability you put on YOUR preferred venue", "accept": ["3/5"], "placeholder": "fraction" }
+        ]
+      },
+      "feedback": {
+        "correct": "3/5. Make your PARTNER indifferent: Column earns 2 if you go to Opera and 3 if you go to Football. Indifference: 2p = 3(1−p) → 5p = 3 → p = 3/5. By symmetry your partner puts 2/5 on Football.",
+        "hints": [
+          "Make your partner indifferent between their two choices.",
+          "Column's payoff from choosing Opera = 2·p; from choosing Football = 3·(1−p). Set equal: 2p = 3(1−p).",
+          "5p = 3 → p = 3/5."
+        ]
+      }
+    },
+    {
+      "beatId": "l3-prove",
+      "required": true,
+      "prompt": "Lock it in with Two-finger Morra.",
+      "interaction": {
+        "type": "masteryChallenge",
+        "scenario": "Two-finger Morra (zero-sum). Row payoffs: \\(a_{11}=2,\\; a_{12}=-3,\\; a_{21}=-3,\\; a_{22}=4\\). Mixed-strategy formulas: \\[\\Delta = a+d-b-c, \\quad p = \\frac{d-c}{\\Delta}, \\quad v = \\frac{ad-bc}{\\Delta}.\\]",
+        "fields": [
+          { "id": "mix", "label": "Probability on 'Show 1'", "accept": ["7/12"], "placeholder": "fraction" },
+          { "id": "value", "label": "Value of the game", "accept": ["-1/12"], "placeholder": "fraction" }
+        ]
+      },
+      "feedback": {
+        "correct": "\\(\\Delta = 2+4-(-3)-(-3)=12\\). \\(p=(4-(-3))/12=7/12\\). \\(v=(2\\cdot4-(-3)\\cdot(-3))/12=(8-9)/12=-1/12\\). Column holds the structural edge.",
+        "hints": [
+          "Compute \\(\\Delta = a+d-b-c = 2+4-(-3)-(-3) = 12\\).",
+          "Row's mix: \\(p = (d-c)/\\Delta = (4-(-3))/12 = 7/12\\).",
+          "Value: \\(v = (ad-bc)/\\Delta = (8-9)/12 = -1/12\\)."
+        ]
+      }
+    },
+    {
+      "beatId": "l3-recap",
+      "required": true,
+      "prompt": "What you built.",
+      "interaction": { "type": "recap" },
+      "feedback": {
+        "correct": "When no pure equilibrium exists, mix by the indifference principle: choose probabilities so your opponent gains equally from any reply. This locks in the game value — the floor you guarantee in any zero-sum game. Asymmetric payoffs (Morra: 7/12) push the mix away from 50/50. Next: minimax and the fundamental theorem (L4).",
+        "hints": [
+          "Indifference: mix so the opponent is indifferent across their options.",
+          "Asymmetric payoffs push the mix away from 50/50 — solve the equal-payoff equation.",
+          "The game value is the expected payoff you guarantee — generalized by minimax in L4."
+        ]
+      }
+    }
+  ]
+}

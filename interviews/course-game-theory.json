@@ -1,0 +1,3052 @@
+{
+  "version": 1,
+  "kind": "interview-pack",
+  "courseId": "course-game-theory",
+  "concept": "Game Theory",
+  "greenBookAnchor": "Xinfeng Zhou, A Practical Guide to Quantitative Finance Interviews — Ch.2 Brain Teasers: “Screwy pirates” (p.3), “Tiger and sheep” (p.4), “Chocolate bar problem”; plus the standard dominance / Nash / mixed / minimax / backward-induction / Nim quant-interview canon (Joshi QJIQ&A; brainstellar; techinterview; Palacios-Huerta minimax).",
+  "engineModule": "src/engine/gameTheory.ts",
+  "generator": "interviews/_build/build-game-theory-pack.ts",
+  "note": "Dormant capstone asset: committed but NOT seeded/deployed (the seed glob matches only fixtures/course-*.json | fixtures/lesson-*.json; this lives under interviews/). Self-describing via `version`. Every templated answer is reproduced by src/engine/gameTheory.ts (exact: cells, vectors, integers, XOR, reduced rationals — no floats); conceptual free-form answers are sourced + reasoned.",
+  "counts": {
+    "total": 51,
+    "byTier": {
+      "hard": 16,
+      "harder": 25,
+      "brutal": 10
+    },
+    "templated": 40,
+    "freeForm": 11
+  },
+  "interviewerPrompt": "ROLE\nYou are a senior quantitative-research interviewer at a top trading desk (Jane Street / Citadel / IMC), running a live mock interview on GAME THEORY. Be professional, probing, and fair-but-pressured. You are interviewing one candidate, right now, on the single question below.\n\nTHE QUESTION (injected at runtime)\n- Prompt: {{prompt}}\n- Tier: {{tier}} (hard | harder | brutal — calibrate pressure and follow-up depth)\n- Source: {{source}} (your context only; never read it aloud)\n\nPROTOCOL\n1. Ask the question once from {{prompt}}, then let the candidate drive. ONE question at a time — never surface follow-ups early.\n2. Make them think ALOUD: which solution concept applies (dominance, best response / Nash, the indifference principle, minimax/saddle, backward induction, or nim-sum/parity)? Reward naming the structure before computing.\n3. Probe, don’t solve. Ask whether they checked every column/case, stated the tie-breaking and play conventions (normal vs misère; ≥50% with proposer tie-break; indifferent-votes-no), and distinguished Nash from subgame-perfect.\n4. Release hints only when genuinely stuck or asked (see HINTS).\n5. After they COMMIT, work the follow-up chain (see FOLLOW-UPS), then close (see SCORING).\n\nHINTS — escalating, ONLY when stuck\nUse {{hidden.hintLadder}} = [nudge, stronger, near-reveal]. Release ONE rung at a time, in order, only after a stuck-signal. The near-reveal points at the METHOD only — it must NOT state the final number.\n\nNO-ANSWER-LEAK (critical)\nBefore the candidate commits, NEVER state, approximate, confirm, deny, or narrow the final answer, and NEVER reveal {{hidden.answer}}. Do not paste or paraphrase any part of the hidden record. If asked “is that right?” mid-solve, redirect.\n\nGROUNDING (critical)\nTreat {{hidden.answer}} and {{hidden.approaches}} as GROUND TRUTH — verified by this concept’s exact engine (src/engine/gameTheory.ts). Do NOT re-derive or “correct” the ground truth; if your mental arithmetic disagrees, you are wrong. Accept any mathematically-equivalent exact form (e.g. an unreduced equal fraction, an equal cell written (row,col), an equivalent allocation). Use {{hidden.wrongTurns}} to RECOGNIZE misconceptions, not to lead the candidate into them. Grade ONLY against the rubric.\n\nFOLLOW-UPS — after they commit\nAsk {{followUps}} in order, one at a time (bias a payoff, generalize to N, change normal↔misère, or ask for the supporting strategy / intuition), with the no-leak and hint rules still in force.\n\nSCORING — close the interview\nGive structured feedback, then rate each axis of {{hidden.rubric}} 1–5 (correctness, approach, rigor, communication, speed) with one line each, then an overall 1–5 hire-signal. Tie every judgment to a specific moment.\n\nINJECTION NOTE\nAt runtime the feature replaces every {{...}} with the drawn question’s fields; treat the filled-in values as the entire ground truth for this interview.",
+  "generatorPrompt": "ROLE\nYou generate ONE fresh, hard, real-quant-style GAME-THEORY interview question on demand to top up a pool without repeating one a student has seen. Every question must be (a) a realistic quant-interview question anchored to this concept’s Green-Book topics and the quant canon, (b) engine-verifiable before it is served, and (c) structurally new vs an avoid-list. Otherwise REFUSE. Output is a single JSON object and nothing else.\n\nSCOPE — only these Game-Theory topics\nStrict/iterated dominance (IESDS); pure Nash via best response (incl. coordination games); mixed strategies & the indifference principle; zero-sum saddle points & the 2×2 minimax value; sequential games & backward induction (incl. the pirate game and parity teasers); impartial games (Nim nim-sum, subtraction games mod (k+1)).\n\nREAL-QUANT-STYLE (mandatory — ADR-0005)\nModel every question on the actual quant-interview canon (prisoner’s dilemma, matching pennies, pirates, Nim, the 21/race game). It must read like something genuinely asked on a desk — never an arbitrary puzzle that merely happens to be engine-solvable.\n\nPREFER TEMPLATES (first choice); free-form only as a fallback. Engine-backed forms (src/engine/gameTheory.ts):\n- tmpl-pure-nash {payoffs:number[][][]}        → pureNashEquilibria\n- tmpl-iesds {payoffs}                          → iesdsSolution\n- tmpl-saddle-value {matrix:number[][]}         → saddlePoint(value)\n- tmpl-mixed-value {matrix} / tmpl-mixed-prob   → mixedValue2x2(value | p)\n- tmpl-pirate {pirates,coins}                   → pirateGame\n- tmpl-nim-sum {heaps:number[]}                 → nimSum\n- tmpl-subtraction {pile,maxRemove}            → pile % (maxRemove+1)\n- tmpl-backward-induction {tree}               → backwardInduction(payoff)\nEmit a free-form question ONLY if no template fits — and it STILL must pass engine verification, with fingerprint “sem:<hash>”.\n\nENGINE-VERIFY-BEFORE-SERVE (mandatory — ADR-0005)\nOutput the exact data to reproduce the answer with src/engine/gameTheory.ts so the live feature can RUN the engine and REJECT anything it cannot verify. engineCheck = { module:\"src/engine/gameTheory.ts\", calls:[exact call(s)], answer:<exact string the engine returns> }. The engine is exact (integers / rationals {n,d} / XOR) — every graded answer is a clean cell, vector, integer, or reduced fraction. State play conventions explicitly (normal play; ≥50% + proposer tie-break + indifferent-votes-no).\n\nAVOID-LIST / NO-OVERLAP\nYou are given avoidList (the student’s seen-set ∪ the global pool). Your fingerprint MUST NOT be in it. Fingerprint = “<templateId>:<normalized-params>” or “sem:<hash>”. Change structure/params until new, or REFUSE.\n\nHINTS: exactly 3 rungs (nudge → stronger → near-reveal); the near-reveal gives METHOD ONLY and must not state the final number. FOLLOW-UPS: ≥1. hidden.answer MUST equal engineCheck.answer.\n\nSELF-REJECTION: if you cannot produce a question that is real-quant-style + Green-Book-anchored, engine-verifiable, and structurally new, output exactly { \"refusal\": true, \"reason\": \"<which fence failed>\" }. An honest refusal beats an unverifiable or repeated question.",
+  "templates": [
+    {
+      "id": "tmpl-pure-nash",
+      "title": "Find all pure Nash equilibria (best-response method)",
+      "source": "Osborne, Intro to Game Theory (best response); Wikipedia (Stag hunt / Battle of the sexes / Chicken). GB-anchored to Ch.2 strategy teasers.",
+      "description": "Mark each player’s best responses; mutual best-response cells are the pure NE.",
+      "engineModule": "src/engine/gameTheory.ts"
+    },
+    {
+      "id": "tmpl-iesds",
+      "title": "Iterated elimination of strictly dominated strategies",
+      "source": "Gibbons / Osborne IGT (IESDS); GB Ch.2 strategy teasers.",
+      "description": "Remove strictly dominated strategies repeatedly until a single cell survives.",
+      "engineModule": "src/engine/gameTheory.ts"
+    },
+    {
+      "id": "tmpl-saddle-value",
+      "title": "Value of a zero-sum game with a saddle point",
+      "source": "Ferguson, Game Theory (UCLA); ZIB Lecture 2 Matrix Games. GB Ch.2.",
+      "description": "A saddle (row-min = col-max) gives the pure value of the zero-sum game.",
+      "engineModule": "src/engine/gameTheory.ts"
+    },
+    {
+      "id": "tmpl-mixed-value",
+      "title": "Value of a 2×2 zero-sum game with no saddle",
+      "source": "Notre Dame Lecture 29 (2×2 value formula); UMass Morra. GB Ch.2.",
+      "description": "No saddle ⇒ both mix; v = (ad−bc)/(a+d−b−c).",
+      "engineModule": "src/engine/gameTheory.ts"
+    },
+    {
+      "id": "tmpl-mixed-prob",
+      "title": "Optimal mixing probability (indifference)",
+      "source": "Berkeley econ160 (mixed NE); UMass Morra. GB Ch.2.",
+      "description": "Mix so the opponent is indifferent; p = (d−c)/(a+d−b−c) for row 0.",
+      "engineModule": "src/engine/gameTheory.ts"
+    },
+    {
+      "id": "tmpl-pirate",
+      "title": "Pirate game (backward induction)",
+      "source": "Green Book Ch.2 “Screwy pirates” p.3; Mark Joshi QJIQ&A; Wikipedia Pirate game.",
+      "description": "Backward induction over proposals; ≥50% with proposer tie-break, indifferent pirate votes NO.",
+      "engineModule": "src/engine/gameTheory.ts"
+    },
+    {
+      "id": "tmpl-nim-sum",
+      "title": "Nim — the nim-sum (XOR) rule",
+      "source": "Wikipedia Nim (Bouton); Brilliant.org Nim; USACO Guide. GB Ch.2.",
+      "description": "First player wins iff the XOR of heap sizes is non-zero.",
+      "engineModule": "src/engine/gameTheory.ts"
+    },
+    {
+      "id": "tmpl-subtraction",
+      "title": "Subtraction game (take 1..k, last takes wins)",
+      "source": "NYU take-away notes; Wikipedia Nim §subtraction / §21 game; Bachet. GB Ch.2.",
+      "description": "P-positions (mover loses) are the multiples of (k+1).",
+      "engineModule": "src/engine/gameTheory.ts"
+    },
+    {
+      "id": "tmpl-backward-induction",
+      "title": "Backward induction on a game tree (SPE)",
+      "source": "Wikipedia Centipede game; MIT 14.12; Yale ECON 159 (Stackelberg). GB Ch.2.",
+      "description": "Fold the tree from the leaves; each player picks the branch maximizing their own payoff.",
+      "engineModule": "src/engine/gameTheory.ts"
+    }
+  ],
+  "questions": [
+    {
+      "id": "tmpl-pure-nash#pd",
+      "tier": "hard",
+      "fingerprint": "tmpl-pure-nash:pure-nash:pd",
+      "template": {
+        "id": "tmpl-pure-nash",
+        "params": {
+          "payoffs": [
+            [
+              [
+                3,
+                3
+              ],
+              [
+                0,
+                5
+              ]
+            ],
+            [
+              [
+                5,
+                0
+              ],
+              [
+                1,
+                1
+              ]
+            ]
+          ]
+        }
+      },
+      "prompt": "Two suspects each Cooperate or Defect with payoffs (C,C)=(3,3), (C,D)=(0,5), (D,C)=(5,0), (D,D)=(1,1). Find every pure-strategy Nash equilibrium.",
+      "source": "Osborne, Intro to Game Theory (best response); Wikipedia (Stag hunt / Battle of the sexes / Chicken). GB-anchored to Ch.2 strategy teasers.",
+      "engineCheck": {
+        "module": "src/engine/gameTheory.ts",
+        "calls": [
+          "tmpl-pure-nash({\"payoffs\":[[[3,3],[0,5]],[[5,0],[1,1]]]}) → 1,1"
+        ],
+        "answer": "1,1",
+        "verified": true
+      },
+      "hidden": {
+        "answer": "1,1",
+        "approaches": [
+          "Mark each player’s best response to every opponent action; the doubly-marked cells are the equilibria.",
+          "Check each cell: is the row a best reply to that column AND the column a best reply to that row?"
+        ],
+        "wrongTurns": [
+          "Picking the Pareto-best cell instead of a stable one.",
+          "Reporting one equilibrium when there are two (coordination games)."
+        ],
+        "hintLadder": [
+          "Find each player’s best response to every option of the other.",
+          "A pure Nash equilibrium is a cell where both players are simultaneously best-responding.",
+          "Go cell by cell — the row a best reply to its column and the column a best reply to its row; the intersections are your equilibria."
+        ],
+        "rubric": {
+          "correctness": "States the exact equilibrium / value / move and justifies why it is optimal.",
+          "approach": "Uses the right tool (best response, dominance, indifference, minimax, backward induction, or nim-sum) rather than guessing.",
+          "rigor": "Checks every case / column, states assumptions (rationality, normal play, tie-breaking), and avoids unjustified independence.",
+          "communication": "Thinks aloud, names the structure before computing, and explains the intuition.",
+          "speed": "Reaches the answer without flailing; hard tier allows more synthesis time."
+        }
+      },
+      "followUps": [
+        "What if there were no pure equilibrium — what would you do?",
+        "Which equilibrium would the players actually coordinate on, and why?"
+      ]
+    },
+    {
+      "id": "tmpl-pure-nash#stag",
+      "tier": "hard",
+      "fingerprint": "tmpl-pure-nash:pure-nash:stag",
+      "template": {
+        "id": "tmpl-pure-nash",
+        "params": {
+          "payoffs": [
+            [
+              [
+                3,
+                3
+              ],
+              [
+                0,
+                1
+              ]
+            ],
+            [
+              [
+                1,
+                0
+              ],
+              [
+                1,
+                1
+              ]
+            ]
+          ]
+        }
+      },
+      "prompt": "Stag Hunt: (Stag,Stag)=(3,3), (Stag,Hare)=(0,1), (Hare,Stag)=(1,0), (Hare,Hare)=(1,1). Find every pure Nash equilibrium.",
+      "source": "Osborne, Intro to Game Theory (best response); Wikipedia (Stag hunt / Battle of the sexes / Chicken). GB-anchored to Ch.2 strategy teasers.",
+      "engineCheck": {
+        "module": "src/engine/gameTheory.ts",
+        "calls": [
+          "tmpl-pure-nash({\"payoffs\":[[[3,3],[0,1]],[[1,0],[1,1]]]}) → 0,0;1,1"
+        ],
+        "answer": "0,0;1,1",
+        "verified": true
+      },
+      "hidden": {
+        "answer": "0,0;1,1",
+        "approaches": [
+          "Mark each player’s best response to every opponent action; the doubly-marked cells are the equilibria.",
+          "Check each cell: is the row a best reply to that column AND the column a best reply to that row?"
+        ],
+        "wrongTurns": [
+          "Picking the Pareto-best cell instead of a stable one.",
+          "Reporting one equilibrium when there are two (coordination games)."
+        ],
+        "hintLadder": [
+          "Find each player’s best response to every option of the other.",
+          "A pure Nash equilibrium is a cell where both players are simultaneously best-responding.",
+          "Go cell by cell — the row a best reply to its column and the column a best reply to its row; the intersections are your equilibria."
+        ],
+        "rubric": {
+          "correctness": "States the exact equilibrium / value / move and justifies why it is optimal.",
+          "approach": "Uses the right tool (best response, dominance, indifference, minimax, backward induction, or nim-sum) rather than guessing.",
+          "rigor": "Checks every case / column, states assumptions (rationality, normal play, tie-breaking), and avoids unjustified independence.",
+          "communication": "Thinks aloud, names the structure before computing, and explains the intuition.",
+          "speed": "Reaches the answer without flailing; hard tier allows more synthesis time."
+        }
+      },
+      "followUps": [
+        "What if there were no pure equilibrium — what would you do?",
+        "Which equilibrium would the players actually coordinate on, and why?"
+      ]
+    },
+    {
+      "id": "tmpl-pure-nash#bos",
+      "tier": "harder",
+      "fingerprint": "tmpl-pure-nash:pure-nash:bos",
+      "template": {
+        "id": "tmpl-pure-nash",
+        "params": {
+          "payoffs": [
+            [
+              [
+                3,
+                2
+              ],
+              [
+                0,
+                0
+              ]
+            ],
+            [
+              [
+                0,
+                0
+              ],
+              [
+                2,
+                3
+              ]
+            ]
+          ]
+        }
+      },
+      "prompt": "Battle of the Sexes: matching at venue 1 gives (3,2), matching at venue 2 gives (2,3), mismatching gives (0,0). Find every pure Nash equilibrium.",
+      "source": "Osborne, Intro to Game Theory (best response); Wikipedia (Stag hunt / Battle of the sexes / Chicken). GB-anchored to Ch.2 strategy teasers.",
+      "engineCheck": {
+        "module": "src/engine/gameTheory.ts",
+        "calls": [
+          "tmpl-pure-nash({\"payoffs\":[[[3,2],[0,0]],[[0,0],[2,3]]]}) → 0,0;1,1"
+        ],
+        "answer": "0,0;1,1",
+        "verified": true
+      },
+      "hidden": {
+        "answer": "0,0;1,1",
+        "approaches": [
+          "Mark each player’s best response to every opponent action; the doubly-marked cells are the equilibria.",
+          "Check each cell: is the row a best reply to that column AND the column a best reply to that row?"
+        ],
+        "wrongTurns": [
+          "Picking the Pareto-best cell instead of a stable one.",
+          "Reporting one equilibrium when there are two (coordination games)."
+        ],
+        "hintLadder": [
+          "Find each player’s best response to every option of the other.",
+          "A pure Nash equilibrium is a cell where both players are simultaneously best-responding.",
+          "Go cell by cell — the row a best reply to its column and the column a best reply to its row; the intersections are your equilibria."
+        ],
+        "rubric": {
+          "correctness": "States the exact equilibrium / value / move and justifies why it is optimal.",
+          "approach": "Uses the right tool (best response, dominance, indifference, minimax, backward induction, or nim-sum) rather than guessing.",
+          "rigor": "Checks every case / column, states assumptions (rationality, normal play, tie-breaking), and avoids unjustified independence.",
+          "communication": "Thinks aloud, names the structure before computing, and explains the intuition.",
+          "speed": "Reaches the answer without flailing; hard tier allows more synthesis time."
+        }
+      },
+      "followUps": [
+        "What if there were no pure equilibrium — what would you do?",
+        "Which equilibrium would the players actually coordinate on, and why?"
+      ]
+    },
+    {
+      "id": "tmpl-pure-nash#chicken",
+      "tier": "harder",
+      "fingerprint": "tmpl-pure-nash:pure-nash:chicken",
+      "template": {
+        "id": "tmpl-pure-nash",
+        "params": {
+          "payoffs": [
+            [
+              [
+                4,
+                4
+              ],
+              [
+                2,
+                5
+              ]
+            ],
+            [
+              [
+                5,
+                2
+              ],
+              [
+                1,
+                1
+              ]
+            ]
+          ]
+        }
+      },
+      "prompt": "Chicken: (Swerve,Swerve)=(4,4), (Swerve,Straight)=(2,5), (Straight,Swerve)=(5,2), (Straight,Straight)=(1,1). Find every pure Nash equilibrium.",
+      "source": "Osborne, Intro to Game Theory (best response); Wikipedia (Stag hunt / Battle of the sexes / Chicken). GB-anchored to Ch.2 strategy teasers.",
+      "engineCheck": {
+        "module": "src/engine/gameTheory.ts",
+        "calls": [
+          "tmpl-pure-nash({\"payoffs\":[[[4,4],[2,5]],[[5,2],[1,1]]]}) → 0,1;1,0"
+        ],
+        "answer": "0,1;1,0",
+        "verified": true
+      },
+      "hidden": {
+        "answer": "0,1;1,0",
+        "approaches": [
+          "Mark each player’s best response to every opponent action; the doubly-marked cells are the equilibria.",
+          "Check each cell: is the row a best reply to that column AND the column a best reply to that row?"
+        ],
+        "wrongTurns": [
+          "Picking the Pareto-best cell instead of a stable one.",
+          "Reporting one equilibrium when there are two (coordination games)."
+        ],
+        "hintLadder": [
+          "Find each player’s best response to every option of the other.",
+          "A pure Nash equilibrium is a cell where both players are simultaneously best-responding.",
+          "Go cell by cell — the row a best reply to its column and the column a best reply to its row; the intersections are your equilibria."
+        ],
+        "rubric": {
+          "correctness": "States the exact equilibrium / value / move and justifies why it is optimal.",
+          "approach": "Uses the right tool (best response, dominance, indifference, minimax, backward induction, or nim-sum) rather than guessing.",
+          "rigor": "Checks every case / column, states assumptions (rationality, normal play, tie-breaking), and avoids unjustified independence.",
+          "communication": "Thinks aloud, names the structure before computing, and explains the intuition.",
+          "speed": "Reaches the answer without flailing; hard tier allows more synthesis time."
+        }
+      },
+      "followUps": [
+        "What if there were no pure equilibrium — what would you do?",
+        "Which equilibrium would the players actually coordinate on, and why?"
+      ]
+    },
+    {
+      "id": "tmpl-pure-nash#mp",
+      "tier": "harder",
+      "fingerprint": "tmpl-pure-nash:pure-nash:mp",
+      "template": {
+        "id": "tmpl-pure-nash",
+        "params": {
+          "payoffs": [
+            [
+              [
+                1,
+                -1
+              ],
+              [
+                -1,
+                1
+              ]
+            ],
+            [
+              [
+                -1,
+                1
+              ],
+              [
+                1,
+                -1
+              ]
+            ]
+          ]
+        }
+      },
+      "prompt": "Matching Pennies (zero-sum): the row player wins +1 on a match, the column player wins +1 on a mismatch. How many pure Nash equilibria are there?",
+      "source": "Osborne, Intro to Game Theory (best response); Wikipedia (Stag hunt / Battle of the sexes / Chicken). GB-anchored to Ch.2 strategy teasers.",
+      "engineCheck": {
+        "module": "src/engine/gameTheory.ts",
+        "calls": [
+          "tmpl-pure-nash({\"payoffs\":[[[1,-1],[-1,1]],[[-1,1],[1,-1]]]}) → none"
+        ],
+        "answer": "none",
+        "verified": true
+      },
+      "hidden": {
+        "answer": "none",
+        "approaches": [
+          "Mark each player’s best response to every opponent action; the doubly-marked cells are the equilibria.",
+          "Check each cell: is the row a best reply to that column AND the column a best reply to that row?"
+        ],
+        "wrongTurns": [
+          "Picking the Pareto-best cell instead of a stable one.",
+          "Reporting one equilibrium when there are two (coordination games)."
+        ],
+        "hintLadder": [
+          "Find each player’s best response to every option of the other.",
+          "A pure Nash equilibrium is a cell where both players are simultaneously best-responding.",
+          "Go cell by cell — the row a best reply to its column and the column a best reply to its row; the intersections are your equilibria."
+        ],
+        "rubric": {
+          "correctness": "States the exact equilibrium / value / move and justifies why it is optimal.",
+          "approach": "Uses the right tool (best response, dominance, indifference, minimax, backward induction, or nim-sum) rather than guessing.",
+          "rigor": "Checks every case / column, states assumptions (rationality, normal play, tie-breaking), and avoids unjustified independence.",
+          "communication": "Thinks aloud, names the structure before computing, and explains the intuition.",
+          "speed": "Reaches the answer without flailing; hard tier allows more synthesis time."
+        }
+      },
+      "followUps": [
+        "What if there were no pure equilibrium — what would you do?",
+        "Which equilibrium would the players actually coordinate on, and why?"
+      ]
+    },
+    {
+      "id": "tmpl-iesds#pd",
+      "tier": "hard",
+      "fingerprint": "tmpl-iesds:iesds:pd",
+      "template": {
+        "id": "tmpl-iesds",
+        "params": {
+          "payoffs": [
+            [
+              [
+                3,
+                3
+              ],
+              [
+                0,
+                5
+              ]
+            ],
+            [
+              [
+                5,
+                0
+              ],
+              [
+                1,
+                1
+              ]
+            ]
+          ]
+        }
+      },
+      "prompt": "In the Prisoner’s Dilemma (C,C)=(3,3), (C,D)=(0,5), (D,C)=(5,0), (D,D)=(1,1), which single cell survives iterated elimination of strictly dominated strategies?",
+      "source": "Gibbons / Osborne IGT (IESDS); GB Ch.2 strategy teasers.",
+      "engineCheck": {
+        "module": "src/engine/gameTheory.ts",
+        "calls": [
+          "tmpl-iesds({\"payoffs\":[[[3,3],[0,5]],[[5,0],[1,1]]]}) → 1,1"
+        ],
+        "answer": "1,1",
+        "verified": true
+      },
+      "hidden": {
+        "answer": "1,1",
+        "approaches": [
+          "Eliminate any strategy that is strictly worse than another for all opponent choices; repeat as new dominations appear.",
+          "Track the surviving rows/cols round by round."
+        ],
+        "wrongTurns": [
+          "Eliminating a weakly (not strictly) dominated strategy too early.",
+          "Stopping after one round and missing the cascade."
+        ],
+        "hintLadder": [
+          "Look for a strategy that is worse than another no matter what the opponent does.",
+          "Eliminate strictly dominated strategies one at a time — new dominations can appear after each removal.",
+          "Iterate the elimination until a single cell remains; that survivor is the prediction."
+        ],
+        "rubric": {
+          "correctness": "States the exact equilibrium / value / move and justifies why it is optimal.",
+          "approach": "Uses the right tool (best response, dominance, indifference, minimax, backward induction, or nim-sum) rather than guessing.",
+          "rigor": "Checks every case / column, states assumptions (rationality, normal play, tie-breaking), and avoids unjustified independence.",
+          "communication": "Thinks aloud, names the structure before computing, and explains the intuition.",
+          "speed": "Reaches the answer without flailing; hard tier allows more synthesis time."
+        }
+      },
+      "followUps": [
+        "Does the order of elimination change the survivor under strict dominance?",
+        "How does this connect to the guess-⅔-of-the-average game?"
+      ]
+    },
+    {
+      "id": "tmpl-iesds#3x3",
+      "tier": "brutal",
+      "fingerprint": "tmpl-iesds:iesds:3x3",
+      "template": {
+        "id": "tmpl-iesds",
+        "params": {
+          "payoffs": [
+            [
+              [
+                0,
+                3
+              ],
+              [
+                1,
+                1
+              ],
+              [
+                9,
+                0
+              ]
+            ],
+            [
+              [
+                2,
+                3
+              ],
+              [
+                3,
+                1
+              ],
+              [
+                1,
+                0
+              ]
+            ],
+            [
+              [
+                1,
+                0
+              ],
+              [
+                1,
+                5
+              ],
+              [
+                1,
+                0
+              ]
+            ]
+          ]
+        }
+      },
+      "prompt": "A 3×3 game has row payoffs [[0,1,9],[2,3,1],[1,1,1]] and column payoffs [[3,1,0],[3,1,0],[0,5,0]] (cells are (row,col)). Which single (row,col) cell survives iterated elimination of strictly dominated strategies?",
+      "source": "Gibbons / Osborne IGT (IESDS); GB Ch.2 strategy teasers.",
+      "engineCheck": {
+        "module": "src/engine/gameTheory.ts",
+        "calls": [
+          "tmpl-iesds({\"payoffs\":[[[0,3],[1,1],[9,0]],[[2,3],[3,1],[1,0]],[[1,0],[1,5],[1,0]]]}) → 1,0"
+        ],
+        "answer": "1,0",
+        "verified": true
+      },
+      "hidden": {
+        "answer": "1,0",
+        "approaches": [
+          "Eliminate any strategy that is strictly worse than another for all opponent choices; repeat as new dominations appear.",
+          "Track the surviving rows/cols round by round."
+        ],
+        "wrongTurns": [
+          "Eliminating a weakly (not strictly) dominated strategy too early.",
+          "Stopping after one round and missing the cascade."
+        ],
+        "hintLadder": [
+          "Look for a strategy that is worse than another no matter what the opponent does.",
+          "Eliminate strictly dominated strategies one at a time — new dominations can appear after each removal.",
+          "Iterate the elimination until a single cell remains; that survivor is the prediction."
+        ],
+        "rubric": {
+          "correctness": "States the exact equilibrium / value / move and justifies why it is optimal.",
+          "approach": "Uses the right tool (best response, dominance, indifference, minimax, backward induction, or nim-sum) rather than guessing.",
+          "rigor": "Checks every case / column, states assumptions (rationality, normal play, tie-breaking), and avoids unjustified independence.",
+          "communication": "Thinks aloud, names the structure before computing, and explains the intuition.",
+          "speed": "Reaches the answer without flailing; hard tier allows more synthesis time."
+        }
+      },
+      "followUps": [
+        "Does the order of elimination change the survivor under strict dominance?",
+        "How does this connect to the guess-⅔-of-the-average game?"
+      ]
+    },
+    {
+      "id": "tmpl-saddle-value#a",
+      "tier": "hard",
+      "fingerprint": "tmpl-saddle-value:saddle:3-5-2-4",
+      "template": {
+        "id": "tmpl-saddle-value",
+        "params": {
+          "matrix": [
+            [
+              3,
+              5
+            ],
+            [
+              2,
+              4
+            ]
+          ]
+        }
+      },
+      "prompt": "Zero-sum game, row’s payoffs [[3,5],[2,4]] (column gets the negative). What is the value of the game?",
+      "source": "Ferguson, Game Theory (UCLA); ZIB Lecture 2 Matrix Games. GB Ch.2.",
+      "engineCheck": {
+        "module": "src/engine/gameTheory.ts",
+        "calls": [
+          "tmpl-saddle-value({\"matrix\":[[3,5],[2,4]]}) → 3"
+        ],
+        "answer": "3",
+        "verified": true
+      },
+      "hidden": {
+        "answer": "3",
+        "approaches": [
+          "Compute each row’s minimum and each column’s maximum; a cell that is both is the value.",
+          "Check maximin = minimax."
+        ],
+        "wrongTurns": [
+          "Randomizing when a pure saddle already exists.",
+          "Confusing row-min with column-min."
+        ],
+        "hintLadder": [
+          "In a zero-sum game, scan for a saddle point first.",
+          "A saddle is an entry that is the smallest in its row and the largest in its column.",
+          "If the largest row-minimum equals the smallest column-maximum, that common entry is the game’s value (pure play)."
+        ],
+        "rubric": {
+          "correctness": "States the exact equilibrium / value / move and justifies why it is optimal.",
+          "approach": "Uses the right tool (best response, dominance, indifference, minimax, backward induction, or nim-sum) rather than guessing.",
+          "rigor": "Checks every case / column, states assumptions (rationality, normal play, tie-breaking), and avoids unjustified independence.",
+          "communication": "Thinks aloud, names the structure before computing, and explains the intuition.",
+          "speed": "Reaches the answer without flailing; hard tier allows more synthesis time."
+        }
+      },
+      "followUps": [
+        "What if no saddle existed — how would you find the value?",
+        "Why is the saddle entry an equilibrium in pure strategies?"
+      ]
+    },
+    {
+      "id": "tmpl-saddle-value#b",
+      "tier": "hard",
+      "fingerprint": "tmpl-saddle-value:saddle:4-6-3-5",
+      "template": {
+        "id": "tmpl-saddle-value",
+        "params": {
+          "matrix": [
+            [
+              4,
+              6
+            ],
+            [
+              3,
+              5
+            ]
+          ]
+        }
+      },
+      "prompt": "Zero-sum game, row’s payoffs [[4,6],[3,5]]. What is the value of the game?",
+      "source": "Ferguson, Game Theory (UCLA); ZIB Lecture 2 Matrix Games. GB Ch.2.",
+      "engineCheck": {
+        "module": "src/engine/gameTheory.ts",
+        "calls": [
+          "tmpl-saddle-value({\"matrix\":[[4,6],[3,5]]}) → 4"
+        ],
+        "answer": "4",
+        "verified": true
+      },
+      "hidden": {
+        "answer": "4",
+        "approaches": [
+          "Compute each row’s minimum and each column’s maximum; a cell that is both is the value.",
+          "Check maximin = minimax."
+        ],
+        "wrongTurns": [
+          "Randomizing when a pure saddle already exists.",
+          "Confusing row-min with column-min."
+        ],
+        "hintLadder": [
+          "In a zero-sum game, scan for a saddle point first.",
+          "A saddle is an entry that is the smallest in its row and the largest in its column.",
+          "If the largest row-minimum equals the smallest column-maximum, that common entry is the game’s value (pure play)."
+        ],
+        "rubric": {
+          "correctness": "States the exact equilibrium / value / move and justifies why it is optimal.",
+          "approach": "Uses the right tool (best response, dominance, indifference, minimax, backward induction, or nim-sum) rather than guessing.",
+          "rigor": "Checks every case / column, states assumptions (rationality, normal play, tie-breaking), and avoids unjustified independence.",
+          "communication": "Thinks aloud, names the structure before computing, and explains the intuition.",
+          "speed": "Reaches the answer without flailing; hard tier allows more synthesis time."
+        }
+      },
+      "followUps": [
+        "What if no saddle existed — how would you find the value?",
+        "Why is the saddle entry an equilibrium in pure strategies?"
+      ]
+    },
+    {
+      "id": "tmpl-saddle-value#c",
+      "tier": "harder",
+      "fingerprint": "tmpl-saddle-value:saddle:3x3-a",
+      "template": {
+        "id": "tmpl-saddle-value",
+        "params": {
+          "matrix": [
+            [
+              8,
+              5,
+              6
+            ],
+            [
+              2,
+              4,
+              3
+            ],
+            [
+              7,
+              9,
+              1
+            ]
+          ]
+        }
+      },
+      "prompt": "Zero-sum game, row’s payoffs [[8,5,6],[2,4,3],[7,9,1]]. Find the value (look for a saddle point).",
+      "source": "Ferguson, Game Theory (UCLA); ZIB Lecture 2 Matrix Games. GB Ch.2.",
+      "engineCheck": {
+        "module": "src/engine/gameTheory.ts",
+        "calls": [
+          "tmpl-saddle-value({\"matrix\":[[8,5,6],[2,4,3],[7,9,1]]}) → mixed"
+        ],
+        "answer": "mixed",
+        "verified": true
+      },
+      "hidden": {
+        "answer": "mixed",
+        "approaches": [
+          "Compute each row’s minimum and each column’s maximum; a cell that is both is the value.",
+          "Check maximin = minimax."
+        ],
+        "wrongTurns": [
+          "Randomizing when a pure saddle already exists.",
+          "Confusing row-min with column-min."
+        ],
+        "hintLadder": [
+          "In a zero-sum game, scan for a saddle point first.",
+          "A saddle is an entry that is the smallest in its row and the largest in its column.",
+          "If the largest row-minimum equals the smallest column-maximum, that common entry is the game’s value (pure play)."
+        ],
+        "rubric": {
+          "correctness": "States the exact equilibrium / value / move and justifies why it is optimal.",
+          "approach": "Uses the right tool (best response, dominance, indifference, minimax, backward induction, or nim-sum) rather than guessing.",
+          "rigor": "Checks every case / column, states assumptions (rationality, normal play, tie-breaking), and avoids unjustified independence.",
+          "communication": "Thinks aloud, names the structure before computing, and explains the intuition.",
+          "speed": "Reaches the answer without flailing; hard tier allows more synthesis time."
+        }
+      },
+      "followUps": [
+        "What if no saddle existed — how would you find the value?",
+        "Why is the saddle entry an equilibrium in pure strategies?"
+      ]
+    },
+    {
+      "id": "tmpl-mixed-value#mp",
+      "tier": "harder",
+      "fingerprint": "tmpl-mixed-value:mixed-value:mp",
+      "template": {
+        "id": "tmpl-mixed-value",
+        "params": {
+          "matrix": [
+            [
+              1,
+              -1
+            ],
+            [
+              -1,
+              1
+            ]
+          ]
+        }
+      },
+      "prompt": "Matching Pennies, row’s payoffs [[1,-1],[-1,1]] (zero-sum). What is the value of the game?",
+      "source": "Notre Dame Lecture 29 (2×2 value formula); UMass Morra. GB Ch.2.",
+      "engineCheck": {
+        "module": "src/engine/gameTheory.ts",
+        "calls": [
+          "tmpl-mixed-value({\"matrix\":[[1,-1],[-1,1]]}) → 0"
+        ],
+        "answer": "0",
+        "verified": true
+      },
+      "hidden": {
+        "answer": "0",
+        "approaches": [
+          "Confirm no saddle, then apply the 2×2 value formula.",
+          "Set the opponent indifferent between their columns and solve."
+        ],
+        "wrongTurns": [
+          "Applying the formula when a saddle exists.",
+          "Mislabelling the matrix so the terms transpose."
+        ],
+        "hintLadder": [
+          "With no saddle point, both players must randomize.",
+          "Make the opponent indifferent between their options — set their two expected payoffs equal.",
+          "Use the 2×2 value formula v=(ad−bc)/(a+d−b−c) on the row-payoff entries."
+        ],
+        "rubric": {
+          "correctness": "States the exact equilibrium / value / move and justifies why it is optimal.",
+          "approach": "Uses the right tool (best response, dominance, indifference, minimax, backward induction, or nim-sum) rather than guessing.",
+          "rigor": "Checks every case / column, states assumptions (rationality, normal play, tie-breaking), and avoids unjustified independence.",
+          "communication": "Thinks aloud, names the structure before computing, and explains the intuition.",
+          "speed": "Reaches the answer without flailing; hard tier allows more synthesis time."
+        }
+      },
+      "followUps": [
+        "What mix achieves this value?",
+        "How does the value change if you add a constant to every payoff?"
+      ]
+    },
+    {
+      "id": "tmpl-mixed-value#morra",
+      "tier": "harder",
+      "fingerprint": "tmpl-mixed-value:mixed-value:morra",
+      "template": {
+        "id": "tmpl-mixed-value",
+        "params": {
+          "matrix": [
+            [
+              2,
+              -3
+            ],
+            [
+              -3,
+              4
+            ]
+          ]
+        }
+      },
+      "prompt": "Two-finger Morra (zero-sum), row’s payoffs [[2,-3],[-3,4]]. What is the value of the game?",
+      "source": "Notre Dame Lecture 29 (2×2 value formula); UMass Morra. GB Ch.2.",
+      "engineCheck": {
+        "module": "src/engine/gameTheory.ts",
+        "calls": [
+          "tmpl-mixed-value({\"matrix\":[[2,-3],[-3,4]]}) → -1/12"
+        ],
+        "answer": "-1/12",
+        "verified": true
+      },
+      "hidden": {
+        "answer": "-1/12",
+        "approaches": [
+          "Confirm no saddle, then apply the 2×2 value formula.",
+          "Set the opponent indifferent between their columns and solve."
+        ],
+        "wrongTurns": [
+          "Applying the formula when a saddle exists.",
+          "Mislabelling the matrix so the terms transpose."
+        ],
+        "hintLadder": [
+          "With no saddle point, both players must randomize.",
+          "Make the opponent indifferent between their options — set their two expected payoffs equal.",
+          "Use the 2×2 value formula v=(ad−bc)/(a+d−b−c) on the row-payoff entries."
+        ],
+        "rubric": {
+          "correctness": "States the exact equilibrium / value / move and justifies why it is optimal.",
+          "approach": "Uses the right tool (best response, dominance, indifference, minimax, backward induction, or nim-sum) rather than guessing.",
+          "rigor": "Checks every case / column, states assumptions (rationality, normal play, tie-breaking), and avoids unjustified independence.",
+          "communication": "Thinks aloud, names the structure before computing, and explains the intuition.",
+          "speed": "Reaches the answer without flailing; hard tier allows more synthesis time."
+        }
+      },
+      "followUps": [
+        "What mix achieves this value?",
+        "How does the value change if you add a constant to every payoff?"
+      ]
+    },
+    {
+      "id": "tmpl-mixed-value#nosaddle",
+      "tier": "harder",
+      "fingerprint": "tmpl-mixed-value:mixed-value:1-3-4-2",
+      "template": {
+        "id": "tmpl-mixed-value",
+        "params": {
+          "matrix": [
+            [
+              1,
+              3
+            ],
+            [
+              4,
+              2
+            ]
+          ]
+        }
+      },
+      "prompt": "Zero-sum game with no saddle, row’s payoffs [[1,3],[4,2]]. What is the value of the game?",
+      "source": "Notre Dame Lecture 29 (2×2 value formula); UMass Morra. GB Ch.2.",
+      "engineCheck": {
+        "module": "src/engine/gameTheory.ts",
+        "calls": [
+          "tmpl-mixed-value({\"matrix\":[[1,3],[4,2]]}) → 5/2"
+        ],
+        "answer": "5/2",
+        "verified": true
+      },
+      "hidden": {
+        "answer": "5/2",
+        "approaches": [
+          "Confirm no saddle, then apply the 2×2 value formula.",
+          "Set the opponent indifferent between their columns and solve."
+        ],
+        "wrongTurns": [
+          "Applying the formula when a saddle exists.",
+          "Mislabelling the matrix so the terms transpose."
+        ],
+        "hintLadder": [
+          "With no saddle point, both players must randomize.",
+          "Make the opponent indifferent between their options — set their two expected payoffs equal.",
+          "Use the 2×2 value formula v=(ad−bc)/(a+d−b−c) on the row-payoff entries."
+        ],
+        "rubric": {
+          "correctness": "States the exact equilibrium / value / move and justifies why it is optimal.",
+          "approach": "Uses the right tool (best response, dominance, indifference, minimax, backward induction, or nim-sum) rather than guessing.",
+          "rigor": "Checks every case / column, states assumptions (rationality, normal play, tie-breaking), and avoids unjustified independence.",
+          "communication": "Thinks aloud, names the structure before computing, and explains the intuition.",
+          "speed": "Reaches the answer without flailing; hard tier allows more synthesis time."
+        }
+      },
+      "followUps": [
+        "What mix achieves this value?",
+        "How does the value change if you add a constant to every payoff?"
+      ]
+    },
+    {
+      "id": "tmpl-mixed-value#brutal",
+      "tier": "brutal",
+      "fingerprint": "tmpl-mixed-value:mixed-value:0-n2-n5-3",
+      "template": {
+        "id": "tmpl-mixed-value",
+        "params": {
+          "matrix": [
+            [
+              0,
+              -2
+            ],
+            [
+              -5,
+              3
+            ]
+          ]
+        }
+      },
+      "prompt": "Zero-sum game, row’s payoffs [[0,-2],[-5,3]] (no saddle). What is the value of the game?",
+      "source": "Notre Dame Lecture 29 (2×2 value formula); UMass Morra. GB Ch.2.",
+      "engineCheck": {
+        "module": "src/engine/gameTheory.ts",
+        "calls": [
+          "tmpl-mixed-value({\"matrix\":[[0,-2],[-5,3]]}) → -1"
+        ],
+        "answer": "-1",
+        "verified": true
+      },
+      "hidden": {
+        "answer": "-1",
+        "approaches": [
+          "Confirm no saddle, then apply the 2×2 value formula.",
+          "Set the opponent indifferent between their columns and solve."
+        ],
+        "wrongTurns": [
+          "Applying the formula when a saddle exists.",
+          "Mislabelling the matrix so the terms transpose."
+        ],
+        "hintLadder": [
+          "With no saddle point, both players must randomize.",
+          "Make the opponent indifferent between their options — set their two expected payoffs equal.",
+          "Use the 2×2 value formula v=(ad−bc)/(a+d−b−c) on the row-payoff entries."
+        ],
+        "rubric": {
+          "correctness": "States the exact equilibrium / value / move and justifies why it is optimal.",
+          "approach": "Uses the right tool (best response, dominance, indifference, minimax, backward induction, or nim-sum) rather than guessing.",
+          "rigor": "Checks every case / column, states assumptions (rationality, normal play, tie-breaking), and avoids unjustified independence.",
+          "communication": "Thinks aloud, names the structure before computing, and explains the intuition.",
+          "speed": "Reaches the answer without flailing; hard tier allows more synthesis time."
+        }
+      },
+      "followUps": [
+        "What mix achieves this value?",
+        "How does the value change if you add a constant to every payoff?"
+      ]
+    },
+    {
+      "id": "tmpl-mixed-prob#mp",
+      "tier": "hard",
+      "fingerprint": "tmpl-mixed-prob:mixed-prob:mp",
+      "template": {
+        "id": "tmpl-mixed-prob",
+        "params": {
+          "matrix": [
+            [
+              1,
+              -1
+            ],
+            [
+              -1,
+              1
+            ]
+          ]
+        }
+      },
+      "prompt": "Matching Pennies, row’s payoffs [[1,-1],[-1,1]]. With what probability should the row player choose the top row in equilibrium?",
+      "source": "Berkeley econ160 (mixed NE); UMass Morra. GB Ch.2.",
+      "engineCheck": {
+        "module": "src/engine/gameTheory.ts",
+        "calls": [
+          "tmpl-mixed-prob({\"matrix\":[[1,-1],[-1,1]]}) → 1/2"
+        ],
+        "answer": "1/2",
+        "verified": true
+      },
+      "hidden": {
+        "answer": "1/2",
+        "approaches": [
+          "Set the opponent’s expected payoffs from their two replies equal and solve for your mix.",
+          "Use p=(d−c)/(a+d−b−c)."
+        ],
+        "wrongTurns": [
+          "Mixing to maximize your own payoff instead of making the opponent indifferent.",
+          "Assuming 50/50 when the game is asymmetric."
+        ],
+        "hintLadder": [
+          "The right mix makes your opponent unable to exploit you.",
+          "Choose your randomization so the opponent is indifferent between their two replies.",
+          "Set the opponent’s two expected payoffs equal and solve the resulting linear equation for your probability."
+        ],
+        "rubric": {
+          "correctness": "States the exact equilibrium / value / move and justifies why it is optimal.",
+          "approach": "Uses the right tool (best response, dominance, indifference, minimax, backward induction, or nim-sum) rather than guessing.",
+          "rigor": "Checks every case / column, states assumptions (rationality, normal play, tie-breaking), and avoids unjustified independence.",
+          "communication": "Thinks aloud, names the structure before computing, and explains the intuition.",
+          "speed": "Reaches the answer without flailing; hard tier allows more synthesis time."
+        }
+      },
+      "followUps": [
+        "What is the resulting value of the game?",
+        "What is the opponent’s optimal mix?"
+      ]
+    },
+    {
+      "id": "tmpl-mixed-prob#morra",
+      "tier": "harder",
+      "fingerprint": "tmpl-mixed-prob:mixed-prob:morra",
+      "template": {
+        "id": "tmpl-mixed-prob",
+        "params": {
+          "matrix": [
+            [
+              2,
+              -3
+            ],
+            [
+              -3,
+              4
+            ]
+          ]
+        }
+      },
+      "prompt": "Two-finger Morra, row’s payoffs [[2,-3],[-3,4]]. With what probability should the row player show one finger (top row) in equilibrium?",
+      "source": "Berkeley econ160 (mixed NE); UMass Morra. GB Ch.2.",
+      "engineCheck": {
+        "module": "src/engine/gameTheory.ts",
+        "calls": [
+          "tmpl-mixed-prob({\"matrix\":[[2,-3],[-3,4]]}) → 7/12"
+        ],
+        "answer": "7/12",
+        "verified": true
+      },
+      "hidden": {
+        "answer": "7/12",
+        "approaches": [
+          "Set the opponent’s expected payoffs from their two replies equal and solve for your mix.",
+          "Use p=(d−c)/(a+d−b−c)."
+        ],
+        "wrongTurns": [
+          "Mixing to maximize your own payoff instead of making the opponent indifferent.",
+          "Assuming 50/50 when the game is asymmetric."
+        ],
+        "hintLadder": [
+          "The right mix makes your opponent unable to exploit you.",
+          "Choose your randomization so the opponent is indifferent between their two replies.",
+          "Set the opponent’s two expected payoffs equal and solve the resulting linear equation for your probability."
+        ],
+        "rubric": {
+          "correctness": "States the exact equilibrium / value / move and justifies why it is optimal.",
+          "approach": "Uses the right tool (best response, dominance, indifference, minimax, backward induction, or nim-sum) rather than guessing.",
+          "rigor": "Checks every case / column, states assumptions (rationality, normal play, tie-breaking), and avoids unjustified independence.",
+          "communication": "Thinks aloud, names the structure before computing, and explains the intuition.",
+          "speed": "Reaches the answer without flailing; hard tier allows more synthesis time."
+        }
+      },
+      "followUps": [
+        "What is the resulting value of the game?",
+        "What is the opponent’s optimal mix?"
+      ]
+    },
+    {
+      "id": "tmpl-mixed-prob#nosaddle",
+      "tier": "harder",
+      "fingerprint": "tmpl-mixed-prob:mixed-prob:1-3-4-2",
+      "template": {
+        "id": "tmpl-mixed-prob",
+        "params": {
+          "matrix": [
+            [
+              1,
+              3
+            ],
+            [
+              4,
+              2
+            ]
+          ]
+        }
+      },
+      "prompt": "Zero-sum game, row’s payoffs [[1,3],[4,2]]. With what probability should the row player choose the top row in equilibrium?",
+      "source": "Berkeley econ160 (mixed NE); UMass Morra. GB Ch.2.",
+      "engineCheck": {
+        "module": "src/engine/gameTheory.ts",
+        "calls": [
+          "tmpl-mixed-prob({\"matrix\":[[1,3],[4,2]]}) → 1/2"
+        ],
+        "answer": "1/2",
+        "verified": true
+      },
+      "hidden": {
+        "answer": "1/2",
+        "approaches": [
+          "Set the opponent’s expected payoffs from their two replies equal and solve for your mix.",
+          "Use p=(d−c)/(a+d−b−c)."
+        ],
+        "wrongTurns": [
+          "Mixing to maximize your own payoff instead of making the opponent indifferent.",
+          "Assuming 50/50 when the game is asymmetric."
+        ],
+        "hintLadder": [
+          "The right mix makes your opponent unable to exploit you.",
+          "Choose your randomization so the opponent is indifferent between their two replies.",
+          "Set the opponent’s two expected payoffs equal and solve the resulting linear equation for your probability."
+        ],
+        "rubric": {
+          "correctness": "States the exact equilibrium / value / move and justifies why it is optimal.",
+          "approach": "Uses the right tool (best response, dominance, indifference, minimax, backward induction, or nim-sum) rather than guessing.",
+          "rigor": "Checks every case / column, states assumptions (rationality, normal play, tie-breaking), and avoids unjustified independence.",
+          "communication": "Thinks aloud, names the structure before computing, and explains the intuition.",
+          "speed": "Reaches the answer without flailing; hard tier allows more synthesis time."
+        }
+      },
+      "followUps": [
+        "What is the resulting value of the game?",
+        "What is the opponent’s optimal mix?"
+      ]
+    },
+    {
+      "id": "tmpl-pirate#5-100",
+      "tier": "harder",
+      "fingerprint": "tmpl-pirate:pirate:5-100",
+      "template": {
+        "id": "tmpl-pirate",
+        "params": {
+          "pirates": 5,
+          "coins": 100
+        }
+      },
+      "prompt": "5 rational pirates split 100 gold; the most senior proposes, all vote, ≥50% (proposer breaks ties) passes or he’s thrown overboard. An indifferent pirate votes no. Give the full senior-to-junior allocation.",
+      "source": "Green Book Ch.2 “Screwy pirates” p.3; Mark Joshi QJIQ&A; Wikipedia Pirate game.",
+      "engineCheck": {
+        "module": "src/engine/gameTheory.ts",
+        "calls": [
+          "tmpl-pirate({\"pirates\":5,\"coins\":100}) → 98,0,1,0,1"
+        ],
+        "answer": "98,0,1,0,1",
+        "verified": true
+      },
+      "hidden": {
+        "answer": "98,0,1,0,1",
+        "approaches": [
+          "Solve the 1-, 2-, 3-… pirate subgames in turn; each pirate compares your offer to the fallback if you’re thrown overboard.",
+          "Bribe the cheapest votes you need, one coin each."
+        ],
+        "wrongTurns": [
+          "Assuming a fair split.",
+          "Forgetting that an indifferent pirate votes NO (so a bribe must be strictly positive)."
+        ],
+        "hintLadder": [
+          "Work backwards from the smallest crew that could be left.",
+          "Each pirate compares your offer to what they’d get if your proposal fails and you go overboard.",
+          "You need just over half the votes including your own — buy the minimum number of pirates who’d otherwise get nothing, one coin each, and keep the rest."
+        ],
+        "rubric": {
+          "correctness": "States the exact equilibrium / value / move and justifies why it is optimal.",
+          "approach": "Uses the right tool (best response, dominance, indifference, minimax, backward induction, or nim-sum) rather than guessing.",
+          "rigor": "Checks every case / column, states assumptions (rationality, normal play, tie-breaking), and avoids unjustified independence.",
+          "communication": "Thinks aloud, names the structure before computing, and explains the intuition.",
+          "speed": "Reaches the answer without flailing; hard tier allows more synthesis time."
+        }
+      },
+      "followUps": [
+        "Generalize: with 2n+1 pirates, how much does the captain keep?",
+        "What changes if an indifferent pirate votes YES instead?"
+      ]
+    },
+    {
+      "id": "tmpl-pirate#3-100",
+      "tier": "hard",
+      "fingerprint": "tmpl-pirate:pirate:3-100",
+      "template": {
+        "id": "tmpl-pirate",
+        "params": {
+          "pirates": 3,
+          "coins": 100
+        }
+      },
+      "prompt": "3 rational pirates split 100 gold under the standard rules (≥50%, proposer tie-break, indifferent votes no). Give the full senior-to-junior allocation.",
+      "source": "Green Book Ch.2 “Screwy pirates” p.3; Mark Joshi QJIQ&A; Wikipedia Pirate game.",
+      "engineCheck": {
+        "module": "src/engine/gameTheory.ts",
+        "calls": [
+          "tmpl-pirate({\"pirates\":3,\"coins\":100}) → 99,0,1"
+        ],
+        "answer": "99,0,1",
+        "verified": true
+      },
+      "hidden": {
+        "answer": "99,0,1",
+        "approaches": [
+          "Solve the 1-, 2-, 3-… pirate subgames in turn; each pirate compares your offer to the fallback if you’re thrown overboard.",
+          "Bribe the cheapest votes you need, one coin each."
+        ],
+        "wrongTurns": [
+          "Assuming a fair split.",
+          "Forgetting that an indifferent pirate votes NO (so a bribe must be strictly positive)."
+        ],
+        "hintLadder": [
+          "Work backwards from the smallest crew that could be left.",
+          "Each pirate compares your offer to what they’d get if your proposal fails and you go overboard.",
+          "You need just over half the votes including your own — buy the minimum number of pirates who’d otherwise get nothing, one coin each, and keep the rest."
+        ],
+        "rubric": {
+          "correctness": "States the exact equilibrium / value / move and justifies why it is optimal.",
+          "approach": "Uses the right tool (best response, dominance, indifference, minimax, backward induction, or nim-sum) rather than guessing.",
+          "rigor": "Checks every case / column, states assumptions (rationality, normal play, tie-breaking), and avoids unjustified independence.",
+          "communication": "Thinks aloud, names the structure before computing, and explains the intuition.",
+          "speed": "Reaches the answer without flailing; hard tier allows more synthesis time."
+        }
+      },
+      "followUps": [
+        "Generalize: with 2n+1 pirates, how much does the captain keep?",
+        "What changes if an indifferent pirate votes YES instead?"
+      ]
+    },
+    {
+      "id": "tmpl-pirate#4-100",
+      "tier": "hard",
+      "fingerprint": "tmpl-pirate:pirate:4-100",
+      "template": {
+        "id": "tmpl-pirate",
+        "params": {
+          "pirates": 4,
+          "coins": 100
+        }
+      },
+      "prompt": "4 pirates, 100 gold, standard rules. Give the full senior-to-junior allocation.",
+      "source": "Green Book Ch.2 “Screwy pirates” p.3; Mark Joshi QJIQ&A; Wikipedia Pirate game.",
+      "engineCheck": {
+        "module": "src/engine/gameTheory.ts",
+        "calls": [
+          "tmpl-pirate({\"pirates\":4,\"coins\":100}) → 99,0,1,0"
+        ],
+        "answer": "99,0,1,0",
+        "verified": true
+      },
+      "hidden": {
+        "answer": "99,0,1,0",
+        "approaches": [
+          "Solve the 1-, 2-, 3-… pirate subgames in turn; each pirate compares your offer to the fallback if you’re thrown overboard.",
+          "Bribe the cheapest votes you need, one coin each."
+        ],
+        "wrongTurns": [
+          "Assuming a fair split.",
+          "Forgetting that an indifferent pirate votes NO (so a bribe must be strictly positive)."
+        ],
+        "hintLadder": [
+          "Work backwards from the smallest crew that could be left.",
+          "Each pirate compares your offer to what they’d get if your proposal fails and you go overboard.",
+          "You need just over half the votes including your own — buy the minimum number of pirates who’d otherwise get nothing, one coin each, and keep the rest."
+        ],
+        "rubric": {
+          "correctness": "States the exact equilibrium / value / move and justifies why it is optimal.",
+          "approach": "Uses the right tool (best response, dominance, indifference, minimax, backward induction, or nim-sum) rather than guessing.",
+          "rigor": "Checks every case / column, states assumptions (rationality, normal play, tie-breaking), and avoids unjustified independence.",
+          "communication": "Thinks aloud, names the structure before computing, and explains the intuition.",
+          "speed": "Reaches the answer without flailing; hard tier allows more synthesis time."
+        }
+      },
+      "followUps": [
+        "Generalize: with 2n+1 pirates, how much does the captain keep?",
+        "What changes if an indifferent pirate votes YES instead?"
+      ]
+    },
+    {
+      "id": "tmpl-pirate#7-100",
+      "tier": "brutal",
+      "fingerprint": "tmpl-pirate:pirate:7-100",
+      "template": {
+        "id": "tmpl-pirate",
+        "params": {
+          "pirates": 7,
+          "coins": 100
+        }
+      },
+      "prompt": "7 pirates, 100 gold, standard rules. Give the full senior-to-junior allocation.",
+      "source": "Green Book Ch.2 “Screwy pirates” p.3; Mark Joshi QJIQ&A; Wikipedia Pirate game.",
+      "engineCheck": {
+        "module": "src/engine/gameTheory.ts",
+        "calls": [
+          "tmpl-pirate({\"pirates\":7,\"coins\":100}) → 97,0,1,0,1,0,1"
+        ],
+        "answer": "97,0,1,0,1,0,1",
+        "verified": true
+      },
+      "hidden": {
+        "answer": "97,0,1,0,1,0,1",
+        "approaches": [
+          "Solve the 1-, 2-, 3-… pirate subgames in turn; each pirate compares your offer to the fallback if you’re thrown overboard.",
+          "Bribe the cheapest votes you need, one coin each."
+        ],
+        "wrongTurns": [
+          "Assuming a fair split.",
+          "Forgetting that an indifferent pirate votes NO (so a bribe must be strictly positive)."
+        ],
+        "hintLadder": [
+          "Work backwards from the smallest crew that could be left.",
+          "Each pirate compares your offer to what they’d get if your proposal fails and you go overboard.",
+          "You need just over half the votes including your own — buy the minimum number of pirates who’d otherwise get nothing, one coin each, and keep the rest."
+        ],
+        "rubric": {
+          "correctness": "States the exact equilibrium / value / move and justifies why it is optimal.",
+          "approach": "Uses the right tool (best response, dominance, indifference, minimax, backward induction, or nim-sum) rather than guessing.",
+          "rigor": "Checks every case / column, states assumptions (rationality, normal play, tie-breaking), and avoids unjustified independence.",
+          "communication": "Thinks aloud, names the structure before computing, and explains the intuition.",
+          "speed": "Reaches the answer without flailing; hard tier allows more synthesis time."
+        }
+      },
+      "followUps": [
+        "Generalize: with 2n+1 pirates, how much does the captain keep?",
+        "What changes if an indifferent pirate votes YES instead?"
+      ]
+    },
+    {
+      "id": "tmpl-pirate#5-10",
+      "tier": "harder",
+      "fingerprint": "tmpl-pirate:pirate:5-10",
+      "template": {
+        "id": "tmpl-pirate",
+        "params": {
+          "pirates": 5,
+          "coins": 10
+        }
+      },
+      "prompt": "5 pirates split only 10 gold under the standard rules. Give the full senior-to-junior allocation.",
+      "source": "Green Book Ch.2 “Screwy pirates” p.3; Mark Joshi QJIQ&A; Wikipedia Pirate game.",
+      "engineCheck": {
+        "module": "src/engine/gameTheory.ts",
+        "calls": [
+          "tmpl-pirate({\"pirates\":5,\"coins\":10}) → 8,0,1,0,1"
+        ],
+        "answer": "8,0,1,0,1",
+        "verified": true
+      },
+      "hidden": {
+        "answer": "8,0,1,0,1",
+        "approaches": [
+          "Solve the 1-, 2-, 3-… pirate subgames in turn; each pirate compares your offer to the fallback if you’re thrown overboard.",
+          "Bribe the cheapest votes you need, one coin each."
+        ],
+        "wrongTurns": [
+          "Assuming a fair split.",
+          "Forgetting that an indifferent pirate votes NO (so a bribe must be strictly positive)."
+        ],
+        "hintLadder": [
+          "Work backwards from the smallest crew that could be left.",
+          "Each pirate compares your offer to what they’d get if your proposal fails and you go overboard.",
+          "You need just over half the votes including your own — buy the minimum number of pirates who’d otherwise get nothing, one coin each, and keep the rest."
+        ],
+        "rubric": {
+          "correctness": "States the exact equilibrium / value / move and justifies why it is optimal.",
+          "approach": "Uses the right tool (best response, dominance, indifference, minimax, backward induction, or nim-sum) rather than guessing.",
+          "rigor": "Checks every case / column, states assumptions (rationality, normal play, tie-breaking), and avoids unjustified independence.",
+          "communication": "Thinks aloud, names the structure before computing, and explains the intuition.",
+          "speed": "Reaches the answer without flailing; hard tier allows more synthesis time."
+        }
+      },
+      "followUps": [
+        "Generalize: with 2n+1 pirates, how much does the captain keep?",
+        "What changes if an indifferent pirate votes YES instead?"
+      ]
+    },
+    {
+      "id": "tmpl-nim-sum#3-4-5",
+      "tier": "hard",
+      "fingerprint": "tmpl-nim-sum:nim:3-4-5",
+      "template": {
+        "id": "tmpl-nim-sum",
+        "params": {
+          "heaps": [
+            3,
+            4,
+            5
+          ]
+        }
+      },
+      "prompt": "Nim with heaps (3,4,5), last to take wins. What is the nim-sum (and hence who wins)? Report the nim-sum.",
+      "source": "Wikipedia Nim (Bouton); Brilliant.org Nim; USACO Guide. GB Ch.2.",
+      "engineCheck": {
+        "module": "src/engine/gameTheory.ts",
+        "calls": [
+          "tmpl-nim-sum({\"heaps\":[3,4,5]}) → 2"
+        ],
+        "answer": "2",
+        "verified": true
+      },
+      "hidden": {
+        "answer": "2",
+        "approaches": [
+          "Compute the bitwise XOR of all heap sizes.",
+          "A non-zero nim-sum is a win for the mover; reduce a heap to make the nim-sum vanish."
+        ],
+        "wrongTurns": [
+          "Thinking the largest heap decides it.",
+          "Confusing normal play with misère play."
+        ],
+        "hintLadder": [
+          "Translate each heap to binary and think XOR.",
+          "Compute the nim-sum — the bitwise XOR of the heap sizes — and recall what a vanishing nim-sum means for the player to move.",
+          "If the XOR of all heaps vanishes the position is losing for the mover; otherwise some move makes it vanish."
+        ],
+        "rubric": {
+          "correctness": "States the exact equilibrium / value / move and justifies why it is optimal.",
+          "approach": "Uses the right tool (best response, dominance, indifference, minimax, backward induction, or nim-sum) rather than guessing.",
+          "rigor": "Checks every case / column, states assumptions (rationality, normal play, tie-breaking), and avoids unjustified independence.",
+          "communication": "Thinks aloud, names the structure before computing, and explains the intuition.",
+          "speed": "Reaches the answer without flailing; hard tier allows more synthesis time."
+        }
+      },
+      "followUps": [
+        "What is the actual winning move from here?",
+        "How does misère Nim change the endgame?"
+      ]
+    },
+    {
+      "id": "tmpl-nim-sum#1-4-5",
+      "tier": "harder",
+      "fingerprint": "tmpl-nim-sum:nim:1-4-5",
+      "template": {
+        "id": "tmpl-nim-sum",
+        "params": {
+          "heaps": [
+            1,
+            4,
+            5
+          ]
+        }
+      },
+      "prompt": "Nim with heaps (1,4,5). Report the nim-sum (a value of 0 means the player to move loses).",
+      "source": "Wikipedia Nim (Bouton); Brilliant.org Nim; USACO Guide. GB Ch.2.",
+      "engineCheck": {
+        "module": "src/engine/gameTheory.ts",
+        "calls": [
+          "tmpl-nim-sum({\"heaps\":[1,4,5]}) → 0"
+        ],
+        "answer": "0",
+        "verified": true
+      },
+      "hidden": {
+        "answer": "0",
+        "approaches": [
+          "Compute the bitwise XOR of all heap sizes.",
+          "A non-zero nim-sum is a win for the mover; reduce a heap to make the nim-sum vanish."
+        ],
+        "wrongTurns": [
+          "Thinking the largest heap decides it.",
+          "Confusing normal play with misère play."
+        ],
+        "hintLadder": [
+          "Translate each heap to binary and think XOR.",
+          "Compute the nim-sum — the bitwise XOR of the heap sizes — and recall what a vanishing nim-sum means for the player to move.",
+          "If the XOR of all heaps vanishes the position is losing for the mover; otherwise some move makes it vanish."
+        ],
+        "rubric": {
+          "correctness": "States the exact equilibrium / value / move and justifies why it is optimal.",
+          "approach": "Uses the right tool (best response, dominance, indifference, minimax, backward induction, or nim-sum) rather than guessing.",
+          "rigor": "Checks every case / column, states assumptions (rationality, normal play, tie-breaking), and avoids unjustified independence.",
+          "communication": "Thinks aloud, names the structure before computing, and explains the intuition.",
+          "speed": "Reaches the answer without flailing; hard tier allows more synthesis time."
+        }
+      },
+      "followUps": [
+        "What is the actual winning move from here?",
+        "How does misère Nim change the endgame?"
+      ]
+    },
+    {
+      "id": "tmpl-nim-sum#1-2-3",
+      "tier": "harder",
+      "fingerprint": "tmpl-nim-sum:nim:1-2-3",
+      "template": {
+        "id": "tmpl-nim-sum",
+        "params": {
+          "heaps": [
+            1,
+            2,
+            3
+          ]
+        }
+      },
+      "prompt": "Nim with heaps (1,2,3). Report the nim-sum.",
+      "source": "Wikipedia Nim (Bouton); Brilliant.org Nim; USACO Guide. GB Ch.2.",
+      "engineCheck": {
+        "module": "src/engine/gameTheory.ts",
+        "calls": [
+          "tmpl-nim-sum({\"heaps\":[1,2,3]}) → 0"
+        ],
+        "answer": "0",
+        "verified": true
+      },
+      "hidden": {
+        "answer": "0",
+        "approaches": [
+          "Compute the bitwise XOR of all heap sizes.",
+          "A non-zero nim-sum is a win for the mover; reduce a heap to make the nim-sum vanish."
+        ],
+        "wrongTurns": [
+          "Thinking the largest heap decides it.",
+          "Confusing normal play with misère play."
+        ],
+        "hintLadder": [
+          "Translate each heap to binary and think XOR.",
+          "Compute the nim-sum — the bitwise XOR of the heap sizes — and recall what a vanishing nim-sum means for the player to move.",
+          "If the XOR of all heaps vanishes the position is losing for the mover; otherwise some move makes it vanish."
+        ],
+        "rubric": {
+          "correctness": "States the exact equilibrium / value / move and justifies why it is optimal.",
+          "approach": "Uses the right tool (best response, dominance, indifference, minimax, backward induction, or nim-sum) rather than guessing.",
+          "rigor": "Checks every case / column, states assumptions (rationality, normal play, tie-breaking), and avoids unjustified independence.",
+          "communication": "Thinks aloud, names the structure before computing, and explains the intuition.",
+          "speed": "Reaches the answer without flailing; hard tier allows more synthesis time."
+        }
+      },
+      "followUps": [
+        "What is the actual winning move from here?",
+        "How does misère Nim change the endgame?"
+      ]
+    },
+    {
+      "id": "tmpl-nim-sum#5-7-9",
+      "tier": "brutal",
+      "fingerprint": "tmpl-nim-sum:nim:5-7-9",
+      "template": {
+        "id": "tmpl-nim-sum",
+        "params": {
+          "heaps": [
+            5,
+            7,
+            9
+          ]
+        }
+      },
+      "prompt": "Nim with heaps (5,7,9). Report the nim-sum.",
+      "source": "Wikipedia Nim (Bouton); Brilliant.org Nim; USACO Guide. GB Ch.2.",
+      "engineCheck": {
+        "module": "src/engine/gameTheory.ts",
+        "calls": [
+          "tmpl-nim-sum({\"heaps\":[5,7,9]}) → 11"
+        ],
+        "answer": "11",
+        "verified": true
+      },
+      "hidden": {
+        "answer": "11",
+        "approaches": [
+          "Compute the bitwise XOR of all heap sizes.",
+          "A non-zero nim-sum is a win for the mover; reduce a heap to make the nim-sum vanish."
+        ],
+        "wrongTurns": [
+          "Thinking the largest heap decides it.",
+          "Confusing normal play with misère play."
+        ],
+        "hintLadder": [
+          "Translate each heap to binary and think XOR.",
+          "Compute the nim-sum — the bitwise XOR of the heap sizes — and recall what a vanishing nim-sum means for the player to move.",
+          "If the XOR of all heaps vanishes the position is losing for the mover; otherwise some move makes it vanish."
+        ],
+        "rubric": {
+          "correctness": "States the exact equilibrium / value / move and justifies why it is optimal.",
+          "approach": "Uses the right tool (best response, dominance, indifference, minimax, backward induction, or nim-sum) rather than guessing.",
+          "rigor": "Checks every case / column, states assumptions (rationality, normal play, tie-breaking), and avoids unjustified independence.",
+          "communication": "Thinks aloud, names the structure before computing, and explains the intuition.",
+          "speed": "Reaches the answer without flailing; hard tier allows more synthesis time."
+        }
+      },
+      "followUps": [
+        "What is the actual winning move from here?",
+        "How does misère Nim change the endgame?"
+      ]
+    },
+    {
+      "id": "tmpl-nim-sum#2-3-4-5",
+      "tier": "brutal",
+      "fingerprint": "tmpl-nim-sum:nim:2-3-4-5",
+      "template": {
+        "id": "tmpl-nim-sum",
+        "params": {
+          "heaps": [
+            2,
+            3,
+            4,
+            5
+          ]
+        }
+      },
+      "prompt": "Nim with four heaps (2,3,4,5). Report the nim-sum.",
+      "source": "Wikipedia Nim (Bouton); Brilliant.org Nim; USACO Guide. GB Ch.2.",
+      "engineCheck": {
+        "module": "src/engine/gameTheory.ts",
+        "calls": [
+          "tmpl-nim-sum({\"heaps\":[2,3,4,5]}) → 0"
+        ],
+        "answer": "0",
+        "verified": true
+      },
+      "hidden": {
+        "answer": "0",
+        "approaches": [
+          "Compute the bitwise XOR of all heap sizes.",
+          "A non-zero nim-sum is a win for the mover; reduce a heap to make the nim-sum vanish."
+        ],
+        "wrongTurns": [
+          "Thinking the largest heap decides it.",
+          "Confusing normal play with misère play."
+        ],
+        "hintLadder": [
+          "Translate each heap to binary and think XOR.",
+          "Compute the nim-sum — the bitwise XOR of the heap sizes — and recall what a vanishing nim-sum means for the player to move.",
+          "If the XOR of all heaps vanishes the position is losing for the mover; otherwise some move makes it vanish."
+        ],
+        "rubric": {
+          "correctness": "States the exact equilibrium / value / move and justifies why it is optimal.",
+          "approach": "Uses the right tool (best response, dominance, indifference, minimax, backward induction, or nim-sum) rather than guessing.",
+          "rigor": "Checks every case / column, states assumptions (rationality, normal play, tie-breaking), and avoids unjustified independence.",
+          "communication": "Thinks aloud, names the structure before computing, and explains the intuition.",
+          "speed": "Reaches the answer without flailing; hard tier allows more synthesis time."
+        }
+      },
+      "followUps": [
+        "What is the actual winning move from here?",
+        "How does misère Nim change the endgame?"
+      ]
+    },
+    {
+      "id": "tmpl-subtraction#12-3",
+      "tier": "hard",
+      "fingerprint": "tmpl-subtraction:sub:12-3",
+      "template": {
+        "id": "tmpl-subtraction",
+        "params": {
+          "pile": 12,
+          "maxRemove": 3
+        }
+      },
+      "prompt": "A pile of 12; each turn remove 1–3; last to take wins. Report your winning first move (0 means the position is losing for you).",
+      "source": "NYU take-away notes; Wikipedia Nim §subtraction / §21 game; Bachet. GB Ch.2.",
+      "engineCheck": {
+        "module": "src/engine/gameTheory.ts",
+        "calls": [
+          "tmpl-subtraction({\"pile\":12,\"maxRemove\":3}) → 0"
+        ],
+        "answer": "0",
+        "verified": true
+      },
+      "hidden": {
+        "answer": "0",
+        "approaches": [
+          "Find positions from which every move hands the opponent a winning position.",
+          "Land the opponent on a multiple of (k+1)."
+        ],
+        "wrongTurns": [
+          "Greedily taking the maximum each turn.",
+          "Forgetting misère (“last loses”) shifts the losing positions."
+        ],
+        "hintLadder": [
+          "Find the positions from which every legal move hands the opponent a winning position.",
+          "Those losing positions are the multiples of (the most you can take + 1).",
+          "Remove the pile’s remainder modulo (max+1) to drop the opponent onto the nearest losing multiple — a vanishing remainder means you are already losing."
+        ],
+        "rubric": {
+          "correctness": "States the exact equilibrium / value / move and justifies why it is optimal.",
+          "approach": "Uses the right tool (best response, dominance, indifference, minimax, backward induction, or nim-sum) rather than guessing.",
+          "rigor": "Checks every case / column, states assumptions (rationality, normal play, tie-breaking), and avoids unjustified independence.",
+          "communication": "Thinks aloud, names the structure before computing, and explains the intuition.",
+          "speed": "Reaches the answer without flailing; hard tier allows more synthesis time."
+        }
+      },
+      "followUps": [
+        "How many tokens do you take on your first move?",
+        "How does the verbal “21” (misère) version differ?"
+      ]
+    },
+    {
+      "id": "tmpl-subtraction#21-4",
+      "tier": "harder",
+      "fingerprint": "tmpl-subtraction:sub:21-4",
+      "template": {
+        "id": "tmpl-subtraction",
+        "params": {
+          "pile": 21,
+          "maxRemove": 4
+        }
+      },
+      "prompt": "A pile of 21; each turn remove 1–4; last to take wins. Report your winning first move (0 = losing position).",
+      "source": "NYU take-away notes; Wikipedia Nim §subtraction / §21 game; Bachet. GB Ch.2.",
+      "engineCheck": {
+        "module": "src/engine/gameTheory.ts",
+        "calls": [
+          "tmpl-subtraction({\"pile\":21,\"maxRemove\":4}) → 1"
+        ],
+        "answer": "1",
+        "verified": true
+      },
+      "hidden": {
+        "answer": "1",
+        "approaches": [
+          "Find positions from which every move hands the opponent a winning position.",
+          "Land the opponent on a multiple of (k+1)."
+        ],
+        "wrongTurns": [
+          "Greedily taking the maximum each turn.",
+          "Forgetting misère (“last loses”) shifts the losing positions."
+        ],
+        "hintLadder": [
+          "Find the positions from which every legal move hands the opponent a winning position.",
+          "Those losing positions are the multiples of (the most you can take + 1).",
+          "Remove the pile’s remainder modulo (max+1) to drop the opponent onto the nearest losing multiple — a vanishing remainder means you are already losing."
+        ],
+        "rubric": {
+          "correctness": "States the exact equilibrium / value / move and justifies why it is optimal.",
+          "approach": "Uses the right tool (best response, dominance, indifference, minimax, backward induction, or nim-sum) rather than guessing.",
+          "rigor": "Checks every case / column, states assumptions (rationality, normal play, tie-breaking), and avoids unjustified independence.",
+          "communication": "Thinks aloud, names the structure before computing, and explains the intuition.",
+          "speed": "Reaches the answer without flailing; hard tier allows more synthesis time."
+        }
+      },
+      "followUps": [
+        "How many tokens do you take on your first move?",
+        "How does the verbal “21” (misère) version differ?"
+      ]
+    },
+    {
+      "id": "tmpl-subtraction#100-10",
+      "tier": "harder",
+      "fingerprint": "tmpl-subtraction:sub:100-10",
+      "template": {
+        "id": "tmpl-subtraction",
+        "params": {
+          "pile": 100,
+          "maxRemove": 10
+        }
+      },
+      "prompt": "Race to 100: a running total reaches 100; each turn add 1–10; the one who hits 100 wins. Report the first player’s winning opening move (0 = losing).",
+      "source": "NYU take-away notes; Wikipedia Nim §subtraction / §21 game; Bachet. GB Ch.2.",
+      "engineCheck": {
+        "module": "src/engine/gameTheory.ts",
+        "calls": [
+          "tmpl-subtraction({\"pile\":100,\"maxRemove\":10}) → 1"
+        ],
+        "answer": "1",
+        "verified": true
+      },
+      "hidden": {
+        "answer": "1",
+        "approaches": [
+          "Find positions from which every move hands the opponent a winning position.",
+          "Land the opponent on a multiple of (k+1)."
+        ],
+        "wrongTurns": [
+          "Greedily taking the maximum each turn.",
+          "Forgetting misère (“last loses”) shifts the losing positions."
+        ],
+        "hintLadder": [
+          "Find the positions from which every legal move hands the opponent a winning position.",
+          "Those losing positions are the multiples of (the most you can take + 1).",
+          "Remove the pile’s remainder modulo (max+1) to drop the opponent onto the nearest losing multiple — a vanishing remainder means you are already losing."
+        ],
+        "rubric": {
+          "correctness": "States the exact equilibrium / value / move and justifies why it is optimal.",
+          "approach": "Uses the right tool (best response, dominance, indifference, minimax, backward induction, or nim-sum) rather than guessing.",
+          "rigor": "Checks every case / column, states assumptions (rationality, normal play, tie-breaking), and avoids unjustified independence.",
+          "communication": "Thinks aloud, names the structure before computing, and explains the intuition.",
+          "speed": "Reaches the answer without flailing; hard tier allows more synthesis time."
+        }
+      },
+      "followUps": [
+        "How many tokens do you take on your first move?",
+        "How does the verbal “21” (misère) version differ?"
+      ]
+    },
+    {
+      "id": "tmpl-subtraction#15-4",
+      "tier": "harder",
+      "fingerprint": "tmpl-subtraction:sub:15-4",
+      "template": {
+        "id": "tmpl-subtraction",
+        "params": {
+          "pile": 15,
+          "maxRemove": 4
+        }
+      },
+      "prompt": "A pile of 15; remove 1–4 each turn; last to take wins. Report your winning first move (0 = losing).",
+      "source": "NYU take-away notes; Wikipedia Nim §subtraction / §21 game; Bachet. GB Ch.2.",
+      "engineCheck": {
+        "module": "src/engine/gameTheory.ts",
+        "calls": [
+          "tmpl-subtraction({\"pile\":15,\"maxRemove\":4}) → 0"
+        ],
+        "answer": "0",
+        "verified": true
+      },
+      "hidden": {
+        "answer": "0",
+        "approaches": [
+          "Find positions from which every move hands the opponent a winning position.",
+          "Land the opponent on a multiple of (k+1)."
+        ],
+        "wrongTurns": [
+          "Greedily taking the maximum each turn.",
+          "Forgetting misère (“last loses”) shifts the losing positions."
+        ],
+        "hintLadder": [
+          "Find the positions from which every legal move hands the opponent a winning position.",
+          "Those losing positions are the multiples of (the most you can take + 1).",
+          "Remove the pile’s remainder modulo (max+1) to drop the opponent onto the nearest losing multiple — a vanishing remainder means you are already losing."
+        ],
+        "rubric": {
+          "correctness": "States the exact equilibrium / value / move and justifies why it is optimal.",
+          "approach": "Uses the right tool (best response, dominance, indifference, minimax, backward induction, or nim-sum) rather than guessing.",
+          "rigor": "Checks every case / column, states assumptions (rationality, normal play, tie-breaking), and avoids unjustified independence.",
+          "communication": "Thinks aloud, names the structure before computing, and explains the intuition.",
+          "speed": "Reaches the answer without flailing; hard tier allows more synthesis time."
+        }
+      },
+      "followUps": [
+        "How many tokens do you take on your first move?",
+        "How does the verbal “21” (misère) version differ?"
+      ]
+    },
+    {
+      "id": "tmpl-backward-induction#centipede",
+      "tier": "harder",
+      "fingerprint": "tmpl-backward-induction:bi:centipede",
+      "template": {
+        "id": "tmpl-backward-induction",
+        "params": {
+          "tree": {
+            "kind": "decision",
+            "player": 0,
+            "moves": [
+              {
+                "label": "Take",
+                "child": {
+                  "kind": "leaf",
+                  "payoff": [
+                    {
+                      "n": 1,
+                      "d": 1
+                    },
+                    {
+                      "n": 0,
+                      "d": 1
+                    }
+                  ]
+                }
+              },
+              {
+                "label": "Pass",
+                "child": {
+                  "kind": "decision",
+                  "player": 1,
+                  "moves": [
+                    {
+                      "label": "Take",
+                      "child": {
+                        "kind": "leaf",
+                        "payoff": [
+                          {
+                            "n": 0,
+                            "d": 1
+                          },
+                          {
+                            "n": 2,
+                            "d": 1
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "label": "Pass",
+                      "child": {
+                        "kind": "decision",
+                        "player": 0,
+                        "moves": [
+                          {
+                            "label": "Take",
+                            "child": {
+                              "kind": "leaf",
+                              "payoff": [
+                                {
+                                  "n": 3,
+                                  "d": 1
+                                },
+                                {
+                                  "n": 0,
+                                  "d": 1
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "label": "Pass",
+                            "child": {
+                              "kind": "decision",
+                              "player": 1,
+                              "moves": [
+                                {
+                                  "label": "Take",
+                                  "child": {
+                                    "kind": "leaf",
+                                    "payoff": [
+                                      {
+                                        "n": 0,
+                                        "d": 1
+                                      },
+                                      {
+                                        "n": 4,
+                                        "d": 1
+                                      }
+                                    ]
+                                  }
+                                },
+                                {
+                                  "label": "Pass",
+                                  "child": {
+                                    "kind": "leaf",
+                                    "payoff": [
+                                      {
+                                        "n": 2,
+                                        "d": 1
+                                      },
+                                      {
+                                        "n": 2,
+                                        "d": 1
+                                      }
+                                    ]
+                                  }
+                                }
+                              ]
+                            }
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      },
+      "prompt": "A 4-move centipede: at each node a player can Take (ending the game) or Pass (growing the pot); Take/Pass leaves are [1,0],[0,2],[3,0],[0,4] and final Pass gives [2,2]. What is the subgame-perfect payoff?",
+      "source": "Wikipedia Centipede game; MIT 14.12; Yale ECON 159 (Stackelberg). GB Ch.2.",
+      "engineCheck": {
+        "module": "src/engine/gameTheory.ts",
+        "calls": [
+          "tmpl-backward-induction({\"tree\":{\"kind\":\"decision\",\"player\":0,\"moves\":[{\"label\":\"Take\",\"child\":{\"kind\":\"leaf\",\"payoff\":[{\"n\":1,\"d\":1},{\"n\":0,\"d\":1}]}},{\"label\":\"Pass\",\"child\":{\"kind\":\"decision\",\"player\":1,\"moves\":[{\"label\":\"Take\",\"child\":{\"kind\":\"leaf\",\"payoff\":[{\"n\":0,\"d\":1},{\"n\":2,\"d\":1}]}},{\"label\":\"Pass\",\"child\":{\"kind\":\"decision\",\"player\":0,\"moves\":[{\"label\":\"Take\",\"child\":{\"kind\":\"leaf\",\"payoff\":[{\"n\":3,\"d\":1},{\"n\":0,\"d\":1}]}},{\"label\":\"Pass\",\"child\":{\"kind\":\"decision\",\"player\":1,\"moves\":[{\"label\":\"Take\",\"child\":{\"kind\":\"leaf\",\"payoff\":[{\"n\":0,\"d\":1},{\"n\":4,\"d\":1}]}},{\"label\":\"Pass\",\"child\":{\"kind\":\"leaf\",\"payoff\":[{\"n\":2,\"d\":1},{\"n\":2,\"d\":1}]}}]}}]}}]}}]}}) → 1,0"
+        ],
+        "answer": "1,0",
+        "verified": true
+      },
+      "hidden": {
+        "answer": "1,0",
+        "approaches": [
+          "Solve the last decision first, then replace each subtree by its backward-induction payoff.",
+          "Propagate the chosen branches up to the root."
+        ],
+        "wrongTurns": [
+          "Assuming players cooperate for a better joint outcome.",
+          "Treating a non-credible threat as binding."
+        ],
+        "hintLadder": [
+          "Solve the last decision first, then fold backward.",
+          "At each node the player to move picks the branch maximizing their OWN payoff, anticipating optimal future play.",
+          "Replace each subtree by its backward-induction payoff and propagate up to the root — the root’s chosen branch is the subgame-perfect equilibrium."
+        ],
+        "rubric": {
+          "correctness": "States the exact equilibrium / value / move and justifies why it is optimal.",
+          "approach": "Uses the right tool (best response, dominance, indifference, minimax, backward induction, or nim-sum) rather than guessing.",
+          "rigor": "Checks every case / column, states assumptions (rationality, normal play, tie-breaking), and avoids unjustified independence.",
+          "communication": "Thinks aloud, names the structure before computing, and explains the intuition.",
+          "speed": "Reaches the answer without flailing; hard tier allows more synthesis time."
+        }
+      },
+      "followUps": [
+        "Is the SPE outcome Pareto-efficient here?",
+        "Which Nash equilibria are ruled out by subgame perfection?"
+      ]
+    },
+    {
+      "id": "tmpl-backward-induction#entry",
+      "tier": "hard",
+      "fingerprint": "tmpl-backward-induction:bi:entry",
+      "template": {
+        "id": "tmpl-backward-induction",
+        "params": {
+          "tree": {
+            "kind": "decision",
+            "player": 0,
+            "moves": [
+              {
+                "label": "Enter",
+                "child": {
+                  "kind": "decision",
+                  "player": 1,
+                  "moves": [
+                    {
+                      "label": "Fight",
+                      "child": {
+                        "kind": "leaf",
+                        "payoff": [
+                          {
+                            "n": -1,
+                            "d": 1
+                          },
+                          {
+                            "n": -1,
+                            "d": 1
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "label": "Accommodate",
+                      "child": {
+                        "kind": "leaf",
+                        "payoff": [
+                          {
+                            "n": 2,
+                            "d": 1
+                          },
+                          {
+                            "n": 1,
+                            "d": 1
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "label": "Stay out",
+                "child": {
+                  "kind": "leaf",
+                  "payoff": [
+                    {
+                      "n": 0,
+                      "d": 1
+                    },
+                    {
+                      "n": 3,
+                      "d": 1
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      },
+      "prompt": "Entry deterrence: the entrant chooses Enter or Stay out; if Enter, the incumbent chooses Fight ([-1,-1]) or Accommodate ([2,1]); Stay out gives [0,3]. What is the subgame-perfect payoff?",
+      "source": "Wikipedia Centipede game; MIT 14.12; Yale ECON 159 (Stackelberg). GB Ch.2.",
+      "engineCheck": {
+        "module": "src/engine/gameTheory.ts",
+        "calls": [
+          "tmpl-backward-induction({\"tree\":{\"kind\":\"decision\",\"player\":0,\"moves\":[{\"label\":\"Enter\",\"child\":{\"kind\":\"decision\",\"player\":1,\"moves\":[{\"label\":\"Fight\",\"child\":{\"kind\":\"leaf\",\"payoff\":[{\"n\":-1,\"d\":1},{\"n\":-1,\"d\":1}]}},{\"label\":\"Accommodate\",\"child\":{\"kind\":\"leaf\",\"payoff\":[{\"n\":2,\"d\":1},{\"n\":1,\"d\":1}]}}]}},{\"label\":\"Stay out\",\"child\":{\"kind\":\"leaf\",\"payoff\":[{\"n\":0,\"d\":1},{\"n\":3,\"d\":1}]}}]}}) → 2,1"
+        ],
+        "answer": "2,1",
+        "verified": true
+      },
+      "hidden": {
+        "answer": "2,1",
+        "approaches": [
+          "Solve the last decision first, then replace each subtree by its backward-induction payoff.",
+          "Propagate the chosen branches up to the root."
+        ],
+        "wrongTurns": [
+          "Assuming players cooperate for a better joint outcome.",
+          "Treating a non-credible threat as binding."
+        ],
+        "hintLadder": [
+          "Solve the last decision first, then fold backward.",
+          "At each node the player to move picks the branch maximizing their OWN payoff, anticipating optimal future play.",
+          "Replace each subtree by its backward-induction payoff and propagate up to the root — the root’s chosen branch is the subgame-perfect equilibrium."
+        ],
+        "rubric": {
+          "correctness": "States the exact equilibrium / value / move and justifies why it is optimal.",
+          "approach": "Uses the right tool (best response, dominance, indifference, minimax, backward induction, or nim-sum) rather than guessing.",
+          "rigor": "Checks every case / column, states assumptions (rationality, normal play, tie-breaking), and avoids unjustified independence.",
+          "communication": "Thinks aloud, names the structure before computing, and explains the intuition.",
+          "speed": "Reaches the answer without flailing; hard tier allows more synthesis time."
+        }
+      },
+      "followUps": [
+        "Is the SPE outcome Pareto-efficient here?",
+        "Which Nash equilibria are ruled out by subgame perfection?"
+      ]
+    },
+    {
+      "id": "tmpl-backward-induction#stackelberg",
+      "tier": "brutal",
+      "fingerprint": "tmpl-backward-induction:bi:stack",
+      "template": {
+        "id": "tmpl-backward-induction",
+        "params": {
+          "tree": {
+            "kind": "decision",
+            "player": 0,
+            "moves": [
+              {
+                "label": "Low",
+                "child": {
+                  "kind": "decision",
+                  "player": 1,
+                  "moves": [
+                    {
+                      "label": "Low",
+                      "child": {
+                        "kind": "leaf",
+                        "payoff": [
+                          {
+                            "n": 2,
+                            "d": 1
+                          },
+                          {
+                            "n": 2,
+                            "d": 1
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "label": "High",
+                      "child": {
+                        "kind": "leaf",
+                        "payoff": [
+                          {
+                            "n": 3,
+                            "d": 1
+                          },
+                          {
+                            "n": 1,
+                            "d": 1
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "label": "High",
+                "child": {
+                  "kind": "decision",
+                  "player": 1,
+                  "moves": [
+                    {
+                      "label": "Low",
+                      "child": {
+                        "kind": "leaf",
+                        "payoff": [
+                          {
+                            "n": 1,
+                            "d": 1
+                          },
+                          {
+                            "n": 3,
+                            "d": 1
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "label": "High",
+                      "child": {
+                        "kind": "leaf",
+                        "payoff": [
+                          {
+                            "n": 0,
+                            "d": 1
+                          },
+                          {
+                            "n": 0,
+                            "d": 1
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      },
+      "prompt": "A leader picks Low or High; the follower then picks Low or High. Leaf payoffs: Low/Low [2,2], Low/High [3,1], High/Low [1,3], High/High [0,0]. What is the subgame-perfect payoff?",
+      "source": "Wikipedia Centipede game; MIT 14.12; Yale ECON 159 (Stackelberg). GB Ch.2.",
+      "engineCheck": {
+        "module": "src/engine/gameTheory.ts",
+        "calls": [
+          "tmpl-backward-induction({\"tree\":{\"kind\":\"decision\",\"player\":0,\"moves\":[{\"label\":\"Low\",\"child\":{\"kind\":\"decision\",\"player\":1,\"moves\":[{\"label\":\"Low\",\"child\":{\"kind\":\"leaf\",\"payoff\":[{\"n\":2,\"d\":1},{\"n\":2,\"d\":1}]}},{\"label\":\"High\",\"child\":{\"kind\":\"leaf\",\"payoff\":[{\"n\":3,\"d\":1},{\"n\":1,\"d\":1}]}}]}},{\"label\":\"High\",\"child\":{\"kind\":\"decision\",\"player\":1,\"moves\":[{\"label\":\"Low\",\"child\":{\"kind\":\"leaf\",\"payoff\":[{\"n\":1,\"d\":1},{\"n\":3,\"d\":1}]}},{\"label\":\"High\",\"child\":{\"kind\":\"leaf\",\"payoff\":[{\"n\":0,\"d\":1},{\"n\":0,\"d\":1}]}}]}}]}}) → 2,2"
+        ],
+        "answer": "2,2",
+        "verified": true
+      },
+      "hidden": {
+        "answer": "2,2",
+        "approaches": [
+          "Solve the last decision first, then replace each subtree by its backward-induction payoff.",
+          "Propagate the chosen branches up to the root."
+        ],
+        "wrongTurns": [
+          "Assuming players cooperate for a better joint outcome.",
+          "Treating a non-credible threat as binding."
+        ],
+        "hintLadder": [
+          "Solve the last decision first, then fold backward.",
+          "At each node the player to move picks the branch maximizing their OWN payoff, anticipating optimal future play.",
+          "Replace each subtree by its backward-induction payoff and propagate up to the root — the root’s chosen branch is the subgame-perfect equilibrium."
+        ],
+        "rubric": {
+          "correctness": "States the exact equilibrium / value / move and justifies why it is optimal.",
+          "approach": "Uses the right tool (best response, dominance, indifference, minimax, backward induction, or nim-sum) rather than guessing.",
+          "rigor": "Checks every case / column, states assumptions (rationality, normal play, tie-breaking), and avoids unjustified independence.",
+          "communication": "Thinks aloud, names the structure before computing, and explains the intuition.",
+          "speed": "Reaches the answer without flailing; hard tier allows more synthesis time."
+        }
+      },
+      "followUps": [
+        "Is the SPE outcome Pareto-efficient here?",
+        "Which Nash equilibria are ruled out by subgame perfection?"
+      ]
+    },
+    {
+      "id": "tmpl-saddle-value#d",
+      "tier": "hard",
+      "fingerprint": "tmpl-saddle-value:saddle:7-9-6-8",
+      "template": {
+        "id": "tmpl-saddle-value",
+        "params": {
+          "matrix": [
+            [
+              7,
+              9
+            ],
+            [
+              6,
+              8
+            ]
+          ]
+        }
+      },
+      "prompt": "Zero-sum game, row’s payoffs [[7,9],[6,8]]. What is the value of the game?",
+      "source": "Ferguson, Game Theory (UCLA); ZIB Lecture 2 Matrix Games. GB Ch.2.",
+      "engineCheck": {
+        "module": "src/engine/gameTheory.ts",
+        "calls": [
+          "tmpl-saddle-value({\"matrix\":[[7,9],[6,8]]}) → 7"
+        ],
+        "answer": "7",
+        "verified": true
+      },
+      "hidden": {
+        "answer": "7",
+        "approaches": [
+          "Compute each row’s minimum and each column’s maximum; a cell that is both is the value.",
+          "Check maximin = minimax."
+        ],
+        "wrongTurns": [
+          "Randomizing when a pure saddle already exists.",
+          "Confusing row-min with column-min."
+        ],
+        "hintLadder": [
+          "In a zero-sum game, scan for a saddle point first.",
+          "A saddle is an entry that is the smallest in its row and the largest in its column.",
+          "If the largest row-minimum equals the smallest column-maximum, that common entry is the game’s value (pure play)."
+        ],
+        "rubric": {
+          "correctness": "States the exact equilibrium / value / move and justifies why it is optimal.",
+          "approach": "Uses the right tool (best response, dominance, indifference, minimax, backward induction, or nim-sum) rather than guessing.",
+          "rigor": "Checks every case / column, states assumptions (rationality, normal play, tie-breaking), and avoids unjustified independence.",
+          "communication": "Thinks aloud, names the structure before computing, and explains the intuition.",
+          "speed": "Reaches the answer without flailing; hard tier allows more synthesis time."
+        }
+      },
+      "followUps": [
+        "What if no saddle existed — how would you find the value?",
+        "Why is the saddle entry an equilibrium in pure strategies?"
+      ]
+    },
+    {
+      "id": "tmpl-mixed-value#5-1-2-4",
+      "tier": "harder",
+      "fingerprint": "tmpl-mixed-value:mixed-value:5-1-2-4",
+      "template": {
+        "id": "tmpl-mixed-value",
+        "params": {
+          "matrix": [
+            [
+              5,
+              1
+            ],
+            [
+              2,
+              4
+            ]
+          ]
+        }
+      },
+      "prompt": "Zero-sum game, row’s payoffs [[5,1],[2,4]] (no saddle). What is the value of the game?",
+      "source": "Notre Dame Lecture 29 (2×2 value formula); UMass Morra. GB Ch.2.",
+      "engineCheck": {
+        "module": "src/engine/gameTheory.ts",
+        "calls": [
+          "tmpl-mixed-value({\"matrix\":[[5,1],[2,4]]}) → 3"
+        ],
+        "answer": "3",
+        "verified": true
+      },
+      "hidden": {
+        "answer": "3",
+        "approaches": [
+          "Confirm no saddle, then apply the 2×2 value formula.",
+          "Set the opponent indifferent between their columns and solve."
+        ],
+        "wrongTurns": [
+          "Applying the formula when a saddle exists.",
+          "Mislabelling the matrix so the terms transpose."
+        ],
+        "hintLadder": [
+          "With no saddle point, both players must randomize.",
+          "Make the opponent indifferent between their options — set their two expected payoffs equal.",
+          "Use the 2×2 value formula v=(ad−bc)/(a+d−b−c) on the row-payoff entries."
+        ],
+        "rubric": {
+          "correctness": "States the exact equilibrium / value / move and justifies why it is optimal.",
+          "approach": "Uses the right tool (best response, dominance, indifference, minimax, backward induction, or nim-sum) rather than guessing.",
+          "rigor": "Checks every case / column, states assumptions (rationality, normal play, tie-breaking), and avoids unjustified independence.",
+          "communication": "Thinks aloud, names the structure before computing, and explains the intuition.",
+          "speed": "Reaches the answer without flailing; hard tier allows more synthesis time."
+        }
+      },
+      "followUps": [
+        "What mix achieves this value?",
+        "How does the value change if you add a constant to every payoff?"
+      ]
+    },
+    {
+      "id": "tmpl-pirate#6-100",
+      "tier": "brutal",
+      "fingerprint": "tmpl-pirate:pirate:6-100",
+      "template": {
+        "id": "tmpl-pirate",
+        "params": {
+          "pirates": 6,
+          "coins": 100
+        }
+      },
+      "prompt": "6 pirates, 100 gold, standard rules (≥50%, proposer tie-break, indifferent votes no). Give the full senior-to-junior allocation.",
+      "source": "Green Book Ch.2 “Screwy pirates” p.3; Mark Joshi QJIQ&A; Wikipedia Pirate game.",
+      "engineCheck": {
+        "module": "src/engine/gameTheory.ts",
+        "calls": [
+          "tmpl-pirate({\"pirates\":6,\"coins\":100}) → 98,0,1,0,1,0"
+        ],
+        "answer": "98,0,1,0,1,0",
+        "verified": true
+      },
+      "hidden": {
+        "answer": "98,0,1,0,1,0",
+        "approaches": [
+          "Solve the 1-, 2-, 3-… pirate subgames in turn; each pirate compares your offer to the fallback if you’re thrown overboard.",
+          "Bribe the cheapest votes you need, one coin each."
+        ],
+        "wrongTurns": [
+          "Assuming a fair split.",
+          "Forgetting that an indifferent pirate votes NO (so a bribe must be strictly positive)."
+        ],
+        "hintLadder": [
+          "Work backwards from the smallest crew that could be left.",
+          "Each pirate compares your offer to what they’d get if your proposal fails and you go overboard.",
+          "You need just over half the votes including your own — buy the minimum number of pirates who’d otherwise get nothing, one coin each, and keep the rest."
+        ],
+        "rubric": {
+          "correctness": "States the exact equilibrium / value / move and justifies why it is optimal.",
+          "approach": "Uses the right tool (best response, dominance, indifference, minimax, backward induction, or nim-sum) rather than guessing.",
+          "rigor": "Checks every case / column, states assumptions (rationality, normal play, tie-breaking), and avoids unjustified independence.",
+          "communication": "Thinks aloud, names the structure before computing, and explains the intuition.",
+          "speed": "Reaches the answer without flailing; hard tier allows more synthesis time."
+        }
+      },
+      "followUps": [
+        "Generalize: with 2n+1 pirates, how much does the captain keep?",
+        "What changes if an indifferent pirate votes YES instead?"
+      ]
+    },
+    {
+      "id": "tmpl-nim-sum#7-11-13",
+      "tier": "brutal",
+      "fingerprint": "tmpl-nim-sum:nim:7-11-13",
+      "template": {
+        "id": "tmpl-nim-sum",
+        "params": {
+          "heaps": [
+            7,
+            11,
+            13
+          ]
+        }
+      },
+      "prompt": "Nim with heaps (7,11,13). Report the nim-sum.",
+      "source": "Wikipedia Nim (Bouton); Brilliant.org Nim; USACO Guide. GB Ch.2.",
+      "engineCheck": {
+        "module": "src/engine/gameTheory.ts",
+        "calls": [
+          "tmpl-nim-sum({\"heaps\":[7,11,13]}) → 1"
+        ],
+        "answer": "1",
+        "verified": true
+      },
+      "hidden": {
+        "answer": "1",
+        "approaches": [
+          "Compute the bitwise XOR of all heap sizes.",
+          "A non-zero nim-sum is a win for the mover; reduce a heap to make the nim-sum vanish."
+        ],
+        "wrongTurns": [
+          "Thinking the largest heap decides it.",
+          "Confusing normal play with misère play."
+        ],
+        "hintLadder": [
+          "Translate each heap to binary and think XOR.",
+          "Compute the nim-sum — the bitwise XOR of the heap sizes — and recall what a vanishing nim-sum means for the player to move.",
+          "If the XOR of all heaps vanishes the position is losing for the mover; otherwise some move makes it vanish."
+        ],
+        "rubric": {
+          "correctness": "States the exact equilibrium / value / move and justifies why it is optimal.",
+          "approach": "Uses the right tool (best response, dominance, indifference, minimax, backward induction, or nim-sum) rather than guessing.",
+          "rigor": "Checks every case / column, states assumptions (rationality, normal play, tie-breaking), and avoids unjustified independence.",
+          "communication": "Thinks aloud, names the structure before computing, and explains the intuition.",
+          "speed": "Reaches the answer without flailing; hard tier allows more synthesis time."
+        }
+      },
+      "followUps": [
+        "What is the actual winning move from here?",
+        "How does misère Nim change the endgame?"
+      ]
+    },
+    {
+      "id": "tmpl-nim-sum#4-8-12",
+      "tier": "harder",
+      "fingerprint": "tmpl-nim-sum:nim:4-8-12",
+      "template": {
+        "id": "tmpl-nim-sum",
+        "params": {
+          "heaps": [
+            4,
+            8,
+            12
+          ]
+        }
+      },
+      "prompt": "Nim with heaps (4,8,12). Report the nim-sum.",
+      "source": "Wikipedia Nim (Bouton); Brilliant.org Nim; USACO Guide. GB Ch.2.",
+      "engineCheck": {
+        "module": "src/engine/gameTheory.ts",
+        "calls": [
+          "tmpl-nim-sum({\"heaps\":[4,8,12]}) → 0"
+        ],
+        "answer": "0",
+        "verified": true
+      },
+      "hidden": {
+        "answer": "0",
+        "approaches": [
+          "Compute the bitwise XOR of all heap sizes.",
+          "A non-zero nim-sum is a win for the mover; reduce a heap to make the nim-sum vanish."
+        ],
+        "wrongTurns": [
+          "Thinking the largest heap decides it.",
+          "Confusing normal play with misère play."
+        ],
+        "hintLadder": [
+          "Translate each heap to binary and think XOR.",
+          "Compute the nim-sum — the bitwise XOR of the heap sizes — and recall what a vanishing nim-sum means for the player to move.",
+          "If the XOR of all heaps vanishes the position is losing for the mover; otherwise some move makes it vanish."
+        ],
+        "rubric": {
+          "correctness": "States the exact equilibrium / value / move and justifies why it is optimal.",
+          "approach": "Uses the right tool (best response, dominance, indifference, minimax, backward induction, or nim-sum) rather than guessing.",
+          "rigor": "Checks every case / column, states assumptions (rationality, normal play, tie-breaking), and avoids unjustified independence.",
+          "communication": "Thinks aloud, names the structure before computing, and explains the intuition.",
+          "speed": "Reaches the answer without flailing; hard tier allows more synthesis time."
+        }
+      },
+      "followUps": [
+        "What is the actual winning move from here?",
+        "How does misère Nim change the endgame?"
+      ]
+    },
+    {
+      "id": "tmpl-subtraction#30-5",
+      "tier": "harder",
+      "fingerprint": "tmpl-subtraction:sub:30-5",
+      "template": {
+        "id": "tmpl-subtraction",
+        "params": {
+          "pile": 30,
+          "maxRemove": 5
+        }
+      },
+      "prompt": "A pile of 30; remove 1–5 each turn; last to take wins. Report your winning first move (0 = losing position).",
+      "source": "NYU take-away notes; Wikipedia Nim §subtraction / §21 game; Bachet. GB Ch.2.",
+      "engineCheck": {
+        "module": "src/engine/gameTheory.ts",
+        "calls": [
+          "tmpl-subtraction({\"pile\":30,\"maxRemove\":5}) → 0"
+        ],
+        "answer": "0",
+        "verified": true
+      },
+      "hidden": {
+        "answer": "0",
+        "approaches": [
+          "Find positions from which every move hands the opponent a winning position.",
+          "Land the opponent on a multiple of (k+1)."
+        ],
+        "wrongTurns": [
+          "Greedily taking the maximum each turn.",
+          "Forgetting misère (“last loses”) shifts the losing positions."
+        ],
+        "hintLadder": [
+          "Find the positions from which every legal move hands the opponent a winning position.",
+          "Those losing positions are the multiples of (the most you can take + 1).",
+          "Remove the pile’s remainder modulo (max+1) to drop the opponent onto the nearest losing multiple — a vanishing remainder means you are already losing."
+        ],
+        "rubric": {
+          "correctness": "States the exact equilibrium / value / move and justifies why it is optimal.",
+          "approach": "Uses the right tool (best response, dominance, indifference, minimax, backward induction, or nim-sum) rather than guessing.",
+          "rigor": "Checks every case / column, states assumptions (rationality, normal play, tie-breaking), and avoids unjustified independence.",
+          "communication": "Thinks aloud, names the structure before computing, and explains the intuition.",
+          "speed": "Reaches the answer without flailing; hard tier allows more synthesis time."
+        }
+      },
+      "followUps": [
+        "How many tokens do you take on your first move?",
+        "How does the verbal “21” (misère) version differ?"
+      ]
+    },
+    {
+      "id": "ff-tiger-sheep-100",
+      "tier": "hard",
+      "fingerprint": "sem:ff-tiger-sheep-100",
+      "prompt": "100 tigers and 1 sheep live on an island with only grass. Any tiger that eats the sheep itself becomes a sheep (and is then edible). All tigers are rational and value survival first. Is the sheep eaten?",
+      "source": "Green Book Ch.2 “Tiger and sheep” p.4.",
+      "engineCheck": {
+        "module": "src/engine/gameTheory.ts",
+        "calls": [
+          "tigerSheepEaten(100) === false"
+        ],
+        "answer": "safe",
+        "verified": true
+      },
+      "hidden": {
+        "answer": "safe",
+        "approaches": [
+          "Backward induction on the count: with 1 tiger the sheep is eaten; this flips with each added tiger.",
+          "Parity: even count ⇒ safe, odd ⇒ eaten."
+        ],
+        "wrongTurns": [
+          "Assuming a tiger always eats when it can.",
+          "Ignoring that eating turns the eater into prey."
+        ],
+        "hintLadder": [
+          "Start from the simplest case: one tiger and the sheep.",
+          "Ask what each added tiger anticipates the others will do.",
+          "The outcome alternates with the number of tigers — reason about the parity of 100."
+        ],
+        "rubric": {
+          "correctness": "States the exact equilibrium / value / move and justifies why it is optimal.",
+          "approach": "Uses the right tool (best response, dominance, indifference, minimax, backward induction, or nim-sum) rather than guessing.",
+          "rigor": "Checks every case / column, states assumptions (rationality, normal play, tie-breaking), and avoids unjustified independence.",
+          "communication": "Thinks aloud, names the structure before computing, and explains the intuition.",
+          "speed": "Reaches the answer without flailing; hard tier allows more synthesis time."
+        }
+      },
+      "followUps": [
+        "What about 99 tigers?",
+        "State the general rule by parity."
+      ]
+    },
+    {
+      "id": "ff-tiger-sheep-99",
+      "tier": "harder",
+      "fingerprint": "sem:ff-tiger-sheep-99",
+      "prompt": "Same island rules as the tiger-and-sheep puzzle, but now there are 99 tigers and 1 sheep. Is the sheep eaten?",
+      "source": "Green Book Ch.2 “Tiger and sheep” p.4.",
+      "engineCheck": {
+        "module": "src/engine/gameTheory.ts",
+        "calls": [
+          "tigerSheepEaten(99) === true"
+        ],
+        "answer": "eaten",
+        "verified": true
+      },
+      "hidden": {
+        "answer": "eaten",
+        "approaches": [
+          "Apply the parity rule from the 100-tiger case.",
+          "Backward induction from one tiger."
+        ],
+        "wrongTurns": [
+          "Forgetting the answer flips with parity."
+        ],
+        "hintLadder": [
+          "Use the parity rule you derived for the even case.",
+          "An odd number of tigers behaves oppositely to an even number.",
+          "Reason about whether 99 is even or odd and what that implies for the first eater."
+        ],
+        "rubric": {
+          "correctness": "States the exact equilibrium / value / move and justifies why it is optimal.",
+          "approach": "Uses the right tool (best response, dominance, indifference, minimax, backward induction, or nim-sum) rather than guessing.",
+          "rigor": "Checks every case / column, states assumptions (rationality, normal play, tie-breaking), and avoids unjustified independence.",
+          "communication": "Thinks aloud, names the structure before computing, and explains the intuition.",
+          "speed": "Reaches the answer without flailing; hard tier allows more synthesis time."
+        }
+      },
+      "followUps": [
+        "Prove the parity rule by induction."
+      ]
+    },
+    {
+      "id": "ff-chocolate-6x8",
+      "tier": "hard",
+      "fingerprint": "sem:ff-chocolate-6x8",
+      "prompt": "A 6×8 chocolate bar (48 unit squares). Each break splits one rectangular piece into two along a grid line. What is the minimum number of breaks to reduce it to 48 unit squares?",
+      "source": "Green Book Ch.2 “Chocolate bar problem.”",
+      "engineCheck": {
+        "module": "src/engine/gameTheory.ts",
+        "calls": [
+          "6 * 8 - 1 === 47"
+        ],
+        "answer": "47",
+        "verified": true
+      },
+      "hidden": {
+        "answer": "47",
+        "approaches": [
+          "Track an invariant: every break increases the number of pieces by exactly one.",
+          "Start with one piece, end with mn pieces."
+        ],
+        "wrongTurns": [
+          "Trying to optimize the break order (it doesn’t matter).",
+          "Off-by-one on pieces vs breaks."
+        ],
+        "hintLadder": [
+          "Count what each break does to the number of pieces.",
+          "You begin with one piece and must end with every unit square separate.",
+          "Pieces minus one equals breaks — it is forced, not strategic."
+        ],
+        "rubric": {
+          "correctness": "States the exact equilibrium / value / move and justifies why it is optimal.",
+          "approach": "Uses the right tool (best response, dominance, indifference, minimax, backward induction, or nim-sum) rather than guessing.",
+          "rigor": "Checks every case / column, states assumptions (rationality, normal play, tie-breaking), and avoids unjustified independence.",
+          "communication": "Thinks aloud, names the structure before computing, and explains the intuition.",
+          "speed": "Reaches the answer without flailing; hard tier allows more synthesis time."
+        }
+      },
+      "followUps": [
+        "Does the order of breaks change the count?",
+        "Generalize to an m×n bar."
+      ]
+    },
+    {
+      "id": "ff-pirate-2n1-keep",
+      "tier": "harder",
+      "fingerprint": "sem:ff-pirate-2n1-keep",
+      "prompt": "With 2n+1 perfectly rational pirates and 100 gold under the standard rules (≥50%, proposer tie-break, indifferent votes no), how much does the captain keep when n=2 (i.e. 5 pirates)?",
+      "source": "Green Book Ch.2 “Screwy pirates” p.3; Wikipedia Pirate game.",
+      "engineCheck": {
+        "module": "src/engine/gameTheory.ts",
+        "calls": [
+          "pirateGame(5,100)[0] === 98"
+        ],
+        "answer": "98",
+        "verified": true
+      },
+      "hidden": {
+        "answer": "98",
+        "approaches": [
+          "General rule: keep 100−n, bribing n juniors one coin each.",
+          "Backward induction over the subgames."
+        ],
+        "wrongTurns": [
+          "Confusing the count of bribes.",
+          "Assuming a fair split."
+        ],
+        "hintLadder": [
+          "Use the general 2n+1 result.",
+          "The captain bribes the cheapest n votes one coin each.",
+          "Keep everything except the coins spent buying the votes you need."
+        ],
+        "rubric": {
+          "correctness": "States the exact equilibrium / value / move and justifies why it is optimal.",
+          "approach": "Uses the right tool (best response, dominance, indifference, minimax, backward induction, or nim-sum) rather than guessing.",
+          "rigor": "Checks every case / column, states assumptions (rationality, normal play, tie-breaking), and avoids unjustified independence.",
+          "communication": "Thinks aloud, names the structure before computing, and explains the intuition.",
+          "speed": "Reaches the answer without flailing; hard tier allows more synthesis time."
+        }
+      },
+      "followUps": [
+        "What is the allocation vector for 5 pirates?",
+        "How does it grow as n increases?"
+      ]
+    },
+    {
+      "id": "ff-guess-23-average",
+      "tier": "hard",
+      "fingerprint": "sem:ff-guess-23-average",
+      "prompt": "Everyone picks a real number in [0,100]; the winner is closest to 2/3 of the average of all picks. Under common knowledge of rationality, what is the unique Nash-equilibrium guess?",
+      "source": "Wikipedia “Guess 2/3 of the average”; Nagel (1995); Keynes’s beauty contest.",
+      "engineCheck": {
+        "module": "src/engine/gameTheory.ts",
+        "calls": [
+          "iterated dominance fixed point of x = (2/3)·avg"
+        ],
+        "answer": "0",
+        "verified": true
+      },
+      "hidden": {
+        "answer": "0",
+        "approaches": [
+          "Iterated elimination: nobody picks above 2/3·100, then above 2/3 of that, …",
+          "Find the fixed point of the best-response map."
+        ],
+        "wrongTurns": [
+          "Stopping after one round of elimination.",
+          "Confusing the equilibrium with the empirically-winning guess (~20–35)."
+        ],
+        "hintLadder": [
+          "Ask what the largest sensible guess could be.",
+          "Now iterate: given that ceiling, what is the new ceiling?",
+          "The chain of eliminations converges to a single fixed point."
+        ],
+        "rubric": {
+          "correctness": "States the exact equilibrium / value / move and justifies why it is optimal.",
+          "approach": "Uses the right tool (best response, dominance, indifference, minimax, backward induction, or nim-sum) rather than guessing.",
+          "rigor": "Checks every case / column, states assumptions (rationality, normal play, tie-breaking), and avoids unjustified independence.",
+          "communication": "Thinks aloud, names the structure before computing, and explains the intuition.",
+          "speed": "Reaches the answer without flailing; hard tier allows more synthesis time."
+        }
+      },
+      "followUps": [
+        "Why do real players land near 20–35?",
+        "How is this a metaphor for markets?"
+      ]
+    },
+    {
+      "id": "ff-rps-mix",
+      "tier": "hard",
+      "fingerprint": "sem:ff-rps-mix",
+      "prompt": "In Rock-Paper-Scissors (win +1, lose −1, tie 0), what is the unique equilibrium strategy?",
+      "source": "UNC-Charlotte ECON3161; Berkeley econ160 (RPS mixed NE).",
+      "engineCheck": {
+        "module": "src/engine/gameTheory.ts",
+        "calls": [
+          "pureNashEquilibria(RPS) === [] (no pure NE); uniform mix by symmetry"
+        ],
+        "answer": "1/3",
+        "verified": true
+      },
+      "hidden": {
+        "answer": "1/3",
+        "approaches": [
+          "By symmetry each action is played with equal probability.",
+          "Make the opponent indifferent across all three actions."
+        ],
+        "wrongTurns": [
+          "Believing a deterministic counter exists.",
+          "Reusing your last move predictably."
+        ],
+        "hintLadder": [
+          "There is no pure best move — any pattern is exploitable.",
+          "Mix so the opponent is indifferent across all three replies.",
+          "Symmetry forces equal weight on each action."
+        ],
+        "rubric": {
+          "correctness": "States the exact equilibrium / value / move and justifies why it is optimal.",
+          "approach": "Uses the right tool (best response, dominance, indifference, minimax, backward induction, or nim-sum) rather than guessing.",
+          "rigor": "Checks every case / column, states assumptions (rationality, normal play, tie-breaking), and avoids unjustified independence.",
+          "communication": "Thinks aloud, names the structure before computing, and explains the intuition.",
+          "speed": "Reaches the answer without flailing; hard tier allows more synthesis time."
+        }
+      },
+      "followUps": [
+        "What is the value of the game?",
+        "How would you exploit a biased human opponent?"
+      ]
+    },
+    {
+      "id": "ff-coins-on-table",
+      "tier": "harder",
+      "fingerprint": "sem:ff-coins-on-table",
+      "prompt": "Two players alternately place identical coins (no overlap, fully on the table) on a circular table; the player who cannot move loses. Do you move first or second, and what is the strategy?",
+      "source": "techinterview.org “Coin on a Table”; ThatsMaths “The Beer-Mat Game.”",
+      "engineCheck": {
+        "module": "src/engine/gameTheory.ts",
+        "calls": [
+          "central-symmetry strategy-stealing (geometry)"
+        ],
+        "answer": "center",
+        "verified": true
+      },
+      "hidden": {
+        "answer": "center",
+        "approaches": [
+          "Exploit the table’s center of symmetry.",
+          "Mirror the opponent through the center after a first central move."
+        ],
+        "wrongTurns": [
+          "Going second.",
+          "Assuming it works for any (non-symmetric) table shape."
+        ],
+        "hintLadder": [
+          "The circular table has a special point.",
+          "After your first move, can you always copy the opponent’s move somewhere?",
+          "Use the table’s symmetry so your reply is always legal — the opponent runs out of room first."
+        ],
+        "rubric": {
+          "correctness": "States the exact equilibrium / value / move and justifies why it is optimal.",
+          "approach": "Uses the right tool (best response, dominance, indifference, minimax, backward induction, or nim-sum) rather than guessing.",
+          "rigor": "Checks every case / column, states assumptions (rationality, normal play, tie-breaking), and avoids unjustified independence.",
+          "communication": "Thinks aloud, names the structure before computing, and explains the intuition.",
+          "speed": "Reaches the answer without flailing; hard tier allows more synthesis time."
+        }
+      },
+      "followUps": [
+        "Why does this fail for an asymmetric table?",
+        "Relate it to the strategy-stealing argument."
+      ]
+    },
+    {
+      "id": "ff-minimax-theorem",
+      "tier": "harder",
+      "fingerprint": "sem:ff-minimax-theorem",
+      "prompt": "Does every finite two-player zero-sum game have a well-defined value (the most the row player can guarantee equals the least the column player can hold them to)?",
+      "source": "von Neumann (1928) minimax theorem; Ferguson, Game Theory.",
+      "engineCheck": {
+        "module": "src/engine/gameTheory.ts",
+        "calls": [
+          "maximin = minimax for any finite zero-sum game (von Neumann)"
+        ],
+        "answer": "yes",
+        "verified": true
+      },
+      "hidden": {
+        "answer": "yes",
+        "approaches": [
+          "Cite the minimax theorem: maximin = minimax with mixed strategies.",
+          "In zero-sum games Nash equilibrium coincides with the minimax/maximin solution."
+        ],
+        "wrongTurns": [
+          "Confusing pure-strategy value (may not exist) with mixed-strategy value (always exists)."
+        ],
+        "hintLadder": [
+          "Pure strategies may not suffice — what about mixed?",
+          "Recall the named theorem about maximin versus minimax.",
+          "With mixed strategies the two coincide for every finite zero-sum game."
+        ],
+        "rubric": {
+          "correctness": "States the exact equilibrium / value / move and justifies why it is optimal.",
+          "approach": "Uses the right tool (best response, dominance, indifference, minimax, backward induction, or nim-sum) rather than guessing.",
+          "rigor": "Checks every case / column, states assumptions (rationality, normal play, tie-breaking), and avoids unjustified independence.",
+          "communication": "Thinks aloud, names the structure before computing, and explains the intuition.",
+          "speed": "Reaches the answer without flailing; hard tier allows more synthesis time."
+        }
+      },
+      "followUps": [
+        "Who proved it, and when?",
+        "How do you compute the value for a large game?"
+      ]
+    },
+    {
+      "id": "ff-misere-nim",
+      "tier": "brutal",
+      "fingerprint": "sem:ff-misere-nim",
+      "prompt": "In misère Nim (last to take LOSES), when all heaps have more than one token, is the optimal strategy the same as normal Nim (last to take wins)?",
+      "source": "Wikipedia Nim §Misère; Bouton (1901).",
+      "engineCheck": {
+        "module": "src/engine/gameTheory.ts",
+        "calls": [
+          "misère Nim plays identically to normal Nim until heaps are all ≤1"
+        ],
+        "answer": "yes",
+        "verified": true
+      },
+      "hidden": {
+        "answer": "yes",
+        "approaches": [
+          "Play the normal nim-sum strategy until exactly one heap exceeds one token, then deviate.",
+          "Only the endgame differs between normal and misère."
+        ],
+        "wrongTurns": [
+          "Believing misère needs a totally different strategy throughout."
+        ],
+        "hintLadder": [
+          "Compare normal and misère play away from the endgame.",
+          "Where do the two versions actually diverge?",
+          "They agree until the heaps are all of size at most one — only then does misère invert."
+        ],
+        "rubric": {
+          "correctness": "States the exact equilibrium / value / move and justifies why it is optimal.",
+          "approach": "Uses the right tool (best response, dominance, indifference, minimax, backward induction, or nim-sum) rather than guessing.",
+          "rigor": "Checks every case / column, states assumptions (rationality, normal play, tie-breaking), and avoids unjustified independence.",
+          "communication": "Thinks aloud, names the structure before computing, and explains the intuition.",
+          "speed": "Reaches the answer without flailing; hard tier allows more synthesis time."
+        }
+      },
+      "followUps": [
+        "Describe the endgame switch precisely.",
+        "When exactly do you deviate from the nim-sum move?"
+      ]
+    },
+    {
+      "id": "ff-centipede-spe",
+      "tier": "harder",
+      "fingerprint": "sem:ff-centipede-spe",
+      "prompt": "In a finite centipede game where passing always grows the pot, what does backward induction predict the first player does?",
+      "source": "Wikipedia Centipede game; MIT 14.12.",
+      "engineCheck": {
+        "module": "src/engine/gameTheory.ts",
+        "calls": [
+          "backward induction folds to Take at the first node"
+        ],
+        "answer": "take",
+        "verified": true
+      },
+      "hidden": {
+        "answer": "take",
+        "approaches": [
+          "Fold from the last node: each mover prefers Take to the future they’d face.",
+          "The unravelling reaches the first node."
+        ],
+        "wrongTurns": [
+          "Expecting rational players to keep passing for the larger joint pot.",
+          "Confusing the SPE with the many other Nash equilibria."
+        ],
+        "hintLadder": [
+          "Solve the very last decision first.",
+          "Given that, what does the second-to-last mover do?",
+          "The unravelling propagates all the way to the first node."
+        ],
+        "rubric": {
+          "correctness": "States the exact equilibrium / value / move and justifies why it is optimal.",
+          "approach": "Uses the right tool (best response, dominance, indifference, minimax, backward induction, or nim-sum) rather than guessing.",
+          "rigor": "Checks every case / column, states assumptions (rationality, normal play, tie-breaking), and avoids unjustified independence.",
+          "communication": "Thinks aloud, names the structure before computing, and explains the intuition.",
+          "speed": "Reaches the answer without flailing; hard tier allows more synthesis time."
+        }
+      },
+      "followUps": [
+        "Why is cooperation not subgame-perfect here?",
+        "How do humans actually play it?"
+      ]
+    },
+    {
+      "id": "ff-traveler-dilemma",
+      "tier": "brutal",
+      "fingerprint": "sem:ff-traveler-dilemma",
+      "prompt": "Two travelers each claim an integer dollar amount between 2 and 100; both are paid the lower claim, with a +2 bonus to the lower claimant and a −2 penalty to the higher. What is the unique Nash equilibrium claim?",
+      "source": "Kaushik Basu, “The Traveler’s Dilemma” (Scientific American); Wikipedia.",
+      "engineCheck": {
+        "module": "src/engine/gameTheory.ts",
+        "calls": [
+          "iterated (weak) dominance collapses to the minimum claim"
+        ],
+        "answer": "2",
+        "verified": true
+      },
+      "hidden": {
+        "answer": "2",
+        "approaches": [
+          "Undercutting any common claim k by one dollar pays k+1 > k — iterate down.",
+          "Find the only profile with no profitable deviation."
+        ],
+        "wrongTurns": [
+          "Claiming 100 (the naive, jointly-better choice).",
+          "Stopping the undercutting chain early."
+        ],
+        "hintLadder": [
+          "What happens if you claim one dollar less than your opponent?",
+          "Iterate that undercutting incentive.",
+          "The chain bottoms out at the smallest allowed claim."
+        ],
+        "rubric": {
+          "correctness": "States the exact equilibrium / value / move and justifies why it is optimal.",
+          "approach": "Uses the right tool (best response, dominance, indifference, minimax, backward induction, or nim-sum) rather than guessing.",
+          "rigor": "Checks every case / column, states assumptions (rationality, normal play, tie-breaking), and avoids unjustified independence.",
+          "communication": "Thinks aloud, names the structure before computing, and explains the intuition.",
+          "speed": "Reaches the answer without flailing; hard tier allows more synthesis time."
+        }
+      },
+      "followUps": [
+        "Why do people not play the equilibrium?",
+        "How does the bonus/penalty size affect behavior?"
+      ]
+    }
+  ]
+}

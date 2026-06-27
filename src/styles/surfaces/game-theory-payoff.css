@@ -1,0 +1,380 @@
+/* ── PayoffMatrixBeat — normal-form bimatrix grid (lesson-game-theory-N) ────
+   Tokens only; no raw hex. Chapter accent resolves through var(--accent)
+   which the lesson shell injects for course-game-theory. */
+
+.gt-payoff {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s3);
+}
+
+/* ── Player axis labels ──────────────────────────────────────────────────── */
+
+.gt-payoff__players {
+  display: flex;
+  gap: var(--s4);
+  flex-wrap: wrap;
+}
+
+.gt-payoff__player-label {
+  font-family: var(--font-mono);
+  font-size: calc(12px * var(--fs));
+  color: var(--graphite);
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.gt-payoff__player-label--row {
+  color: var(--accent);
+}
+
+/* ── Table wrapper ───────────────────────────────────────────────────────── */
+
+.gt-payoff__table-wrap {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.gt-payoff__table {
+  border-collapse: collapse;
+  font-family: var(--font-mono);
+  font-size: calc(14px * var(--fs));
+}
+
+/* ── Corner cell ─────────────────────────────────────────────────────────── */
+
+.gt-payoff__corner {
+  padding: var(--s2) var(--s3);
+  border: 1px solid var(--rule);
+  background: var(--ergo-surface-2);
+  vertical-align: bottom;
+  min-width: 72px;
+}
+
+.gt-payoff__corner-labels {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s1);
+  font-size: calc(11px * var(--fs));
+  color: var(--graphite);
+}
+
+/* ── Column headers ──────────────────────────────────────────────────────── */
+
+.gt-payoff__col-header {
+  padding: var(--s2) var(--s3);
+  border: 1px solid var(--rule);
+  background: var(--ergo-surface-2);
+  text-align: center;
+  min-width: 80px;
+  min-height: 44px;
+  color: var(--ink);
+  font-weight: 600;
+  vertical-align: middle;
+  white-space: nowrap;
+}
+
+.gt-payoff__col-header--tappable {
+  cursor: pointer;
+  user-select: none;
+}
+
+.gt-payoff__col-header--tappable:hover {
+  background: var(--accent-tint);
+  color: var(--accent);
+}
+
+.gt-payoff__col-header--tappable:focus-visible {
+  box-shadow: var(--ring-focus);
+  outline: none;
+  position: relative;
+  z-index: 1;
+}
+
+.gt-payoff__col-header--active {
+  background: var(--accent-tint);
+  color: var(--accent);
+}
+
+.gt-payoff__col-header--dominated {
+  text-decoration: line-through;
+  opacity: 0.5;
+}
+
+.gt-payoff__col-header--marked {
+  background: var(--mark-wash);
+  color: var(--mark);
+}
+
+/* ── Row headers ─────────────────────────────────────────────────────────── */
+
+.gt-payoff__row-header {
+  padding: var(--s2) var(--s3);
+  border: 1px solid var(--rule);
+  background: var(--ergo-surface-2);
+  text-align: left;
+  min-width: 80px;
+  min-height: 44px;
+  color: var(--ink);
+  font-weight: 600;
+  vertical-align: middle;
+  white-space: nowrap;
+}
+
+.gt-payoff__row-header--tappable {
+  cursor: pointer;
+  user-select: none;
+}
+
+.gt-payoff__row-header--tappable:hover {
+  background: var(--accent-tint);
+  color: var(--accent);
+}
+
+.gt-payoff__row-header--tappable:focus-visible {
+  box-shadow: var(--ring-focus);
+  outline: none;
+  position: relative;
+  z-index: 1;
+}
+
+.gt-payoff__row-header--active {
+  background: var(--accent-tint);
+  color: var(--accent);
+}
+
+.gt-payoff__row-header--dominated {
+  text-decoration: line-through;
+  opacity: 0.5;
+}
+
+.gt-payoff__row-header--marked {
+  background: var(--mark-wash);
+  color: var(--mark);
+}
+
+/* ── Data cells ──────────────────────────────────────────────────────────── */
+
+.gt-payoff__cell {
+  padding: var(--s2) var(--s3);
+  border: 1px solid var(--rule);
+  background: var(--ergo-surface);
+  text-align: center;
+  min-width: 80px;
+  min-height: 44px;
+  vertical-align: middle;
+  position: relative;
+  transition: background var(--dur-base) var(--ease-out),
+              box-shadow var(--dur-base) var(--ease-out);
+}
+
+.gt-payoff__cell--tappable {
+  cursor: pointer;
+}
+
+.gt-payoff__cell--tappable:hover {
+  background: var(--ergo-surface-2);
+}
+
+.gt-payoff__cell--tappable:focus-visible {
+  box-shadow: var(--ring-focus);
+  outline: none;
+  z-index: 1;
+}
+
+.gt-payoff__cell--best-response {
+  background: var(--accent-tint);
+  box-shadow: inset 0 0 0 1.5px var(--accent);
+}
+
+.gt-payoff__cell--ne {
+  background: var(--correct-tint);
+  box-shadow: inset 0 0 0 1.5px var(--correct);
+}
+
+.gt-payoff__cell--row-min {
+  background: var(--mark-tint);
+  box-shadow: inset 0 0 0 1.5px var(--mark);
+}
+
+.gt-payoff__cell--col-max {
+  background: var(--quill-tint);
+  box-shadow: inset 0 0 0 1.5px var(--quill);
+}
+
+.gt-payoff__cell--saddle {
+  background: var(--accent-tint);
+  box-shadow: inset 0 0 0 2px var(--accent), 0 0 0 2px var(--accent);
+}
+
+.gt-payoff__cell--survivor {
+  background: var(--accent-tint);
+  box-shadow: inset 0 0 0 2px var(--accent);
+}
+
+/* ── Payoff pair inside a cell ───────────────────────────────────────────── */
+
+.gt-payoff__payoff {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 2px;
+  font-family: var(--font-mono);
+  font-size: calc(14px * var(--fs));
+}
+
+.gt-payoff__payoff-row {
+  color: var(--accent);
+  font-weight: 700;
+}
+
+.gt-payoff__payoff-sep {
+  color: var(--graphite-soft);
+}
+
+.gt-payoff__payoff-col {
+  color: var(--ink);
+}
+
+/* ── Nash equilibrium badge ─────────────────────────────────────────────── */
+
+.gt-payoff__ne-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: var(--s1);
+  padding: 1px var(--s1);
+  border-radius: var(--r-xs);
+  background: var(--correct);
+  color: var(--ergo-surface);
+  font-family: var(--font-mono);
+  font-size: calc(10px * var(--fs));
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  vertical-align: middle;
+}
+
+/* ── Status / progress area ──────────────────────────────────────────────── */
+
+.gt-payoff__progress {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: calc(13px * var(--fs));
+  color: var(--graphite);
+}
+
+.gt-payoff__status {
+  margin: 0;
+  padding: var(--s2) var(--s3);
+  border-radius: var(--r-sm);
+  background: var(--ergo-surface-2);
+  font-family: var(--font-mono);
+  font-size: calc(14px * var(--fs));
+  color: var(--ink);
+  border: 1px solid var(--rule);
+}
+
+/* ── Aria-live region ─────────────────────────────────────────────────────── */
+
+.gt-payoff__live {
+  margin: 0;
+  min-height: 20px;
+  font-family: var(--font-mono);
+  font-size: calc(13px * var(--fs));
+  color: var(--graphite);
+}
+
+/* ── Mix task: slider and EV display ────────────────────────────────────── */
+
+.gt-payoff__mix-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s3);
+}
+
+.gt-payoff__slider-label {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s2);
+  font-family: var(--font-mono);
+  font-size: calc(14px * var(--fs));
+  color: var(--ink);
+}
+
+.gt-payoff__slider {
+  width: 100%;
+  max-width: 360px;
+  height: 44px;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+
+.gt-payoff__ev-display {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s2);
+}
+
+.gt-payoff__ev-line {
+  display: flex;
+  align-items: center;
+  gap: var(--s3);
+  padding: var(--s2) var(--s3);
+  border-radius: var(--r-sm);
+  background: var(--ergo-surface-2);
+  border: 1px solid var(--rule);
+  font-family: var(--font-mono);
+  font-size: calc(14px * var(--fs));
+}
+
+.gt-payoff__ev-line--equal {
+  background: var(--accent-tint);
+  border-color: var(--accent);
+}
+
+.gt-payoff__ev-label {
+  color: var(--graphite);
+  min-width: 80px;
+}
+
+.gt-payoff__ev-value {
+  color: var(--ink);
+  font-weight: 700;
+}
+
+.gt-payoff__ev-line--equal .gt-payoff__ev-value {
+  color: var(--accent);
+}
+
+.gt-payoff__equilibrium {
+  margin: 0;
+  padding: var(--s2) var(--s3);
+  border-radius: var(--r-sm);
+  background: var(--accent-tint);
+  font-family: var(--font-mono);
+  font-size: calc(14px * var(--fs));
+  color: var(--accent);
+  border: 1px solid var(--accent);
+}
+
+/* ── Animations ──────────────────────────────────────────────────────────── */
+
+@keyframes gt-payoff-cell-found {
+  0%   { transform: scale(1.04); }
+  100% { transform: scale(1); }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .gt-payoff__cell--ne {
+    animation: gt-payoff-cell-found var(--dur-base) var(--ease-out);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gt-payoff__cell--ne {
+    animation: none;
+  }
+
+  .gt-payoff__cell {
+    transition: none;
+  }
+}
