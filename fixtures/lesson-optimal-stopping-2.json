@@ -42,7 +42,7 @@
             "note": "Not quite — that's the blind-pick baseline. Using candidate #1 as a benchmark adds real information, so you can actually do better."
           },
           "1/2": {
-            "note": "Exactly right. Of the 6 equally likely orderings, 3 end in hiring the best: [1,2,3], [1,3,2], [2,1,3]. That's 3/6 = 1/2 — a clean doubling of the 1/3 baseline.",
+            "note": "Exactly right. Of the 6 equally likely orderings, 3 end in hiring the best: [2,1,3], [2,3,1], [3,1,2]. That's 3/6 = 1/2 — a clean doubling of the 1/3 baseline.",
             "correct": true
           },
           "2/3": {

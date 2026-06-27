@@ -163,7 +163,7 @@
         "correct": "At n = 50, the optimal cutoff is r* = 19 (reject the first 18). The fraction 19/50 = 0.38 is already close to 1/e ≈ 0.368, and both curves keep tightening toward that limit.",
         "hints": [
           "optimalCutoff(n) maximizes p_n(r); as n grows, r*/n → 1/e and p_n(r*) → 1/e.",
-          "n=4: r*=2 (50%); n=7: r*=3 (43%); n=20: r*=8 (38%); n=50: r*=19 (38%).",
+          "n=4: r*=2 (50%); n=7: r*=3 (43%); n=20: r*=8 (40%); n=50: r*=19 (38%).",
           "The headline is the optimal r* for the largest listed n — here n=50 gives r*=19."
         ]
       }
