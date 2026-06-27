@@ -115,14 +115,6 @@ export type ClientPack = Omit<
 // OpenAI Responses API json_schema (strict); attempts.ts has its own runtime
 // validator for the Firestore read path.
 
-export type HireSignal =
-  | 'Strong No' // 0
-  | 'No' // 1
-  | 'Lean No' // 2
-  | 'Lean Yes' // 3
-  | 'Yes' // 4
-  | 'Strong Yes' // 5
-
 export interface Dim {
   score: 1 | 2 | 3 | 4 | 5
   evidence: string // short quoted transcript snippet
@@ -136,17 +128,16 @@ export interface InterviewReport {
     communication: Dim
     speed: Dim
   }
-  hireSignal: HireSignal
   summary: string
   strengths: string[]
   fixes: string[]
   // spec-22 / D9: the difficulty tier the score was tier-calibrated against
   // (server-authoritative — overwritten from the drawn question's tier). The UI
-  // labels "Graded as a {tier} question". SHARED with spec-23 (README §3.5):
-  // spec-23 removes `hireSignal`; these two fields survive that removal.
+  // labels "Graded as a {tier} question".
   tier: 'hard' | 'harder' | 'brutal'
   // spec-22: a one-line "pressure graduation" note (under-pressure retrieval is
-  // the real signal), never a hire/no-hire verdict. Survives spec-23.
+  // the real signal), never a hire/no-hire verdict. spec-23 (D11 / ADR-0010)
+  // removed the hire verdict entirely; the report feeds forward.
   pressureNote: string
 }
 

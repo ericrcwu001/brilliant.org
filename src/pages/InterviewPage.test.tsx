@@ -43,6 +43,7 @@ function makeReturn(overrides: Partial<UseRealtimeInterviewReturn>): UseRealtime
     secondsLeft: SESSION_CAP,
     error: null,
     report: null,
+    calibration: null,
     attemptId: null,
     start: vi.fn(),
     stop: vi.fn(),

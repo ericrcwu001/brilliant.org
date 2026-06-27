@@ -102,6 +102,27 @@ export async function submitReview(
   return res.data
 }
 
+// spec-20 → spec-01: lazy no-deck backfill (§4.5). A learner who completed lessons
+// BEFORE the SR system (or before the one-time backfill) has no reviews/{cardId}
+// cards; this triggers spec-01's Function-owned writeCardsForCompletion over their
+// already-completed lessons (derivable server-side from progress docs). This spec
+// is TRIGGER-ONLY (R4): it creates NO cards client-side. spec-01 owns the callable
+// body; until it lands the call rejects and the caller degrades gracefully (the
+// no-deck affordance still renders — it simply has nothing to call yet, §4.5).
+export type RebuildReviewDeckResult = {
+  created: number // number of cards minted (0 if idempotent / none to create)
+}
+
+export async function rebuildReviewDeck(): Promise<RebuildReviewDeckResult> {
+  const functions = await getFns()
+  const fn = httpsCallable<Record<string, never>, RebuildReviewDeckResult>(
+    functions,
+    'rebuildReviewDeck',
+  )
+  const res = await fn({})
+  return res.data
+}
+
 export async function recordQualifyingAction(
   input: RecordQualifyingActionInput,
 ): Promise<RecordQualifyingActionResult> {

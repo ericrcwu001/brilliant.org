@@ -1,6 +1,8 @@
 # Phase 3 — Realtime Client
 
 > Part of [ADR-0008](../adr/0008-ai-capstone-interview-realtime-grounded.md). Shared contracts: [spec index](./README.md).
+>
+> **Superseded in part by [ADR-0010](../adr/0010-remove-interview-hire-signal-feedforward-report.md) / `docs/learning-science/spec-23-interview-report-feedforward.md` (D11):** the `interview_completed` analytics no longer carries `hireSignal` (it carries `meanScore`, the mean of the five 1..5 rubric dimensions). The `hireSignal` reference below is historical.
 
 **Status:** Planned — not yet built.
 

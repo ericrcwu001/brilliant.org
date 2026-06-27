@@ -28,12 +28,21 @@ const fixtureReport: InterviewReport = {
     communication: { score: 4, evidence: 'Explained clearly.' },
     speed: { score: 3, evidence: 'On pace for the tier.' },
   },
-  hireSignal: 'Lean Yes',
   summary: 'Good overall performance with minor gaps.',
   strengths: ['Correct setup', 'Clear articulation'],
   fixes: ['Justify convergence', 'Define random variable explicitly'],
   tier: 'hard',
   pressureNote: 'A live timed interview is harder than untimed practice.',
+}
+
+// spec-12 CalibrationResult shape: meanConfidence .8 vs accuracy .6 → +.2 overconfident.
+const overconfidentCalibration = {
+  n: 1,
+  brier: 0.2,
+  meanConfidence: 0.8,
+  accuracy: 0.6,
+  overconfidence: 0.2,
+  reliable: false,
 }
 
 describe('InterviewReportView (smoke — renderToString)', () => {
@@ -62,7 +71,7 @@ describe('InterviewReportView (smoke — renderToString)', () => {
     }
   })
 
-  it('renders the hire signal label', () => {
+  it('renders NO hire-signal verdict (D11 / spec-23): no verdict text, no iv-signal class', () => {
     const html = renderToString(
       <InterviewReportView
         report={fixtureReport}
@@ -70,7 +79,77 @@ describe('InterviewReportView (smoke — renderToString)', () => {
         conceptId="course-expected-value"
       />,
     )
-    expect(html).toContain('Lean Yes')
+    expect(html).not.toContain('Lean Yes')
+    expect(html).not.toContain('iv-signal')
+    for (const verdict of ['Strong No', 'Lean No', 'Strong Yes']) {
+      expect(html, `verdict leaked: ${verdict}`).not.toContain(verdict)
+    }
+  })
+
+  it('renders the feed-forward "next fixes" framing', () => {
+    const html = renderToString(
+      <InterviewReportView
+        report={fixtureReport}
+        attemptId="a1"
+        conceptId="course-expected-value"
+      />,
+    )
+    expect(html).toContain('What to work on next')
+  })
+
+  it('shows the calibration delta when showCalibration is on and a calibration is passed', () => {
+    const html = renderToString(
+      <InterviewReportView
+        report={fixtureReport}
+        attemptId="a1"
+        conceptId="course-expected-value"
+        showCalibration
+        calibration={overconfidentCalibration}
+      />,
+    )
+    expect(html).toContain('Calibration')
+    expect(html).toContain('80%')
+    expect(html).toContain('60%')
+    expect(html).toContain('overconfidence')
+  })
+
+  it('hides the calibration delta for Track A (showCalibration false) even with a calibration prop', () => {
+    const html = renderToString(
+      <InterviewReportView
+        report={fixtureReport}
+        attemptId="a1"
+        conceptId="course-expected-value"
+        showCalibration={false}
+        calibration={overconfidentCalibration}
+      />,
+    )
+    expect(html).not.toContain('Calibration')
+  })
+
+  it('hides the calibration delta when n === 0 even with the gate on', () => {
+    const html = renderToString(
+      <InterviewReportView
+        report={fixtureReport}
+        attemptId="a1"
+        conceptId="course-expected-value"
+        showCalibration
+        calibration={{ n: 0, brier: null, meanConfidence: null, accuracy: null, overconfidence: null, reliable: false }}
+      />,
+    )
+    expect(html).not.toContain('Calibration')
+  })
+
+  it('exposes NO share/export/download affordance for the report or calibration (README §4.6)', () => {
+    const html = renderToString(
+      <InterviewReportView
+        report={fixtureReport}
+        attemptId="a1"
+        conceptId="course-expected-value"
+        showCalibration
+        calibration={overconfidentCalibration}
+      />,
+    )
+    expect(html).not.toMatch(/share|export|download/i)
   })
 
   it('has aria-label="Interview report"', () => {

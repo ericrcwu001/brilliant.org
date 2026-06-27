@@ -1,6 +1,8 @@
 # Phase 1 — Cloud Functions
 
 > Part of [ADR-0008](../adr/0008-ai-capstone-interview-realtime-grounded.md). Shared contracts: [spec index](./README.md).
+>
+> **Superseded in part by [ADR-0010](../adr/0010-remove-interview-hire-signal-feedforward-report.md) / `docs/learning-science/spec-23-interview-report-feedforward.md` (D11):** the `hireSignal` verdict (the `HireSignal` type, the `hireSignal` property in `INTERVIEW_REPORT_SCHEMA` + its `required` entry, the `hireSignal` finalize write, and the type re-export) is **removed**. The grader emits no verdict; `gradeInterview` returns the per-attempt `calibration` (spec-12) for the feed-forward report. The `hireSignal`/`HireSignal` references below are historical.
 
 **Status:** Planned — not yet built.
 

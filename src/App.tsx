@@ -59,6 +59,9 @@ const LessonPage = lazy(() =>
 const InterviewPage = lazy(() =>
   import('./pages/InterviewPage').then(m => ({ default: m.InterviewPage })),
 )
+const DailyReviewPage = lazy(() =>
+  import('./pages/DailyReviewPage').then(m => ({ default: m.DailyReviewPage })),
+)
 
 function useRouter() {
   const [path, setPath] = useState(() => window.location.pathname)
@@ -115,6 +118,7 @@ function redirectTarget(
   const known =
     path === ROUTES.landing ||
     path === ROUTES.profile ||
+    path === ROUTES.review ||
     parseLessonId(path) !== null ||
     parseConceptId(path) !== null ||
     parseInterviewId(path) !== null
@@ -152,6 +156,9 @@ function GuardedRoutes({
   if (path === ROUTES.onboardingName) return <DisplayNamePage />
   if (path === ROUTES.onboarding) return <OnboardingSurvey navigate={navigate} />
   if (path === ROUTES.profile) return <ProfilePage navigate={navigate} />
+  // Daily Review queue (spec-20 / D8). The container resolves the quant-intensity
+  // gate via isQuantIntensity(userDoc); App stays out of the gate logic.
+  if (path === ROUTES.review) return <DailyReviewPage navigate={navigate} />
 
   const lessonId = parseLessonId(path)
   if (lessonId) return <LessonPage navigate={navigate} lessonId={lessonId} />
@@ -169,8 +176,10 @@ function GuardedRoutes({
         // (spec-22 / D9) both gate on the single quant-intensity helper
         // (README §4; fails GENTLE). No per-concept progress here, so the gate
         // uses userDoc (defaultTrack ?? 'A') + learningGoal — do NOT inline the
-        // predicate (gate Issue #9).
+        // predicate (gate Issue #9). The report's calibration delta (spec-23 /
+        // D11) gates on the SAME helper.
         showConfidence={isQuantIntensity(userDoc)}
+        showCalibration={isQuantIntensity(userDoc)}
         tierFloor={isQuantIntensity(userDoc) ? 'brutal' : 'hard'}
       />
     )

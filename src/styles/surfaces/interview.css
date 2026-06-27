@@ -349,34 +349,6 @@
   gap: var(--s5);
 }
 
-.iv-signal {
-  padding: var(--s2) var(--s4);
-  border-radius: var(--r-pill);
-  font-weight: 600;
-  font-size: calc(14px * var(--fs));
-  text-align: center;
-  inline-size: fit-content;
-  margin-inline: auto;
-}
-
-.iv-signal--strong-no,
-.iv-signal--no {
-  background: var(--bad-tint);
-  color: var(--bad);
-}
-
-.iv-signal--lean-no {
-  background: var(--mark-tint);
-  color: var(--mark);
-}
-
-.iv-signal--lean-yes,
-.iv-signal--yes,
-.iv-signal--strong-yes {
-  background: var(--ok-tint);
-  color: var(--ok);
-}
-
 .iv-summary {
   font-size: calc(16px * var(--fs));
   line-height: 1.6;

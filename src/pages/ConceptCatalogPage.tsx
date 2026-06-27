@@ -4,17 +4,38 @@
 // All rendering lives in ConceptCatalog so the container is testable with
 // fixture data and no Firebase (mirroring the CoursePathPage / StudyDesk split).
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useAuth } from '../auth/authContext'
+import { isQuantIntensity } from '../auth/track'
 import { loadCoursesFromFirestore } from '../content/firestoreLoader'
 import type { Course } from '../content/schema'
 import { subscribeProgressMap } from '../progress/progress'
 import { subscribeStreak, ZERO_STREAK, type Streak } from '../habit/streaks'
 import { buildCatalogModel, type ProgressMap } from './conceptCatalog.model'
 import { analytics } from '../analytics/events'
-import type { NavigateFn } from './routes'
+import { ROUTES, type NavigateFn } from './routes'
 import { ConceptCatalog } from './ConceptCatalog'
 import { subscribeInterviewAttempts } from '../interview/attempts'
+import { loadDueQueue } from '../lesson/queue'
+import { rebuildReviewDeck } from '../progress/functions'
+import { buildHeroModel, type DailyReviewHeroModel } from './dailyReview.model'
+
+// Cheap existence read for the Daily Review hero: does the learner have ANY review
+// card? Distinguishes caught-up from no-deck (spec-20 §4.5). A 1-doc limit query,
+// NOT a new exported queue API (queue.ts is frozen).
+async function loadHasAnyReviewCard(uid: string): Promise<boolean> {
+  try {
+    const [{ getDb }, { collection, query, limit, getDocs }] = await Promise.all([
+      import('../firebase/app'),
+      import('firebase/firestore'),
+    ])
+    const db = await getDb()
+    const snap = await getDocs(query(collection(db, 'users', uid, 'reviews'), limit(1)))
+    return !snap.empty
+  } catch {
+    return false
+  }
+}
 
 export function ConceptCatalogPage({ navigate }: { navigate: NavigateFn }) {
   const { user, userDoc } = useAuth()
@@ -25,6 +46,15 @@ export function ConceptCatalogPage({ navigate }: { navigate: NavigateFn }) {
   const [streak, setStreak] = useState<Streak>(ZERO_STREAK)
   const [loadError, setLoadError] = useState(false)
   const [resumeInterviewDone, setResumeInterviewDone] = useState(false)
+
+  // Daily Review hero state (spec-20 / D8). The hero's N + hasAnyCards both come
+  // from spec-10's loadDueQueue + the existence read; the model derivation is the
+  // pure buildHeroModel. quantGate is the single isQuantIntensity helper (gate
+  // Issue #9 — never a bare defaultTrack check); it only selects the hero's copy.
+  const quantGate = isQuantIntensity(userDoc)
+  const [reviewHero, setReviewHero] = useState<DailyReviewHeroModel | null>(null)
+  const [reviewReload, setReviewReload] = useState(0)
+  const backfillFired = useRef(false)
 
   // One-time course list load.
   useEffect(() => {
@@ -51,6 +81,63 @@ export function ConceptCatalogPage({ navigate }: { navigate: NavigateFn }) {
   useEffect(() => {
     void analytics.catalogViewed()
   }, [])
+
+  // Daily Review hero (spec-20): read the due queue + the any-card existence
+  // signal, derive hasCompletedLessons from the progress the container already
+  // subscribes to, and build the hero view-model via the pure buildHeroModel.
+  // Best-effort — a failure leaves the hero hidden (the catalog is unaffected).
+  useEffect(() => {
+    if (!user) return
+    let cancelled = false
+    const uid = user.uid
+    void (async () => {
+      try {
+        const [due, anyCard] = await Promise.all([
+          loadDueQueue(uid, new Date(), { foils: quantGate }),
+          loadHasAnyReviewCard(uid),
+        ])
+        if (cancelled) return
+        const hasCompletedLessons = Object.values(progressById).some(
+          (p) => p.completionStatus === 'completed',
+        )
+        const model = buildHeroModel(
+          due.length,
+          anyCard,
+          hasCompletedLessons,
+          userDoc?.targetInterviewDate,
+          new Date(),
+        )
+        setReviewHero(model)
+        if (model.state === 'due' || model.state === 'ramp') {
+          void analytics.dailyReviewHeroShown({ dueCount: model.dueCount })
+        }
+      } catch {
+        /* leave the hero hidden — never break the catalog */
+      }
+    })()
+    return () => {
+      cancelled = true
+    }
+    // progressById intentionally excluded: hasCompletedLessons is read at fire
+    // time; re-reading the queue on every progress tick is wasteful. reviewReload
+    // re-runs it after a backfill.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user, quantGate, userDoc?.targetInterviewDate, reviewReload])
+
+  // No-deck backfill, automatic-once (§4.5): when the hero resolves to no-deck
+  // (no cards, but completed lessons), fire spec-01's backfill once, then re-read.
+  // Guarded so it never re-fires. Rejects harmlessly if the callable isn't
+  // deployed yet (the no-deck affordance stays visible — §4.5).
+  const triggerBackfill = () => {
+    if (backfillFired.current) return
+    backfillFired.current = true
+    void rebuildReviewDeck()
+      .then(() => setReviewReload((n) => n + 1))
+      .catch(() => {})
+  }
+  useEffect(() => {
+    if (reviewHero?.state === 'no-deck' && !backfillFired.current) triggerBackfill()
+  }, [reviewHero?.state])
 
   // Built before the early returns so the recommendation effect below stays an
   // unconditional hook (rules-of-hooks); null until the course list resolves.
@@ -110,6 +197,10 @@ export function ConceptCatalogPage({ navigate }: { navigate: NavigateFn }) {
       displayName={displayName}
       navigate={navigate}
       resumeInterviewDone={resumeInterviewDone}
+      reviewHero={reviewHero ?? undefined}
+      quantGate={quantGate}
+      onStartReview={() => navigate(ROUTES.review)}
+      onBuildDeck={triggerBackfill}
     />
   )
 }

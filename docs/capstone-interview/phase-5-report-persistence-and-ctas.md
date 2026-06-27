@@ -1,6 +1,8 @@
 # Phase 5 — Report, Persistence & CTAs
 
 > Part of [ADR-0008](../adr/0008-ai-capstone-interview-realtime-grounded.md). Shared contracts: [spec index](./README.md).
+>
+> **Superseded in part by [ADR-0010](../adr/0010-remove-interview-hire-signal-feedforward-report.md) / `docs/learning-science/spec-23-interview-report-feedforward.md` (D11):** the `hireSignal` verdict is **removed** — the `HireSignal` type, the `hireSignal?` attempt-schema field, the `HIRE_RANK` map + `signalSlug`, the `iv-signal` report pill, and the `interviewCompleted` `hireSignal` analytics. `selectBest` now ranks by **mean rubric score** (tie-break most-recent); the report feeds forward (next-fix cards + a calibration delta). The `hireSignal`/`HireSignal`/`HIRE_RANK`/`signalSlug`/`iv-signal` references below are historical.
 
 **Status:** Planned — not yet built.
 

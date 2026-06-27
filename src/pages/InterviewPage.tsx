@@ -28,8 +28,10 @@ export function InterviewPage({
   conceptId,
   _transport,
   showConfidence = false,
+  showCalibration = false,
   tierFloor = 'hard',
   devInAppAccuracy,
+  devCalibration,
 }: {
   navigate: NavigateFn
   conceptId: string
@@ -39,6 +41,10 @@ export function InterviewPage({
   // renders the rating whenever status === 'confidence', which the hook reaches
   // only when this is on.
   showConfidence?: boolean
+  // Quant-intensity gate (spec-23 §5 / D11), computed by App.tsx via the SAME
+  // isQuantIntensity helper. Gates the report's predicted-vs-measured calibration
+  // delta; default false ⇒ Track A never sees it. Page stays gate-agnostic.
+  showCalibration?: boolean
   // Track-gated difficulty floor (spec-22 / D9), resolved by App.tsx via the
   // shared isQuantIntensity helper ('brutal' for the gate, 'hard' for Track A)
   // and forwarded into the hook → mint. Default 'hard' ⇒ Track A unchanged.
@@ -47,6 +53,10 @@ export function InterviewPage({
   // provided, skip the real course/progress load and render the gap block with
   // this value. Never set on the authed route.
   devInAppAccuracy?: number | null
+  // /dev harness stub for the calibration delta (spec-23 §7): when provided, the
+  // report renders this calibration instead of the hook's. Never set on the
+  // authed route.
+  devCalibration?: import('../progress/calibration').CalibrationResult | null
 }) {
   // Read AuthContext directly (useContext, NOT useAuth) so the /dev/interview
   // route — which renders this page with no <AuthProvider> — still renders.
@@ -61,6 +71,7 @@ export function InterviewPage({
     secondsLeft,
     error,
     report,
+    calibration,
     attemptId,
     start,
     stop,
@@ -372,6 +383,8 @@ export function InterviewPage({
           attemptId={attemptId ?? ''}
           conceptId={conceptId}
           inAppAccuracy={inAppAccuracy}
+          calibration={devCalibration !== undefined ? devCalibration : calibration}
+          showCalibration={showCalibration}
           onClose={handleBack}
         />
       </div>

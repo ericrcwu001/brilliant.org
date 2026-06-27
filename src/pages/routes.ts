@@ -16,6 +16,8 @@ export const ROUTES = {
   onboarding: '/onboarding/survey',
   coursePath: '/path',
   profile: '/profile',
+  /** Daily Review queue surface (spec-20 / D8). Cross-concept — no params. */
+  review: '/review',
   /** Dev-only fixture route preserved from Group A (bypasses auth). */
   devLesson: '/dev/lesson',
   /** Dev-only Study Desk harness (fixture data, no Firebase). */
@@ -24,6 +26,8 @@ export const ROUTES = {
   devInterview: '/dev/interview',
   /** Dev-only which-method gate harness (spec-13; no Firebase). */
   devGate: '/dev/gate',
+  /** Dev-only Daily Review harness (spec-20; fixtures, no Firebase). */
+  devReview: '/dev/review',
 } as const
 
 export const FLAGSHIP_LESSON_ID = 'lesson-pattern-hitting-times'
@@ -33,6 +37,11 @@ export const INTRO_LESSON_ID = 'lesson-first-heads'
 
 export function lessonPath(lessonId: string): string {
   return `/lesson/${lessonId}`
+}
+
+/** The Daily Review queue path (spec-20). No params — the queue is cross-concept. */
+export function reviewPath(): string {
+  return ROUTES.review
 }
 
 /** Returns the lessonId for a `/lesson/:lessonId` path, else null. */

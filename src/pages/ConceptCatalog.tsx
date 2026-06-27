@@ -12,6 +12,8 @@ import { analytics } from '../analytics/events'
 import { CONCEPT_OPEN_TRANSITION } from '../app/viewTransition'
 import { conceptPath, interviewPath, ROUTES, type NavigateFn } from './routes'
 import type { CatalogModel, ConceptCard, DomainSection } from './conceptCatalog.model'
+import { DailyReviewHero } from './DailyReviewHero'
+import type { DailyReviewHeroModel } from './dailyReview.model'
 
 // ── Props ─────────────────────────────────────────────────────────────────────
 
@@ -21,6 +23,15 @@ export interface ConceptCatalogProps {
   displayName: string
   navigate: NavigateFn
   resumeInterviewDone?: boolean
+  // Daily Review hero (spec-20 / D8). Optional so existing catalog tests +
+  // /dev/home are unaffected; rendered above ResumeHero when state !== 'hidden'.
+  reviewHero?: DailyReviewHeroModel
+  // Quant-intensity gate, computed by the ConceptCatalogPage container via
+  // isQuantIntensity(userDoc) (README §4 helper — never a bare defaultTrack check).
+  // Only selects the hero's two-track copy.
+  quantGate?: boolean
+  onStartReview?: () => void
+  onBuildDeck?: () => void
 }
 
 // ── vizKey → MathVizKind mapping ──────────────────────────────────────────────
@@ -437,6 +448,10 @@ export function ConceptCatalog({
   displayName,
   navigate,
   resumeInterviewDone,
+  reviewHero,
+  quantGate = false,
+  onStartReview,
+  onBuildDeck,
 }: ConceptCatalogProps) {
   const reducedMotion = useReducedMotion()
 
@@ -479,6 +494,18 @@ export function ConceptCatalog({
       </header>
 
       <main aria-label="Concepts" className="ergo-catalog__main">
+        {/* Daily Review hero (spec-20 / D8) — the recommended daily action, ABOVE
+            the resume hero. Renders nothing for the `hidden` state (brand-new
+            learner) so the catalog is unchanged for them. */}
+        {reviewHero && reviewHero.state !== 'hidden' && (
+          <DailyReviewHero
+            model={reviewHero}
+            quantGate={quantGate}
+            onStart={() => onStartReview?.()}
+            onBuildDeck={onBuildDeck}
+          />
+        )}
+
         {/* Resume hero */}
         {model.resume && (
           <ResumeHero

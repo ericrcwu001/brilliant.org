@@ -188,7 +188,9 @@ export const analytics = {
     conceptId: string
     questionId: string
     durationSec: number
-    hireSignal: string
+    // Mean of the five 1..5 rubric dimensions (spec-23 / D11). Replaced the
+    // removed hireSignal verdict so completion stays measurable without a verdict.
+    meanScore: number
   }) => track('interview_completed', p),
   interviewReportViewed: (p: { conceptId: string; attemptId: string }) =>
     track('interview_report_viewed', p),
@@ -209,4 +211,17 @@ export const analytics = {
     brier: number | null
     overconfidence: number | null
   }) => track('calibration_computed', p),
+  // Daily Review queue events (spec-20 / D8). Additive, fire-and-forget — the
+  // queue is the recommended daily action; these measure hero impression → start
+  // → per-card → completion. NONE carry conceptId/lessonId in the payload-facing
+  // surface (the queue is label-stripped); `schemaId` is allowed on the per-card
+  // event for method-weakness analytics (Foundation B intent) — it never renders.
+  dailyReviewHeroShown: (p: { dueCount: number }) =>
+    track('daily_review_hero_shown', p),
+  dailyReviewStarted: (p: { dueCount: number; quantGate: boolean }) =>
+    track('daily_review_started', p),
+  reviewCardCompleted: (p: { result: 'pass' | 'fail'; schemaId?: string }) =>
+    track('review_card_completed', p),
+  dailyReviewCompleted: (p: { reviewed: number; passed: number }) =>
+    track('daily_review_completed', p),
 }

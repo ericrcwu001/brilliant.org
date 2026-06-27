@@ -12,11 +12,11 @@ import type {
   ClientQuestion,
   Turn,
   InterviewReport,
-  HireSignal,
 } from '../content/interviewPack'
+import type { CalibrationResult } from '../progress/calibration'
 
 // Re-export the shared report/turn types so consumers import from one place.
-export type { ClientQuestion, Turn, InterviewReport, HireSignal }
+export type { ClientQuestion, Turn, InterviewReport }
 
 export type MintInterviewTokenInput = {
   conceptId: string
@@ -48,6 +48,10 @@ export type GradeInterviewInput = {
 export type GradeInterviewOutput = {
   report: InterviewReport
   attemptId: string
+  // spec-12 / spec-23: the per-attempt calibration (Brier + predicted-vs-measured
+  // delta), RETURNED so the report renders it without a doc subscription (README
+  // §4.5). Optional: a Track-A attempt with no confidence captured returns no block.
+  calibration?: CalibrationResult
 }
 
 export async function mintInterviewToken(

@@ -420,12 +420,12 @@ const TIER_CALIBRATION: Record<'hard' | 'harder' | 'brutal', string> = {
 // JSON Schema for the grader's Structured Output (strict: every property in
 // `required`, additionalProperties:false everywhere). Mirrors InterviewReport.
 //
-// SHARED with spec-23 (README §3.5): spec-22 ADDS `tier`/`pressureNote` (here);
-// spec-23 REMOVES `hireSignal` and ADDS its calibration field. The two specs
-// touch DISJOINT properties — the only shared edit is the `required` array. When
-// spec-23 lands, the merger reconciles `required` to the final property set:
-// drop 'hireSignal', keep 'tier'/'pressureNote', add spec-23's calibration field
-// — or strict-mode grading throws at runtime.
+// SHARED with spec-23 (README §3.5): spec-22 ADDED `tier`/`pressureNote` (here);
+// spec-23 REMOVED `hireSignal` end-to-end (D11 / ADR-0010 — the report feeds
+// forward, no hire/no-hire verdict anywhere). The grader no longer emits a
+// verdict; the report renders the five dimensions as next-fix cards plus the
+// predicted-vs-measured calibration delta. The post-merge `required` set is
+// exactly ['dimensions', 'summary', 'strengths', 'fixes', 'tier', 'pressureNote'].
 export const INTERVIEW_REPORT_SCHEMA = {
   type: 'object',
   properties: {
@@ -441,10 +441,6 @@ export const INTERVIEW_REPORT_SCHEMA = {
       required: ['correctness', 'approach', 'rigor', 'communication', 'speed'],
       additionalProperties: false,
     },
-    hireSignal: {
-      type: 'string',
-      enum: ['Strong No', 'No', 'Lean No', 'Lean Yes', 'Yes', 'Strong Yes'],
-    },
     summary: { type: 'string' },
     strengths: { type: 'array', items: { type: 'string' } },
     fixes: { type: 'array', items: { type: 'string' } },
@@ -456,7 +452,7 @@ export const INTERVIEW_REPORT_SCHEMA = {
     // under-pressure retrieval, never a hire/no-hire verdict.
     pressureNote: { type: 'string' },
   },
-  required: ['dimensions', 'hireSignal', 'summary', 'strengths', 'fixes', 'tier', 'pressureNote'],
+  required: ['dimensions', 'summary', 'strengths', 'fixes', 'tier', 'pressureNote'],
   additionalProperties: false,
   $defs: {
     dim: {
@@ -584,7 +580,6 @@ export const gradeInterview = onCall(
     if (!reportJson.trim()) throw new HttpsError('internal', 'Grader returned no usable output')
     const report = JSON.parse(reportJson) as InterviewReport
     if (
-      !report.hireSignal ||
       !report.dimensions ||
       typeof report.dimensions !== 'object' ||
       !report.pressureNote
@@ -598,8 +593,9 @@ export const gradeInterview = onCall(
 
     // 4b — calibration (spec-12). Build CalibrationItem[] from the transcript:
     // each candidate turn carrying a finite spec-02 `confidence`. correct is
-    // binarized from the single per-attempt correctness dimension (isCorrect,
-    // NOT hireSignal — survives D11). hard = the drawn question's tier !== 'hard'.
+    // binarized from the single per-attempt correctness dimension (isCorrect;
+    // D11 removed the hire verdict, so correctness is the honest signal). hard =
+    // the drawn question's tier !== 'hard'.
     // Every interview item is `voice` (gate #7, §3.2a) — keeps the interview delta
     // separable from in-lesson typein/binary captures. Computed HERE (function body,
     // not inside the tx closure) so `cal` survives to the return (gate Issue #10).
@@ -642,7 +638,6 @@ export const gradeInterview = onCall(
           status: 'graded',
           transcript,
           report,
-          hireSignal: report.hireSignal,
           durationSec: cappedDuration,
           ...(cal.n > 0 ? { calibration: cal } : {}),
           gradedAt: FieldValue.serverTimestamp(),

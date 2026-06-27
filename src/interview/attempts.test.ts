@@ -55,46 +55,62 @@ describe('selectLatest', () => {
   })
 })
 
-// ── selectBest ─────────────────────────────────────────────────────────────────
+// ── selectBest (mean rubric score — spec-23 §3.4, hireSignal removed / D11) ──────
+
+// A report blob carrying the five dimension scores (only `score` matters here).
+const reportWith = (score: number) => ({
+  dimensions: {
+    correctness:   { score, evidence: '' },
+    approach:      { score, evidence: '' },
+    rigor:         { score, evidence: '' },
+    communication: { score, evidence: '' },
+    speed:         { score, evidence: '' },
+  },
+})
 
 describe('selectBest', () => {
+  it('returns null on an empty array', () => {
+    expect(selectBest([])).toBeNull()
+  })
+
   it('returns null when no attempts are graded', () => {
-    expect(selectBest([make({ status: 'pending', hireSignal: undefined })])).toBeNull()
+    expect(selectBest([make({ status: 'pending', report: reportWith(5) })])).toBeNull()
   })
 
-  it('returns null when no graded attempt has a hireSignal', () => {
-    expect(selectBest([make({ status: 'graded', hireSignal: undefined })])).toBeNull()
+  it('excludes an attempt with no report (mean null)', () => {
+    expect(selectBest([make({ status: 'graded', report: undefined })])).toBeNull()
   })
 
-  it('returns the single graded attempt with a hireSignal', () => {
-    const a = make({ id: 'a', hireSignal: 'Yes' })
+  it('excludes an attempt whose dimensions are malformed (missing score)', () => {
+    const bad = make({
+      status: 'graded',
+      report: { dimensions: { correctness: { evidence: 'x' } } },
+    })
+    expect(selectBest([bad])).toBeNull()
+  })
+
+  it('returns the single graded attempt with a usable report', () => {
+    const a = make({ id: 'a', report: reportWith(3) })
     expect(selectBest([a])?.id).toBe('a')
   })
 
-  it('returns the attempt with the highest hireSignal rank', () => {
-    const a = make({ id: 'a', hireSignal: 'No' })
-    const b = make({ id: 'b', hireSignal: 'Yes' })
+  it('returns the attempt with the highest mean rubric score (all-5 beats all-3)', () => {
+    const a = make({ id: 'a', report: reportWith(3) })
+    const b = make({ id: 'b', report: reportWith(5) })
     expect(selectBest([a, b])?.id).toBe('b')
     expect(selectBest([b, a])?.id).toBe('b')
   })
 
-  it('Strong Yes beats Yes', () => {
-    const a = make({ id: 'a', hireSignal: 'Yes' })
-    const b = make({ id: 'b', hireSignal: 'Strong Yes' })
-    expect(selectBest([a, b])?.id).toBe('b')
+  it('tie on mean score → the more-recent createdAt wins', () => {
+    const older = make({ id: 'old', createdAt: 1000, report: reportWith(4) })
+    const newer = make({ id: 'new', createdAt: 2000, report: reportWith(4) })
+    expect(selectBest([older, newer])?.id).toBe('new')
+    expect(selectBest([newer, older])?.id).toBe('new')
   })
 
-  it('covers the full ranking order (Strong No < No < Lean No < Lean Yes < Yes < Strong Yes)', () => {
-    const signals = ['Strong No', 'No', 'Lean No', 'Lean Yes', 'Yes', 'Strong Yes'] as const
-    const attempts = signals.map((hireSignal, i) =>
-      make({ id: `a${i}`, hireSignal }),
-    )
-    expect(selectBest(attempts)?.hireSignal).toBe('Strong Yes')
-  })
-
-  it('ignores pending attempts when mixed with graded', () => {
-    const pending = make({ id: 'p', status: 'pending', hireSignal: undefined })
-    const graded = make({ id: 'g', status: 'graded', hireSignal: 'Lean Yes' })
+  it('never selects a pending attempt even with a high-scoring report', () => {
+    const pending = make({ id: 'p', status: 'pending', report: reportWith(5) })
+    const graded = make({ id: 'g', status: 'graded', report: reportWith(3) })
     expect(selectBest([pending, graded])?.id).toBe('g')
   })
 })

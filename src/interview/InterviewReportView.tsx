@@ -3,7 +3,8 @@
 // Fires interviewReportViewed analytics once on mount.
 
 import { useEffect } from 'react'
-import type { InterviewReport, HireSignal } from './functions'
+import type { InterviewReport } from './functions'
+import type { CalibrationResult } from '../progress/calibration'
 import { analytics } from '../analytics/events'
 import { GAP_THRESHOLD, interviewAccuracyFromScore } from './gap'
 
@@ -16,6 +17,15 @@ interface InterviewReportViewProps {
   // computed by InterviewPage. null ⇒ too few completed lessons or still loading,
   // and the gap block hides cleanly.
   inAppAccuracy?: number | null
+  // Predicted-vs-measured calibration delta (spec-23 §3.5), the per-attempt block
+  // RETURNED by gradeInterview (spec-12). Optional — absent for a Track-A attempt
+  // with no confidence captured.
+  calibration?: CalibrationResult | null
+  // Quant-intensity gate (spec-23 §5; README §4 isQuantIntensity). The calibration
+  // delta is gated to the gate AND double-guarded on `calibration.n > 0`. The most
+  // sensitive personal inference this surface shows (README §4.6) — self-only, no
+  // share/export affordance.
+  showCalibration?: boolean
   onClose?:   () => void
 }
 
@@ -32,8 +42,16 @@ const DIMS = [
   ['speed',         'Speed'],
 ] as const
 
-function signalSlug(signal: HireSignal): string {
-  return signal.toLowerCase().replace(/\s+/g, '-')
+// Predicted-vs-measured delta in plain, non-judgmental words (spec-23 §3.5). No
+// verdict, no person-level label (ADR-0010 rationale).
+function calibrationSentence(c: CalibrationResult): string {
+  const conf = Math.round((c.meanConfidence ?? 0) * 100)
+  const acc = Math.round((c.accuracy ?? 0) * 100)
+  const d = c.overconfidence ?? 0
+  if (Math.abs(d) < 0.1) return `Well calibrated — you predicted ${conf}% and performed at ${acc}%.`
+  return d > 0
+    ? `You felt ${conf}% ready but performed at ${acc}% — watch for overconfidence.`
+    : `You performed at ${acc}% but only felt ${conf}% ready — you can trust yourself more.`
 }
 
 function AccuracyBar({ label, value }: { label: string; value: number }) {
@@ -75,6 +93,8 @@ export function InterviewReportView({
   attemptId,
   conceptId,
   inAppAccuracy = null,
+  calibration = null,
+  showCalibration = false,
   onClose,
 }: InterviewReportViewProps) {
   useEffect(() => {
@@ -91,12 +111,22 @@ export function InterviewReportView({
 
   return (
     <section className="iv-report" aria-label="Interview report">
-      <div className={`iv-signal iv-signal--${signalSlug(report.hireSignal)}`}>
-        {report.hireSignal}
-      </div>
-
       <p className="iv-summary">{report.summary}</p>
 
+      {/* Predicted-vs-measured calibration delta (spec-23 §3.5). Self-only, no
+          verdict; gated to the quant-intensity gate AND double-guarded on a
+          reliable-enough non-empty bucket (README §4.6). */}
+      {showCalibration &&
+        calibration &&
+        calibration.n > 0 &&
+        calibration.overconfidence != null && (
+          <div className="iv-calibration">
+            <h3 className="iv-feedback__heading">Calibration</h3>
+            <p>{calibrationSentence(calibration)}</p>
+          </div>
+        )}
+
+      <h3 className="iv-feedback__heading iv-dims__heading">What to work on next</h3>
       <div className="iv-dims">
         {DIMS.map(([key, label]) => {
           const dim = report.dimensions[key]

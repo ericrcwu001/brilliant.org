@@ -1,6 +1,8 @@
 # Phase 6 — Guardrails & Tests
 
 > Part of [ADR-0008](../adr/0008-ai-capstone-interview-realtime-grounded.md). Shared contracts: [spec index](./README.md).
+>
+> **Superseded in part by [ADR-0010](../adr/0010-remove-interview-hire-signal-feedforward-report.md) / `docs/learning-science/spec-23-interview-report-feedforward.md` (D11):** the `selectBest` `hireSignal`-rank test below and the `.iv-signal` E2E assertion are historical — `selectBest` now ranks by **mean rubric score** and the report renders no verdict pill. See `src/interview/attempts.test.ts` + `src/interview/InterviewReportView.test.tsx` for the live tests.
 
 **Status:** Planned — not yet built.
 

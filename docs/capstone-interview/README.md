@@ -93,7 +93,6 @@ users/{uid}/interviews/{attemptId}
     durationSec?:   number
     transcript?:    Turn[]
     report?:        InterviewReport
-    hireSignal?:    HireSignal
     createdAt:      Timestamp
     gradedAt?:      Timestamp
   }
@@ -292,7 +291,7 @@ interface GradeInterviewOutput {
 // 4. POST /v1/responses (Structured Outputs, json_schema strict) using
 //    hidden.answer / approaches / rubric as ground truth
 // 5. Transaction: finalize attempt (status → "graded", transcript, report,
-//    hireSignal, durationSec, gradedAt), add questionId to interviewState
+//    durationSec, gradedAt), add questionId to interviewState
 //    seen-set, increment interviewUsage/{day}.secondsUsed (capped)
 // Audio is NEVER stored.
 ```
@@ -301,15 +300,9 @@ interface GradeInterviewOutput {
 
 ### Report and turn types
 
-```ts
-type HireSignal =
-  | "Strong No"   // 0
-  | "No"          // 1
-  | "Lean No"     // 2
-  | "Lean Yes"    // 3
-  | "Yes"         // 4
-  | "Strong Yes"; // 5 — numeric mapping used for "best attempt" selection
+> **Superseded in part by [ADR-0010](../adr/0010-remove-interview-hire-signal-feedforward-report.md) / `docs/learning-science/spec-23-interview-report-feedforward.md` (D11).** The `HireSignal` type and the `hireSignal` verdict were **removed end-to-end** — the report now feeds forward (per-dimension "next fix" cards + a predicted-vs-measured **calibration** delta), with no Strong-No→Strong-Yes verdict anywhere. The grader's per-attempt **`calibration`** (spec-12) is now **returned** by `gradeInterview` (not only written) so the report renders it without a doc subscription. "Best attempt" selection now uses the **mean rubric score** (mean of the five 1..5 dimension scores; tie-break most-recent), not a numeric hire-signal mapping. `tier`/`pressureNote` (spec-22) are unaffected.
 
+```ts
 interface Dim {
   score:    1 | 2 | 3 | 4 | 5;
   evidence: string;  // short quoted transcript snippet
@@ -323,7 +316,6 @@ interface InterviewReport {
     communication: Dim;
     speed:         Dim;
   };
-  hireSignal: HireSignal;
   summary:    string;
   strengths:  string[];
   fixes:      string[];
@@ -372,7 +364,7 @@ All events live in `src/analytics/events.ts`. Naming convention: `snake_case`; a
 | `interview_started` | `{ conceptId, questionId, tier, mode }` |
 | `interview_connected` | `{ conceptId }` |
 | `interview_fallback_used` | `{ conceptId }` |
-| `interview_completed` | `{ conceptId, questionId, durationSec, hireSignal }` |
+| `interview_completed` | `{ conceptId, questionId, durationSec, meanScore }` |
 | `interview_report_viewed` | `{ conceptId, attemptId }` |
 | `interview_quota_blocked` | `{ conceptId, reason: 'daily' \| 'session' }` |
 | `interview_error` | `{ conceptId, stage: 'mint' \| 'connect' \| 'grade' }` |

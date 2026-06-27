@@ -117,6 +117,21 @@ describe('INTERVIEW_REPORT_SCHEMA (spec-22)', () => {
   })
 })
 
+describe('INTERVIEW_REPORT_SCHEMA (spec-23 — hireSignal removed / D11)', () => {
+  // Assert presence/absence per-key, NOT a whole-array equality, because spec-22
+  // additively adds tier/pressureNote to the same array (README §5 merge).
+  it('does NOT carry the hireSignal property or required entry (no verdict)', () => {
+    expect('hireSignal' in INTERVIEW_REPORT_SCHEMA.properties).toBe(false)
+    expect(INTERVIEW_REPORT_SCHEMA.required).not.toContain('hireSignal')
+  })
+
+  it('still requires the feed-forward report fields', () => {
+    for (const key of ['dimensions', 'summary', 'strengths', 'fixes']) {
+      expect(INTERVIEW_REPORT_SCHEMA.required).toContain(key)
+    }
+  })
+})
+
 describe('extractGradeJson', () => {
   it('returns the JSON string from a message item when output[0] is a reasoning item', () => {
     const data = {
@@ -124,11 +139,11 @@ describe('extractGradeJson', () => {
         { type: 'reasoning' },
         {
           type: 'message',
-          content: [{ type: 'output_text', text: '{"hireSignal":"Yes"}' }],
+          content: [{ type: 'output_text', text: '{"dimensions":{}}' }],
         },
       ],
     }
-    expect(extractGradeJson(data)).toBe('{"hireSignal":"Yes"}')
+    expect(extractGradeJson(data)).toBe('{"dimensions":{}}')
   })
 
   it('prefers output_text at the top level when present', () => {

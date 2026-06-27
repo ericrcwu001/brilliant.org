@@ -18,6 +18,7 @@ import {
   type Turn,
   type InterviewReport,
 } from './functions'
+import type { CalibrationResult } from '../progress/calibration'
 import { SESSION_CAP_SECONDS } from './constants'
 import { analytics } from '../analytics/events'
 
@@ -64,6 +65,9 @@ export interface UseRealtimeInterviewReturn {
   secondsLeft:     number
   error:           InterviewError | null
   report:          InterviewReport | null
+  // Per-attempt calibration RETURNED by gradeInterview (spec-12/23). null until a
+  // graded attempt returns one; absent for a Track-A no-confidence attempt.
+  calibration:     CalibrationResult | null
   attemptId:       string | null
   start:           () => void
   stop:            () => void
@@ -191,6 +195,7 @@ export function useRealtimeInterview(
   const [secondsLeft, setSecondsLeft] = useState(SESSION_CAP_SECONDS)
   const [error, setError] = useState<InterviewError | null>(null)
   const [report, setReport] = useState<InterviewReport | null>(null)
+  const [calibration, setCalibration] = useState<CalibrationResult | null>(null)
   const [attemptId, setAttemptId] = useState<string | null>(null)
 
   // Refs for imperative / closure-safe access.
@@ -734,19 +739,30 @@ export function useRealtimeInterview(
     const durationSec = pendingDurationRef.current
     setStatusSafe('grading')
     try {
-      const { report: gradeReport } = await gradeInterview({
+      const { report: gradeReport, calibration: gradeCalibration } = await gradeInterview({
         attemptId:  mintResultRef.current!.attemptId,
         conceptId,
         transcript,
         durationSec,
       })
+      // Mean of the five 1..5 rubric dimensions — the verdict-free completion
+      // measure that replaced hireSignal (spec-23 §3.4/§9 / D11).
+      const d = gradeReport.dimensions
+      const meanScore =
+        (d.correctness.score +
+          d.approach.score +
+          d.rigor.score +
+          d.communication.score +
+          d.speed.score) /
+        5
       void analytics.interviewCompleted({
         conceptId,
         questionId:  mintResultRef.current!.question.id,
         durationSec,
-        hireSignal:  gradeReport.hireSignal,
+        meanScore,
       })
       setReport(gradeReport)
+      setCalibration(gradeCalibration ?? null)
       setStatusSafe('done')
     } catch (err) {
       void analytics.interviewError({ conceptId, stage: 'grade' })
@@ -792,6 +808,7 @@ export function useRealtimeInterview(
     secondsLeft,
     error,
     report,
+    calibration,
     attemptId,
     start,
     stop,

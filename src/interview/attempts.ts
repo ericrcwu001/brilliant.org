@@ -19,9 +19,6 @@ export const InterviewAttemptSchema = z.object({
   status:      z.enum(['pending', 'graded', 'abandoned']),
   startedAt:   z.unknown(),
   durationSec: z.number().optional(),
-  hireSignal:  z
-    .enum(['Strong No', 'No', 'Lean No', 'Lean Yes', 'Yes', 'Strong Yes'])
-    .optional(),
   report:    z.unknown().optional(),
   createdAt: z.unknown(),
   gradedAt:  z.unknown().optional(),
@@ -66,16 +63,6 @@ export function subscribeInterviewAttempts(
   }
 }
 
-// Numeric rank mirrors README HireSignal ordering (Strong No=0 … Strong Yes=5).
-const HIRE_RANK: Record<string, number> = {
-  'Strong No': 0,
-  'No':        1,
-  'Lean No':   2,
-  'Lean Yes':  3,
-  'Yes':       4,
-  'Strong Yes': 5,
-}
-
 // Most-recent attempt by createdAt (Timestamp or epoch ms in tests).
 export function selectLatest(
   attempts: InterviewAttempt[],
@@ -86,19 +73,41 @@ export function selectLatest(
   )
 }
 
-// Best graded attempt by hireSignal rank; null if none are graded.
+// The five rubric dimensions (each 1..5) the grader always returns (spec-23 §3.4).
+const DIM_KEYS = ['correctness', 'approach', 'rigor', 'communication', 'speed'] as const
+
+/** Mean of the five 1..5 dimension scores; null if the report shape is unusable.
+ *  Replaces the removed hireSignal rank (D11 / spec-23 §3.4) as the "best attempt"
+ *  key: always present on a graded attempt, survives the hire-verdict removal, and
+ *  needs no confidence capture (works for Track A). */
+function meanRubricScore(a: InterviewAttempt): number | null {
+  const dims = (a.report as { dimensions?: Record<string, { score?: number }> } | undefined)
+    ?.dimensions
+  if (!dims) return null
+  let sum = 0
+  for (const k of DIM_KEYS) {
+    const s = dims[k]?.score
+    if (typeof s !== 'number') return null
+    sum += s
+  }
+  return sum / DIM_KEYS.length
+}
+
+// Best graded attempt by mean rubric score; ties broken by most-recent. null if
+// none graded (spec-23 §3.4).
 export function selectBest(
   attempts: InterviewAttempt[],
 ): InterviewAttempt | null {
   const graded = attempts.filter(
-    (a) => a.status === 'graded' && a.hireSignal != null,
+    (a) => a.status === 'graded' && meanRubricScore(a) != null,
   )
   if (graded.length === 0) return null
-  return graded.reduce((a, b) =>
-    (HIRE_RANK[a.hireSignal!] ?? 0) >= (HIRE_RANK[b.hireSignal!] ?? 0)
-      ? a
-      : b,
-  )
+  return graded.reduce((a, b) => {
+    const sa = meanRubricScore(a)!
+    const sb = meanRubricScore(b)!
+    if (sa !== sb) return sa >= sb ? a : b
+    return toMs(a.createdAt) >= toMs(b.createdAt) ? a : b // tie → most recent
+  })
 }
 
 function toMs(ts: unknown): number {

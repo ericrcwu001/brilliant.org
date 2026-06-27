@@ -643,8 +643,6 @@ function writeArtifacts(opts: {
     [
       `# Interview Report — ${persona}`,
       '',
-      `**Hire Signal:** ${report.hireSignal}`,
-      '',
       '## Summary',
       '',
       report.summary,
@@ -709,7 +707,6 @@ function writeComparison(opts: {
     const cells = results.map((r) => `${r.report.dimensions[d].score}/5`)
     return `| ${d[0].toUpperCase() + d.slice(1)} | ${cells.join(' | ')} |`
   })
-  const hireRow = `| **Hire Signal** | ${results.map((r) => `**${r.report.hireSignal}**`).join(' | ')} |`
   const summaries = results.map((r) => `**${r.persona}:** ${r.report.summary}`).join('\n\n')
 
   fs.mkdirSync(outDir, { recursive: true })
@@ -724,7 +721,6 @@ function writeComparison(opts: {
       `| Dimension | ${cols.join(' | ')} |`,
       `|-----------|${cols.map(() => '---------|').join('')}`,
       ...dimRows,
-      hireRow,
       '',
       '## Summaries',
       '',
@@ -833,7 +829,6 @@ async function main(): Promise<void> {
       extractFn:    extractGradeJson,
       schema:       INTERVIEW_REPORT_SCHEMA as unknown as object,
     })
-    console.log(`  [${persona}] Hire signal: ${report.hireSignal}`)
 
     writeArtifacts({
       outDir:       args.outDir,
