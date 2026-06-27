@@ -140,6 +140,7 @@ No approval step. Once the dev smoke test is green, ship from **this repo** (whi
 ```bash
 git merge --no-ff concept/<slug>                             # promote the whole concept onto main
 ./node_modules/.bin/tsx scripts/validate-fixtures.ts         # final gate on main
+./node_modules/.bin/tsx scripts/validate-interview-packs.ts  # interview-pack gate on main
 git push origin main                                         # publish main to the remote
 ./node_modules/.bin/tsc -b && ./node_modules/.bin/vite build # prod build (.env.production)
 # Seed the concept's lessons + course doc into PROD Firestore:
@@ -148,6 +149,24 @@ SEED_TARGET=prod GOOGLE_CLOUD_PROJECT=brilliant-org \
 firebase deploy --only hosting,firestore,functions --project brilliant-org
 git worktree remove ../lf-<slug>                             # concept worktree no longer needed
 ```
+
+> **Interview pack + functions deploy.** The `firebase.json` predeploy hook
+> (`scripts/copy-interview-packs.mjs`) copies `interviews/course-*.json` into `functions/packs/` at
+> deploy time — so the interview pack **is live** in the Functions runtime whenever functions deploy.
+> The `loadPack` function strips a leading `course-` from the conceptId
+> (`conceptId.replace(/^course-/, '')`) so `course-<slug>.json` is always the filename.
+> If you ship **only** `--only hosting,firestore` (to avoid touching the live interview runtime),
+> the predeploy hook is skipped and the pack is not updated.
+
+> **OPENAI_API_KEY secret preflight.** The `mintInterviewToken` function requires this secret. Before
+> the first functions deploy (or after rotating the key), set it:
+> ```bash
+> firebase functions:secrets:set OPENAI_API_KEY --project brilliant-org
+> ```
+> Without it, `mintInterviewToken` will error at runtime. Check it is set:
+> ```bash
+> firebase functions:secrets:access OPENAI_API_KEY --project brilliant-org
+> ```
 
 If `validate-fixtures` (the final gate on `main`) fails, **abort the merge** (`git merge --abort`, or
 reset `main` to its pre-merge commit) and hard-stop instead of pushing or deploying — `main` must never
@@ -171,10 +190,22 @@ Lessons (all 9/9 gates green):
 Fact-check: every answer cited AND reproduced by the engine. validate/test/build/lint/e2e green.
 LIVE (prod): <prod URL>/concept/<courseId>
 Scorecards: concepts/<slug>/*/scorecard.md
-Interview Pack (future feature, not deployed): interviews/<courseId>.md  (<N> engine-verified hard Qs)
+Interview Pack (live, bundled in Functions): interviews/<courseId>.md  (<N> engine-verified hard Qs)
 
 Shipped autonomously — no action needed. Reply with change requests if anything looks off.
 ```
+
+## Interview-critical hosting headers (ADR-0008 — do not strip)
+
+The `firebase.json` hosting config carries headers required for the live interview feature. When
+deploying `--only hosting`, verify these are not removed:
+
+- `Content-Security-Policy`: must include `connect-src … https://api.openai.com` (the browser
+  connects directly to OpenAI Realtime via an ephemeral token).
+- `Permissions-Policy`: must include `microphone=(self)` (hard-blocks the mic if absent).
+
+These are already set in `firebase.json`. Any hosting-only lesson ship should leave that file
+untouched.
 
 ## Reachability
 

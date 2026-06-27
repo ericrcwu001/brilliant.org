@@ -8,9 +8,9 @@ ships autonomously).
 
 - **HARD-REQUIRE nested-spawn probe** (run first, before any other step): spawn a 2-deep nested
   chain — a subagent that spawns a subagent — confirming that a lead can spawn a worker
-  (`Manager → lead → worker`, 3 layers total). If any layer cannot spawn its child, **hard-stop**
-  and tell the user the skill requires nested subagent spawning to 3 layers (a lead that can spawn
-  workers) and cannot run in this environment. **No flat fallback.**
+  (`Manager → lead → worker`, 3 layers total, per ADR-0007). If any layer cannot spawn its child,
+  **hard-stop** and tell the user the skill requires nested subagent spawning to 3 layers (a lead
+  that can spawn workers) and cannot run in this environment. **No flat fallback.**
 - **Run the automated first-run setup** (`deploy.md` → First-run setup): ground-truth check,
   `firebase` auth, auto-generate `.env.dev`, dev-routes flag, seed credentials (ADC), and resolve the
   dev URL. Idempotent; if any **credential login is missing, the Manager Slack-DMs the user the exact
@@ -138,8 +138,9 @@ otherwise it proceeds straight to Ship.
   lessons to **prod (`brilliant-org`)** and `vite build` + `firebase deploy --project brilliant-org`;
   then `git worktree remove ../lf-<slug>`. The concept **auto-registers in the Concept Catalog** on
   seed (ADR-0004) — live at `/concept/<courseId>` (lessons at `/lesson/<lessonId>`), zero UI code. The
-  Interview Pack is merged too but **not seeded/deployed**. **Slack-DM a one-time FYI** with the
-  production `/concept/<courseId>` link.
+  Interview Pack is merged and **bundled into the live Functions runtime** by the predeploy hook when
+  functions deploy (not seeded to Firestore). **Slack-DM a one-time FYI** with the production
+  `/concept/<courseId>` link.
 - **Only on failure** (red QA gate, broken dev smoke test, or unanchored concept) → hard-stop, do
   **not** ship, and escalate to the user (route fixable notes to the owning department, re-run, re-QA).
 
@@ -173,6 +174,6 @@ fixtures/lesson-<lesson>.json # the actual lesson (one per lesson)
 fixtures/course-<slug>.json   # the concept (macro) doc
 src/engine/<topic>.ts         # new verifying engine(s)
 src/lesson/beats/<Beat>.tsx   # new renderer(s) / widget(s)
-interviews/<courseId>.json    # capstone Interview Pack (committed, NOT seeded/deployed)
+interviews/<courseId>.json    # capstone Interview Pack (committed; bundled into Functions at deploy)
 interviews/<courseId>.md      # human-readable mirror
 ```

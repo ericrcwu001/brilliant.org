@@ -3,7 +3,7 @@
 // done(report) → error. Mounts <Orb> for audio-reactive visuals and
 // <InterviewReportView> when the session ends.
 
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import type { NavigateFn } from '../pages/routes'
 import type { RealtimeTransport } from '../interview/useRealtimeInterview'
 import { useRealtimeInterview } from '../interview/useRealtimeInterview'
@@ -68,17 +68,25 @@ export function InterviewPage({
     el.dataset.scrolled = el.scrollTop > 4 ? 'true' : 'false'
   }
 
-  useEffect(() => {
-    const el = audioRef.current
-    if (!el || !remoteStream) return
-    el.srcObject = remoteStream
-    el.play()
-      .then(() => setAudioBlocked(false))
-      .catch((err) => {
-        console.error('[iv] remote audio play blocked', err)
-        setAudioBlocked(true)
-      })
-  }, [remoteStream, status])
+  // Wire the remote stream to the <audio> element with a callback ref so it runs
+  // exactly when the element mounts (or the stream changes), not on every status
+  // change. The element only renders in `live` and the stream is usually set
+  // earlier during `connecting`; the callback ref attaches srcObject the moment
+  // the element appears, which a `[remoteStream]`-only effect would miss.
+  const attachAudio = useCallback(
+    (el: HTMLAudioElement | null) => {
+      audioRef.current = el
+      if (!el || !remoteStream) return
+      el.srcObject = remoteStream
+      el.play()
+        .then(() => setAudioBlocked(false))
+        .catch((err) => {
+          console.error('[iv] remote audio play blocked', err)
+          setAudioBlocked(true)
+        })
+    },
+    [remoteStream],
+  )
 
   // Barge-in duck: pause playback the instant the user talks over the AI so the
   // interruption feels immediate; resume when they stop.
@@ -307,7 +315,7 @@ export function InterviewPage({
         </button>
       </header>
 
-      <audio ref={audioRef} autoPlay playsInline />
+      <audio ref={attachAudio} autoPlay playsInline />
 
       <div className="iv-live">
         {/* Stage: compact Orb presence + a live speaking/listening status. */}

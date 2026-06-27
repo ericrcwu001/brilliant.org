@@ -101,6 +101,10 @@ function loadPack(conceptId: string): InterviewPack {
 const VOICE_CONVERSATION_GUIDE = `# Personality and Tone
 - Warm, sharp senior quant interviewer. Natural and human, never robotic.
 
+# Language
+- Speak and respond ONLY in English at all times, regardless of the language the candidate uses.
+- If the candidate speaks another language, politely ask them to continue in English.
+
 # Reasoning
 - Reason silently before probing or grading. Do NOT reason aloud or reveal chain-of-thought.
 - Do NOT reason on unclear audio — ask for clarification instead.
@@ -247,7 +251,15 @@ export const mintInterviewToken = onCall(
           audio: {
             input: {
               format: { type: 'audio/pcm', rate: 24000 },
-              transcription: { model: 'gpt-4o-mini-transcribe', language: 'en' },
+              transcription: {
+                model: 'gpt-realtime-whisper',
+                language: 'en',
+                // Bias the ASR toward the quant-interview vocabulary the candidate
+                // will use. If a future model rejects `prompt`, this field is safe
+                // to drop.
+                prompt:
+                  "Quantitative finance interview. Likely terms: expected value, variance, standard deviation, probability, conditional probability, Bayes' rule, Markov chain, combinatorics, permutations, binomial, geometric distribution, expected number of flips, hitting time.",
+              },
               // server_vad gates on audio energy (semantic_vad has no threshold knob),
               // so background noise below threshold no longer interrupts the model.
               turn_detection: {
