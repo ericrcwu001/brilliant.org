@@ -9,6 +9,7 @@
   "beats": [
     {
       "beatId": "cov6-recall",
+      "schemaId": "linearity-indicators",
       "required": true,
       "prompt": "Cumulative recall across the whole arc. Match each headline result to its value.",
       "interaction": {
@@ -31,6 +32,7 @@
     },
     {
       "beatId": "cov6-mixed",
+      "schemaId": "linearity-indicators",
       "required": true,
       "prompt": "The converse trap, one more time. Match each statement to its completion.",
       "interaction": {
@@ -113,6 +115,7 @@
     },
     {
       "beatId": "cov6-win",
+      "schemaId": "linearity-indicators",
       "required": true,
       "prompt": "Two iid Uniform(0,1) draws; Y = min, Z = max. Using the identity YZ = min·max = X₁·X₂ (handed to you), what is E[YZ]?",
       "interaction": {
@@ -148,7 +151,42 @@
       }
     },
     {
+      "beatId": "transfer-heldout",
+      "required": false,
+      "track": "B",
+      "heldOut": true,
+      "schemaId": "linearity-indicators",
+      "prompt": "Transfer challenge: a fresh joint table for two bits X, Y puts P(X=0,Y=0)=P(X=1,Y=1)=5/12 on the diagonal and P(X=0,Y=1)=P(X=1,Y=0)=1/12 off it. Read which object each blank asks for, then reach for the tool. Give Cov(X,Y) and ρ(X,Y). Note Var(X)=Var(Y)=1/4.",
+      "interaction": {
+        "type": "masteryChallenge",
+        "scenario": "Diagonal-heavy bits, but not perfectly matched. First decide what each blank wants: Cov is the raw leftover E[XY]−E[X]E[Y]; ρ normalizes it by √(Var(X)·Var(Y)). Each marginal is a fair bit (Var=1/4), so the √ collapses. Compute Cov, then ρ.",
+        "fields": [
+          {
+            "id": "cov",
+            "label": "Cov(X,Y)",
+            "accept": ["1/6"],
+            "placeholder": "?/?"
+          },
+          {
+            "id": "rho",
+            "label": "ρ(X,Y)",
+            "accept": ["2/3"],
+            "placeholder": "?/?"
+          }
+        ]
+      },
+      "feedback": {
+        "correct": "XY=1 only on (1,1) at prob 5/12 ⇒ E[XY]=5/12; each marginal is Bernoulli(1/2) ⇒ E[X]E[Y]=1/4=3/12; Cov=5/12−3/12=2/12=1/6. ρ=(1/6)/√((1/4)(1/4))=(1/6)/(1/4)=4/6=2/3 — rational because Var(X)=Var(Y) collapses the √. You picked the covariance-then-correlation tools by reading what each blank asked for.",
+        "hints": [
+          "Decide first what each blank wants: Cov is the raw leftover; ρ divides Cov by √(Var·Var). Compute E[XY] and E[X]E[Y] on this table.",
+          "E[XY]=5/12 (only the (1,1) cell has XY=1); E[X]E[Y]=(1/2)(1/2)=3/12; Cov=5/12−3/12. Then with Var(X)=Var(Y)=1/4, √(Var·Var)=1/4.",
+          "Cov=2/12=1/6; ρ=(1/6)/(1/4)=2/3."
+        ]
+      }
+    },
+    {
       "beatId": "cov6-mastery",
+      "schemaId": "linearity-indicators",
       "required": true,
       "density": "split",
       "prompt": "Mastery — two parts. Part A: the order-statistic covariance and correlation. Part B: pick the right tool for a re-surfaced bilinearity question.",

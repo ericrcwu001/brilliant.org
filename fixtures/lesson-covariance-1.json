@@ -9,6 +9,7 @@
   "beats": [
     {
       "beatId": "cov1-recall",
+      "schemaId": "linearity-indicators",
       "required": true,
       "prompt": "Back in Expected Value you found the balance point of a fair die. Match each statement to its value.",
       "interaction": {
@@ -132,6 +133,7 @@
     },
     {
       "beatId": "cov1-win",
+      "schemaId": "linearity-indicators",
       "required": true,
       "prompt": "Given E[X²]=91/6 and E[X]²=(7/2)²=49/4, compute Var(X) = E[X²] − E[X]². Enter as a fraction.",
       "interaction": {
@@ -189,7 +191,42 @@
       }
     },
     {
+      "beatId": "transfer-heldout",
+      "required": false,
+      "track": "B",
+      "heldOut": true,
+      "schemaId": "linearity-indicators",
+      "prompt": "Transfer challenge: a FAIR tetrahedral die shows 1, 2, 3, or 4, each with probability 1/4. Build E[X²] from the pmf, then compute Var(X) = E[X²] − E[X]². Enter both as fractions.",
+      "interaction": {
+        "type": "masteryChallenge",
+        "scenario": "A four-sided die is rolled; outcomes 1, 2, 3, 4 are each equally likely (probability 1/4). Step 1: build E[X²] = Σ x²·P(x) yourself. Step 2: with E[X]=5/2, apply Var(X) = E[X²] − E[X]². Keep squared units — do not take a square root.",
+        "fields": [
+          {
+            "id": "ex2",
+            "label": "E[X²]",
+            "accept": ["15/2"],
+            "placeholder": "?/?"
+          },
+          {
+            "id": "var",
+            "label": "Var(X)",
+            "accept": ["5/4"],
+            "placeholder": "?/?"
+          }
+        ]
+      },
+      "feedback": {
+        "correct": "Built E[X²]=(1+4+9+16)/4=30/4=15/2 from the pmf, then Var=15/2−(5/2)²=30/4−25/4=5/4. Same move as the six-sided die, fresh numbers.",
+        "hints": [
+          "Two steps: build mean-of-squares from the pmf yourself, then apply Var = E[X²] − E[X]².",
+          "E[X²]=(1²+2²+3²+4²)/4=(1+4+9+16)/4=30/4=15/2; E[X]=(1+2+3+4)/4=5/2 so E[X]²=25/4; convert E[X²] to quarters and subtract — don't take a root.",
+          "E[X²]=15/2=30/4, Var=30/4−25/4=5/4."
+        ]
+      }
+    },
+    {
       "beatId": "cov1-mastery",
+      "schemaId": "linearity-indicators",
       "required": true,
       "density": "split",
       "prompt": "Mastery: derive E[X²] from the fair-die pmf from scratch, then compute Var(X). Enter both as fractions.",

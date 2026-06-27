@@ -9,6 +9,7 @@
   "beats": [
     {
       "beatId": "cov3-recall",
+      "schemaId": "linearity-indicators",
       "required": true,
       "prompt": "Linearity of expectation added with no fine print. Match each item to its value.",
       "interaction": {
@@ -104,6 +105,7 @@
     },
     {
       "beatId": "cov3-win",
+      "schemaId": "linearity-indicators",
       "required": true,
       "prompt": "Two independent fair dice X₁ and X₂. Their individual variances are each 35/12 (L1), and they are independent so Cov(X₁,X₂)=0. What is Var(X₁+X₂)? Enter as a fraction.",
       "interaction": {
@@ -161,7 +163,36 @@
       }
     },
     {
+      "beatId": "transfer-heldout",
+      "required": false,
+      "track": "B",
+      "heldOut": true,
+      "schemaId": "linearity-indicators",
+      "prompt": "Transfer challenge: two independent fair dice X₁ and X₂, each with variance 35/12. Using bilinearity, find Cov(2X₁, X₁+X₂) — the covariance of a DOUBLED component with the sum. Enter as a fraction.",
+      "interaction": {
+        "type": "masteryChallenge",
+        "scenario": "A scaled component still covaries with the whole. Split Cov(2X₁, X₁+X₂) with bilinearity — the constant 2 pulls out of the covariance — before reaching for 'independent so 0'. Recall Cov(X₁,X₁)=Var(X₁)=35/12 and Cov(X₁,X₂)=0.",
+        "fields": [
+          {
+            "id": "cov-2x1-s",
+            "label": "Cov(2X₁, X₁+X₂)",
+            "accept": ["35/6"],
+            "placeholder": "?/?"
+          }
+        ]
+      },
+      "feedback": {
+        "correct": "Cov(2X₁,X₁+X₂)=2·Cov(X₁,X₁)+2·Cov(X₁,X₂)=2·Var(X₁)+0=2·(35/12)=35/6. The constant scales straight through, and the self-covariance term Var(X₁) is what survives — independence only kills Cov(X₁,X₂).",
+        "hints": [
+          "Pull the 2 out, then split over the sum: Cov(2X₁,X₁+X₂)=2[Cov(X₁,X₁)+Cov(X₁,X₂)].",
+          "Cov(X₁,X₁)=Var(X₁)=35/12 survives; Cov(X₁,X₂)=0 by independence. So you have 2·(35/12+0).",
+          "2·35/12=70/12=35/6."
+        ]
+      }
+    },
+    {
       "beatId": "cov3-mastery",
+      "schemaId": "linearity-indicators",
       "required": true,
       "density": "split",
       "interviewNote": "Interview framing: Cov(X₁,S) where S=X₁+X₂ is the canonical example of 'the part correlates with the whole.' The bilinearity split — Cov(X₁,X₁)+Cov(X₁,X₂)=Var(X₁)+0=35/12 — is the exact move that re-appears in portfolio variance decomposition (β·Var(B)) and in any regression where a component also appears in the target. The sharp diagnostic distractor is 0: learners who think 'X₁ and X₂ are independent so every covariance is 0' forget that S is not a stranger to X₁ — it literally contains it.",

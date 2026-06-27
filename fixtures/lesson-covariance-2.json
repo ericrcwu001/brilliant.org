@@ -9,6 +9,7 @@
   "beats": [
     {
       "beatId": "cov2-recall",
+      "schemaId": "linearity-indicators",
       "required": true,
       "prompt": "Back in Expected Value L2 you met the product rule. Match each statement to its value.",
       "interaction": {
@@ -117,6 +118,7 @@
     },
     {
       "beatId": "cov2-win",
+      "schemaId": "linearity-indicators",
       "required": true,
       "prompt": "Matched bits: P(X=0,Y=0)=P(X=1,Y=1)=1/2, all other cells 0. You are given E[XY]=1/2 and E[X]E[Y]=1/4. What is Cov(X,Y)?",
       "interaction": {
@@ -176,6 +178,7 @@
     },
     {
       "beatId": "cov2-interleave",
+      "schemaId": "linearity-indicators",
       "required": true,
       "prompt": "Retrieval: match each statement to its right-hand side.",
       "interaction": {
@@ -205,7 +208,42 @@
       }
     },
     {
+      "beatId": "transfer-heldout",
+      "required": false,
+      "track": "B",
+      "heldOut": true,
+      "schemaId": "linearity-indicators",
+      "prompt": "Transfer challenge: an ANTI-diagonal joint table puts all mass on the mismatches: P(X=0,Y=1)=P(X=1,Y=0)=1/2, and P(X=0,Y=0)=P(X=1,Y=1)=0. Compute Cov(X,Y), then ρ(X,Y). Note Var(X)=Var(Y)=1/4. Enter Cov as a fraction and ρ as a number.",
+      "interaction": {
+        "type": "masteryChallenge",
+        "scenario": "Two bits move in opposite directions: whenever X=0 then Y=1, and whenever X=1 then Y=0, each pairing with probability 1/2 (the cells P(0,0) and P(1,1) are empty). Run Cov=E[XY]−E[X]E[Y] on this table, then normalize: ρ=Cov/√(Var(X)·Var(Y)), with Var(X)=Var(Y)=1/4.",
+        "fields": [
+          {
+            "id": "cov",
+            "label": "Cov(X,Y)",
+            "accept": ["-1/4", "−1/4", "-0.25", "−0.25"],
+            "placeholder": "?/?"
+          },
+          {
+            "id": "rho",
+            "label": "ρ(X,Y)",
+            "accept": ["-1", "−1"],
+            "placeholder": "?"
+          }
+        ]
+      },
+      "feedback": {
+        "correct": "XY=1 never happens (the only (1,1) cell is empty) ⇒ E[XY]=0; each bit is Bernoulli(1/2) ⇒ E[X]E[Y]=1/4; Cov=0−1/4=−1/4. ρ=(−1/4)/√((1/4)(1/4))=(−1/4)/(1/4)=−1 — perfect anti-correlation, the mirror image of the matched table's +1.",
+        "hints": [
+          "Find E[XY] and E[X]E[Y] separately on this table, then subtract — don't assume independence.",
+          "XY=1 only on the (1,1) cell, which has probability 0 here ⇒ E[XY]=0; each marginal is Bernoulli(1/2) ⇒ E[X]E[Y]=1/4; Cov=0−1/4. Then ρ=Cov/√(Var·Var)=Cov/(1/4).",
+          "Cov=−1/4; ρ=(−1/4)/(1/4)=−1."
+        ]
+      }
+    },
+    {
       "beatId": "cov2-mastery",
+      "schemaId": "linearity-indicators",
       "required": true,
       "density": "split",
       "prompt": "Mastery challenge — two joint pmf tables. Compute Cov and, where applicable, ρ.",

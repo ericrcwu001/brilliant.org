@@ -9,6 +9,7 @@
   "beats": [
     {
       "beatId": "cov4-recall",
+      "schemaId": "linearity-indicators",
       "required": true,
       "prompt": "Two quick retrievals from the last two lessons. Match each statement to its value.",
       "interaction": {
@@ -79,6 +80,7 @@
     },
     {
       "beatId": "cov4-win",
+      "schemaId": "linearity-indicators",
       "required": true,
       "prompt": "Now compute it. With Cov = 12, Var(X) = 9, Var(Y) = 25, find ρ(X,Y). Enter as a fraction.",
       "interaction": {
@@ -162,6 +164,7 @@
     },
     {
       "beatId": "cov4-interleave",
+      "schemaId": "linearity-indicators",
       "required": true,
       "prompt": "Sort independence from zero-correlation. Match each statement to its correct completion.",
       "interaction": {
@@ -181,7 +184,43 @@
       }
     },
     {
+      "beatId": "transfer-heldout",
+      "required": false,
+      "track": "B",
+      "heldOut": true,
+      "schemaId": "linearity-indicators",
+      "prompt": "Transfer challenge: a stock return X and a bond return Y have Cov(X,Y) = −6, Var(X) = 4, and Var(Y) = 25. Normalize to the correlation ρ(X,Y). Here the root is exact, so enter ρ itself as a fraction, and also enter ρ². ",
+      "interaction": {
+        "type": "masteryChallenge",
+        "scenario": "Strip the units off this covariance. ρ = Cov/√(Var(X)·Var(Y)) — divide by the PRODUCT of the standard deviations, not the sum of variances. With σ_X=√4 and σ_Y=√25 both whole numbers, ρ comes out rational. Give ρ and the always-rational ρ².",
+        "fields": [
+          {
+            "id": "rho",
+            "label": "ρ(X,Y)",
+            "accept": ["-3/5", "−3/5", "-0.6", "−0.6"],
+            "placeholder": "?/?"
+          },
+          {
+            "id": "rho-sq",
+            "label": "ρ²(X,Y)",
+            "accept": ["9/25", "0.36", ".36"],
+            "placeholder": "a/b",
+            "suffix": "= ρ²"
+          }
+        ]
+      },
+      "feedback": {
+        "correct": "σ_X=2, σ_Y=5, so the denominator is √(4·25)=√100=10 (NOT 4+25=29). ρ=−6/10=−3/5, and ρ²=9/25. The negative sign survives: stock up tends to pair with bond down.",
+        "hints": [
+          "Divide Cov by the PRODUCT of the SDs, not by anything you add. σ=√Var.",
+          "σ_X=√4=2, σ_Y=√25=5, so the denominator is √(4·25)=10, not 4+25=29. Keep Cov's sign.",
+          "ρ=−6/10=−3/5; ρ²=(3/5)²=9/25."
+        ]
+      }
+    },
+    {
       "beatId": "cov4-mastery",
+      "schemaId": "linearity-indicators",
       "required": true,
       "density": "split",
       "prompt": "Mastery — two parts. Part A: the two-dice correlation. Part B: the converse trap.",
