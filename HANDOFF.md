@@ -2,6 +2,10 @@
 
 <!-- Orientation doc for a fresh context. Session-by-session narration lives in git history; this file keeps only what's needed going forward. -->
 
+## Cursor Cloud env setup (2026-06-27, COMMITTED on branch)
+
+Set up the Cloud Agent dev environment. Deps install via the startup update script (`npm install` root + `functions/`). Documented the full local run loop in `AGENTS.md` → `## Cursor Cloud specific instructions`: create gitignored `.env.development` (placeholder Firebase config + `VITE_USE_EMULATORS=true`), build functions (`npm run build --prefix functions`), `npx firebase emulators:start` (Java present), `npm run seed`, `npm run dev` (:5173). Verified end-to-end in this env: `vitest` 1112/1112 green; emulators + seed OK; signed up a fresh account through the Auth emulator and interacted with the Pattern Hitting Times lesson (MCQ feedback + Flip state-machine sim). `npm run lint` fails only on pre-existing `interviews/_build/*.ts` errors (not setup-related).
+
 ## Interview Caption/Transcript UI Redesign (2026-06-26, NOT COMMITTED)
 
 Fixed the "horrible" live-interview caption UI (`/interview/:conceptId`, live state). **Root cause:** `src/styles/surfaces/interview.css` referenced non-existent tokens (`--color-*`, `--text-*`, `--space-*`, `--radius-*`) so nearly all rules were dropped → unstyled wall of text, orb hogging the screen. (A concurrent edit had already migrated the file to real `--ergo-*` tokens + polished the ready/report screens; this work was **reconciled on top**, keeping those and adding the caption redesign.)
