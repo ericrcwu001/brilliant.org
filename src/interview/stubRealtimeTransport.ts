@@ -55,23 +55,51 @@ export const stubRealtimeTransport: RealtimeTransport = {
       onEvent({ type: 'session.created', session: { type: 'realtime' } })
     }, 50)
 
-    // Emit canned turns at 800 ms intervals.
+    // Emit canned turns sequentially. Interviewer turns are streamed as
+    // output_item.added → audio started → per-word transcript deltas → done →
+    // audio stopped, so the InterviewPage exercises the paced word-by-word
+    // reveal. Candidate turns arrive as a single completed transcription (as the
+    // real API delivers them). `cursor` keeps turns from overlapping.
+    const PER_WORD_MS = 90
+    let cursor = 400
     CANNED_TURNS.forEach((turn, i) => {
-      const delay = 500 + i * 800
-      setTimeout(() => {
-        const type =
-          turn.role === 'interviewer'
-            ? 'response.output_audio_transcript.done'
-            : 'conversation.item.input_audio_transcription.completed'
-        onEvent({ type, transcript: turn.text })
-
-        if (turn.role === 'interviewer') {
+      const startAt = cursor
+      if (turn.role === 'interviewer') {
+        const words = turn.text.split(/\s+/)
+        const speakMs = words.length * PER_WORD_MS
+        setTimeout(() => {
+          onEvent({ type: 'response.output_item.added', item: { id: `stub-item-${i}` } })
           onEvent({ type: 'output_audio_buffer.started', response_id: `stub-${i}` })
+          words.forEach((w, wi) => {
+            setTimeout(() => {
+              onEvent({
+                type: 'response.output_audio_transcript.delta',
+                item_id: `stub-item-${i}`,
+                delta: (wi === 0 ? '' : ' ') + w,
+              })
+            }, wi * PER_WORD_MS)
+          })
+          setTimeout(() => {
+            onEvent({
+              type: 'response.output_audio_transcript.done',
+              item_id: `stub-item-${i}`,
+              transcript: turn.text,
+            })
+          }, speakMs + 40)
           setTimeout(() => {
             onEvent({ type: 'output_audio_buffer.stopped', response_id: `stub-${i}` })
-          }, 300)
-        }
-      }, delay)
+          }, speakMs + 80)
+        }, startAt)
+        cursor += speakMs + 500
+      } else {
+        setTimeout(() => {
+          onEvent({
+            type: 'conversation.item.input_audio_transcription.completed',
+            transcript: turn.text,
+          })
+        }, startAt)
+        cursor += 700
+      }
     })
 
     return {

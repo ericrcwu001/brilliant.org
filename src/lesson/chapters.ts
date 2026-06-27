@@ -32,6 +32,12 @@ const LESSON_CHAPTER: Record<string, ChapterHue> = {
   'lesson-optimal-stopping-3': 'ch3',
   'lesson-optimal-stopping-4': 'ch3',
   'lesson-optimal-stopping-5': 'ch3',
+  'lesson-game-theory-1': 'ch2',
+  'lesson-game-theory-2': 'ch2',
+  'lesson-game-theory-3': 'ch2',
+  'lesson-game-theory-4': 'ch2',
+  'lesson-game-theory-5': 'ch2',
+  'lesson-game-theory-6': 'ch2',
 }
 
 // Resolved hex per chapter — keep in sync with the --chN tokens in

@@ -38,6 +38,7 @@ function makeReturn(overrides: Partial<UseRealtimeInterviewReturn>): UseRealtime
     status: 'idle',
     transcript: [],
     isAiSpeaking: false,
+    userSpeaking: false,
     remoteStream: null,
     secondsLeft: SESSION_CAP,
     error: null,
@@ -108,6 +109,13 @@ describe('InterviewPage (smoke — renderToString)', () => {
         <InterviewPage navigate={() => {}} conceptId="course-expected-value" />,
       )
       expect(html).toContain('iv-countdown')
+    })
+
+    it('renders a remote-audio element for playback', () => {
+      const html = renderToString(
+        <InterviewPage navigate={() => {}} conceptId="course-expected-value" />,
+      )
+      expect(html).toContain('<audio')
     })
   })
 

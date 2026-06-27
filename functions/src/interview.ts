@@ -45,7 +45,7 @@ const db = getFirestore()
 const SESSION_CAP_SECONDS = 480 // 8 min hard per-session
 const DAILY_QUOTA_SECONDS = 1800 // 30 min per user per day
 const TOKEN_TTL_SECONDS = 600 // expires_after.seconds at mint (>= session cap)
-const REALTIME_MODEL = 'gpt-realtime'
+const REALTIME_MODEL = 'gpt-realtime-2'
 const REALTIME_VOICE = 'marin'
 const GRADER_MODEL = 'gpt-5.5' // pin a snapshot for production
 
@@ -95,9 +95,41 @@ function loadPack(conceptId: string): InterviewPack {
 // (the pack's build-time NO-LEAK guard ensures rungs state method not the number),
 // qualitative rubric text, followUps. Forbidden: hidden.answer / approaches /
 // wrongTurns / engineCheck.answer.
+// Voice-delivery layer shared across every concept pack (the pack's own
+// interviewerPrompt supplies role/protocol/edge-cases/hints/scoring). Structured
+// per OpenAI's Realtime prompting guide; contains NO hidden answer/rubric fields.
+const VOICE_CONVERSATION_GUIDE = `# Personality and Tone
+- Warm, sharp senior quant interviewer. Natural and human, never robotic.
+
+# Language
+- Speak and respond ONLY in English at all times, regardless of the language the candidate uses.
+- If the candidate speaks another language, politely ask them to continue in English.
+
+# Reasoning
+- Reason silently before probing or grading. Do NOT reason aloud or reveal chain-of-thought.
+- Do NOT reason on unclear audio — ask for clarification instead.
+
+# Preambles
+- If you need a beat to think, a SHORT spoken filler is fine ("Let me think about that.").
+
+# Verbosity (you are SPEAKING out loud)
+- Keep every turn to ONE or TWO sentences, then STOP and listen. Never monologue.
+- Ask ONE thing at a time. Do not stack questions.
+
+# Interruptions
+- If the candidate talks while you are speaking, STOP immediately, listen, address what they said, then continue naturally. Do NOT restate your whole previous turn.
+
+# Unclear Audio
+- Only act on audio you understand with confidence. If you hear silence, a stray word, or noise rather than a real answer, do NOT respond — wait, or briefly prompt ("Take your time."). Never guess at missing words.
+
+# Variety
+- Vary your acknowledgments and phrasing across turns ("Right." "Go on." "Okay.") to avoid sounding repetitive.`
+
 function buildLiveInstructions(pack: InterviewPack, question: Question): string {
   const r = question.hidden.rubric
   return [
+    VOICE_CONVERSATION_GUIDE,
+    '',
     pack.interviewerPrompt,
     '',
     '## Question',
@@ -213,13 +245,28 @@ export const mintInterviewToken = onCall(
           model: REALTIME_MODEL,
           instructions,
           output_modalities: ['audio'],
+          // gpt-realtime-2 reasons before it speaks; 'low' keeps first-audio latency
+          // tolerable for a live interview. Tune up to 'medium' if probing is shallow.
+          reasoning: { effort: 'low' },
           audio: {
             input: {
               format: { type: 'audio/pcm', rate: 24000 },
-              transcription: { model: 'gpt-4o-mini-transcribe', language: 'en' },
+              transcription: {
+                model: 'gpt-realtime-whisper',
+                language: 'en',
+                // Bias the ASR toward the quant-interview vocabulary the candidate
+                // will use. If a future model rejects `prompt`, this field is safe
+                // to drop.
+                prompt:
+                  "Quantitative finance interview. Likely terms: expected value, variance, standard deviation, probability, conditional probability, Bayes' rule, Markov chain, combinatorics, permutations, binomial, geometric distribution, expected number of flips, hitting time.",
+              },
+              // server_vad gates on audio energy (semantic_vad has no threshold knob),
+              // so background noise below threshold no longer interrupts the model.
               turn_detection: {
-                type: 'semantic_vad',
-                eagerness: 'auto',
+                type: 'server_vad',
+                threshold: 0.7,
+                prefix_padding_ms: 300,
+                silence_duration_ms: 800,
                 create_response: true,
                 interrupt_response: true,
               },

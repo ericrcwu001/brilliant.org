@@ -1,0 +1,254 @@
+{
+  "lessonId": "lesson-game-theory-6",
+  "courseId": "course-game-theory",
+  "title": "Winning Strategies: Nim & Symmetry",
+  "patternOptions": ["H"],
+  "milestoneId": "game-theory-combinatorial",
+  "unlocks": null,
+  "schemaVersion": 1,
+  "beats": [
+    {
+      "beatId": "l6-recall",
+      "required": true,
+      "prompt": "Warm up: match each idea to its answer.",
+      "interaction": {
+        "type": "retrievalGrid",
+        "pairs": [
+          { "left": "Solve a sequential game from the end", "right": "backward induction" },
+          { "left": "A position the mover loses", "right": "P-position" },
+          { "left": "Pirate game: senior keeps", "right": "98" }
+        ]
+      },
+      "feedback": {
+        "correct": "Right. Today: in take-away games every position is either winning or losing — and a single rule (XOR or mod) decides which.",
+        "hints": [
+          "Unravel a sequential game from the last move backward: backward induction.",
+          "A position where every available move hands the opponent a winning spot — the mover loses: P-position.",
+          "With 5 pirates and 100 coins, backward induction gives the senior pirate 98."
+        ]
+      }
+    },
+    {
+      "beatId": "l6-bet",
+      "required": true,
+      "prompt": "Take 1–3 tokens, last to take WINS. Pile of 12. The first player…",
+      "interaction": {
+        "type": "prediction",
+        "options": ["wins", "loses", "depends"]
+      },
+      "feedback": {
+        "byOption": {
+          "wins": {
+            "note": "Not quite. 12 is a multiple of 4 — that makes it a P-position (Previous player wins). No matter how many tokens the first player takes, the second can always return the pile to the next multiple of 4."
+          },
+          "loses": {
+            "note": "Yes. 12 = 4 × 3 is a P-position. Whatever the first player takes (1, 2, or 3), the second player takes 4 minus that to reach 8, then 4, then 0. The first player loses with perfect play.",
+            "correct": true
+          },
+          "depends": {
+            "note": "No opponent-choice dependence here. With 12 tokens both players play optimally: 12 is a multiple of 4 so the first player is in a losing position — no sequence of play can change that."
+          }
+        }
+      }
+    },
+    {
+      "beatId": "l6-primer",
+      "required": false,
+      "track": "A",
+      "prompt": "A quick definition before the board.",
+      "interaction": {
+        "type": "primer",
+        "variant": "custom",
+        "title": "P-positions & N-positions",
+        "body": "Every position in a take-away game is either a P-position (Previous player wins — the mover LOSES) or an N-position (Next player wins — the mover WINS). Terminal position (0 tokens): P-position (the mover has lost). From an N-position there is always at least one move to a P-position. From a P-position every move leads to an N-position. Winning strategy: always hand your opponent a P-position. In the subtraction game (remove 1 to k tokens), the P-positions are exactly the multiples of k+1.",
+        "collapsible": true
+      },
+      "feedback": {
+        "correct": "Keep that in mind: you win by always handing your opponent a P-position.",
+        "hints": [
+          "P = Previous player wins (mover loses); N = Next player wins (mover wins).",
+          "From a P-position every move gives the opponent an N-position — there is no escape.",
+          "Read and tap Continue."
+        ]
+      }
+    },
+    {
+      "beatId": "l6-win",
+      "required": true,
+      "prompt": "Take 1–3 tokens; last to take wins. Pile of 10. How many should you take?",
+      "interaction": {
+        "type": "nimBoard",
+        "heaps": [10],
+        "task": "subtraction",
+        "maxRemove": 3,
+        "lastTakeWins": true,
+        "headline": "2",
+        "interactive": true
+      },
+      "feedback": {
+        "correct": "Take 2, leaving 8 — a multiple of 4. Whatever your opponent takes (1, 2, or 3), respond with 4 minus that: land on 4, then 0. You win.",
+        "hints": [
+          "P-positions are multiples of 4: 0, 4, 8, 12, …",
+          "10 mod 4 = 2. Taking 2 leaves 8, a P-position for your opponent.",
+          "Winning move: take 2 → leave 8."
+        ]
+      },
+      "hero": {
+        "slowFirst": true,
+        "structuralReadout": "10 mod 4 = 2 → take 2, leave 8 (P-position).",
+        "reducedMotionFinalFrame": true
+      }
+    },
+    {
+      "beatId": "l6-scaffold",
+      "required": false,
+      "track": "A",
+      "prompt": "Same rules, smaller pile: 7 tokens, take 1–3. How many should you take?",
+      "interaction": {
+        "type": "nimBoard",
+        "heaps": [7],
+        "task": "subtraction",
+        "maxRemove": 3,
+        "lastTakeWins": true,
+        "headline": "3",
+        "interactive": true
+      },
+      "feedback": {
+        "correct": "Take 3, leaving 4 — a P-position. Then mirror your opponent to reach 0.",
+        "hints": [
+          "P-positions are multiples of 4: 0, 4, 8, …",
+          "7 mod 4 = 3. Take 3 to leave 4.",
+          "Winning move: take 3 → leave 4."
+        ]
+      }
+    },
+    {
+      "beatId": "l6-explore",
+      "required": true,
+      "prompt": "Three heaps: 3, 4, and 5 tokens. Last to take wins. The nim-sum (XOR of all heaps) decides who wins — explore the board.",
+      "interaction": {
+        "type": "nimBoard",
+        "heaps": [3, 4, 5],
+        "task": "nim",
+        "lastTakeWins": true,
+        "headline": "2",
+        "interactive": true
+      },
+      "feedback": {
+        "correct": "Nim-sum 3⊕4⊕5 = 2 ≠ 0, so the first player wins. Winning move: reduce the 3-heap to 1, leaving (1, 4, 5) with nim-sum 1⊕4⊕5 = 0 — a P-position your opponent cannot escape.",
+        "hints": [
+          "Compute 3 XOR 4 = 7, then 7 XOR 5 = 2. Non-zero nim-sum ⇒ first player wins.",
+          "Find a heap h where h XOR 2 < h. The 3-heap: 3 XOR 2 = 1 < 3 — reduce it to 1.",
+          "Winning move: reduce the 3-heap to 1 → leave (1, 4, 5), nim-sum 0."
+        ]
+      },
+      "hero": {
+        "slowFirst": true,
+        "structuralReadout": "nim-sum 3⊕4⊕5 = 2 ≠ 0 → first player wins; move: 3-heap → 1.",
+        "reducedMotionFinalFrame": true
+      }
+    },
+    {
+      "beatId": "l6-model",
+      "required": true,
+      "prompt": "Three lenses on Nim. Predict the core rule, then reveal each frame.",
+      "interaction": {
+        "type": "tripletReveal",
+        "value": "nim-sum 0 ⇒ losing",
+        "display": "cards",
+        "lenses": [
+          {
+            "label": "nim-sum = 0 ⟺ losing",
+            "body": "A position is a P-position (mover loses) if and only if its nim-sum — the XOR of all heap sizes — equals 0. Any move from a nim-sum-0 position changes at least one heap, making the XOR non-zero and handing the opponent an N-position."
+          },
+          {
+            "label": "XOR balances the heaps",
+            "body": "From any N-position (nim-sum ≠ 0), you can always find a move that zeroes the XOR: pick any heap whose leading bit matches the nim-sum's leading bit and reduce it until the XOR cancels. Your opponent is then stuck at nim-sum 0."
+          },
+          {
+            "label": "Mirror onto a P-position",
+            "body": "Winning play is a strategy of keeping nim-sum 0 after every move you make. You hand the opponent a P-position each turn; they are forced to produce an N-position, which you correct again — until they take the last token and lose."
+          }
+        ]
+      },
+      "feedback": {
+        "correct": "nim-sum 0 ⇒ P-position (the mover loses). The XOR rule is exact: every non-zero nim-sum has a zeroing move; every zero nim-sum has none.",
+        "hints": [
+          "nim-sum = XOR of all heap sizes. Zero ⇒ P-position (mover loses).",
+          "From a non-zero nim-sum you can always move to zero. From zero, any move makes it non-zero.",
+          "Three lenses: algebraic (XOR = 0), strategic (balancing), and positional (mirroring)."
+        ]
+      }
+    },
+    {
+      "beatId": "l6-apply",
+      "required": true,
+      "interviewNote": "Green Book chocolate-bar invariant: each break splits one piece into two, so the piece count increases by exactly 1 per break. Starting from 1 piece you need exactly mn − 1 breaks to reach mn unit squares — the number is forced, not strategic. Coins on a round table (techinterview.org symmetry / strategy-stealing): the first player places a coin at the exact center, then mirrors every opponent move through the center — guaranteeing the first player always has a legal move when the opponent does, so the first player wins. Normal vs misère Nim: in normal play (last to take wins) the nim-sum rule applies exactly; in misère Nim (last to take loses) play normally until only heaps of size 0 or 1 remain, then take an odd number of those last tokens instead of even. The 21 game (take 1–3, the player forced to take 21 loses) is misère subtraction — P-positions shift by one.",
+      "prompt": "A chocolate bar is 6 × 8 = 48 squares. You snap it along grid lines until you have 48 individual unit squares. What is the minimum number of breaks required?",
+      "interaction": {
+        "type": "answerEntry",
+        "fields": [
+          {
+            "id": "breaks",
+            "label": "Number of breaks",
+            "accept": ["47"],
+            "placeholder": "your answer"
+          }
+        ]
+      },
+      "feedback": {
+        "correct": "47. Each break takes one piece and produces two — exactly +1 piece per break. You start with 1 piece and need 48, so you need exactly 47 breaks. No strategy can speed this up: it is forced (mn − 1 = 6 × 8 − 1 = 47).",
+        "hints": [
+          "After k breaks, how many pieces exist? Each break adds exactly one.",
+          "Start with 1 piece; after 47 breaks you have 48 pieces.",
+          "mn − 1 = 6 × 8 − 1 = 47."
+        ]
+      }
+    },
+    {
+      "beatId": "l6-prove",
+      "required": true,
+      "prompt": "Nim heaps (1, 4, 5). Compute the nim-sum and decide who wins.",
+      "interaction": {
+        "type": "masteryChallenge",
+        "scenario": "Three Nim heaps: sizes 1, 4, and 5. The nim-sum is \\(1 \\oplus 4 \\oplus 5\\), where \\(\\oplus\\) denotes bitwise XOR. Recall: a position with nim-sum \\(0\\) is a P-position — the player to move loses with perfect play.",
+        "fields": [
+          {
+            "id": "nimsum",
+            "label": "Nim-sum (XOR) of 1, 4, 5",
+            "accept": ["0"],
+            "placeholder": "?"
+          },
+          {
+            "id": "win",
+            "label": "Does the player to move win? (yes/no)",
+            "accept": ["no"],
+            "placeholder": "yes or no"
+          }
+        ]
+      },
+      "feedback": {
+        "correct": "\\(1 \\oplus 4 \\oplus 5 = 5 \\oplus 5 = 0\\). Nim-sum 0 ⇒ P-position: the player to move loses. Despite the large 5-heap, every move produces a non-zero XOR the opponent can correct. \\[ 1 \\oplus 4 \\oplus 5 = 0. \\]",
+        "hints": [
+          "1 in binary is 001; 4 is 100; 5 is 101. XOR column by column: 001 XOR 100 = 101 = 5.",
+          "Then 5 XOR 5 = 0. nim-sum = 0.",
+          "nim-sum = 0 ⇒ P-position ⇒ the mover loses → answer: no."
+        ]
+      }
+    },
+    {
+      "beatId": "l6-recap",
+      "required": true,
+      "prompt": "What you built.",
+      "interaction": { "type": "recap" },
+      "feedback": {
+        "correct": "Every impartial take-away position is winning (N) or losing (P): you win by always handing your opponent a P-position. In Nim the nim-sum (XOR) = 0 ⟺ P-position. In subtraction (remove 1–k), P-positions are the multiples of k+1. Some 'games' are forced — no strategy, just counting. You've now seen the full Game Theory arc: dominance → Nash equilibrium → mixed strategies → minimax → backward induction → winning positions.",
+        "hints": [
+          "nim-sum = XOR of all heaps; 0 ⇒ P-position (mover loses).",
+          "Subtraction game: P-positions are multiples of k+1; winning move is n mod (k+1).",
+          "Arc: dominance (L1) → Nash (L2) → mixing (L3) → minimax (L4) → backward induction (L5) → winning positions (L6)."
+        ]
+      }
+    }
+  ]
+}

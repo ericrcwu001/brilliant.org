@@ -88,6 +88,35 @@ const TransitionRefSchema = z.object({
   on: z.enum(['H', 'T']),
 })
 
+// Game Theory concept (Wave 0): a finite extensive-form tree, folded by backward
+// induction (src/engine/gameTheory.ts). Recursive, so declared via z.lazy with an
+// explicit type. Firestore-safe: `payoff` is an array of {n,d} objects (not nested
+// arrays); `moves` is an array of {label, child} objects.
+export type GameTreeNodeData =
+  | { kind: 'leaf'; label?: string; payoff: { n: number; d: number }[] }
+  | {
+      kind: 'decision'
+      player: number
+      label?: string
+      moves: { label: string; child: GameTreeNodeData }[]
+    }
+
+export const GameTreeNodeSchema: z.ZodType<GameTreeNodeData> = z.lazy(() =>
+  z.union([
+    z.object({
+      kind: z.literal('leaf'),
+      label: z.string().optional(),
+      payoff: z.array(RationalSchema),
+    }),
+    z.object({
+      kind: z.literal('decision'),
+      player: z.number().int().nonnegative(),
+      label: z.string().optional(),
+      moves: z.array(z.object({ label: z.string(), child: GameTreeNodeSchema })),
+    }),
+  ]),
+)
+
 export const InteractionSchema = z.discriminatedUnion('type', [
   z.object({ type: z.literal('prediction'), options: z.array(z.string()) }),
   z.object({
@@ -505,6 +534,52 @@ export const InteractionSchema = z.discriminatedUnion('type', [
     //   sequence    → 'win' | 'miss' (or the selected candidate's rank as a string)
     //   cutoff      → success prob "n/d" at `cutoff` (or at the optimal r if `cutoff` omitted)
     //   convergence → the optimal cutoff r* at the largest nValues (an integer string)
+    headline: z.string().optional(),
+  }),
+  // ── Game Theory concept (Wave-0 contract freeze). Three new interaction types
+  // for lesson-game-theory-1..6; each maps 1:1 to a beat view in beats/index.tsx
+  // (stub-routed in Wave 0). Engine dep: src/engine/gameTheory.ts (pure/exact).
+  // All three follow the `chainBoard` precedent: NOT in GRADED_TYPES/HERO_TYPES/
+  // mastery.ts; they carry an engine-reproducible `headline` cross-checked by
+  // scripts/validate-fixtures.ts. Firestore-safe (no directly-nested arrays).
+  //
+  // Normal-form bimatrix grid. `task` folds dominance / best-response / pure-Nash /
+  // zero-sum value / mixed-strategy (the `mix` task adds the indifference slider).
+  z.object({
+    type: z.literal('payoffMatrix'),
+    rows: z.array(z.string()).min(2),
+    cols: z.array(z.string()).min(2),
+    matrix: z.array(
+      z.object({
+        cells: z.array(z.object({ row: RationalSchema, col: RationalSchema })),
+      }),
+    ),
+    task: z.enum(['dominance', 'bestResponse', 'nash', 'value', 'mix']),
+    rowPlayer: z.string().optional(),
+    colPlayer: z.string().optional(),
+    zeroSum: z.boolean().optional(),
+    interactive: z.boolean().optional(),
+    headline: z.string().optional(),
+  }),
+  // Sequential extensive-form game; tap to fold by backward induction → the SPE.
+  z.object({
+    type: z.literal('gameTree'),
+    root: GameTreeNodeSchema,
+    players: z.array(z.string()).optional(),
+    interactive: z.boolean().optional(),
+    // SPE payoff vector, formatVector(backwardInduction(root).payoff). Validation anchor.
+    headline: z.string().optional(),
+  }),
+  // Impartial take-away game: heaps of tokens. `task` 'nim' (XOR rule) or
+  // 'subtraction' (pile = heaps[0], remove 1..maxRemove, last takes wins).
+  z.object({
+    type: z.literal('nimBoard'),
+    heaps: z.array(z.number().int().nonnegative()).min(1),
+    task: z.enum(['nim', 'subtraction']).optional(),
+    maxRemove: z.number().int().positive().optional(),
+    lastTakeWins: z.boolean().optional(),
+    interactive: z.boolean().optional(),
+    // nim → String(nimSum(heaps)); subtraction → String(heaps[0] % (maxRemove+1)). 0 ⇒ mover loses.
     headline: z.string().optional(),
   }),
 ])

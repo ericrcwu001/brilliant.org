@@ -1,0 +1,224 @@
+/* ── NimBoardBeat — impartial take-away game (lesson-game-theory-N) ──────────
+   Tokens only; no raw hex. Chapter accent resolves through var(--accent)
+   which the lesson shell injects for course-game-theory. */
+
+.gt-nim {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s3);
+}
+
+/* ── Status badge (aria-live host) ──────────────────────────────────────── */
+
+.gt-nim__status {
+  margin: 0;
+  min-height: 32px;
+  display: flex;
+  align-items: center;
+}
+
+.gt-nim__status-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: var(--s1) var(--s3);
+  border-radius: var(--r-pill);
+  font-family: var(--font-mono);
+  font-size: calc(15px * var(--fs));
+  font-weight: 600;
+}
+
+.gt-nim__status-badge--win {
+  background: var(--accent-tint);
+  color: var(--accent);
+}
+
+.gt-nim__status-badge--lose {
+  background: var(--ergo-surface);
+  color: var(--ink);
+  border: 1px solid var(--rule);
+}
+
+/* ── Heaps container ─────────────────────────────────────────────────────── */
+
+.gt-nim__heaps {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s3);
+}
+
+.gt-nim__heap {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: var(--s2);
+  align-items: center;
+}
+
+.gt-nim__heap-label {
+  font-family: var(--font-mono);
+  font-size: calc(13px * var(--fs));
+  color: var(--ink);
+  min-width: 48px;
+  flex-shrink: 0;
+}
+
+.gt-nim__heap-tokens {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s2);
+}
+
+.gt-nim__heap-empty {
+  font-family: var(--font-mono);
+  font-size: calc(13px * var(--fs));
+  color: var(--ink);
+  opacity: 0.5;
+}
+
+/* ── Token buttons ───────────────────────────────────────────────────────── */
+
+.gt-nim__token {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  min-height: 44px;
+  border-radius: 50%;
+  border: 2px solid var(--rule);
+  background: var(--ergo-surface);
+  cursor: pointer;
+  padding: 0;
+}
+
+.gt-nim__token:not(:disabled):hover {
+  border-color: var(--accent);
+  background: var(--accent-tint);
+}
+
+.gt-nim__token:focus-visible {
+  box-shadow: var(--ring-focus);
+  outline: none;
+}
+
+.gt-nim__token--highlight {
+  border-color: var(--accent);
+  background: var(--accent-tint);
+}
+
+/* ── Subtraction remove buttons ─────────────────────────────────────────── */
+
+.gt-nim__sub-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s2);
+}
+
+.gt-nim__remove-btn {
+  min-width: 44px;
+  min-height: 44px;
+  padding: var(--s2) var(--s3);
+  border: 1.5px solid var(--rule);
+  border-radius: var(--r-sm);
+  background: var(--ergo-surface);
+  font-family: var(--font-mono);
+  font-size: calc(14px * var(--fs));
+  color: var(--ink);
+  cursor: pointer;
+}
+
+.gt-nim__remove-btn:not(:disabled):hover {
+  border-color: var(--accent);
+  background: var(--accent-tint);
+}
+
+.gt-nim__remove-btn:focus-visible {
+  box-shadow: var(--ring-focus);
+  outline: none;
+}
+
+.gt-nim__remove-btn:disabled {
+  cursor: default;
+  opacity: 0.45;
+}
+
+.gt-nim__remove-btn--highlight {
+  border-color: var(--accent);
+  background: var(--accent-tint);
+  color: var(--accent);
+  font-weight: 700;
+}
+
+/* ── Framing note ────────────────────────────────────────────────────────── */
+
+.gt-nim__framing {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: calc(13px * var(--fs));
+  color: var(--ink);
+}
+
+/* ── Show-move reveal button ─────────────────────────────────────────────── */
+
+.gt-nim__reveal-btn {
+  align-self: flex-start;
+  min-height: 44px;
+  padding: var(--s2) var(--s4);
+  border: 1.5px solid var(--rule);
+  border-radius: var(--r-sm);
+  background: var(--ergo-surface);
+  font-family: var(--font-mono);
+  font-size: calc(14px * var(--fs));
+  color: var(--ink);
+  cursor: pointer;
+}
+
+.gt-nim__reveal-btn:not(:disabled):hover {
+  border-color: var(--accent);
+  background: var(--accent-tint);
+}
+
+.gt-nim__reveal-btn:focus-visible {
+  box-shadow: var(--ring-focus);
+  outline: none;
+}
+
+/* ── Winning-move hint ───────────────────────────────────────────────────── */
+
+.gt-nim__move-hint {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: calc(14px * var(--fs));
+  color: var(--accent);
+  background: var(--accent-tint);
+  padding: var(--s2) var(--s3);
+  border-radius: var(--r-sm);
+}
+
+/* ── Animations ──────────────────────────────────────────────────────────── */
+
+@keyframes gt-nim-badge-in {
+  from { opacity: 0; transform: scale(0.95); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+@keyframes gt-nim-hint-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .gt-nim__status-badge {
+    animation: gt-nim-badge-in var(--dur-base) var(--ease-out);
+  }
+
+  .gt-nim__move-hint {
+    animation: gt-nim-hint-in var(--dur-base) var(--ease-out);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gt-nim__status-badge,
+  .gt-nim__move-hint {
+    animation: none;
+  }
+}

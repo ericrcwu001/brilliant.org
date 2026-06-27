@@ -26,21 +26,29 @@ const FRAG_SRC = `
 precision mediump float;
 
 uniform float uTime;
-uniform float uAmplitude;
+uniform float uAmplitude;   // smoothed 0..1 morph level
 uniform vec2  uResolution;
+
+// Cheap angular pseudo-noise (sum of sines) for an organic, per-word edge morph.
+float wobble(float a, float t) {
+  return sin(a * 3.0 + t * 1.6) * 0.6
+       + sin(a * 5.0 - t * 2.1) * 0.3
+       + sin(a * 8.0 + t * 0.9) * 0.1;
+}
 
 void main() {
   vec2 uv = (gl_FragCoord.xy - 0.5 * uResolution) / min(uResolution.x, uResolution.y);
-  float dist = length(uv);
+  float dist  = length(uv);
+  float angle = atan(uv.y, uv.x);
 
-  float radius   = 0.28 + uAmplitude * 0.07;
-  float softness = 0.04;
+  // Organic edge: the radius deforms per-angle, scaled by the morph level.
+  float morph    = wobble(angle, uTime) * uAmplitude * 0.06;
+  float radius   = 0.24 + uAmplitude * 0.05 + morph;  // 0.24 base leaves glow headroom
+  float softness = 0.035;
+  float shape    = smoothstep(radius + softness, radius - softness, dist);
 
-  float ripple = sin(dist * 18.0 - uTime * 2.5) * 0.5 + 0.5;
-  float disp   = uAmplitude * ripple * 0.04;
-  float shape  = smoothstep(radius + softness + disp, radius - softness + disp, dist);
-
-  float glow  = exp(-dist * 5.0) * (0.08 + uAmplitude * 0.35);
+  // Glow blooms with the morph level — this is the per-word swell.
+  float glow = exp(-dist * 4.0) * (0.10 + uAmplitude * 0.9);
 
   vec3 baseColor = vec3(0.55, 0.75, 1.0);
   vec3 color     = baseColor * (shape + glow);
@@ -139,6 +147,9 @@ export function Orb({ remoteStream, isAiSpeaking, reducedMotion: reducedMotionPr
   const ambientActiveRef          = useRef(ambientActive)
   const analyserRef               = useRef<AnalyserNode | null>(null)
   const audioCtxRef               = useRef<AudioContext | null>(null)
+  const drawFrameRef              = useRef<((amplitude: number, t: number) => void) | null>(null)
+  // Smoothed morph level (envelope follower) — read & written only in the rAF loop.
+  const levelRef                  = useRef(0)
 
   // Sync props/hook values into refs (read by the rAF loop).
   useEffect(() => { isAiSpeakingRef.current = isAiSpeaking }, [isAiSpeaking])
@@ -181,7 +192,12 @@ export function Orb({ remoteStream, isAiSpeaking, reducedMotion: reducedMotionPr
     canvas.height = width * dpr
     canvas.style.width  = `${width}px`
     canvas.style.height = `${width}px`
-    if (gl) gl.viewport(0, 0, canvas.width, canvas.height)
+    if (gl) {
+      gl.viewport(0, 0, canvas.width, canvas.height)
+      // Resizing the canvas clears its drawing buffer; repaint a resting frame so
+      // the orb stays visible even when idle (not speaking) or under reduced motion.
+      drawFrameRef.current?.(0.12, 0)
+    }
   }, [width])
 
   // ── WebGL setup + rAF loop ───────────────────────────────────────────────
@@ -238,6 +254,7 @@ export function Orb({ remoteStream, isAiSpeaking, reducedMotion: reducedMotionPr
       gl.uniform2f(uResolutionLoc.current, canvas!.width, canvas!.height)
       gl.drawArrays(gl.TRIANGLES, 0, 6)
     }
+    drawFrameRef.current = drawFrame
 
     // Draw a resting frame immediately so the orb is visible before the first rAF tick.
     drawFrame(0.12, 0.0)
@@ -260,13 +277,18 @@ export function Orb({ remoteStream, isAiSpeaking, reducedMotion: reducedMotionPr
 
       if (!speaking && !ambient) return
 
-      const amplitude = readAmplitude(analyserRef.current)
+      const raw    = readAmplitude(analyserRef.current)        // ~0..0.3
+      const gained = Math.min(raw * 4.0, 1.0)
+      // Hybrid drive: while speaking, never drop below a gentle floor so the orb
+      // keeps morphing even if the analyser reads low; settle to a calm resting
+      // level otherwise.
+      const target = speaking ? Math.max(gained, 0.18) : 0.12
+      // Envelope follower: fast attack (swell on word onset), slow decay (smooth tail).
+      const k = target > levelRef.current ? 0.35 : 0.08
+      levelRef.current += (target - levelRef.current) * k
       const t = (now - startTime) / 1000
 
-      drawFrame(
-        speaking ? amplitude : Math.max(amplitude * 0.04, 0.12),
-        t,
-      )
+      drawFrame(levelRef.current, t)
     }
 
     rafRef.current = requestAnimationFrame(draw)
