@@ -1,0 +1,246 @@
+{
+  "lessonId": "lesson-optimal-stopping-4",
+  "courseId": "course-optimal-stopping",
+  "title": "Why 37% Works",
+  "patternOptions": ["H"],
+  "milestoneId": "optimal-stopping-why",
+  "unlocks": "lesson-optimal-stopping-5",
+  "schemaVersion": 1,
+  "beats": [
+    {
+      "beatId": "l4-recall",
+      "required": true,
+      "prompt": "Warm-up. Match each partial harmonic sum to its exact reduced value.",
+      "interaction": {
+        "type": "retrievalGrid",
+        "pairs": [
+          { "left": "1 + 1/2", "right": "3/2" },
+          { "left": "1 + 1/2 + 1/3", "right": "11/6" },
+          { "left": "1 + 1/2 + 1/3 + 1/4", "right": "25/12" }
+        ]
+      },
+      "feedback": {
+        "correct": "Right — 3/2, 11/6, 25/12. These are the harmonic numbers H_2, H_3, H_4 (H_n = 1 + 1/2 + … + 1/n). They will reappear inside the win-probability formula.",
+        "hints": [
+          "Add the fractions with a common denominator: 1 + 1/2 = 3/2.",
+          "1 + 1/2 + 1/3: LCD is 6 → 6/6 + 3/6 + 2/6 = 11/6. Add 1/4: LCD is 12 → 22/12 + 3/12 = 25/12.",
+          "Match: two terms → 3/2; three terms → 11/6; four terms → 25/12."
+        ]
+      }
+    },
+    {
+      "beatId": "l4-bet",
+      "required": true,
+      "prompt": "The look-then-leap rule wins only in very specific circumstances. Which condition must hold for it to hire the very best?",
+      "interaction": {
+        "type": "prediction",
+        "options": [
+          "the best lands in the reject zone",
+          "the best comes after the reject zone AND the top candidate so far was inside it",
+          "you simply get lucky"
+        ]
+      },
+      "feedback": {
+        "byOption": {
+          "the best lands in the reject zone": {
+            "note": "No — if the best is in the reject zone, the rule skips them automatically. The rule can only win when the best arrives in the leap phase."
+          },
+          "the best comes after the reject zone AND the top candidate so far was inside it": {
+            "note": "Exactly. Two things must coincide: (1) the best must arrive at position r or later, and (2) the best among all prior candidates must have fallen inside the reject zone — otherwise the rule would have already grabbed someone inferior.",
+            "correct": true
+          },
+          "you simply get lucky": {
+            "note": "Luck is what we are quantifying. The precise condition is structural: the best must arrive after the reject zone, and the best candidate seen before it must be confined to the reject zone so no one in between triggers an early hire."
+          }
+        }
+      }
+    },
+    {
+      "beatId": "l4-primer",
+      "required": false,
+      "track": "A",
+      "prompt": "The key insight, stated plainly before we count.",
+      "interaction": {
+        "type": "primer",
+        "variant": "custom",
+        "title": "Two things must line up",
+        "body": "For the rule to hire the very best: (1) the best must arrive in the leap phase (position >= r), and (2) the best of everyone before it must have been inside the reject zone — otherwise the rule would have already grabbed someone. Multiply those two and sum over positions.",
+        "collapsible": true
+      },
+      "feedback": {
+        "correct": "Keep both conditions in mind: the best arrives at position ≥ r, and the best of the first i−1 candidates was somewhere in positions 1 through r−1.",
+        "hints": [
+          "Condition 1: the best candidate is at some position i ≥ r (probability 1/n per position).",
+          "Condition 2: the best of the first i−1 candidates was in the reject zone (probability (r−1)/(i−1)).",
+          "Read it, then tap Continue."
+        ]
+      }
+    },
+    {
+      "beatId": "l4-build",
+      "required": true,
+      "prompt": "Watch the rule win. The order [2,3,1,4] with cutoff r=2 shows both conditions satisfied — trace how the rule lands the very best.",
+      "interaction": {
+        "type": "stoppingBoard",
+        "display": "sequence",
+        "n": 4,
+        "order": [2, 3, 1, 4],
+        "cutoff": 2,
+        "interactive": false,
+        "headline": "win"
+      },
+      "feedback": {
+        "correct": "The reject zone holds rank 2 (the benchmark). At position 3, rank 1 (the best) arrives — it beats the benchmark, so the rule leaps. Both conditions are met: the best is in the leap phase, and the best reject-zone candidate (rank 2) is the running high-water mark.",
+        "hints": [
+          "Cutoff r=2 means the rule rejects position 1 only (rank 2) and sets it as the benchmark.",
+          "Position 2 (rank 3) does not beat rank 2, so the rule skips it.",
+          "Position 3 (rank 1) beats rank 2 — the rule hires, winning."
+        ]
+      }
+    },
+    {
+      "beatId": "l4-decompose",
+      "required": true,
+      "prompt": "For n=4, r=2: each position i in the leap phase contributes (1/n)·(r−1)/(i−1) to the win probability. Position i=2 gives (1/4)·(1/1); i=3 gives (1/4)·(1/2); i=4 gives (1/4)·(1/3). Sum them.",
+      "interaction": {
+        "type": "answerEntry",
+        "fields": [
+          {
+            "id": "sum",
+            "label": "1/4 + 1/8 + 1/12 (n=4, r=2)",
+            "accept": ["11/24"],
+            "placeholder": "a/b"
+          }
+        ]
+      },
+      "feedback": {
+        "correct": "11/24. LCD of 4, 8, 12 is 24: 6/24 + 3/24 + 2/24 = 11/24. Each term is the probability the best lands at position i AND the reject zone holds the overall runner-up.",
+        "hints": [
+          "1/4 + 1/8 + 1/12: find a common denominator. LCD(4, 8, 12) = 24.",
+          "6/24 + 3/24 + 2/24 = 11/24.",
+          "The answer is 11/24."
+        ]
+      }
+    },
+    {
+      "beatId": "l4-formula",
+      "required": true,
+      "comparison": true,
+      "introducesSymbol": "Σ",
+      "groundedBy": ["l4-recall", "l4-decompose"],
+      "interviewNote": "The derivation: p_n(r) = (r−1)/n · Σ_{j=r}^{n} 1/(j−1). Each position i ≥ r wins iff the best is there (prob 1/n) AND the best of the first i−1 candidates fell in the reject zone (prob (r−1)/(i−1)); multiply and sum over i. The optimal r* is the largest r with Σ_{j=r}^{n} 1/(j−1) > 1 — adding another r still improves the total. In the continuous limit, maximise f(x) = x·ln(1/x) over x ∈ (0,1]; setting f'(x) = ln(1/x) − 1 = 0 gives x = 1/e, recovering the 37% rule for both the skip fraction and the win probability.",
+      "prompt": "Three ways to read the same number. The formula behind the 37% rule, viewed from three angles.",
+      "interaction": {
+        "type": "tripletReveal",
+        "value": "11/24",
+        "display": "cards",
+        "lenses": [
+          { "label": "Per-position sum", "body": "Sum over i of (1/n)·(r−1)/(i−1)." },
+          { "label": "Factored", "body": "(r−1)/n · Σ 1/(j−1)." },
+          { "label": "Harmonic", "body": "(r−1)/n · (H_{n−1} − H_{r−2})." }
+        ]
+      },
+      "feedback": {
+        "correct": "All three evaluate to 11/24 for n=4, r=2. The factored form (r−1)/n · Σ_{j=r}^{n} 1/(j−1) is the standard formula; writing the sum as H_{n−1} − H_{r−2} connects it directly to the harmonic numbers you recalled at the start.",
+        "hints": [
+          "The per-position sum adds (1/4)·(1/1) + (1/4)·(1/2) + (1/4)·(1/3) — each term is a win-probability contribution from one leap-phase position.",
+          "Factor out (r−1)/n = 1/4 to get (1/4)·(1 + 1/2 + 1/3) = (1/4)·(11/6) = 11/24.",
+          "The harmonic form: for r=2, H_{r−2} = H_0 = 0, so (1/4)·H_3 = (1/4)·(11/6) = 11/24."
+        ]
+      }
+    },
+    {
+      "beatId": "l4-harmonic",
+      "required": true,
+      "prompt": "Plug in n=5, r=2. Since H_{r−2} = H_0 = 0, the formula simplifies to p_5(2) = (1/5)·H_4. Use H_4 = 25/12 to find p_5(2).",
+      "interaction": {
+        "type": "answerEntry",
+        "fields": [
+          {
+            "id": "p52",
+            "label": "p_5(2) = (1/5)·H_4 = (1/5)(25/12)",
+            "accept": ["5/12"],
+            "placeholder": "a/b"
+          }
+        ]
+      },
+      "feedback": {
+        "correct": "(1/5)·(25/12) = 25/60 = 5/12. The harmonic shortcut makes the arithmetic clean: whenever r=2, H_{r−2} = H_0 = 0 drops out and p_n(2) = (1/n)·H_{n−1}.",
+        "hints": [
+          "r=2, n=5: (r−1)/n = 1/5. H_{n−1} = H_4 = 25/12.",
+          "(1/5)·(25/12) = 25/60.",
+          "Reduce: gcd(25,60)=5 → 5/12."
+        ]
+      }
+    },
+    {
+      "beatId": "l4-threshold",
+      "required": true,
+      "prompt": "The optimal cutoff r* is the LARGEST r for which Σ_{j=r}^{n} 1/(j−1) > 1. For n=4, test r=2 and r=3 to find r*.",
+      "interaction": {
+        "type": "answerEntry",
+        "fields": [
+          {
+            "id": "ropt",
+            "label": "Largest r with the sum > 1 (n=4): optimal r",
+            "accept": ["2"],
+            "placeholder": "r"
+          }
+        ]
+      },
+      "feedback": {
+        "correct": "r=2: sum = 1/1 + 1/2 + 1/3 = 11/6 ≈ 1.83 > 1 ✓. r=3: sum = 1/2 + 1/3 = 5/6 < 1 ✗. The largest r still above 1 is r=2, so r*=2 is the optimal cutoff for n=4.",
+        "hints": [
+          "For n=4, r=2: Σ_{j=2}^{4} 1/(j−1) = 1/1 + 1/2 + 1/3. Compute: 1 + 0.5 + 0.33 ≈ 1.83 > 1.",
+          "For r=3: Σ_{j=3}^{4} 1/(j−1) = 1/2 + 1/3 = 5/6 ≈ 0.83 < 1 — below threshold.",
+          "The largest r still above 1 is r=2."
+        ]
+      }
+    },
+    {
+      "beatId": "l4-prove",
+      "required": true,
+      "prompt": "Prove you've got it.",
+      "interaction": {
+        "type": "masteryChallenge",
+        "scenario": "Use the formula \\(p_n(r) = \\frac{r-1}{n}\\sum_{j=r}^{n}\\frac{1}{j-1}\\) with \\(n=5\\), \\(r=2\\). Recall \\(H_4 = \\frac{25}{12}\\). (a) Compute \\(p_5(2)\\). (b) Is \\(r=2\\) the optimal cutoff for \\(n=5\\)? Hint: compare with \\(p_5(3) = \\frac{2}{5}\\!\\left(\\frac{1}{2}+\\frac{1}{3}+\\frac{1}{4}\\right)\\).",
+        "fields": [
+          {
+            "id": "prob",
+            "label": "p_5(2) success probability",
+            "accept": ["5/12"],
+            "placeholder": "a/b"
+          },
+          {
+            "id": "isopt",
+            "label": "Is r=2 the optimal cutoff for n=5? (yes/no)",
+            "accept": ["no"],
+            "placeholder": "yes / no"
+          }
+        ]
+      },
+      "feedback": {
+        "correct": "\\[ p_5(2) = \\frac{1}{5}\\left(1 + \\frac{1}{2} + \\frac{1}{3} + \\frac{1}{4}\\right) = \\frac{1}{5} \\cdot \\frac{25}{12} = \\frac{5}{12} \\approx 41.7\\% \\] But \\(r=3\\) gives \\(p_5(3) = \\frac{2}{5}\\left(\\frac{1}{2}+\\frac{1}{3}+\\frac{1}{4}\\right) = \\frac{2}{5}\\cdot\\frac{13}{12} = \\frac{13}{30} \\approx 43.3\\%\\), which is higher. So \\(r=2\\) is NOT the optimal cutoff for \\(n=5\\); the optimum is \\(r^*=3\\).",
+        "hints": [
+          "\\(p_5(2)\\): \\((r-1)/n = 1/5\\), sum \\(= H_4 = 25/12\\). So \\(p_5(2) = (1/5)(25/12) = 5/12\\).",
+          "Check \\(r=3\\): \\(p_5(3) = (2/5)(1/2+1/3+1/4) = (2/5)(13/12) = 13/30\\). Since \\(13/30 > 5/12\\), \\(r=2\\) is not optimal.",
+          "Answers: \\(p_5(2) = 5/12\\); \\(r=2\\) is NOT optimal — the answer to (b) is no."
+        ]
+      }
+    },
+    {
+      "beatId": "l4-recap",
+      "required": true,
+      "prompt": "Close the loop.",
+      "interaction": { "type": "recap" },
+      "feedback": {
+        "correct": "The win formula p_n(r) = (r−1)/n · Σ_{j=r}^{n} 1/(j−1) ties together the reject-zone benchmark and the position sum. The optimal r* is the largest r with that sum > 1, and as n → ∞ both r*/n and p_n(r*) converge to 1/e ≈ 37%. Next: Stopping in the Wild — how the 37% rule applies beyond the hiring room.",
+        "hints": [
+          "The formula counts per-position wins: P(best at position i) × P(benchmark in reject zone), summed over the leap phase.",
+          "Factor out (r−1)/n and you see the harmonic difference H_{n−1} − H_{r−2}.",
+          "Next lesson: real-world applications of the 37% stopping rule."
+        ]
+      }
+    }
+  ]
+}
