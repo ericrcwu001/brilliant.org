@@ -1,17 +1,92 @@
 {
   "courseId": "course-game-theory",
   "title": "Game Theory",
-  "description": "Model strategic interaction: prisoner's dilemma, Nash equilibria, mixed strategies, and auctions. Understand why rational players sometimes trap themselves in bad outcomes — and how mechanism design, repeated play, and commitments can break the trap.",
-  "persona": "For anyone who negotiates, competes, or cooperates. No prerequisites beyond basic probability; every concept is grounded in concrete two-player games before generalizing.",
+  "description": "Model strategic interaction: dominance and the prisoner's dilemma, Nash equilibria, mixed strategies, zero-sum minimax, backward induction, and combinatorial winning strategies. Learn to ask not 'what's best for me?' but 'what's best for me given what everyone else will do?' — and to compute that equilibrium.",
+  "persona": "For anyone who negotiates, competes, or cooperates — and for quant-interview preppers. No prerequisites beyond basic probability; every idea is grounded in a concrete game before it generalizes.",
+  "lessons": [
+    {
+      "lessonId": "lesson-game-theory-1",
+      "title": "Dominance & the Prisoner's Dilemma",
+      "summary": "A strictly dominant strategy beats every alternative no matter what others do — and mutual rationality can trap both players below the cooperative outcome.",
+      "milestoneId": "game-theory-dominance",
+      "built": true,
+      "glyphKey": "A≻B",
+      "vizKey": "twoNode"
+    },
+    {
+      "lessonId": "lesson-game-theory-2",
+      "title": "Nash Equilibrium",
+      "summary": "When no one has a dominant strategy, find a profile where everyone is best-responding at once — a cell no one wants to leave.",
+      "milestoneId": "game-theory-nash",
+      "built": true,
+      "glyphKey": "NE",
+      "vizKey": "fourNode"
+    },
+    {
+      "lessonId": "lesson-game-theory-3",
+      "title": "Mixed Strategies",
+      "summary": "Some games have no pure equilibrium — you must randomize, mixing exactly so the opponent is indifferent.",
+      "milestoneId": "game-theory-mixed",
+      "built": true,
+      "glyphKey": "p*",
+      "vizKey": "dice"
+    },
+    {
+      "lessonId": "lesson-game-theory-4",
+      "title": "Zero-Sum & Minimax",
+      "summary": "In pure conflict every finite game has a value: the most you can guarantee equals the least your opponent can hold you to.",
+      "milestoneId": "game-theory-minimax",
+      "built": true,
+      "glyphKey": "V",
+      "vizKey": "twoNode"
+    },
+    {
+      "lessonId": "lesson-game-theory-5",
+      "title": "Sequential Games & Backward Induction",
+      "summary": "When players move in turn, fold the game tree from the end — the logic behind the pirate split.",
+      "milestoneId": "game-theory-sequential",
+      "built": true,
+      "glyphKey": "BI",
+      "vizKey": "raceLanes"
+    },
+    {
+      "lessonId": "lesson-game-theory-6",
+      "title": "Winning Strategies: Nim & Symmetry",
+      "summary": "In impartial take-away games, the nim-sum (XOR) and parity/symmetry tell you who wins — and the exact winning move.",
+      "milestoneId": "game-theory-combinatorial",
+      "built": true,
+      "glyphKey": "XOR",
+      "vizKey": "coin"
+    }
+  ],
+  "roadmap": [],
   "completionMilestoneId": "game-theory-complete",
   "schemaVersion": 1,
   "domain": "Combinatorics & Games",
   "domainOrder": 1,
   "order": 2,
-  "status": "coming_soon",
+  "status": "live",
   "tagline": "Find equilibria where no one wants to deviate.",
   "accent": "ch2",
-  "vizKey": "coin",
-  "lessons": [],
-  "roadmap": []
+  "vizKey": "twoNode",
+  "chapters": [
+    {
+      "id": "ch-game-theory-1",
+      "label": "Strategic Dominance",
+      "accent": "ch2",
+      "lessonIds": ["lesson-game-theory-1", "lesson-game-theory-2"]
+    },
+    {
+      "id": "ch-game-theory-2",
+      "label": "Randomize & Minimize",
+      "accent": "ch4",
+      "lessonIds": ["lesson-game-theory-3", "lesson-game-theory-4"]
+    },
+    {
+      "id": "ch-game-theory-3",
+      "label": "Sequence & Symmetry",
+      "accent": "ch1",
+      "lessonIds": ["lesson-game-theory-5", "lesson-game-theory-6"]
+    }
+  ]
 }
