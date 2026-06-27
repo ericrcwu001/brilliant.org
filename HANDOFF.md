@@ -2,9 +2,24 @@
 
 <!-- Orientation doc for a fresh context. Session-by-session narration lives in git history; this file keeps only what's needed going forward. -->
 
-## Learning-Science Overhaul — IMPLEMENTATION (2026-06-27, in progress, NOT COMMITTED)
+## Learning-Science Overhaul — ✅ COMPLETE (2026-06-27, on branch `learning-science-overhaul`)
 
-Implementing the full plan in `docs/learning-science/` (README + 16 specs) as shipped code. Orchestrated phase-by-phase per README §7 DAG.
+The full plan in `docs/learning-science/` (README + all 15 specs) is implemented, verified, and committed to branch **`learning-science-overhaul`** (NOT main — branched to protect the work after a concurrent `concept/covariance` merge into main; see the merge event note below). Commits: 2526970 (P0+P1w1), 37c49d3 (covariance), 8ccf01f (spec-12), b5face8 (spec-11), d770493 (P2w1), ff8c11a (P2w2), 9dba6d6 (spec-05 + final flag flip).
+
+**Final DoD — ALL GREEN:**
+- `npm test`: **2302 passed / 57 failed** — the 57 are the PRE-EXISTING `src/engine/interviewPack.bayes.test.ts` drift (commit 9fa6b85, out of scope); **zero new failures** from any spec or the covariance merge (+527 passing vs the 1775 clean-main baseline).
+- `npm run validate`: green with BOTH gates now **HARD/unconditional** — `✓ method-tag gate` (every graded beat across all 54 lessons has a valid schemaId) + `✓ held-out transfer gate` (every lesson has a well-formed transfer beat). Flipped REQUIRE_SCHEMA_ID then REQUIRE_TRANSFER in order (Issue #12); the env guards are removed.
+- `npm run validate:interviews`: green. `tsc -b`: 23 errors (zero new vs the merge baseline 335a17c — all pre-existing in ChainBoardBeat/EquationTilesBeat/answerAcceptance.audit). `npm run build --prefix functions`: clean. `eslint` (92 changed src files): 0 errors (only the pre-existing `useRealtimeInterview` hooks warning). `npm run test:rules`: 21 passed.
+- All 15 specs' DoD satisfied. spec-05 net-new behaviors ship behind runtime flags **DEFAULT-OFF** (`flags.ts` fails closed to ALL_OFF) with a `treatment|holdout` cohort (no `control`), per-feature kill switch (gold-mint + brutal-floor server-authoritative), and the §4.6 cascade-delete (`functions/src/privacy.ts`). §9/D16 housekeeping CONFIRMED done (ADR-0009/0010 present, ADR-0008 annotated superseded-in-part, root `CONTEXT.md` glossary deltas present, mis-numbered audit files annotated).
+- Scope additions handled: the 6 merged **covariance** lessons integrated (schemaId backfill + engine-verified transfer beats); `bayes-rule-1` restored after the merge reverted it.
+
+**Accepted residuals (documented, not blocking):** (1) the validator's `HELDOUT_RECOMPUTE` engine cross-check covers 6 concepts (58 fields); the 6 covariance + 5 specific prose/display-rounded accepts are author+verifier engine-checked but not CI-mechanized. (2) No in-lesson which-method gate beats authored into fixtures yet (the gate surfaces via the Daily Review queue; in-lesson gate authoring is deferrable content). (3) The Daily Review which-method gate's `{correct}` pick isn't recorded to analytics (gate beats aren't in fixtures yet). (4) Existing-user review-card backfill (`rebuildReviewDeck`) is a spec-01-owned callable body not yet implemented (the no-deck affordance degrades gracefully). (5) `stash@{0}` ("parked parallel learning-science WIP") on main is left untouched — superseded by this branch.
+
+---
+
+### (superseded) original in-progress note
+
+Implemented the full plan in `docs/learning-science/` (README + 15 specs) as shipped code. Orchestrated phase-by-phase per README §7 DAG.
 
 **Baselines on clean `main` (HEAD ef47403), measured before any change — these are PRE-EXISTING and NOT mine:**
 - `npm test`: **1775 passed / 57 failed**. All 57 in `src/engine/interviewPack.bayes.test.ts` — `engineCheck` shape drift (`{fn,args}`→`{module,calls}`) from commit `9fa6b85`. Out of scope (no spec touches that pack/test/engine). My DoD = introduce zero NEW failures.
