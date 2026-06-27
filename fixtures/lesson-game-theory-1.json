@@ -1,0 +1,244 @@
+{
+  "lessonId": "lesson-game-theory-1",
+  "courseId": "course-game-theory",
+  "title": "Dominance & the Prisoner's Dilemma",
+  "patternOptions": ["H"],
+  "milestoneId": "game-theory-dominance",
+  "unlocks": "lesson-game-theory-2",
+  "schemaVersion": 1,
+  "beats": [
+    {
+      "beatId": "l1-recall",
+      "required": true,
+      "prompt": "Warm up: match each idea to its answer.",
+      "interaction": {
+        "type": "retrievalGrid",
+        "pairs": [
+          { "left": "Penney's game: the single best pattern", "right": "none (non-transitive)" },
+          { "left": "A move that's best no matter what others do", "right": "dominant strategy" },
+          { "left": "Value of a 50/50 bet paying +2 or 0", "right": "1" }
+        ]
+      },
+      "feedback": {
+        "correct": "Right. Today: when one move beats every alternative regardless of the opponent — and what happens when both players have one.",
+        "hints": [
+          "Penney's game had no single best pattern — every pattern is beaten by another.",
+          "A strategy that wins whatever the opponent does is 'dominant'.",
+          "Match: no best pattern, dominant strategy, and E = ½·2 + ½·0 = 1."
+        ]
+      }
+    },
+    {
+      "beatId": "l1-bet",
+      "required": true,
+      "prompt": "Two suspects are questioned separately. Each may stay silent (Cooperate) or confess (Defect). Payoffs (higher = better): both silent (3,3); both confess (1,1); if one confesses while the other stays silent, the confessor gets 5 and the silent one 0. Both are perfectly rational. What happens?",
+      "interaction": {
+        "type": "prediction",
+        "options": ["Both stay silent → (3,3)", "Both confess → (1,1)", "One confesses, one stays silent"]
+      },
+      "feedback": {
+        "byOption": {
+          "Both stay silent → (3,3)": {
+            "note": "Tempting, but unstable: whatever the other does, confessing pays more (5>3 and 1>0). Each has a private incentive to break the pact."
+          },
+          "Both confess → (1,1)": {
+            "note": "Yes — confessing strictly dominates staying silent for both, so both confess and land at (1,1), worse than the (3,3) they could have shared.",
+            "correct": true
+          },
+          "One confesses, one stays silent": {
+            "note": "Not stable either: the silent player would switch to confessing (0 → 1). Both end up confessing."
+          }
+        }
+      }
+    },
+    {
+      "beatId": "l1-primer",
+      "required": false,
+      "track": "A",
+      "prompt": "One definition before the grid.",
+      "interaction": {
+        "type": "primer",
+        "variant": "custom",
+        "title": "Strict dominance",
+        "body": "Strategy X strictly dominates strategy Y for a player if X gives that player a strictly higher payoff than Y against EVERY choice the opponent could make. A rational player never plays a strictly dominated strategy — and if one strategy dominates all the others, it's a dominant strategy: just play it.",
+        "collapsible": true
+      },
+      "feedback": {
+        "correct": "Keep that test in mind: compare a strategy's payoff column-by-column against the alternative.",
+        "hints": [
+          "'Strictly' means greater in every column, with no ties.",
+          "If a strategy is dominated, cross it out — you'll never play it.",
+          "Read and tap Continue."
+        ]
+      }
+    },
+    {
+      "beatId": "l1-win",
+      "required": true,
+      "prompt": "Here is the Prisoner's Dilemma as a payoff grid (row player, column player). Tap a row to test whether it's dominated. Which strategy should each rational player pick?",
+      "interaction": {
+        "type": "payoffMatrix",
+        "rows": ["Cooperate", "Defect"],
+        "cols": ["Cooperate", "Defect"],
+        "rowPlayer": "Suspect A",
+        "colPlayer": "Suspect B",
+        "task": "dominance",
+        "matrix": [
+          { "cells": [ { "row": { "n": 3, "d": 1 }, "col": { "n": 3, "d": 1 } }, { "row": { "n": 0, "d": 1 }, "col": { "n": 5, "d": 1 } } ] },
+          { "cells": [ { "row": { "n": 5, "d": 1 }, "col": { "n": 0, "d": 1 } }, { "row": { "n": 1, "d": 1 }, "col": { "n": 1, "d": 1 } } ] }
+        ],
+        "headline": "1,1"
+      },
+      "feedback": {
+        "correct": "Defect strictly dominates Cooperate in BOTH columns (5>3 and 1>0), for both players. So both defect — the only stable cell is (Defect, Defect) = (1,1).",
+        "hints": [
+          "Compare the Cooperate row to the Defect row, column by column.",
+          "Defect pays 5 vs 3 (if the other cooperates) and 1 vs 0 (if the other defects) — higher in both.",
+          "A dominated strategy is never played: both defect → (1,1)."
+        ]
+      },
+      "hero": {
+        "slowFirst": true,
+        "structuralReadout": "Defect out-pays Cooperate in every column → both defect → the (1,1) cell.",
+        "reducedMotionFinalFrame": true
+      }
+    },
+    {
+      "beatId": "l1-scaffold",
+      "required": false,
+      "track": "A",
+      "prompt": "Same game, different lens: tap a column to highlight the row player's best response to it. Notice both arrows point to Defect.",
+      "interaction": {
+        "type": "payoffMatrix",
+        "rows": ["Cooperate", "Defect"],
+        "cols": ["Cooperate", "Defect"],
+        "rowPlayer": "Suspect A",
+        "colPlayer": "Suspect B",
+        "task": "bestResponse",
+        "interactive": true,
+        "matrix": [
+          { "cells": [ { "row": { "n": 3, "d": 1 }, "col": { "n": 3, "d": 1 } }, { "row": { "n": 0, "d": 1 }, "col": { "n": 5, "d": 1 } } ] },
+          { "cells": [ { "row": { "n": 5, "d": 1 }, "col": { "n": 0, "d": 1 } }, { "row": { "n": 1, "d": 1 }, "col": { "n": 1, "d": 1 } } ] }
+        ]
+      },
+      "feedback": {
+        "correct": "Whatever column you pick, the row player's best response is Defect — that's exactly what 'dominant' means.",
+        "hints": [
+          "Tap the Cooperate column: the bigger row payoff is 5 (Defect).",
+          "Tap the Defect column: the bigger row payoff is 1 (Defect).",
+          "Best response is Defect in both columns → dominant."
+        ]
+      }
+    },
+    {
+      "beatId": "l1-explore",
+      "required": true,
+      "prompt": "Dominance can cascade. In this 3×3 game, repeatedly eliminate strictly dominated strategies (tap a column or row to test it, or use Solve). What single cell survives?",
+      "interaction": {
+        "type": "payoffMatrix",
+        "rows": ["Top", "Middle", "Bottom"],
+        "cols": ["Left", "Center", "Right"],
+        "rowPlayer": "Row",
+        "colPlayer": "Column",
+        "task": "dominance",
+        "matrix": [
+          { "cells": [ { "row": { "n": 0, "d": 1 }, "col": { "n": 3, "d": 1 } }, { "row": { "n": 1, "d": 1 }, "col": { "n": 1, "d": 1 } }, { "row": { "n": 9, "d": 1 }, "col": { "n": 0, "d": 1 } } ] },
+          { "cells": [ { "row": { "n": 2, "d": 1 }, "col": { "n": 3, "d": 1 } }, { "row": { "n": 3, "d": 1 }, "col": { "n": 1, "d": 1 } }, { "row": { "n": 1, "d": 1 }, "col": { "n": 0, "d": 1 } } ] },
+          { "cells": [ { "row": { "n": 1, "d": 1 }, "col": { "n": 0, "d": 1 } }, { "row": { "n": 1, "d": 1 }, "col": { "n": 5, "d": 1 } }, { "row": { "n": 1, "d": 1 }, "col": { "n": 0, "d": 1 } } ] }
+        ],
+        "headline": "1,0"
+      },
+      "feedback": {
+        "correct": "Round 1: Right is dominated for Column (Center beats it everywhere) → gone. Round 2: with Right gone, Middle dominates Top and Bottom for Row → gone. Round 3: Column now prefers Left to Center. The survivor is (Middle, Left).",
+        "hints": [
+          "Start with Column's options: Center's payoffs (1,1,5) beat Right's (0,0,0) in every row — drop Right.",
+          "Now Row compares over Left/Center only: Middle (2,3) beats Top (0,1) and Bottom (1,1) — drop Top and Bottom.",
+          "Finally Column picks Left over Center in the Middle row (3>1). Survivor: (Middle, Left)."
+        ]
+      },
+      "hero": {
+        "slowFirst": true,
+        "structuralReadout": "Eliminate Right, then Top & Bottom, then Center — one cell survives: (Middle, Left).",
+        "reducedMotionFinalFrame": true
+      }
+    },
+    {
+      "beatId": "l1-model",
+      "required": true,
+      "prompt": "Three ways to read the Prisoner's Dilemma. Predict the stable outcome, then reveal each lens.",
+      "interaction": {
+        "type": "tripletReveal",
+        "value": "(Defect, Defect)",
+        "display": "cards",
+        "lenses": [
+          { "label": "Dominant strategy", "body": "Defecting out-pays cooperating against every opponent choice — so each player defects on their own." },
+          { "label": "Nash equilibrium", "body": "At (Defect, Defect) neither player can do better by switching alone — it is self-enforcing." },
+          { "label": "Pareto comparison", "body": "(Cooperate, Cooperate) = (3,3) is better for BOTH, yet it is not an equilibrium: each is tempted to defect to 5." }
+        ]
+      },
+      "feedback": {
+        "correct": "Dominance forces it, Nash confirms it's stable, and Pareto shows the tragedy: rationality lands both players below the cooperative outcome.",
+        "hints": [
+          "Dominant: best regardless of the opponent.",
+          "Nash: no one gains by deviating alone.",
+          "Pareto: a better-for-both outcome exists, but it isn't stable."
+        ]
+      }
+    },
+    {
+      "beatId": "l1-apply",
+      "required": true,
+      "interviewNote": "The 'guess 2/3 of the average' game (Keynes's beauty contest) is a classic desk question and a market metaphor: iterated dominance drives the unique equilibrium to 0, but real players (and traders) reason only a few levels deep, so winning guesses cluster around 20–35. The lesson is that 'rational' equilibrium and observed behavior can diverge — pricing what others will do, not just fundamentals.",
+      "prompt": "Everyone picks a real number in [0, 100]; the winner is closest to 2/3 of the average of all picks. By iterated elimination of dominated guesses, what is the unique Nash-equilibrium guess?",
+      "interaction": {
+        "type": "answerEntry",
+        "fields": [
+          { "id": "guess", "label": "Equilibrium guess", "accept": ["0"], "placeholder": "your answer" }
+        ]
+      },
+      "feedback": {
+        "correct": "0. No rational player picks above 2/3·100 ≈ 66.7; given that, none picks above 2/3·66.7 ≈ 44.4; iterating this collapses every guess to 0 — the only fixed point.",
+        "hints": [
+          "The target is 2/3 of the average, so guesses above 2/3·100 are dominated.",
+          "Eliminate those, and now guesses above 2/3 of the new max are dominated — repeat.",
+          "The chain of eliminations converges to a single value: 0."
+        ]
+      }
+    },
+    {
+      "beatId": "l1-prove",
+      "required": true,
+      "prompt": "Lock it in with the Prisoner's Dilemma below.",
+      "interaction": {
+        "type": "masteryChallenge",
+        "scenario": "In the Prisoner's Dilemma both players' only dominant strategy is to Defect, so the unique Nash equilibrium is \\((\\text{Defect}, \\text{Defect})\\). Payoffs: \\((C,C)=(3,3)\\), \\((D,D)=(1,1)\\), and a lone defector earns \\(5\\) while the cooperator earns \\(0\\).",
+        "fields": [
+          { "id": "ne", "label": "Payoff to EACH player at the Nash equilibrium", "accept": ["1"], "placeholder": "?" },
+          { "id": "coop", "label": "Payoff to each if both had cooperated", "accept": ["3"], "placeholder": "?" }
+        ]
+      },
+      "feedback": {
+        "correct": "At the equilibrium both Defect, so each earns \\(1\\). Had both Cooperated they'd each earn \\(3\\) — Pareto-superior, but not an equilibrium because either could deviate to \\(5\\). \\[ (D,D)=(1,1) \\quad\\text{vs}\\quad (C,C)=(3,3). \\]",
+        "hints": [
+          "The equilibrium cell is (Defect, Defect).",
+          "Read that cell's payoff: both get 1.",
+          "The cooperative cell (Cooperate, Cooperate) pays 3 each."
+        ]
+      }
+    },
+    {
+      "beatId": "l1-recap",
+      "required": true,
+      "prompt": "What you built.",
+      "interaction": { "type": "recap" },
+      "feedback": {
+        "correct": "A strictly dominant strategy beats every alternative — play it. When both players have one, you can be trapped below the cooperative outcome (the Prisoner's Dilemma). Next: when no one has a dominant strategy, how do we find the stable outcome? → Nash equilibrium (L2).",
+        "hints": [
+          "Dominance: best regardless of the opponent.",
+          "Iterated dominance can solve bigger games (and the 2/3 game).",
+          "Bridge: L2 — equilibrium when nothing is dominant."
+        ]
+      }
+    }
+  ]
+}

@@ -1,0 +1,226 @@
+/* ── GameTreeBeat — extensive-form game tree (lesson-game-theory-N) ──────────
+   Tokens only; no raw hex. Chapter accent resolves through var(--accent)
+   which the lesson shell injects for course-game-theory. */
+
+.gt-tree {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s3);
+}
+
+/* ── Live announcement region (aria-live host) ───────────────────────────── */
+
+.gt-tree__live {
+  margin: 0;
+  min-height: 24px;
+  font-family: var(--font-mono);
+  font-size: calc(13px * var(--fs));
+  color: var(--ink);
+}
+
+/* ── SPE payoff badge ────────────────────────────────────────────────────── */
+
+.gt-tree__spe-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s2);
+  padding: var(--s2) var(--s3);
+  border-radius: var(--r-sm);
+  background: var(--accent-tint);
+  font-family: var(--font-mono);
+  font-size: calc(14px * var(--fs));
+  color: var(--ink);
+  align-self: flex-start;
+}
+
+.gt-tree__spe-value {
+  font-weight: 700;
+  color: var(--accent);
+}
+
+@keyframes gt-tree-badge-in {
+  from { opacity: 0; transform: scale(0.95); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .gt-tree__spe-badge {
+    animation: gt-tree-badge-in var(--dur-base) var(--ease-out);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gt-tree__spe-badge {
+    animation: none;
+  }
+}
+
+/* ── Tree canvas (scrolls horizontally on wide trees) ───────────────────── */
+
+.gt-tree__canvas {
+  overflow-x: auto;
+  padding: var(--s2) 0;
+}
+
+/* ── Subtree: decision node + its branches ──────────────────────────────── */
+
+.gt-tree__subtree {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* ── Decision node (button when unsolved, div when solved) ──────────────── */
+
+.gt-tree__decision-node {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  min-height: 44px;
+  padding: var(--s2) var(--s3);
+  border: 1.5px solid var(--rule);
+  border-radius: var(--r-sm);
+  background: var(--ergo-surface);
+  font-family: var(--font-mono);
+  font-size: calc(14px * var(--fs));
+  color: var(--ink);
+  text-align: center;
+  white-space: nowrap;
+}
+
+button.gt-tree__decision-node {
+  cursor: pointer;
+}
+
+button.gt-tree__decision-node:disabled {
+  cursor: default;
+  opacity: 0.5;
+}
+
+button.gt-tree__decision-node:focus-visible {
+  box-shadow: var(--ring-focus);
+  outline: none;
+}
+
+/* Ready to fold: accent border; hover shows tint */
+.gt-tree__decision-node--ready {
+  border-color: var(--accent);
+}
+
+button.gt-tree__decision-node--ready:not(:disabled):hover {
+  background: var(--accent-tint);
+}
+
+/* Solved: filled accent tint */
+.gt-tree__decision-node--solved {
+  border-color: var(--accent);
+  background: var(--accent-tint);
+  color: var(--accent);
+}
+
+/* ── Branches row ────────────────────────────────────────────────────────── */
+
+.gt-tree__branches {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: var(--s4);
+  padding-top: 0;
+}
+
+/* ── Single branch: vertical connector + move label + child ─────────────── */
+
+.gt-tree__branch {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--s1);
+}
+
+/* Vertical connector line from parent down to the move label */
+.gt-tree__branch::before {
+  content: '';
+  display: block;
+  width: 2px;
+  height: var(--s3);
+  background: var(--rule);
+  flex-shrink: 0;
+}
+
+.gt-tree__move-label {
+  font-family: var(--font-mono);
+  font-size: calc(13px * var(--fs));
+  color: var(--ink);
+  white-space: nowrap;
+}
+
+/* ── SPE path and locally-optimal branch highlights ─────────────────────── */
+
+.gt-tree__branch--optimal::before {
+  background: var(--accent);
+}
+
+.gt-tree__branch--optimal > .gt-tree__move-label {
+  color: var(--accent);
+  font-weight: 600;
+}
+
+/* SPE path: bolder connector + label */
+.gt-tree__branch--spe::before {
+  width: 3px;
+  background: var(--accent);
+}
+
+.gt-tree__branch--spe > .gt-tree__move-label {
+  font-weight: 700;
+  color: var(--accent);
+}
+
+@keyframes gt-tree-branch-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .gt-tree__branch--optimal > .gt-tree__move-label,
+  .gt-tree__branch--spe > .gt-tree__move-label {
+    animation: gt-tree-branch-in var(--dur-base) var(--ease-out);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gt-tree__branch--optimal > .gt-tree__move-label,
+  .gt-tree__branch--spe > .gt-tree__move-label {
+    animation: none;
+  }
+}
+
+/* ── Leaf node ───────────────────────────────────────────────────────────── */
+
+.gt-tree__leaf {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: var(--s2) var(--s3);
+  border: 1px solid var(--rule);
+  border-radius: var(--r-sm);
+  background: var(--ergo-surface);
+}
+
+.gt-tree__leaf--spe {
+  border-color: var(--accent);
+  background: var(--accent-tint);
+}
+
+.gt-tree__payoff-tag {
+  font-family: var(--font-mono);
+  font-size: calc(14px * var(--fs));
+  color: var(--ink);
+}
+
+.gt-tree__leaf--spe .gt-tree__payoff-tag {
+  color: var(--accent);
+  font-weight: 700;
+}

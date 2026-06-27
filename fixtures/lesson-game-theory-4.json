@@ -1,0 +1,255 @@
+{
+  "lessonId": "lesson-game-theory-4",
+  "courseId": "course-game-theory",
+  "title": "Zero-Sum & Minimax",
+  "patternOptions": ["H"],
+  "milestoneId": "game-theory-minimax",
+  "unlocks": "lesson-game-theory-5",
+  "schemaVersion": 1,
+  "beats": [
+    {
+      "beatId": "l4-recall",
+      "required": true,
+      "prompt": "Warm up: match each idea to its answer.",
+      "interaction": {
+        "type": "retrievalGrid",
+        "pairs": [
+          { "left": "No pure equilibrium ⇒ you must", "right": "mix" },
+          { "left": "Mix so the opponent is", "right": "indifferent" },
+          { "left": "Matching Pennies value", "right": "0" }
+        ]
+      },
+      "feedback": {
+        "correct": "Right. Today: when a zero-sum game has no saddle point, both players must mix — and von Neumann proved every finite zero-sum game has a minimax value.",
+        "hints": [
+          "If there's no pure Nash equilibrium, you must randomize to prevent exploitation.",
+          "Mixed strategies are calibrated so the opponent gains nothing by deviating — you leave them indifferent.",
+          "Matching Pennies: each player mixes 50/50; the value is 0."
+        ]
+      }
+    },
+    {
+      "beatId": "l4-bet",
+      "required": true,
+      "prompt": "Zero-sum game WITH a saddle point — should you randomize?",
+      "interaction": {
+        "type": "prediction",
+        "options": ["No, play the saddle", "Yes, always mix", "Depends on luck"]
+      },
+      "feedback": {
+        "byOption": {
+          "No, play the saddle": {
+            "note": "Correct. A saddle point is simultaneously the row-minimum and column-maximum — neither player can gain by deviating, so pure play is already optimal. Mixing away from it can only hurt you.",
+            "correct": true
+          },
+          "Yes, always mix": {
+            "note": "Only mix when there is no saddle. A saddle is the deterministic value of the game — mixing away from it cannot improve your guarantee and may reduce it."
+          },
+          "Depends on luck": {
+            "note": "The value of the game is deterministic, not random. At a saddle point, neither player benefits from randomizing regardless of what the opponent does."
+          }
+        }
+      }
+    },
+    {
+      "beatId": "l4-primer",
+      "required": false,
+      "track": "A",
+      "prompt": "Three terms before the matrix.",
+      "interaction": {
+        "type": "primer",
+        "variant": "custom",
+        "title": "Maximin, minimax & value",
+        "body": "**Maximin** (Row): for each row, find its worst-case payoff (the row minimum); then pick the row with the largest such minimum. This is the most Row can guarantee. **Minimax** (Col): for each column, find the best-case payoff for Row (the column maximum); then pick the column with the smallest such maximum. This is the least Col can hold Row to. **Value** V: when maximin = minimax, that common number is the game's value — a saddle point exists and pure play is optimal. Von Neumann's minimax theorem (1928) guarantees every finite zero-sum game has a value V, possibly requiring mixed strategies.",
+        "collapsible": true
+      },
+      "feedback": {
+        "correct": "Keep the two worst-case perspectives in mind: Row secures ≥V, Col holds Row to ≤V — they meet exactly at V.",
+        "hints": [
+          "Maximin (Row): take the minimum of each row, then the maximum over rows.",
+          "Minimax (Col): take the maximum of each column, then the minimum over columns.",
+          "When maximin = minimax, that shared number is the saddle-point value V."
+        ]
+      }
+    },
+    {
+      "beatId": "l4-win",
+      "required": true,
+      "prompt": "Row's payoffs are shown (Col's = their negatives). Find the saddle point — the cell that is the minimum of its row AND the maximum of its column. What is the value of this game?",
+      "interaction": {
+        "type": "payoffMatrix",
+        "rows": ["Row A", "Row B"],
+        "cols": ["Col A", "Col B"],
+        "rowPlayer": "Row",
+        "colPlayer": "Col",
+        "task": "value",
+        "zeroSum": true,
+        "matrix": [
+          { "cells": [ { "row": { "n": 3, "d": 1 }, "col": { "n": -3, "d": 1 } }, { "row": { "n": 5, "d": 1 }, "col": { "n": -5, "d": 1 } } ] },
+          { "cells": [ { "row": { "n": 2, "d": 1 }, "col": { "n": -2, "d": 1 } }, { "row": { "n": 4, "d": 1 }, "col": { "n": -4, "d": 1 } } ] }
+        ],
+        "headline": "3"
+      },
+      "feedback": {
+        "correct": "Saddle at (Row A, Col A): Row A's row-minimum is 3 (≤5), and Col A's column-maximum is 3 (≥2). Maximin = minimax = 3. Row plays Row A; Col plays Col A.",
+        "hints": [
+          "Row minimums: Row A → min(3,5)=3, Row B → min(2,4)=2. Maximin = max(3,2) = 3.",
+          "Column maximums: Col A → max(3,2)=3, Col B → max(5,4)=5. Minimax = min(3,5) = 3.",
+          "Maximin = minimax = 3 → saddle at (Row A, Col A). Value = 3."
+        ]
+      },
+      "hero": {
+        "slowFirst": true,
+        "structuralReadout": "Row-min of Row A = 3 = Col-max of Col A → saddle at (Row A, Col A), value = 3.",
+        "reducedMotionFinalFrame": true
+      }
+    },
+    {
+      "beatId": "l4-scaffold",
+      "required": false,
+      "track": "A",
+      "prompt": "Another saddle-point game. Scan row-minimums and column-maximums — where do they meet?",
+      "interaction": {
+        "type": "payoffMatrix",
+        "rows": ["Row A", "Row B"],
+        "cols": ["Col A", "Col B"],
+        "rowPlayer": "Row",
+        "colPlayer": "Col",
+        "task": "value",
+        "zeroSum": true,
+        "matrix": [
+          { "cells": [ { "row": { "n": 4, "d": 1 }, "col": { "n": -4, "d": 1 } }, { "row": { "n": 6, "d": 1 }, "col": { "n": -6, "d": 1 } } ] },
+          { "cells": [ { "row": { "n": 3, "d": 1 }, "col": { "n": -3, "d": 1 } }, { "row": { "n": 5, "d": 1 }, "col": { "n": -5, "d": 1 } } ] }
+        ],
+        "headline": "4"
+      },
+      "feedback": {
+        "correct": "Saddle at (Row A, Col A): row-min of Row A = min(4,6) = 4; col-max of Col A = max(4,3) = 4. Maximin = minimax = 4. Value = 4.",
+        "hints": [
+          "Row minimums: Row A → min(4,6)=4, Row B → min(3,5)=3. Maximin = 4.",
+          "Column maximums: Col A → max(4,3)=4, Col B → max(6,5)=6. Minimax = 4.",
+          "They agree at 4 → saddle at (Row A, Col A), value = 4."
+        ]
+      }
+    },
+    {
+      "beatId": "l4-explore",
+      "required": true,
+      "prompt": "This game has NO saddle point — verify that, then find the mixed-strategy value using v = (ad − bc)/(a + d − b − c), where a, b, c, d are the row payoffs reading left-to-right, top-to-bottom.",
+      "interaction": {
+        "type": "payoffMatrix",
+        "rows": ["Top", "Bottom"],
+        "cols": ["Left", "Right"],
+        "rowPlayer": "Row",
+        "colPlayer": "Col",
+        "task": "mix",
+        "zeroSum": true,
+        "matrix": [
+          { "cells": [ { "row": { "n": 1, "d": 1 }, "col": { "n": -1, "d": 1 } }, { "row": { "n": 3, "d": 1 }, "col": { "n": -3, "d": 1 } } ] },
+          { "cells": [ { "row": { "n": 4, "d": 1 }, "col": { "n": -4, "d": 1 } }, { "row": { "n": 2, "d": 1 }, "col": { "n": -2, "d": 1 } } ] }
+        ],
+        "headline": "5/2"
+      },
+      "feedback": {
+        "correct": "No saddle: maximin = max(1,2) = 2; minimax = min(4,3) = 3; 2 ≠ 3. Formula: Δ = 1+2−3−4 = −4; v = (1·2 − 3·4)/(−4) = −10/(−4) = 5/2. Row plays Top with p = 1/2; Col plays Left with q = 1/4.",
+        "hints": [
+          "Check: row-mins are min(1,3)=1 and min(4,2)=2; col-maxes are max(1,4)=4 and max(3,2)=3. Maximin=2 ≠ Minimax=3 → no saddle.",
+          "Apply v = (ad−bc)/(a+d−b−c) with a=1, b=3, c=4, d=2: Δ = 1+2−3−4 = −4.",
+          "v = (1·2 − 3·4)/(−4) = (2−12)/(−4) = 5/2. Row's top-row probability: p = (d−c)/Δ = (2−4)/(−4) = 1/2."
+        ]
+      },
+      "hero": {
+        "slowFirst": true,
+        "structuralReadout": "No saddle → 2×2 formula: v = (ad−bc)/(a+d−b−c) = 5/2; Row plays Top with p = 1/2.",
+        "reducedMotionFinalFrame": true
+      }
+    },
+    {
+      "beatId": "l4-model",
+      "required": true,
+      "prompt": "Three lenses on the minimax theorem. Predict the stable value, then reveal each perspective.",
+      "interaction": {
+        "type": "tripletReveal",
+        "value": "maximin = minimax = V",
+        "display": "cards",
+        "lenses": [
+          {
+            "label": "Maximin",
+            "body": "Row chooses the strategy that maximizes the worst-case payoff — guaranteeing at least V no matter what Col does. This is the best Row can secure against an adversary."
+          },
+          {
+            "label": "Minimax",
+            "body": "Col chooses the strategy that minimizes the best-case payoff for Row — holding Row to at most V no matter what Row does. This is the tightest ceiling Col can enforce."
+          },
+          {
+            "label": "Minimax theorem",
+            "body": "Von Neumann (1928): in every finite zero-sum game, maximin = minimax = V. The Nash equilibrium in zero-sum games is exactly the minimax/maximin solution — a unique value both sides can independently enforce."
+          }
+        ]
+      },
+      "feedback": {
+        "correct": "Row secures ≥V, Col limits Row to ≤V, and von Neumann proved these always meet at V. In zero-sum games, Nash equilibrium ≡ minimax ≡ maximin — one theorem, three perspectives.",
+        "hints": [
+          "Maximin: scan each row's minimum, pick the row with the largest minimum.",
+          "Minimax: scan each column's maximum, pick the column with the smallest maximum.",
+          "Von Neumann proved floor and ceiling always coincide for finite zero-sum games."
+        ]
+      }
+    },
+    {
+      "beatId": "l4-apply",
+      "required": true,
+      "interviewNote": "Von Neumann's minimax theorem (1928) is the bedrock of zero-sum game theory — every finite zero-sum game has a value. Interview angle: always scan for a saddle point first (O(mn)); if none, use the 2×2 formula; for larger games, set up a linear program. Two-finger Morra is a classic desk problem: the negative value means Col (the 'even-sum' player in this framing) holds a slight structural advantage.",
+      "prompt": "Two-finger Morra: Row wins if the total fingers differ; Col wins if they match. Row's payoff matrix is [[2, −3], [−3, 4]] (Row shows 1 or 2 fingers; Col shows 1 or 2). What is the value of this game?",
+      "interaction": {
+        "type": "answerEntry",
+        "fields": [
+          { "id": "value", "label": "Value of the game", "accept": ["-1/12"], "placeholder": "e.g. 1/4" }
+        ]
+      },
+      "feedback": {
+        "correct": "No saddle (row-mins −3, −3; col-maxes 2, 4 → 2 ≠ −3). Δ = 2+4−(−3)−(−3) = 12; v = (2·4 − (−3)(−3))/12 = (8−9)/12 = −1/12. The game slightly favors Col.",
+        "hints": [
+          "Check for a saddle: row-mins are min(2,−3)=−3 and min(−3,4)=−3; col-maxes are max(2,−3)=2 and max(−3,4)=4. −3 ≠ 2 → no saddle.",
+          "Δ = a+d−b−c = 2+4−(−3)−(−3) = 2+4+3+3 = 12.",
+          "v = (ad−bc)/Δ = (2·4 − (−3)·(−3))/12 = (8−9)/12 = −1/12."
+        ]
+      }
+    },
+    {
+      "beatId": "l4-prove",
+      "required": true,
+      "prompt": "Lock in the formula. Same no-saddle game as the explore beat: row payoffs [[1, 3], [4, 2]].",
+      "interaction": {
+        "type": "masteryChallenge",
+        "scenario": "Zero-sum game, row payoffs \\(M = \\begin{pmatrix}1 & 3 \\\\ 4 & 2\\end{pmatrix}\\). There is no saddle point. Use the 2×2 mixed-value formula \\(v = \\dfrac{ad - bc}{a + d - b - c}\\) and the row-probability formula \\(p = \\dfrac{d - c}{a + d - b - c}\\).",
+        "fields": [
+          { "id": "value", "label": "Value of the game", "accept": ["5/2"], "placeholder": "?" },
+          { "id": "p", "label": "Row's probability on the TOP row", "accept": ["1/2"], "placeholder": "?" }
+        ]
+      },
+      "feedback": {
+        "correct": "\\(\\Delta = 1+2-3-4 = -4\\); \\(v = (1\\cdot2 - 3\\cdot4)/(-4) = -10/(-4) = 5/2\\). Row's top-row probability: \\(p = (d-c)/\\Delta = (2-4)/(-4) = (-2)/(-4) = 1/2\\).",
+        "hints": [
+          "Compute \\(\\Delta = a+d-b-c = 1+2-3-4 = -4\\).",
+          "\\(v = (ad-bc)/\\Delta = (1 \\cdot 2 - 3 \\cdot 4)/(-4) = -10/(-4) = 5/2\\).",
+          "\\(p = (d-c)/\\Delta = (2-4)/(-4) = 1/2\\)."
+        ]
+      }
+    },
+    {
+      "beatId": "l4-recap",
+      "required": true,
+      "prompt": "What you built.",
+      "interaction": { "type": "recap" },
+      "feedback": {
+        "correct": "Every finite zero-sum game has a value V — the most Row can guarantee and the least Col can hold Row to. If a saddle point exists (row-min = col-max at some cell), play it pure. If not, both players randomize: use v = (ad−bc)/(a+d−b−c) for 2×2 games. Next: games that unfold over time — backward induction (L5).",
+        "hints": [
+          "Saddle point: row-minimum = column-maximum → pure optimal play, value = that number.",
+          "No saddle: v = (ad−bc)/(a+d−b−c) for the 2×2 mixed value.",
+          "Von Neumann's minimax theorem: maximin = minimax = V for all finite zero-sum games."
+        ]
+      }
+    }
+  ]
+}

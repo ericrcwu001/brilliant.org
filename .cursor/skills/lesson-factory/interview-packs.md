@@ -1,17 +1,21 @@
-# Interview Packs (capstone AI quant interview — FUTURE feature, prepared now)
+# Interview Packs (capstone AI quant interview — LIVE feature, ADR-0008)
 
 At the end of each **macro concept (course)** the factory produces an **Interview Pack**: a large,
 engine-verified bank of HARD quant-interview questions + an AI **interviewer prompt** + a **generator
-prompt** for unlimited fresh, non-overlapping questions. The live "interview an AI quant interviewer"
-feature is **not built yet** — the pack is a **dormant, committed-but-not-deployed asset** so it's ready
-the day you build it. Decision record: `docs/adr/0005-ai-interview-questions-grounded-and-engine-verified.md`.
+prompt** for unlimited fresh, non-overlapping questions. The "interview an AI quant interviewer"
+feature is **live** (ADR-0008). The pack is consumed by `functions/src/interview.ts` via `loadPack`;
+the Zod schema is `src/content/interviewPack.ts`; `loadPack` strips a leading `course-` from the
+conceptId so the filename is always `course-<slug>.json`. Decision records:
+`docs/adr/0005-ai-interview-questions-grounded-and-engine-verified.md` and
+`docs/adr/0008-ai-capstone-interview-realtime-grounded.md`.
 
 ## What's produced (per concept)
 
 `interviews/<courseId>.json` (canonical, versioned) + `interviews/<courseId>.md` (human-readable
-mirror). Committed on `main` with the concept; **never seeded to Firestore or deployed** (the seed glob
-only matches `lesson-*.json`/`course-*.json`). **No app/Zod schema is added now** (avoid speculative
-scope) — the JSON is self-describing with a `version`; add the loader + schema when you build the feature.
+mirror). Committed on `main` with the concept; **not seeded to Firestore** (the seed glob only matches
+`lesson-*.json`/`course-*.json`). **Bundled into the live Functions runtime** at deploy time via the
+`firebase.json` predeploy hook (`scripts/copy-interview-packs.mjs`). The Zod schema already exists at
+`src/content/interviewPack.ts`; use it — do not define a separate schema.
 
 Contents:
 1. **Pre-loaded question pool** (large), built two ways:
@@ -24,6 +28,33 @@ Contents:
 3. **Generator prompt** (runtime top-ups under the real-quant-style + engine-verify + avoid-list rules).
 4. Per-question **fingerprint** for de-dup.
 
+## Top-level pack shape (authoritative schema: `src/content/interviewPack.ts`)
+
+```jsonc
+{
+  "version": 1,                      // z.literal(1)
+  "kind": "interview-pack",
+  "courseId": "course-<slug>",
+  "concept": "<Human-readable concept name>",
+  "greenBookAnchor": "<GB chapter/section cite>",
+  "engineModule": "src/engine/<topic>.ts",
+  "generator": "<generator identifier>",
+  "note": "<any authoring note>",
+  "counts": {
+    "total": 50,
+    "byTier": { "hard": 20, "harder": 20, "brutal": 10 },
+    "templated": 40,
+    "freeForm": 10
+  },
+  "interviewerPrompt": "...",         // server-only; stripped by toClientPack()
+  "generatorPrompt": "...",           // server-only; stripped by toClientPack()
+  "templates": [
+    { "id": "...", "title": "...", "source": "...", "description": "...", "engineModule": "..." }
+  ],
+  "questions": [ /* see Per-question record below */ ]
+}
+```
+
 ## Grounding & verification (the iron rule, incl. the runtime carve-out — ADR-0005)
 
 - **Real quant-style (ALWAYS).** Every question — pre-loaded *or* runtime-generated — must be a
@@ -34,7 +65,7 @@ Contents:
   Green-Book problem or a sourced real quant-interview question).
 - **Engine-verify-before-serve:** every question's answer is reproduced by the concept's pure engine.
   Templates are inherently verifiable; free-form questions are kept only if the engine verifies them.
-  The **generator prompt instructs the future feature to run the engine and reject any question it
+  The **generator prompt instructs the live interview runtime to run the engine and reject any question it
   cannot verify** before showing it to a student.
 - **Difficulty:** tiered `hard | harder | brutal` (floor = hard, always harder than any lesson's
   mastery challenge); **synthesis across the whole concept**; each question carries a **follow-up chain**.
@@ -86,13 +117,14 @@ Stored as `generatorPrompt`. It must:
 - Take an **avoid-list** (the student's seen fingerprints + the global pool) and produce a question with
   a **new fingerprint** → guarantees "no overlap ever, per student."
 
-## No-overlap-per-student (spec for the future feature)
+## No-overlap-per-student (live — implemented in `functions/src/interview.ts`)
 
 - Each question has a **structural fingerprint** (`templateId` + normalized params; a semantic signature
   for free-form) — catches reworded/parameter-trivial duplicates, not just exact text.
-- The feature keeps a **per-student seen-set** of fingerprints (in the student's Firestore user doc),
-  serves only unseen questions, and when the pool is exhausted calls the generator with the seen-set as
-  the **avoid-list**. (Future-feature responsibility; documented here so it's ready.)
+- `mintInterviewToken` loads the per-user `seenQuestionIds` from Firestore, draws one unseen question
+  via `drawQuestion` (see `functions/src/interviewDraw.ts`), and `gradeInterview` transactionally
+  appends the just-answered id to `seenQuestionIds`. The generator prompt's avoid-list spec is the
+  long-term overflow path for when the static pool is exhausted.
 
 ## Who builds it — the Interview Studio (after a concept's lessons are built)
 
@@ -106,21 +138,29 @@ The **Interview Studio Lead** *(Opus, non-readonly, persistent/resumable — spa
 
 ## Interview Pack Scorecard (concept-level — signed off with the lesson Scorecards)
 
-| # | gate | pass condition |
-|---|------|----------------|
-| 1 | Source fidelity | concept Green-Book-anchored; every seed/showcase question cited |
-| 2 | Real quant-style | every question reads like a real quant-interview question (canon-grounded), not an arbitrary puzzle |
-| 3 | Engine-verified pool | every pooled question's answer reproduced by the engine; all `verified:true` |
-| 4 | De-duplicated | all fingerprints unique within the pool |
-| 5 | Interviewer prompt | no-answer-leak; escalating hints; grounding clause; structured scoring |
-| 6 | Generator prompt | constrained to real-quant-style + anchored + engine-solvable forms; engine-verify-before-serve; avoid-list |
-| 7 | Difficulty | floor = hard; tiers tagged; follow-up chains present |
-| 8 | Asset hygiene | `interviews/<courseId>.json` validates (versioned, self-describing); `.md` mirror generated; not seeded/deployed |
+| # | gate | pass condition | evidence |
+|---|------|----------------|---------|
+| 1 | Source fidelity | concept Green-Book-anchored; every seed/showcase question cited | manual review |
+| 2 | Real quant-style | every question reads like a real quant-interview question (canon-grounded), not an arbitrary puzzle | manual review |
+| 3 | Engine-verified pool | every pooled question's answer reproduced by the engine; all `verified:true` | **`./node_modules/.bin/tsx scripts/validate-interview-packs.ts`** (engine cross-check section; exits non-zero on any mismatch) |
+| 4 | De-duplicated | all fingerprints unique within the pool | **`validate-interview-packs.ts`** (duplicate-fingerprint gate) |
+| 5 | Interviewer prompt | no-answer-leak; escalating hints; grounding clause; structured scoring | **`validate-interview-packs.ts`** (NO-LEAK hint-rung gate) + manual review of persona/protocol |
+| 6 | Generator prompt | constrained to real-quant-style + anchored + engine-solvable forms; engine-verify-before-serve; avoid-list | manual review |
+| 7 | Difficulty | floor = hard; tiers tagged; follow-up chains present | **`validate-interview-packs.ts`** (tier + followUps structural gates) |
+| 8 | Asset hygiene | `interviews/<courseId>.json` validates against `InterviewPackSchema`; `.md` mirror generated; schema drift guard passes | **`validate-interview-packs.ts`** (schema validation + functions copy drift guard) |
+| 9 | Leak guard | `functions/src/interview.leak.test.ts` passes | **`./node_modules/.bin/vitest run functions/src/interview.leak.test.ts`** |
+
+Run both mechanized gates before signing off:
+```bash
+./node_modules/.bin/tsx scripts/validate-interview-packs.ts   # engine-recompute + no-leak + schema + drift
+./node_modules/.bin/vitest run functions/src/interview.leak.test.ts  # leak-guard unit test
+```
 
 ## Lifecycle
 
 Built at the **end of the concept** (after lessons, reusing their engines). Its Scorecard is part of the
 **concept sign-off**; the **Slack FYI** notes the pack (question count + a link to the `.md`). When the
-concept **auto-ships** it is **merged to `main`** with the concept but **never seeded or deployed** —
-dormant until you build the live feature, at which point you add a loader, a Zod schema, and the
-verify-before-serve + per-student seen-set seam.
+concept **auto-ships** it is **merged to `main`** with the concept and **bundled into the live Functions
+runtime** when functions deploy (the `firebase.json` predeploy hook runs `scripts/copy-interview-packs.mjs`).
+Not seeded to Firestore. The loader (`functions/src/interview.ts`:`loadPack`), the Zod schema
+(`src/content/interviewPack.ts`), and the verify-before-serve + per-student seen-set seam already exist.

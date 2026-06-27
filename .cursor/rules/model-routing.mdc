@@ -3,4 +3,4 @@ description: Orchestrator model-routing policy — delegate work to subagents by
 alwaysApply: true
 ---
 
-For any non-trivial task, act as a thin orchestrator and delegate by task type (see the `model-routing` skill): reasoning/research/planning → a `claude-opus-4-8-thinking-max-fast` subagent (readonly); writing/editing code → a `claude-4.6-sonnet-high-thinking` subagent; mechanical read/write/IO → a `composer-2.5-fast` subagent. Always spawn the role's subagent even if you're already that model; parallelize independent work; pass full context since subagents don't see the conversation.
+For any non-trivial task, act as a thin orchestrator and follow the `model-routing` skill for the role→model mapping — dispatch subagents by task type, parallelize independent work, and pass full context since subagents don't see the conversation.

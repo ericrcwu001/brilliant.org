@@ -51,15 +51,23 @@ Plus an explicit **engine-vs-source** assertion in the engine's golden test: eac
 Lesson Brief problem table is reproduced by the engine at exact rational values.
 
 > ⚠️ **Gates 6 & 9 pass *vacuously* for a new concept unless you wire its lessons in.**
-> `scripts/validate-fixtures.ts` hardcodes its gate sets (`GATED`, `MASTERY_LESSONS`, …) to the
-> Pattern-Hitting-Times lessonIds, so a new concept's lessons are silently skipped and a 9/9 Scorecard
-> can be meaningless. Wave-0 / Dept-3 **must add the new lessonIds to those sets** (or generalize the
-> gate) so the inclusivity + mastery-challenge gates actually run.
-> Also **mechanize the chapters-coverage check** (currently manual): add an assertion to
-> `validate-fixtures.ts` that every built `lessonId` appears in exactly one `course.chapters[].lessonIds`
-> (and every chapter lessonId exists), so the "invisible lessons" trap fails CI instead of shipping.
-> **e2e caveat:** `playwright.config.ts`'s `webServer` uses `npm run dev` (forbidden here), so `e2e`
-> isn't autonomously runnable as-is — run it against a built + previewed server, or flag for the user.
+> `GATED` and `MASTERY_LESSONS` are **manually-maintained allowlists** in `scripts/validate-fixtures.ts`
+> — a new concept's lessons are silently skipped until you add their lessonIds (see the existing
+> markov/bayes/expected-value entries as models). Wave-0 / Dept-3 **must add the new lessonIds to
+> those sets** (or generalize the gate) so the inclusivity + mastery-challenge gates actually run.
+> The **chapters-coverage check IS mechanized** in `validate-fixtures.ts` (section 7): it verifies
+> every built `lessonId` appears in exactly one `course.chapters[].lessonIds` and every chapter
+> lessonId exists as a course lesson node — the "invisible lessons" trap already fails CI.
+> Ensure your new course's `chapters[]` passes it.
+> **e2e resolution:** `playwright.config.ts`'s `webServer` uses `npm run dev` (forbidden here).
+> Run e2e against a built + previewed server:
+> ```bash
+> ./node_modules/.bin/vite build && ./node_modules/.bin/vite preview &
+> ./node_modules/.bin/playwright test --config playwright.config.ts
+> ```
+> Alternatively, treat e2e as a **user-run gate**: a green Scorecard without e2e means all other 8
+> gates are mechanically verified; flag e2e explicitly in the sign-off note and have the user run
+> it before the concept is declared fully shipped.
 
 ## When a gate is red
 
@@ -81,5 +89,12 @@ citations + engine cross-check + the Interview Pack: N engine-verified questions
 
 The capstone AI-interview pack has its own gates — every pooled question anchor-and-source +
 engine-verified, pool de-duplicated, interviewer/generator prompts reviewed (no-leak / grounding /
-engine-verify-before-serve / avoid-list), difficulty tiers + follow-ups present, and the asset validates
-and is committed-not-deployed. Full gate table in **`interview-packs.md`**.
+engine-verify-before-serve / avoid-list), difficulty tiers + follow-ups present, and the asset validates.
+The mechanized portion runs via:
+
+```bash
+./node_modules/.bin/tsx scripts/validate-interview-packs.ts   # engine-recompute + no-leak + schema + drift guard
+./node_modules/.bin/vitest run functions/src/interview.leak.test.ts  # leak-guard unit test
+```
+
+Full gate table in **`interview-packs.md`**.
