@@ -21,6 +21,15 @@ import { reduce, ratAdd, ratMul } from '../engine/automaton'
 import { diagnoseRow } from './equationDiagnosis'
 import { balanceModel } from './beats/balanceModel'
 import type { Automaton, StateId, Rational, CanonicalRecurrence } from '../engine/types'
+import {
+  covariance as covFn,
+  variance as varFn,
+  corrRange as corrRangeFn,
+  rhoSquared as rhoSqFn,
+  formatRational as formatRationalCov,
+  formatRangePair,
+} from '../engine/covariance'
+import type { JointCell as CovJointCell } from '../engine/covariance'
 
 // Re-export diagnoseRow so the beat can keep its current import path via grading.ts
 // if desired, but components may also import it directly from equationDiagnosis.
@@ -620,4 +629,89 @@ export function isRetrievalGridCorrect(
   assign: Record<number, string | null>,
 ): boolean {
   return ix.pairs.every((p, i) => assign[i] === p.right)
+}
+
+// ─── 15. covarianceBoard ────────────────────────────────────────────────────────
+//
+// covarianceBoard is NOT in GRADED_TYPES and is never self-graded: explore beats
+// are ungraded; graded reads (Cov, ρ², corrRange) use answerEntry/masteryChallenge
+// which compare learner input to the engine-anchored `headline` string. The helpers
+// here are testable and correct IF ever wired, but they are intentionally NOT
+// invoked by the CovarianceBoardBeat runtime renderer.
+// (Engine imports covFn/varFn/corrRangeFn/rhoSqFn/formatRationalCov/formatRangePair
+//  and the JointCell type are all imported at the top of this file.)
+
+type CovarianceBoardIx = {
+  display: 'jointPmf' | 'scatter' | 'corrVectors'
+  joint?: CovJointCell[]
+  rho1?: Rational
+  rho2?: Rational
+  task?: 'covariance' | 'rhoSquared' | 'corrRange'
+  headline?: string
+}
+
+type CovarianceBoardBeat = {
+  interaction: CovarianceBoardIx
+}
+
+/**
+ * covarianceBoard is never self-graded; graded reads use answerEntry/masteryChallenge.
+ * This always returns false to make the intent clear and prevent accidental wiring.
+ */
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export function isCovarianceBoardGraded(_beat: CovarianceBoardBeat): boolean {
+  // Design note (schema.ts §15): covarianceBoard NOT in GRADED_TYPES.
+  // Explore beats are ungraded; graded reads use answerEntry. Always false.
+  return false
+}
+
+/**
+ * Grade a covarianceBoard beat against a typed string input.
+ * Recomputes the anchor via the engine (covariance/rhoSquared/corrRange→formatRational/
+ * formatRangePair) and compares under `norm`. Correct if the learner's input
+ * matches the engine-derived headline for the beat's `task`.
+ *
+ * NOTE: This helper is not invoked by the runtime renderer. It is testable
+ * and available for future graded wiring (e.g. a hybrid answerEntry beat
+ * that also displays the joint pmf).
+ */
+export function isCovarianceBoardCorrect(
+  beat: CovarianceBoardBeat,
+  input: string,
+): boolean {
+  const ix = beat.interaction
+  const { task, joint, rho1, rho2 } = ix
+
+  if (task === 'covariance' && joint && joint.length > 0) {
+    const cov = covFn(joint)
+    return norm(input) === norm(formatRationalCov(cov))
+  }
+
+  if (task === 'rhoSquared' && joint && joint.length > 0) {
+    const cov = covFn(joint)
+    const varX = varFn(joint.map((c) => ({ x: c.x, p: c.p })))
+    const varY = varFn(joint.map((c) => ({ x: c.y, p: c.p })))
+    const rs = rhoSqFn(cov, varX, varY)
+    return norm(input) === norm(formatRationalCov(rs))
+  }
+
+  if (task === 'corrRange' && rho1 && rho2) {
+    // corrRange THROWS on non-Pythagorean inputs (engine has no float fallback).
+    // The renderer wraps it in try/catch for its display-only readout; mirror
+    // that here so a future non-Pythagorean fixture grades as `false` rather
+    // than crashing the grader.
+    try {
+      const range = corrRangeFn(rho1, rho2)
+      return norm(input) === norm(formatRangePair(range))
+    } catch {
+      return false
+    }
+  }
+
+  // Fallback: compare to stored headline (validation anchor)
+  if (ix.headline) {
+    return norm(input) === norm(ix.headline)
+  }
+
+  return false
 }

@@ -582,6 +582,43 @@ export const InteractionSchema = z.discriminatedUnion('type', [
     // nim → String(nimSum(heaps)); subtraction → String(heaps[0] % (maxRemove+1)). 0 ⇒ mover loses.
     headline: z.string().optional(),
   }),
+  // Covariance & Correlation board (concept-covariance, Wave 0). ONE new type,
+  // three presentation displays (the codebase convention where `raceSim` folds
+  // lanes/oddsDial/heatmap, `walkBoard` folds single/swarm/…, `chainBoard` folds
+  // diagram/matrix/…, `stoppingBoard` folds sequence/cutoff/convergence):
+  //   'jointPmf'    — a DOM joint-pmf table; tap/drag integer mass over a fixed
+  //                   total T so Σp = 1 EXACTLY (no float). Cov = E[XY] − E[X]E[Y]
+  //                   recomputes live, with a sign chip (L2).
+  //   'scatter'     — an authored (reproducible, never-RNG) point cloud of (X,Y);
+  //                   the co-movement trend tilts with ρ. Used for raw-vs-standardized
+  //                   scale-invariance (L4) and the (min,max) order-stat cloud (L6).
+  //   'corrVectors' — two FIXED unit vectors at angle arccos(ρ) to a common axis +
+  //                   one sweepable third; live ρ(y,z) rides a [−1,1] number-line
+  //                   and stops at the attainable range bound (L5).
+  // All inputs are exact rationals (RationalSchema). The renderer computes every
+  // displayed value via src/engine/covariance.ts; `headline` is the engine-
+  // reproducible anchor (Cov "n/d", ρ², or "min,max" range) cross-checked by
+  // scripts/validate-fixtures.ts. NOT a HERO_TYPE and NOT in GRADED_TYPES — graded
+  // reads use answerEntry/masteryChallenge (the chainBoard/stoppingBoard precedent).
+  z.object({
+    type: z.literal('covarianceBoard'),
+    display: z.enum(['jointPmf', 'scatter', 'corrVectors']),
+    // jointPmf/scatter: the joint pmf P(X=x, Y=y) as exact-rational cells.
+    joint: z.array(z.object({ x: RationalSchema, y: RationalSchema, p: RationalSchema })).optional(),
+    // corrVectors: the two fixed correlations ρ(x,y), ρ(x,z) of the sweep frame.
+    rho1: RationalSchema.optional(),
+    rho2: RationalSchema.optional(),
+    labels: z.array(z.string()).optional(),
+    // Which engine quantity this beat's headline anchors against (selects the
+    // covariance.ts cross-check path in validate-fixtures §3f).
+    task: z.enum(['covariance', 'rhoSquared', 'corrRange']).optional(),
+    // The learner manipulates (tap mass / drag the scale slider / sweep the third
+    // vector) vs a passive watch.
+    interactive: z.boolean().optional(),
+    // Engine-reproducible headline anchor: a reduced "n/d" Cov or ρ², or a
+    // comma-joined "min,max" range ("7/25,1"). Validation anchor.
+    headline: z.string().optional(),
+  }),
 ])
 
 const HintTripleSchema = z.tuple([z.string(), z.string(), z.string()])

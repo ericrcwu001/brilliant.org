@@ -71,6 +71,16 @@ import {
   type Game as GtGame,
   type GameTreeNode as GtNode,
 } from '../src/engine/gameTheory'
+import {
+  covariance as covCovariance,
+  rhoSquared as covRhoSquared,
+  corrRange as covCorrRange,
+  variance as covVariance,
+  formatRational as covFmt,
+  formatRangePair as covFmtRange,
+  type JointCell as CovJointCell,
+  type Pmf as CovPmf,
+} from '../src/engine/covariance'
 
 const fixturesDir = join(dirname(fileURLToPath(import.meta.url)), '..', 'fixtures')
 
@@ -275,6 +285,13 @@ console.log(`✓ engine recurrences match equation-tile targets (${crossChecked}
 // ── 3b. Bayes update cross-check — recompute each declared `posterior` via
 // bayes.ts and assert equality; surfaces wrong posterior strings in fixtures.
 const toR = (r: { n: number; d: number }): Rational => ({ n: r.n, d: r.d })
+// A joint cell {x,y,p} — each of x/y/p coerced to a fresh plain-number Rational
+// (used by the covarianceBoard §3f cross-check).
+const toR3 = (c: {
+  x: { n: number; d: number }
+  y: { n: number; d: number }
+  p: { n: number; d: number }
+}): CovJointCell => ({ x: toR(c.x), y: toR(c.y), p: toR(c.p) })
 let bayesChecked = 0
 for (const lesson of lessons) {
   for (const beat of lesson.beats) {
@@ -507,6 +524,68 @@ for (const lesson of lessons) {
 }
 console.log(`✓ gameTheory headlines match gameTheory.ts (${gtChecked} beats)`)
 
+// ── 3f. covarianceBoard engine cross-check — recompute each declared `headline`
+// via covariance.ts (switch on task) and assert equality. covarianceBoard is NOT
+// in HERO_TYPES/GRADED_TYPES; this cross-check carries the math anchor (mirrors
+// the chainBoard §3c / stoppingBoard §3d / gameTheory §3e cross-checks). Graded
+// reads live in answerEntry / masteryChallenge beats and are checked in the
+// per-lesson factcheck tests (Stage 4). No-op until covariance fixtures land.
+//
+// Marginal pmf of X (or Y) collapsed from a joint distribution — summing the
+// probability mass over each distinct outcome value (exact rationals).
+function covMarginal(joint: CovJointCell[], axis: 'x' | 'y'): CovPmf {
+  const byVal = new Map<string, { x: Rational; p: Rational }>()
+  for (const cell of joint) {
+    const v = cell[axis]
+    const key = `${v.n}/${v.d}`
+    const prev = covAddP(byVal.get(key)?.p, cell.p)
+    byVal.set(key, { x: v, p: prev })
+  }
+  return [...byVal.values()]
+}
+function covAddP(a: Rational | undefined, b: Rational): Rational {
+  if (!a) return b
+  return { n: a.n * b.d + b.n * a.d, d: a.d * b.d } // unreduced ok; covVariance reduces
+}
+let covChecked = 0
+for (const lesson of lessons) {
+  for (const beat of lesson.beats) {
+    const it = beat.interaction
+    if (it.type !== 'covarianceBoard' || !it.headline) continue
+    const where = `${lesson.lessonId}/${beat.beatId}`
+    let got: string
+    switch (it.task) {
+      case 'covariance': {
+        if (!it.joint) fail(`${where}: covarianceBoard task 'covariance' needs joint for its headline`)
+        got = covFmt(covCovariance(it.joint.map(toR3)))
+        break
+      }
+      case 'rhoSquared': {
+        if (!it.joint) fail(`${where}: covarianceBoard task 'rhoSquared' needs joint for its headline`)
+        const joint = it.joint.map(toR3)
+        const cov = covCovariance(joint)
+        const varX = covVariance(covMarginal(joint, 'x'))
+        const varY = covVariance(covMarginal(joint, 'y'))
+        got = covFmt(covRhoSquared(cov, varX, varY))
+        break
+      }
+      case 'corrRange': {
+        if (!it.rho1 || !it.rho2) fail(`${where}: covarianceBoard task 'corrRange' needs rho1 & rho2 for its headline`)
+        got = covFmtRange(covCorrRange(toR(it.rho1), toR(it.rho2)))
+        break
+      }
+      default:
+        // No task ⇒ no engine anchor to cross-check (passive display).
+        continue
+    }
+    if (got !== it.headline) {
+      fail(`${where}: covarianceBoard(${it.task}) declared headline ${it.headline} ≠ engine ${got}`)
+    }
+    covChecked++
+  }
+}
+console.log(`✓ covarianceBoard headlines match covariance.ts (${covChecked} beats)`)
+
 // ── 4. Inclusivity gate (build-brief §4.5 / §10). Mechanizable subset of the
 // per-lesson DoD, applied to the remaining lessons (L2–L6). L0/L1 predate the
 // gate (their own specs) and are exempt. The asserts are dormant until each
@@ -544,6 +623,9 @@ const GATED = new Set([
   // concept-game-theory
   'lesson-game-theory-1','lesson-game-theory-2','lesson-game-theory-3',
   'lesson-game-theory-4','lesson-game-theory-5','lesson-game-theory-6',
+  // concept-covariance
+  'lesson-covariance-1','lesson-covariance-2','lesson-covariance-3',
+  'lesson-covariance-4','lesson-covariance-5','lesson-covariance-6',
 ])
 // L5 transfer lesson is the logged exception to the retrieval-opener rule.
 const NO_RETRIEVAL_OPENER = new Set(['lesson-longer-patterns'])
@@ -717,6 +799,9 @@ const MASTERY_LESSONS = new Set([
   // concept-game-theory
   'lesson-game-theory-1','lesson-game-theory-2','lesson-game-theory-3',
   'lesson-game-theory-4','lesson-game-theory-5','lesson-game-theory-6',
+  // concept-covariance
+  'lesson-covariance-1','lesson-covariance-2','lesson-covariance-3',
+  'lesson-covariance-4','lesson-covariance-5','lesson-covariance-6',
 ])
 for (const lesson of lessons) {
   if (!MASTERY_LESSONS.has(lesson.lessonId)) continue

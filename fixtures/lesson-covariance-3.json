@@ -1,0 +1,207 @@
+{
+  "lessonId": "lesson-covariance-3",
+  "courseId": "course-covariance",
+  "title": "Variance of a Sum: The Cross Term",
+  "patternOptions": ["H"],
+  "milestoneId": "cov-sum",
+  "unlocks": "lesson-covariance-4",
+  "schemaVersion": 1,
+  "beats": [
+    {
+      "beatId": "cov3-recall",
+      "required": true,
+      "prompt": "Linearity of expectation added with no fine print. Match each item to its value.",
+      "interaction": {
+        "type": "retrievalGrid",
+        "pairs": [
+          {
+            "left": "Linearity: E[X+Y] = …",
+            "right": "E[X]+E[Y], always"
+          },
+          {
+            "left": "Var of ONE fair die (from L1)",
+            "right": "35/12"
+          }
+        ]
+      },
+      "feedback": {
+        "correct": "Expectation adds unconditionally; one die has Var=35/12 (L1).",
+        "hints": [
+          "One is the EV-L2 unconditional rule, one is L1's die variance.",
+          "Linearity never needs independence; Var=91/6−49/4.",
+          "Match: 'Linearity: E[X+Y]=…' → 'E[X]+E[Y], always'; 'Var of ONE fair die' → '35/12'."
+        ]
+      }
+    },
+    {
+      "beatId": "cov3-bet",
+      "required": false,
+      "prompt": "Linearity of expectation (EV L2) added with no fine print — E[X+Y]=E[X]+E[Y], dependent or not. Does the *variance* of a sum add just as cleanly? Two independent fair dice, X₁ and X₂: is Var(X₁+X₂) equal to Var(X₁)+Var(X₂)?",
+      "interaction": {
+        "type": "prediction",
+        "options": [
+          "Always, just like expectation adds",
+          "Never — variances can't be added",
+          "Here yes, because these dice are independent (Cov=0)"
+        ]
+      },
+      "feedback": {
+        "byOption": {
+          "Always, just like expectation adds": {
+            "note": "Linearity adds with no fine print, but variance picks up a 2Cov(X,Y) cross term. It matches the naive sum only when Cov=0 — true here, but for a reason, not by default.",
+            "correct": false
+          },
+          "Never — variances can't be added": {
+            "note": "Too pessimistic. Var(X+Y)=Var(X)+Var(Y)+2Cov always holds; independent ⇒ cross term 0 ⇒ they add to 35/6 (#2).",
+            "correct": false
+          },
+          "Here yes, because these dice are independent (Cov=0)": {
+            "note": "The cross term is 0 only because of independence. 35/12+35/12=35/6 (#2).",
+            "correct": true
+          }
+        }
+      }
+    },
+    {
+      "beatId": "cov3-explore",
+      "required": false,
+      "prompt": "Drag the Cov slider. Watch how the variance of the sum changes relative to the sum of variances. The gap between the bars is exactly 2·Cov. Drag to Cov=0 — the bars snap flush.",
+      "interaction": {
+        "type": "slider",
+        "min": -3,
+        "max": 3,
+        "step": 1
+      },
+      "feedback": {
+        "correct": "At Cov=0 the bars are flush: Var(X+Y)=Var(X)+Var(Y). Drag ± and the right bar over/undershoots by exactly 2·Cov.",
+        "hints": [
+          "Drag the slider to Cov=0 — notice the bars are flush (gap=0).",
+          "Drag positive: the right bar (Var(X+Y)) grows beyond the left by 2·Cov.",
+          "Drag negative: the right bar shrinks. The gap is always labeled '= 2·Cov'."
+        ]
+      }
+    },
+    {
+      "beatId": "cov3-primer-bilinear",
+      "required": false,
+      "track": "A",
+      "prompt": "Quick reminder before the mastery challenge — read the card, then continue.",
+      "interaction": {
+        "type": "primer",
+        "variant": "custom",
+        "title": "Covariance is bilinear",
+        "body": "Covariance splits over sums in each argument:\n  Cov(X, Y+Z) = Cov(X,Y) + Cov(X,Z)\n  Cov(X+W, Y) = Cov(X,Y) + Cov(W,Y)\n\nA key special case: Cov(X,X) = Var(X). A variable always covaries perfectly with itself — that term never vanishes, even when the two outer variables are independent.",
+        "collapsible": true
+      },
+      "feedback": {
+        "correct": "Covariance is bilinear: it splits over sums. Cov(X,X)=Var(X) always.",
+        "hints": [
+          "Read the card.",
+          "Cov splits over sums in each slot.",
+          "Continue when ready."
+        ]
+      }
+    },
+    {
+      "beatId": "cov3-win",
+      "required": true,
+      "prompt": "Two independent fair dice X₁ and X₂. Their individual variances are each 35/12 (L1), and they are independent so Cov(X₁,X₂)=0. What is Var(X₁+X₂)? Enter as a fraction.",
+      "interaction": {
+        "type": "answerEntry",
+        "fields": [
+          {
+            "id": "var-sum",
+            "label": "Var(X₁+X₂)",
+            "accept": ["35/6"],
+            "placeholder": "?/?"
+          }
+        ]
+      },
+      "feedback": {
+        "correct": "Var(X+Y)=Var(X)+Var(Y)+2Cov; independence kills the cross term, so 35/12+35/12=35/6.",
+        "hints": [
+          "Sum's variance = two variances + cross term; recall Cov for *independent* dice.",
+          "Each Var=35/12; Cov=0 drops 2Cov; add — don't report one, don't multiply.",
+          "35/12+35/12=70/12=35/6 (#2). Type 35/6."
+        ]
+      }
+    },
+    {
+      "beatId": "cov3-model",
+      "required": false,
+      "introducesSymbol": "Var(X+Y)=Var(X)+Var(Y)+2Cov(X,Y)",
+      "groundedBy": ["cov3-win"],
+      "prompt": "You just computed it. Now name the rule.",
+      "interaction": {
+        "type": "tripletReveal",
+        "value": "Var(X+Y)=Var(X)+Var(Y)+2Cov(X,Y)",
+        "lenses": [
+          {
+            "label": "Formula",
+            "body": "Var(X+Y) = Var(X) + Var(Y) + 2·Cov(X,Y). The 2Cov term is the cross term — it measures how much the variables move together and corrects the naive sum."
+          },
+          {
+            "label": "When cross term vanishes",
+            "body": "Cov(X,Y)=0 when X and Y are independent. Then Var(X+Y)=Var(X)+Var(Y) — variances add cleanly, just like expectations. But this is a special case, not the default."
+          },
+          {
+            "label": "Contrast with linearity",
+            "body": "E[X+Y]=E[X]+E[Y] holds always — no fine print. Var(X+Y)=Var(X)+Var(Y) holds only when Cov=0. Expectation is unconditionally linear; variance is not."
+          }
+        ],
+        "display": "cards"
+      },
+      "feedback": {
+        "correct": "Variances add cleanly only when Cov=0. The 2Cov cross term is the correction.",
+        "hints": [
+          "Tap each lens card to reveal.",
+          "The formula vs the linearity lens show the key contrast.",
+          "Tap all three cards."
+        ]
+      }
+    },
+    {
+      "beatId": "cov3-mastery",
+      "required": true,
+      "density": "split",
+      "interviewNote": "Interview framing: Cov(X₁,S) where S=X₁+X₂ is the canonical example of 'the part correlates with the whole.' The bilinearity split — Cov(X₁,X₁)+Cov(X₁,X₂)=Var(X₁)+0=35/12 — is the exact move that re-appears in portfolio variance decomposition (β·Var(B)) and in any regression where a component also appears in the target. The sharp diagnostic distractor is 0: learners who think 'X₁ and X₂ are independent so every covariance is 0' forget that S is not a stranger to X₁ — it literally contains it.",
+      "prompt": "Let S = X₁+X₂ (sum of two independent fair dice). What is Cov(X₁, S)? Use bilinearity to split the covariance, then simplify. Enter as a fraction.",
+      "interaction": {
+        "type": "masteryChallenge",
+        "scenario": "S contains X₁, so even though X₁ and X₂ are independent, S is not independent of X₁. Split Cov(X₁, X₁+X₂) before reaching for 'independent so 0'.",
+        "fields": [
+          {
+            "id": "cov-x1-s",
+            "label": "Cov(X₁, S)",
+            "accept": ["35/12"],
+            "placeholder": "?/?"
+          }
+        ]
+      },
+      "feedback": {
+        "correct": "Cov(X₁,S)=Cov(X₁,X₁)+Cov(X₁,X₂)=Var(X₁)+0=35/12 — the part correlates with the whole because the whole contains it.",
+        "hints": [
+          "S contains X₁; split Cov(X₁,X₁+X₂) before reaching for 'independent so 0'.",
+          "=Var(X₁)+Cov(X₁,X₂); dice independent ⇒ Cov(X₁,X₂)=0 but Cov(X₁,X₁)=Var(X₁)=35/12 survives.",
+          "35/12 (#3). X₁,X₂ are independent, but S isn't a stranger to X₁ — it contains it. Cov(X₁,X₁)+Cov(X₁,X₂)=Var(X₁)+0=35/12. A variable always covaries perfectly with itself; that term never vanishes."
+        ]
+      }
+    },
+    {
+      "beatId": "cov3-recap",
+      "required": true,
+      "prompt": "The moves that ran through this lesson.",
+      "interaction": {
+        "type": "recap"
+      },
+      "feedback": {
+        "correct": "Var(X+Y)=Var(X)+Var(Y)+2Cov(X,Y). Variances add cleanly only when Cov=0; the cross term is the correction. Covariance is bilinear: Cov(X,X)=Var(X) never vanishes. Next: a unit-free score.",
+        "hints": [
+          "Read each recap card.",
+          "The key contrast: E[X+Y] adds always; Var(X+Y) adds cleanly only when Cov=0.",
+          "Tap to continue."
+        ]
+      }
+    }
+  ]
+}

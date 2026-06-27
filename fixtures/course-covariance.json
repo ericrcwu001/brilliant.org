@@ -1,0 +1,92 @@
+{
+  "courseId": "course-covariance",
+  "title": "Covariance & Correlation",
+  "description": "Measure how two random quantities move together — and prove it can't lie. From variance as self-covariance, through the covariance formula and the variance-of-a-sum cross term, to the unit-free correlation coefficient ρ, its [−1,1] bound, and the geometry of three correlated variables.",
+  "persona": "For learners who know expected value and want the second number: spread, co-movement, and correlation. We build every result on finite, exact-rational examples — no calculus required.",
+  "completionMilestoneId": "covariance-complete",
+  "schemaVersion": 1,
+  "domain": "Probability",
+  "domainOrder": 0,
+  "order": 4,
+  "status": "live",
+  "tagline": "How do two random quantities move together?",
+  "accent": "ch5",
+  "vizKey": "twoNode",
+  "chapters": [
+    {
+      "id": "ch-covariance-1",
+      "label": "Spread & Co-Movement",
+      "accent": "ch5",
+      "lessonIds": ["lesson-covariance-1", "lesson-covariance-2"]
+    },
+    {
+      "id": "ch-covariance-2",
+      "label": "The Covariance Toolkit",
+      "accent": "ch1",
+      "lessonIds": ["lesson-covariance-3", "lesson-covariance-4"]
+    },
+    {
+      "id": "ch-covariance-3",
+      "label": "Correlation in the Wild",
+      "accent": "ch3",
+      "lessonIds": ["lesson-covariance-5", "lesson-covariance-6"]
+    }
+  ],
+  "lessons": [
+    {
+      "lessonId": "lesson-covariance-1",
+      "title": "Spread: Variance & Standard Deviation",
+      "summary": "Variance is spread around the mean: Var(X) = E[X²] − E[X]².",
+      "milestoneId": "cov-spread",
+      "built": true,
+      "glyphKey": "Var(X)",
+      "vizKey": "twoNode"
+    },
+    {
+      "lessonId": "lesson-covariance-2",
+      "title": "Covariance: The Leftover of the Product Rule",
+      "summary": "Cov(X,Y) = E[XY] − E[X]E[Y] — the residue of the product rule.",
+      "milestoneId": "cov-covariance",
+      "built": true,
+      "glyphKey": "Cov(X,Y)",
+      "vizKey": "twoNode"
+    },
+    {
+      "lessonId": "lesson-covariance-3",
+      "title": "Variance of a Sum: The Cross Term",
+      "summary": "Var(X+Y) = Var(X) + Var(Y) + 2Cov(X,Y); variances add cleanly only when Cov = 0.",
+      "milestoneId": "cov-sum",
+      "built": true,
+      "glyphKey": "Var(X+Y)",
+      "vizKey": "twoNode"
+    },
+    {
+      "lessonId": "lesson-covariance-4",
+      "title": "Correlation ρ: The Unit-Free Score",
+      "summary": "ρ = Cov/(σ_Xσ_Y) ∈ [−1,1]; grade ρ² when ρ is irrational; Cov = 0 ⇏ independence.",
+      "milestoneId": "cov-rho",
+      "built": true,
+      "glyphKey": "ρ(X,Y)",
+      "vizKey": "twoNode"
+    },
+    {
+      "lessonId": "lesson-covariance-5",
+      "title": "The Correlation Triangle: 3-Variable Bounds",
+      "summary": "The PSD-determinant condition fences the third correlation; the equicorrelation floor is −1/(n−1).",
+      "milestoneId": "cov-triangle",
+      "built": true,
+      "glyphKey": "ρ-range",
+      "vizKey": "twoNode"
+    },
+    {
+      "lessonId": "lesson-covariance-6",
+      "title": "Synthesis: Min, Max & the Whole Toolkit",
+      "summary": "Order-statistic covariance Cov(min,max) = 1/36, ρ = 1/2 — the whole toolkit, told apart on sight.",
+      "milestoneId": "cov-synthesis",
+      "built": true,
+      "glyphKey": "Cov(min,max)",
+      "vizKey": "twoNode"
+    }
+  ],
+  "roadmap": []
+}

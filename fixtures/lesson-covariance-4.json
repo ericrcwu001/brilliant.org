@@ -1,0 +1,237 @@
+{
+  "lessonId": "lesson-covariance-4",
+  "courseId": "course-covariance",
+  "title": "Correlation ρ: The Unit-Free Score",
+  "patternOptions": ["H"],
+  "milestoneId": "cov-rho",
+  "unlocks": "lesson-covariance-5",
+  "schemaVersion": 1,
+  "beats": [
+    {
+      "beatId": "cov4-recall",
+      "required": true,
+      "prompt": "Two quick retrievals from the last two lessons. Match each statement to its value.",
+      "interaction": {
+        "type": "retrievalGrid",
+        "pairs": [
+          { "left": "Covariance carries the units of…", "right": "X × Y" },
+          { "left": "Independent ⇒ Cov(X,Y) =", "right": "0" }
+        ]
+      },
+      "feedback": {
+        "correct": "Cov carries units of X×Y (which is exactly why we divide them out); independence makes the product rule exact, so Cov = 0.",
+        "hints": [
+          "One card asks what units Cov carries; the other asks what independence does to Cov (L2).",
+          "Cov multiplies an X-unit by a Y-unit; independent ⇒ the product rule is exact ⇒ the leftover vanishes.",
+          "Cov is in units of X × Y; independent ⇒ Cov = 0 (#2)."
+        ]
+      }
+    },
+    {
+      "beatId": "cov4-bet",
+      "required": false,
+      "prompt": "Given Cov(X,Y) = 12, Var(X) = 9, Var(Y) = 25, what is the correlation ρ(X,Y)?",
+      "interaction": {
+        "type": "prediction",
+        "options": [
+          "12 — the covariance is the correlation",
+          "12/34 — divide by the variances added",
+          "4/5 — Cov over the product of the SDs"
+        ]
+      },
+      "feedback": {
+        "byOption": {
+          "12 — the covariance is the correlation": {
+            "note": "Let's test it — that's the raw covariance, still carrying units of X×Y, and ρ must land in [−1,1], so a bare 12 can't be one. ρ = Cov/(σ_Xσ_Y).",
+            "correct": false
+          },
+          "12/34 — divide by the variances added": {
+            "note": "Let's test it — you divided by Var(X)+Var(Y)=34. ρ divides by the product of the SDs, √(9·25)=15, not the sum of variances.",
+            "correct": false
+          },
+          "4/5 — Cov over the product of the SDs": {
+            "note": "Good instinct — divide by the product of the SDs to strip the units: 12/√225 = 12/15 = 4/5 (#5).",
+            "correct": true
+          }
+        }
+      }
+    },
+    {
+      "beatId": "cov4-primer-sqrt-denom",
+      "required": false,
+      "track": "A",
+      "prompt": "Quick reminder before we normalize — read the card, then continue.",
+      "interaction": {
+        "type": "primer",
+        "variant": "custom",
+        "title": "The ρ denominator is √(product), not the product (and not the sum)",
+        "body": "Correlation is ρ = Cov(X,Y) / (σ_X·σ_Y), where σ = √Var is the standard deviation. So the denominator is √(Var(X)·Var(Y)) — the square root of the PRODUCT of the variances. It is NOT Var(X)·Var(Y) (no root) and NOT Var(X)+Var(Y) (the sum). Dividing by the product of the SDs is what cancels the X-units and Y-units, leaving a pure number in [−1,1].",
+        "collapsible": true
+      },
+      "feedback": {
+        "correct": "Denominator = √(Var_X · Var_Y) = σ_X σ_Y — the product of the SDs.",
+        "hints": [
+          "Read the card.",
+          "σ = √Var; the ρ denominator multiplies the two SDs.",
+          "Continue when ready."
+        ]
+      }
+    },
+    {
+      "beatId": "cov4-win",
+      "required": true,
+      "prompt": "Now compute it. With Cov = 12, Var(X) = 9, Var(Y) = 25, find ρ(X,Y). Enter as a fraction.",
+      "interaction": {
+        "type": "answerEntry",
+        "fields": [
+          {
+            "id": "rho",
+            "label": "ρ(X,Y)",
+            "accept": ["4/5", "0.8", ".8"],
+            "placeholder": "?/?"
+          }
+        ]
+      },
+      "feedback": {
+        "correct": "ρ = 12/√(9·25) = 12/15 = 4/5 — the product of the SDs strips the units and lands inside [−1,1].",
+        "hints": [
+          "Divide Cov by the PRODUCT of the SDs, not by anything you add.",
+          "σ_X = 3, σ_Y = 5, so the denominator is √225 = 15, not 9+25 = 34. (A bare 12 is outside [−1,1].)",
+          "12/15 = 4/5 (#5)."
+        ]
+      }
+    },
+    {
+      "beatId": "cov4-explore",
+      "required": false,
+      "prompt": "Stretch the Y-units and watch what changes. The raw cloud deforms vertically; the standardized cloud refuses to change shape. Does ρ move?",
+      "interaction": {
+        "type": "covarianceBoard",
+        "display": "scatter",
+        "task": "rhoSquared",
+        "interactive": true,
+        "labels": ["X", "Y"],
+        "joint": [
+          { "x": { "n": 0, "d": 1 }, "y": { "n": 0, "d": 1 }, "p": { "n": 1, "d": 4 } },
+          { "x": { "n": 0, "d": 1 }, "y": { "n": 1, "d": 1 }, "p": { "n": 1, "d": 4 } },
+          { "x": { "n": 1, "d": 1 }, "y": { "n": 1, "d": 1 }, "p": { "n": 1, "d": 4 } },
+          { "x": { "n": 1, "d": 1 }, "y": { "n": 2, "d": 1 }, "p": { "n": 1, "d": 4 } }
+        ],
+        "headline": "1/2"
+      },
+      "hero": {
+        "slowFirst": true,
+        "structuralReadout": "Stretching the units changed Cov, not ρ. ρ² = 1/2 holds.",
+        "reducedMotionFinalFrame": true
+      },
+      "feedback": {
+        "correct": "Stretching the units changed Cov, not ρ — correlation is unit-free. Here ρ² = 1/2 (ρ = 1/√2, irrational, so we grade the square).",
+        "hints": [
+          "Predict first: as you stretch Y, does ρ go up, down, or stay?",
+          "The raw (X, cY) cloud stretches vertically and Cov scales by c, but the standardized cloud holds its shape.",
+          "ρ is pinned: rescaling units cannot change a unit-free score. ρ² = 1/2 throughout."
+        ]
+      }
+    },
+    {
+      "beatId": "cov4-model",
+      "required": false,
+      "introducesSymbol": "ρ(X,Y)=Cov/(σ_Xσ_Y)",
+      "groundedBy": ["cov4-win"],
+      "comparison": true,
+      "interviewNote": "Interview framing: ρ = Cov/(σ_Xσ_Y) is generically irrational — the two-dice corr(X₁, X₁+X₂) = 1/√2 ≈ 0.707 is the canonical example. Quants grade and reason on ρ² (always rational from finite pmfs) and reserve the float ρ for a final decimal. And the converse trap bites in interviews: ρ = 0 means no LINEAR association, not independence (Y = X² with X symmetric has ρ = 0 yet Y is a deterministic function of X).",
+      "prompt": "You just saw it on the clouds. Now name it.",
+      "interaction": {
+        "type": "tripletReveal",
+        "value": "ρ = Cov/(σ_Xσ_Y) ∈ [−1,1]",
+        "lenses": [
+          { "label": "Definition", "body": "ρ(X,Y) = Cov(X,Y) / (σ_X·σ_Y): the covariance normalized by the product of the standard deviations. Always lands in [−1,1]." },
+          { "label": "Irrational ρ → grade ρ²", "body": "The denominator is a square root, so ρ is usually irrational. For two dice, ρ(X₁, X₁+X₂) = 1/√2 ≈ 0.707 — irrational. We grade ρ² = 1/2 (always rational); 1/√2 is display-only, never a graded float." },
+          { "label": "The converse trap", "body": "ρ = 0 means no LINEAR co-movement — it does NOT mean independent. With X symmetric about 0 and Y = X², Cov(X,X²) = 0 and ρ = 0, yet Y is computed from X (fully dependent)." }
+        ],
+        "display": "cards"
+      },
+      "feedback": {
+        "correct": "ρ = Cov/(σ_Xσ_Y) strips units into [−1,1]; ρ is usually irrational (grade ρ²); and ρ = 0 ⇏ independent.",
+        "hints": [
+          "Read the three lenses.",
+          "Normalize Cov by the product of the SDs; the root makes ρ usually irrational.",
+          "ρ = 0 kills only a linear trend — not dependence."
+        ]
+      }
+    },
+    {
+      "beatId": "cov4-interleave",
+      "required": true,
+      "prompt": "Sort independence from zero-correlation. Match each statement to its correct completion.",
+      "interaction": {
+        "type": "retrievalGrid",
+        "pairs": [
+          { "left": "Independent evidence ⇒ the likelihoods…", "right": "multiply (joint factors)" },
+          { "left": "Cov(X,Y) = 0 ⇒", "right": "no linear trend — NOT independence" }
+        ]
+      },
+      "feedback": {
+        "correct": "Independence is DEFINED by the joint factoring (multiply); Cov = 0 is strictly weaker and does not buy independence.",
+        "hints": [
+          "Independent likelihoods do one specific thing; Cov = 0 is the weaker, one-directional claim.",
+          "Independent ⇒ joint factors ⇒ multiply ⇒ Cov = 0; but Cov = 0 only kills a LINEAR trend (e.g. X vs X²).",
+          "Independent ⇒ multiply; Cov = 0 does NOT ⇒ independent (#7)."
+        ]
+      }
+    },
+    {
+      "beatId": "cov4-mastery",
+      "required": true,
+      "density": "split",
+      "prompt": "Mastery — two parts. Part A: the two-dice correlation. Part B: the converse trap.",
+      "interaction": {
+        "type": "masteryChallenge",
+        "scenario": "Part A: For two fair dice, Cov(X₁, S) = 35/12, Var(X₁) = 35/12, Var(S) = 35/6, so ρ(X₁, S) = 1/√2 — irrational. Enter ρ² (the rational object we grade). Part B: X is symmetric about 0 and Y = X². Give Cov(X, X²) and ρ(X, X²).",
+        "fields": [
+          {
+            "id": "rho-sq",
+            "label": "ρ²(X₁, S)  (we grade the square — ρ = 1/√2 itself is irrational)",
+            "accept": ["1/2", "0.5", ".5"],
+            "placeholder": "a/b",
+            "suffix": "= ρ²"
+          },
+          {
+            "id": "cov-xx2",
+            "label": "Cov(X, X²)",
+            "accept": ["0"],
+            "placeholder": "?"
+          },
+          {
+            "id": "rho-xx2",
+            "label": "ρ(X, X²)",
+            "accept": ["0"],
+            "placeholder": "?"
+          }
+        ]
+      },
+      "feedback": {
+        "correct": "Part A: ρ = 1/√2 is irrational, so we grade ρ² = (35/12)² / ((35/12)(35/6)) = 1/2 — never the float 0.707. Part B: symmetry ⇒ E[X] = E[X³] = 0 ⇒ Cov(X,X²) = 0, ρ = 0, yet Y = X² is fully determined by X — zero correlation is not independence.",
+        "hints": [
+          "Part A: ρ here is irrational → display-only; the gradeable object is one step away (always rational). Part B: compute Cov by symmetry, then ask whether Cov = 0 forces independence.",
+          "Part A: ρ = 1/√2 (shown for reference) → square it → ρ² = 1/2; enter ρ², not ρ — we never grade a float ρ. Part B: E[X]=E[X³]=0 ⇒ Cov(X,X²)=E[X³]−E[X]E[X²]=0, ρ=0; but X²'s tie to X is curved, so Cov=0 kills only the LINEAR part.",
+          "Part A: ρ² = 1/2 (#4). Part B: Cov = 0, ρ = 0 — yet X, X² are fully dependent (#7)."
+        ]
+      }
+    },
+    {
+      "beatId": "cov4-recap",
+      "required": true,
+      "prompt": "The unit-free score, and the trap it sets.",
+      "interaction": { "type": "recap" },
+      "feedback": {
+        "correct": "ρ ∈ [−1,1] is Cov normalized by the SD product — unit-free, usually irrational (grade ρ²). And uncorrelated ≠ independent. Next: three correlated variables, and how the geometry fences the third ρ.",
+        "hints": [
+          "Read each recap card.",
+          "ρ strips units into [−1,1]; ρ = 0 means no linear trend, not independence.",
+          "Tap to continue."
+        ]
+      }
+    }
+  ]
+}

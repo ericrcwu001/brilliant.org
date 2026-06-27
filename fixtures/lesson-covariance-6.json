@@ -1,0 +1,189 @@
+{
+  "lessonId": "lesson-covariance-6",
+  "courseId": "course-covariance",
+  "title": "Synthesis: Min, Max & the Whole Toolkit",
+  "patternOptions": ["H"],
+  "milestoneId": "cov-synthesis",
+  "unlocks": null,
+  "schemaVersion": 1,
+  "beats": [
+    {
+      "beatId": "cov6-recall",
+      "required": true,
+      "prompt": "Cumulative recall across the whole arc. Match each headline result to its value.",
+      "interaction": {
+        "type": "retrievalGrid",
+        "pairs": [
+          { "left": "Var(one fair die)", "right": "35/12" },
+          { "left": "Var(X₁ + X₂), independent dice", "right": "35/6" },
+          { "left": "ρ with Cov = 12, Var 9 & 25", "right": "4/5" },
+          { "left": "Min equal pairwise ρ (3 variables)", "right": "−1/2" }
+        ]
+      },
+      "feedback": {
+        "correct": "Every load-bearing headline from the arc: Var(die) = 35/12, Var(sum) = 35/6, ρ = 4/5, equicorrelation floor −1/2.",
+        "hints": [
+          "Each card is one result from a different lesson of this concept.",
+          "Var(die) = 91/6 − 49/4; Var(sum) with Cov = 0; ρ = 12/15; the floor from 1 + 2ρ ≥ 0.",
+          "35/12, 35/6, 4/5, −1/2 (#1, #2, #5, #11)."
+        ]
+      }
+    },
+    {
+      "beatId": "cov6-mixed",
+      "required": true,
+      "prompt": "The converse trap, one more time. Match each statement to its completion.",
+      "interaction": {
+        "type": "retrievalGrid",
+        "pairs": [
+          { "left": "Cov(X, X²) with X symmetric about 0", "right": "0" },
+          { "left": "X and X² are…", "right": "dependent" },
+          { "left": "Independent ⇒ Cov…", "right": "= 0 (one direction only)" }
+        ]
+      },
+      "feedback": {
+        "correct": "Cov(X,X²) = 0 yet X, X² are dependent; independence forces Cov = 0 — but the arrow runs one way only.",
+        "hints": [
+          "The L4 converse trap: a Cov value, a dependence verdict, and a one-way direction.",
+          "Symmetry ⇒ Cov(X,X²) = 0, but Y = X² is computed from X; independent ⇒ Cov = 0, not the reverse.",
+          "0; dependent; independent ⇒ Cov = 0 (#7)."
+        ]
+      }
+    },
+    {
+      "beatId": "cov6-bet",
+      "required": false,
+      "prompt": "Draw two numbers, keep the smaller (min) and the larger (max). How correlated are min and max?",
+      "interaction": {
+        "type": "prediction",
+        "options": [
+          "ρ = 1 — min can never exceed max, locked together",
+          "ρ = 0 — which draw is bigger is random, so unrelated",
+          "ρ = 1/2 — positively but not perfectly correlated"
+        ]
+      },
+      "feedback": {
+        "byOption": {
+          "ρ = 1 — min can never exceed max, locked together": {
+            "note": "Let's test it — the ordering Y ≤ Z is real but doesn't make them move in lockstep. A big draw and a small draw raise the max while barely touching the min. ρ is only 1/2 (#8).",
+            "correct": false
+          },
+          "ρ = 0 — which draw is bigger is random, so unrelated": {
+            "note": "Let's test it — they share the same two numbers, so they can't be independent. In fact YZ = X₁X₂ always, pinning Cov = 1/36 (#8).",
+            "correct": false
+          },
+          "ρ = 1/2 — positively but not perfectly correlated": {
+            "note": "Good instinct — they co-move, but the ordering doesn't lock them. Cov = 1/36, ρ = 1/2 (#8).",
+            "correct": true
+          }
+        }
+      }
+    },
+    {
+      "beatId": "cov6-explore",
+      "required": false,
+      "prompt": "Draw more (min, max) pairs and watch the cloud build. Every point lands on or above the diagonal (max ≥ min); the running ρ climbs and settles near 1/2 — a fat cloud, not a line.",
+      "interaction": {
+        "type": "covarianceBoard",
+        "display": "scatter",
+        "interactive": true,
+        "labels": ["min", "max"],
+        "joint": [
+          { "x": { "n": 1, "d": 6 }, "y": { "n": 1, "d": 6 }, "p": { "n": 1, "d": 9 } },
+          { "x": { "n": 1, "d": 6 }, "y": { "n": 1, "d": 2 }, "p": { "n": 2, "d": 9 } },
+          { "x": { "n": 1, "d": 6 }, "y": { "n": 5, "d": 6 }, "p": { "n": 2, "d": 9 } },
+          { "x": { "n": 1, "d": 2 }, "y": { "n": 1, "d": 2 }, "p": { "n": 1, "d": 9 } },
+          { "x": { "n": 1, "d": 2 }, "y": { "n": 5, "d": 6 }, "p": { "n": 2, "d": 9 } },
+          { "x": { "n": 5, "d": 6 }, "y": { "n": 5, "d": 6 }, "p": { "n": 1, "d": 9 } }
+        ]
+      },
+      "hero": {
+        "slowFirst": true,
+        "structuralReadout": "Fat cloud above the diagonal — min and max co-move at ρ = 1/2, not 1.",
+        "reducedMotionFinalFrame": true
+      },
+      "feedback": {
+        "correct": "A fat cloud, not a line — min and max co-move at ρ = 1/2 despite the hard min ≤ max boundary. (The exact continuous result: Cov = 1/36, ρ = 1/2.)",
+        "hints": [
+          "Tap 'draw' to add (min, max) points from iid-uniform pairs.",
+          "Every point sits on or above the y = x diagonal (max ≥ min); the cloud is fat, not a line.",
+          "Running ρ settles near 1/2 — far from the ρ = 1 reference line (#8)."
+        ]
+      }
+    },
+    {
+      "beatId": "cov6-win",
+      "required": true,
+      "prompt": "Two iid Uniform(0,1) draws; Y = min, Z = max. Using the identity YZ = min·max = X₁·X₂ (handed to you), what is E[YZ]?",
+      "interaction": {
+        "type": "answerEntry",
+        "fields": [
+          { "id": "eyz", "label": "E[YZ]", "accept": ["1/4", "0.25", ".25"], "placeholder": "?/?" }
+        ]
+      },
+      "feedback": {
+        "correct": "YZ = min·max = X₁·X₂ always; X₁, X₂ independent ⇒ E[YZ] = E[X₁]E[X₂] = (1/2)(1/2) = 1/4.",
+        "hints": [
+          "min·max equals the product of the ORIGINAL two draws, every time.",
+          "YZ = X₁X₂; independent ⇒ E[YZ] = E[X₁]E[X₂] = (1/2)(1/2). Do NOT use E[Y]E[Z] — Y and Z are dependent.",
+          "(1/2)(1/2) = 1/4 (#9). (2/9 = E[Y]E[Z] is the term you'll subtract: Cov = 1/4 − 2/9 = 1/36.)"
+        ]
+      }
+    },
+    {
+      "beatId": "cov6-primer-rho-denom",
+      "required": false,
+      "track": "A",
+      "prompt": "A spaced re-test before the mastery — read the card, then continue.",
+      "interaction": {
+        "type": "primer",
+        "variant": "custom",
+        "title": "ρ denominator = √(product), not the product",
+        "body": "Recall ρ = Cov / √(Var_Y · Var_Z). The denominator is the SQUARE ROOT of the product of the variances, not the product itself. When Var_Y = Var_Z (as for min and max, both 1/18), √(Var_Y·Var_Z) = √((1/18)²) = 1/18 — the √ collapses and ρ comes out rational. Dividing by the bare product 1/324 (or its root 1/648) is the classic slip.",
+        "collapsible": true
+      },
+      "feedback": {
+        "correct": "ρ denominator = √(Var_Y·Var_Z); when the variances are equal it collapses to that single variance.",
+        "hints": ["Read the card.", "Denominator is √(product), not the product.", "Continue when ready."]
+      }
+    },
+    {
+      "beatId": "cov6-mastery",
+      "required": true,
+      "density": "split",
+      "prompt": "Mastery — two parts. Part A: the order-statistic covariance and correlation. Part B: pick the right tool for a re-surfaced bilinearity question.",
+      "interaction": {
+        "type": "masteryChallenge",
+        "scenario": "Part A: two iid Uniform(0,1); Y = min, Z = max. With E[YZ] = 1/4, E[Y] = 1/3, E[Z] = 2/3, and Var(Y) = Var(Z) = 1/18, give Cov(Y,Z) and ρ(Y,Z). Part B: two independent fair dice; let S = X₁ + X₂. Give Cov(X₁, S).",
+        "fields": [
+          { "id": "cov-minmax", "label": "Cov(min, max)", "accept": ["1/36"], "placeholder": "?/?" },
+          { "id": "rho-minmax", "label": "ρ(min, max)", "accept": ["1/2", "0.5", ".5"], "placeholder": "?/?" },
+          { "id": "cov-x1-s", "label": "Cov(X₁, S)", "accept": ["35/12"], "placeholder": "?/?" }
+        ]
+      },
+      "feedback": {
+        "correct": "Part A: Cov = 1/4 − (1/3)(2/3) = 1/4 − 2/9 = 1/36; ρ = (1/36)/√((1/18)(1/18)) = (1/36)/(1/18) = 1/2 — rational because Var(Y) = Var(Z), so the √ collapses. Part B: Cov(X₁,S) = Cov(X₁,X₁) + Cov(X₁,X₂) = Var(X₁) + 0 = 35/12 — you picked the bilinearity tool; a variable always covaries perfectly with itself.",
+        "hints": [
+          "Part A: Cov = E[YZ] − E[Y]E[Z] (subtract the dependent product); ρ denominator is a single √ of the product of variances. Part B: S contains X₁, so it's 'covariance with a sum', not an independence question.",
+          "Part A: Cov = 1/4 − (1/3)(2/3) = 1/36; with Var_Y = Var_Z = 1/18, √(Var·Var) = 1/18 (NOT the product 1/324, and not its root 1/648). Part B: Cov(X₁,X₁) + Cov(X₁,X₂) = Var(X₁) + 0.",
+          "Part A: Cov = 1/36, ρ = 1/2 (#8). Part B: 35/12 + 0 = 35/12 (#3)."
+        ]
+      }
+    },
+    {
+      "beatId": "cov6-recap",
+      "required": true,
+      "interviewNote": "Interview framing: 'Correlation of min and max of two iid uniforms' is a Green-Book classic — the trick is YZ = min·max = X₁X₂, so E[YZ] = E[X₁]E[X₂] = 1/4 (NOT E[Y]E[Z] = 2/9, since Y, Z are dependent), giving Cov = 1/36 and ρ = 1/2. The whole toolkit — variance, the covariance leftover, the Var(X+Y) cross term, the unit-free ρ, and the PSD bounds — is one connected set of moves, picked apart on sight by which object the question asks for.",
+      "prompt": "One toolkit, told apart on sight.",
+      "interaction": { "type": "recap" },
+      "feedback": {
+        "correct": "Variance, the covariance leftover, the cross term in Var(X+Y), the unit-free ρ, and the PSD bounds — one connected toolkit. The capstone move: read which object the question asks for, then reach for the matching tool.",
+        "hints": [
+          "Read each recap card.",
+          "Every result this concept taught is one move in a single connected toolkit.",
+          "Tap to finish."
+        ]
+      }
+    }
+  ]
+}

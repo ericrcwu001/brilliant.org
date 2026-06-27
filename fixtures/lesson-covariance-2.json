@@ -1,0 +1,262 @@
+{
+  "lessonId": "lesson-covariance-2",
+  "courseId": "course-covariance",
+  "title": "Covariance: The Leftover of the Product Rule",
+  "patternOptions": ["H"],
+  "milestoneId": "cov-covariance",
+  "unlocks": "lesson-covariance-3",
+  "schemaVersion": 1,
+  "beats": [
+    {
+      "beatId": "cov2-recall",
+      "required": true,
+      "prompt": "Back in Expected Value L2 you met the product rule. Match each statement to its value.",
+      "interaction": {
+        "type": "retrievalGrid",
+        "pairs": [
+          {
+            "left": "E[XY]=E[X]E[Y] is allowed when…",
+            "right": "X, Y are independent"
+          },
+          {
+            "left": "Two independent fair dice: Cov(X₁,X₂)",
+            "right": "0"
+          }
+        ]
+      },
+      "feedback": {
+        "correct": "Product rule holds exactly under independence, so two separate dice have Cov=0.",
+        "hints": [
+          "One card is the EV-L2 product-rule condition; the other is what it does to the leftover.",
+          "The product rule is allowed iff the variables are independent; separate dice never influence each other.",
+          "Match: 'E[XY]=E[X]E[Y] when…' → 'X, Y are independent'; 'Two independent fair dice: Cov(X₁,X₂)' → '0' (#2)."
+        ]
+      }
+    },
+    {
+      "beatId": "cov2-bet",
+      "required": false,
+      "prompt": "Two independent fair six-sided dice, X₁ and X₂. Before computing: what is Cov(X₁,X₂)?",
+      "interaction": {
+        "type": "prediction",
+        "options": [
+          "Positive — both are dice, so they move together",
+          "Can't tell without the joint table",
+          "Zero — they're independent"
+        ]
+      },
+      "feedback": {
+        "byOption": {
+          "Positive — both are dice, so they move together": {
+            "note": "Identically-distributed isn't dependent. Two separate dice share a distribution but never influence each other; E[X₁X₂]−E[X₁]E[X₂] collapses to 0 (#2).",
+            "correct": false
+          },
+          "Can't tell without the joint table": {
+            "note": "Generally true, but independence hands it to you: E[X₁X₂]=E[X₁]E[X₂] exactly, so the leftover is 0 (#2).",
+            "correct": false
+          },
+          "Zero — they're independent": {
+            "note": "Independence makes the product rule exact, so the leftover vanishes. Cov=0 (#2).",
+            "correct": true
+          }
+        }
+      }
+    },
+    {
+      "beatId": "cov2-primer-jointpmf",
+      "required": false,
+      "track": "A",
+      "prompt": "Quick primer before we explore — read, then continue.",
+      "interaction": {
+        "type": "primer",
+        "variant": "custom",
+        "title": "What is a joint pmf?",
+        "body": "A joint probability mass function (joint pmf) assigns a probability P(X=x, Y=y) to every pair of outcomes. The full table has one cell per (x,y) pair; all cells sum to 1. When X and Y are independent, each cell equals P(X=x)·P(Y=y) — the row marginal times the column marginal. When they are dependent, some cells are heavier (or lighter) than that product.",
+        "collapsible": true
+      },
+      "feedback": {
+        "correct": "Joint pmf: one cell per outcome pair; cells sum to 1; independence means row×col.",
+        "hints": [
+          "Read the card.",
+          "Each cell holds P(X=x, Y=y); summing all cells gives 1.",
+          "Independence means P(X=x, Y=y)=P(X=x)·P(Y=y) for every cell — continue when ready."
+        ]
+      }
+    },
+    {
+      "beatId": "cov2-explore",
+      "required": false,
+      "prompt": "Tap the 2×2 joint-pmf cells to shift probability mass. Watch E[XY], E[X]E[Y], and Cov update live. Try to make Cov negative, then make it exactly 0 without putting all mass in one cell.",
+      "interaction": {
+        "type": "covarianceBoard",
+        "display": "jointPmf",
+        "joint": [
+          { "x": { "n": 0, "d": 1 }, "y": { "n": 0, "d": 1 }, "p": { "n": 1, "d": 2 } },
+          { "x": { "n": 0, "d": 1 }, "y": { "n": 1, "d": 1 }, "p": { "n": 0, "d": 1 } },
+          { "x": { "n": 1, "d": 1 }, "y": { "n": 0, "d": 1 }, "p": { "n": 0, "d": 1 } },
+          { "x": { "n": 1, "d": 1 }, "y": { "n": 1, "d": 1 }, "p": { "n": 1, "d": 2 } }
+        ],
+        "task": "covariance",
+        "interactive": true,
+        "headline": "1/4",
+        "labels": ["X=0", "X=1", "Y=0", "Y=1"]
+      },
+      "hero": {
+        "slowFirst": true,
+        "structuralReadout": "Matched table: Cov(X,Y) = 1/4 — the product rule's leftover is not zero.",
+        "reducedMotionFinalFrame": true
+      },
+      "feedback": {
+        "correct": "You built independence — the leftover is 0. Move mass onto the diagonal and watch it climb back to 1/4.",
+        "hints": [
+          "Tapping a cell moves mass; the sign chip shows + (diagonal-heavy) or − (anti-diagonal-heavy).",
+          "Anti-diagonal mass (X high when Y low) drives Cov negative; equal mass in each cell (the independent layout) zeros it.",
+          "Start from the matched preset: Cov=1/4. Move all mass to equal cells for independence → Cov=0."
+        ]
+      }
+    },
+    {
+      "beatId": "cov2-win",
+      "required": true,
+      "prompt": "Matched bits: P(X=0,Y=0)=P(X=1,Y=1)=1/2, all other cells 0. You are given E[XY]=1/2 and E[X]E[Y]=1/4. What is Cov(X,Y)?",
+      "interaction": {
+        "type": "answerEntry",
+        "fields": [
+          {
+            "id": "cov",
+            "label": "Cov(X,Y)",
+            "accept": ["1/4", "0.25", ".25"],
+            "placeholder": "?/?"
+          }
+        ]
+      },
+      "feedback": {
+        "correct": "Cov=E[XY]−E[X]E[Y]=1/2−1/4=1/4 — the leftover isn't zero, this table isn't independent.",
+        "hints": [
+          "Cov is the leftover — find E[XY] and E[X]E[Y] separately, then subtract.",
+          "XY=1 only on (1,1) at prob 1/2 → E[XY]=1/2; each bit is Bernoulli(1/2) → E[X]E[Y]=1/4; subtract.",
+          "1/2−1/4=1/4 (#6)."
+        ]
+      }
+    },
+    {
+      "beatId": "cov2-model",
+      "required": false,
+      "introducesSymbol": "Cov(X,Y)=E[XY]−E[X]E[Y]",
+      "groundedBy": ["cov2-win"],
+      "prompt": "You just computed it. Now name it.",
+      "interaction": {
+        "type": "tripletReveal",
+        "value": "Cov(X,Y)=E[XY]−E[X]E[Y]",
+        "lenses": [
+          {
+            "label": "The formula",
+            "body": "Cov(X,Y) = E[XY] − E[X]E[Y]. Subtract the product of the means from the expected product."
+          },
+          {
+            "label": "The sign",
+            "body": "Positive Cov: X and Y tend to be large together. Negative Cov: large X pairs with small Y. Zero: the product rule holds exactly — the variables are independent."
+          },
+          {
+            "label": "The leftover",
+            "body": "E[XY]=E[X]E[Y] is the product rule — it holds only under independence. Covariance is what remains when the rule breaks: it measures how far the joint distribution strays from the independent product."
+          }
+        ],
+        "display": "cards"
+      },
+      "interviewNote": "Interview framing: Cov(X,Y)=0 does NOT imply independence (only the converse: independence ⇒ Cov=0). The matched-bits example here achieves ρ=1 (perfect linear dependence), the extreme; the general bound is |ρ|≤1 by Cauchy–Schwarz. For continuous distributions, Cov(X,Y)=∫∫ (x−μX)(y−μY)·f(x,y)dx dy — the same leftover interpretation survives the integral.",
+      "feedback": {
+        "correct": "Cov is the leftover of the product rule.",
+        "hints": [
+          "Read each lens card.",
+          "The formula subtracts the independent baseline E[X]E[Y] from the observed E[XY].",
+          "Tap to continue."
+        ]
+      }
+    },
+    {
+      "beatId": "cov2-interleave",
+      "required": true,
+      "prompt": "Retrieval: match each statement to its right-hand side.",
+      "interaction": {
+        "type": "retrievalGrid",
+        "pairs": [
+          {
+            "left": "Independent evidence ⇒ ___ the likelihoods",
+            "right": "multiply"
+          },
+          {
+            "left": "X and Y independent ⇒ Cov(X,Y)",
+            "right": "0"
+          },
+          {
+            "left": "Cov = E[XY] − ___",
+            "right": "E[X]E[Y]"
+          }
+        ]
+      },
+      "feedback": {
+        "correct": "Independent evidence multiplies the likelihoods — the same factorization that forces Cov=0.",
+        "hints": [
+          "Bayes L3: independent likelihoods → ?; and what does independence do to the Cov formula?",
+          "Joint factors P(A,B)=P(A)P(B) ⇒ multiply ⇒ Cov=0. The correction term in Cov is E[X]E[Y].",
+          "multiply (joint factors) ⇒ Cov=0; correction term = E[X]E[Y]."
+        ]
+      }
+    },
+    {
+      "beatId": "cov2-mastery",
+      "required": true,
+      "density": "split",
+      "prompt": "Mastery challenge — two joint pmf tables. Compute Cov and, where applicable, ρ.",
+      "interaction": {
+        "type": "masteryChallenge",
+        "scenario": "**Part A** Independent fair bits: P(X=0,Y=0)=P(X=0,Y=1)=P(X=1,Y=0)=P(X=1,Y=1)=1/4. **Part B** Matched bits: P(X=0,Y=0)=P(X=1,Y=1)=1/2, other cells 0. For Part B also find ρ=Cov/√(Var(X)·Var(Y)); note Var(X)=Var(Y)=1/4.",
+        "fields": [
+          {
+            "id": "cov-A",
+            "label": "Part A: Cov(X,Y)",
+            "accept": ["0"],
+            "placeholder": "?"
+          },
+          {
+            "id": "cov-B",
+            "label": "Part B: Cov(X,Y)",
+            "accept": ["1/4", "0.25", ".25"],
+            "placeholder": "?/?"
+          },
+          {
+            "id": "rho-B",
+            "label": "Part B: ρ(X,Y)",
+            "accept": ["1"],
+            "placeholder": "?"
+          }
+        ]
+      },
+      "feedback": {
+        "correct": "Independent table → Cov=0; matched table breaks the product rule → Cov=1/4, ρ=1. Cov=0 is a result, not a default.",
+        "hints": [
+          "Run Cov=E[XY]−E[X]E[Y] on each table separately — don't assume they match.",
+          "A: independent ⇒ leftover 0. B: mass on (0,0),(1,1) ⇒ E[XY]=1/2≠1/4 ⇒ Cov=1/4; ρ=(1/4)/(1/4)=1.",
+          "A=0; B Cov=1/4, ρ=(1/4)/√(1/4·1/4)=(1/4)/(1/4)=1 (#6)."
+        ]
+      }
+    },
+    {
+      "beatId": "cov2-recap",
+      "required": true,
+      "prompt": "The move that ran through this whole lesson.",
+      "interaction": {
+        "type": "recap"
+      },
+      "feedback": {
+        "correct": "Cov(X,Y)=E[XY]−E[X]E[Y] — the product rule's residue. Its sign tells direction; zero only under independence. Next: how Cov adds inside Var(X+Y).",
+        "hints": [
+          "Read each recap card.",
+          "The formula is a subtraction: observed joint average minus the independent baseline.",
+          "Tap to continue."
+        ]
+      }
+    }
+  ]
+}

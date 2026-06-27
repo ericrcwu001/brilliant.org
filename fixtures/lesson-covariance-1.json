@@ -1,0 +1,240 @@
+{
+  "lessonId": "lesson-covariance-1",
+  "courseId": "course-covariance",
+  "title": "Spread: Variance & Standard Deviation",
+  "patternOptions": ["H"],
+  "milestoneId": "cov-spread",
+  "unlocks": "lesson-covariance-2",
+  "schemaVersion": 1,
+  "beats": [
+    {
+      "beatId": "cov1-recall",
+      "required": true,
+      "prompt": "Back in Expected Value you found the balance point of a fair die. Match each statement to its value.",
+      "interaction": {
+        "type": "retrievalGrid",
+        "pairs": [
+          {
+            "left": "E[X], one fair die",
+            "right": "7/2"
+          },
+          {
+            "left": "EV's last lesson said ___ is next",
+            "right": "the spread (variance)"
+          }
+        ]
+      },
+      "feedback": {
+        "correct": "E[X]=7/2 is the balance point; the spread around it is variance.",
+        "hints": [
+          "Both came from Expected Value — the die mean and the 'coming next' promise.",
+          "(1+2+3+4+5+6)/6 = 21/6 = 7/2; EV closed promising a spread number.",
+          "7/2; the spread = variance."
+        ]
+      }
+    },
+    {
+      "beatId": "cov1-bet",
+      "required": false,
+      "prompt": "Two carnival games both pay $5 on average. Game A pays exactly $5 every time. Game B pays $0 or $10 on a fair coin flip. Same expected value — which game is riskier?",
+      "interaction": {
+        "type": "prediction",
+        "options": [
+          "Same mean ⇒ same risk — neither is riskier",
+          "The fixed-$5 game is riskier",
+          "The 0/$10 game is riskier — bigger spread"
+        ]
+      },
+      "feedback": {
+        "byOption": {
+          "Same mean ⇒ same risk — neither is riskier": {
+            "note": "Let's test it — both average $5, but the coin-flip game can pay $0 or $10. Same balance point, very different spread. We need a second number.",
+            "correct": false
+          },
+          "The fixed-$5 game is riskier": {
+            "note": "Let's test it — backwards: a guaranteed $5 has zero spread. The 0/$10 game is the volatile one.",
+            "correct": false
+          },
+          "The 0/$10 game is riskier — bigger spread": {
+            "note": "Good instinct — equal means, but spread around the mean differs. That spread is what variance measures.",
+            "correct": true
+          }
+        }
+      }
+    },
+    {
+      "beatId": "cov1-primer-square",
+      "required": false,
+      "track": "A",
+      "prompt": "Quick check before we calculate — E[X²] and E[X]² are different things.",
+      "interaction": {
+        "type": "primer",
+        "variant": "custom",
+        "title": "E[X²] ≠ E[X]²",
+        "body": "E[X²] = mean of the squares: square each outcome, then weight and sum.\nE[X]² = square of the mean: compute E[X] first, then square.\n\nFor a fair die: E[X²] = (1²+2²+3²+4²+5²+6²)/6 = 91/6 ≈ 15.17, but E[X]² = (7/2)² = 49/4 = 12.25. These are not equal — confusing them is the most common variance mistake.",
+        "collapsible": true
+      },
+      "feedback": {
+        "correct": "Mean of squares ≠ square of the mean — the whole point of variance is the gap between them.",
+        "hints": [
+          "Read the card.",
+          "E[X²]: square each value, then average. E[X]²: average first, then square.",
+          "Continue when ready."
+        ]
+      }
+    },
+    {
+      "beatId": "cov1-explore",
+      "required": false,
+      "prompt": "Tap each face value to place its probability weight. Watch the spread grow around the fixed fulcrum at E[X]=7/2.",
+      "interaction": {
+        "type": "expectationScale",
+        "outcomes": [
+          {
+            "x": 1,
+            "label": "1"
+          },
+          {
+            "x": 2,
+            "label": "2"
+          },
+          {
+            "x": 3,
+            "label": "3"
+          },
+          {
+            "x": 4,
+            "label": "4"
+          },
+          {
+            "x": 5,
+            "label": "5"
+          },
+          {
+            "x": 6,
+            "label": "6"
+          }
+        ]
+      },
+      "hero": {
+        "slowFirst": true,
+        "structuralReadout": "E[X]=7/2 · Var=35/12 — same balance point, different spread.",
+        "reducedMotionFinalFrame": true
+      },
+      "feedback": {
+        "correct": "Same balance point, different spread — that's variance.",
+        "hints": [
+          "Tap each number to place its weight (1/6 for a fair die).",
+          "The fulcrum stays pinned at 7/2 while the spread grows.",
+          "Place all six weights and watch the spread readout settle at 35/12."
+        ]
+      }
+    },
+    {
+      "beatId": "cov1-win",
+      "required": true,
+      "prompt": "Given E[X²]=91/6 and E[X]²=(7/2)²=49/4, compute Var(X) = E[X²] − E[X]². Enter as a fraction.",
+      "interaction": {
+        "type": "answerEntry",
+        "fields": [
+          {
+            "id": "var",
+            "label": "Var(X)",
+            "accept": ["35/12"],
+            "placeholder": "?/?"
+          }
+        ]
+      },
+      "feedback": {
+        "correct": "Yes — Var = E[X²] − E[X]² = 35/12. Spread around the mean, not from zero.",
+        "hints": [
+          "Variance needs two pieces — mean-of-squares and square-of-mean; you have both.",
+          "E[X²]=91/6, E[X]²=49/4; convert to twelfths and subtract — don't stop at 91/6.",
+          "182/12 − 147/12 = 35/12."
+        ]
+      }
+    },
+    {
+      "beatId": "cov1-model",
+      "required": false,
+      "introducesSymbol": "Var(X)=E[X²]−E[X]²",
+      "groundedBy": ["cov1-win"],
+      "interviewNote": "For the interview: Var(X)=E[(X−μ)²] is the definition by squared deviation; E[X²]−E[X]² is the computational shortcut proved by expanding the square. Both forms appear in practice — the shortcut is faster for pmf computations; the deviation form is more interpretable as 'average squared distance from the mean'. SD=√Var puts spread back in the original units (dollars, meters, etc.), which is why SD is reported more often than variance in applied statistics.",
+      "prompt": "Three ways to see the same formula — tap each lens.",
+      "interaction": {
+        "type": "tripletReveal",
+        "value": "Var(X) = E[X²] − E[X]²",
+        "lenses": [
+          {
+            "label": "Definition",
+            "body": "Variance is the average squared distance from the mean: Var(X) = E[(X−μ)²]. Squaring makes all distances positive and penalizes large deviations more."
+          },
+          {
+            "label": "Shortcut",
+            "body": "Expand (X−μ)² = X²−2μX+μ² and take expectations: E[X²]−2μ²+μ² = E[X²]−E[X]². Mean-of-squares minus square-of-mean."
+          },
+          {
+            "label": "Units",
+            "body": "Variance is in squared units (dollars², meters²). SD = √Var(X) = √(35/12) ≈ 1.71 returns spread to the die's own units — but √(35/12) is irrational, so we grade the rational Var=35/12."
+          }
+        ]
+      },
+      "feedback": {
+        "correct": "Var = E[X²] − E[X]².",
+        "hints": [
+          "Tap each lens card to reveal its perspective.",
+          "All three lenses describe the same quantity from different angles.",
+          "The converge line: Var(X) = E[X²] − E[X]²."
+        ]
+      }
+    },
+    {
+      "beatId": "cov1-mastery",
+      "required": true,
+      "density": "split",
+      "prompt": "Mastery: derive E[X²] from the fair-die pmf from scratch, then compute Var(X). Enter both as fractions.",
+      "interaction": {
+        "type": "masteryChallenge",
+        "scenario": "A fair die has outcomes 1–6, each with probability 1/6. Step 1: build E[X²] = Σ x²·P(x) yourself. Step 2: apply Var(X) = E[X²] − E[X]², using E[X]=7/2.",
+        "fields": [
+          {
+            "id": "ex2",
+            "label": "E[X²]",
+            "accept": ["91/6"],
+            "placeholder": "?/?"
+          },
+          {
+            "id": "var",
+            "label": "Var(X)",
+            "accept": ["35/12"],
+            "placeholder": "?/?"
+          }
+        ]
+      },
+      "feedback": {
+        "correct": "Nailed both — built E[X²]=91/6 from the pmf, then subtracted to 35/12.",
+        "hints": [
+          "Two steps: build mean-of-squares yourself, then apply the definition.",
+          "E[X²]=(1²+2²+3²+4²+5²+6²)/6 = (1+4+9+16+25+36)/6 = 91/6; Var=91/6−49/4; keep squared units — don't take a root.",
+          "E[X²]=91/6, Var=35/12. (SD=√(35/12)≈1.71 is display-only.)"
+        ]
+      }
+    },
+    {
+      "beatId": "cov1-recap",
+      "required": true,
+      "prompt": "The move that ran through this whole lesson.",
+      "interaction": {
+        "type": "recap"
+      },
+      "feedback": {
+        "correct": "Variance = spread²: Var(X) = E[X²] − E[X]². SD = √Var puts spread back in the variable's units. Next: two variables moving together — covariance.",
+        "hints": [
+          "Read each recap card.",
+          "Var(X) = E[X²] − E[X]² — mean-of-squares minus square-of-mean.",
+          "Tap to continue."
+        ]
+      }
+    }
+  ]
+}

@@ -37,6 +37,24 @@ import {
   noodleLoops,
 } from '../src/engine/expectation'
 import {
+  variance as covVariance,
+  covariance as covCovariance,
+  covarianceIndicators as covCovInd,
+  varianceOfSum as covVarSum,
+  covBilinear as covBilin,
+  rho as covRho,
+  rhoSquared as covRhoSq,
+  corrRange as covCorrRange,
+  psdDeterminant3 as covPsdDet,
+  equicorrelationMin as covEquicorrMin,
+  optimalHedgeRatio as covHedge,
+  orderStatCovUniform as covOrderStat,
+  formatRational as covFmt,
+  formatRangePair as covFmtRange,
+  type Pmf as CovPmf,
+  type JointCell as CovJointCell,
+} from '../src/engine/covariance'
+import {
   pureNashEquilibria as gtPureNash,
   iesdsSolution as gtIesds,
   saddlePoint as gtSaddle,
@@ -295,8 +313,78 @@ function recomputeGameTheory(q: Question): string | null {
   }
 }
 
+// Covariance & Correlation pack recompute (returns the answer STRING directly,
+// since some answers are range pairs "min,max"). The build script
+// (interviews/_build/build-covariance-pack.ts) encodes template params in exactly
+// these shapes so this independent reproduction matches. Free-form covariance
+// questions (multi-value glosses) return null — covered by the structural gates +
+// the src/engine/interviewPack.covariance.test.ts CI test.
+function covDie(m: number): CovPmf {
+  return Array.from({ length: m }, (_, i) => ({ x: R(i + 1), p: R(1, m) }))
+}
+function covBernoulli(p: Rational): CovPmf {
+  return [{ x: R(0), p: reduce(p.d - p.n, p.d) }, { x: R(1), p }]
+}
+function covJoint2x2(cells: string, den: number): CovJointCell[] {
+  const [a, b, c, d] = cells.split('-').map((x) => parseInt(x, 10))
+  return [
+    { x: R(0), y: R(0), p: R(a, den) },
+    { x: R(0), y: R(1), p: R(b, den) },
+    { x: R(1), y: R(0), p: R(c, den) },
+    { x: R(1), y: R(1), p: R(d, den) },
+  ]
+}
+function recomputeCovariance(q: Question): string | null {
+  const t = q.template?.id
+  const p = (q.template?.params ?? {}) as Record<string, unknown>
+  const num = (k: string): number => Number(p[k])
+  const str = (k: string): string => String(p[k])
+  switch (t) {
+    case 'tmpl-variance':
+      return covFmt(
+        p.kind === 'die' ? covVariance(covDie(num('m'))) : covVariance(covBernoulli(parseFrac(str('p')))),
+      )
+    case 'tmpl-cov-joint':
+      return covFmt(covCovariance(covJoint2x2(str('cells'), num('den'))))
+    case 'tmpl-cov-indicator':
+      return covFmt(covCovInd(parseFrac(str('pAB')), parseFrac(str('pA')), parseFrac(str('pB'))))
+    case 'tmpl-var-linear': {
+      const a = num('a'), b = num('b')
+      const vX = parseFrac(str('vX')), vY = parseFrac(str('vY')), cov = parseFrac(str('cov'))
+      const A = reduce(a * a * vX.n, vX.d)
+      const B = reduce(b * b * vY.n, vY.d)
+      const C = reduce(a * b * cov.n, cov.d)
+      return covFmt(covVarSum(A, B, C))
+    }
+    case 'tmpl-cov-bilinear':
+      return covFmt(covBilin(parseFrac(str('vX')), parseFrac(str('cov'))))
+    case 'tmpl-rho-perfsq': {
+      const cov = parseFrac(str('cov')), vX = parseFrac(str('vX')), vY = parseFrac(str('vY'))
+      if (str('grade') === 'rho') {
+        const r = covRho(cov, vX, vY)
+        if (r.kind !== 'rational') throw new Error(`tmpl-rho-perfsq: expected rational ρ for ${q.id}`)
+        return covFmt(r.rho)
+      }
+      return covFmt(covRhoSq(cov, vX, vY))
+    }
+    case 'tmpl-corr-range':
+      return covFmtRange(covCorrRange(parseFrac(str('rho1')), parseFrac(str('rho2'))))
+    case 'tmpl-psd-det':
+      return covFmt(covPsdDet(parseFrac(str('r12')), parseFrac(str('r13')), parseFrac(str('r23'))))
+    case 'tmpl-equicorr-min':
+      return covFmt(covEquicorrMin(num('n')))
+    case 'tmpl-hedge-ratio':
+      return covFmt(covHedge(parseFrac(str('cov')), parseFrac(str('varB'))))
+    case 'tmpl-order-stat':
+      return covFmt(str('ask') === 'cov' ? covOrderStat().cov : covOrderStat().rho)
+    default:
+      return null // free-form (by id) — anchored manually + CI test
+  }
+}
+
 function recomputeAnswer(q: Question): string | null {
   if (q.engineCheck.module === 'src/engine/gameTheory.ts') return recomputeGameTheory(q)
+  if (q.engineCheck.module === 'src/engine/covariance.ts') return recomputeCovariance(q)
   const r =
     q.engineCheck.module === 'src/engine/expectation.ts' ? recomputeEV(q) : recomputePHT(q)
   return r === null ? null : ratStr(r)
