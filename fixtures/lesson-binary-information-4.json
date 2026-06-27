@@ -9,6 +9,7 @@
   "beats": [
     {
       "beatId": "l4-recall",
+      "schemaId": "base-encoding",
       "required": true,
       "prompt": "Quick recall. From the counterfeit-coin teaser, match each setup to its count.",
       "interaction": {
@@ -74,6 +75,7 @@
     },
     {
       "beatId": "l4-win",
+      "schemaId": "base-encoding",
       "required": true,
       "prompt": "9 coins — one is heavier than the rest (you already know the direction). What is the fewest number of weighings needed to find the heavy coin?",
       "interaction": {
@@ -142,7 +144,10 @@
     },
     {
       "beatId": "l4-apply",
-      "required": true,
+      "schemaId": "base-encoding",
+      "heldOut": true,
+      "required": false,
+      "track": "B",
       "prompt": "Bachet's problem: you have a two-pan balance and can place weights on either pan. What is the smallest set of integer weights that can measure every whole-number mass from 1 to 40 grams? Enter the weights as a comma-separated list, or just the largest weight.",
       "interaction": {
         "type": "answerEntry",
@@ -188,6 +193,7 @@
     },
     {
       "beatId": "l4-prove",
+      "schemaId": "base-encoding",
       "required": true,
       "prompt": "Prove you have it. You have 12 coins and a balance scale. Exactly one coin is fake — it may be either heavier or lighter than a genuine coin, and you do not know which. What is the minimum number of weighings guaranteed to identify the fake coin and determine whether it is heavy or light?",
       "interaction": {

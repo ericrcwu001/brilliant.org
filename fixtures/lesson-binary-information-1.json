@@ -9,6 +9,7 @@
   "beats": [
     {
       "beatId": "l1-recall",
+      "schemaId": "binary-encoding",
       "required": true,
       "prompt": "Quick recall. From Combinatorics, match each number of coin flips to the count of distinct head/tail strings.",
       "interaction": {
@@ -75,6 +76,7 @@
     },
     {
       "beatId": "l1-win",
+      "schemaId": "binary-encoding",
       "required": true,
       "prompt": "The gold rod: 2 cuts make 3 pieces that cover all daily totals 1–7. The pieces are powers of 2. What is the largest piece (in grams)?",
       "interaction": {
@@ -143,6 +145,7 @@
     },
     {
       "beatId": "l1-apply",
+      "schemaId": "binary-encoding",
       "required": true,
       "prompt": "Write 100 in binary. Which powers of 2 sum to 100?",
       "interaction": {
@@ -167,6 +170,8 @@
     },
     {
       "beatId": "l1-transfer",
+      "schemaId": "binary-encoding",
+      "heldOut": true,
       "required": false,
       "track": "B",
       "prompt": "Held-out transfer. Write 43 in binary using the same method: subtract powers of 2 from largest to smallest.",
@@ -192,6 +197,7 @@
     },
     {
       "beatId": "l1-prove",
+      "schemaId": "binary-encoding",
       "required": true,
       "prompt": "Prove you've got it. Write 1000 in binary — the Green Book headline number.",
       "interaction": {

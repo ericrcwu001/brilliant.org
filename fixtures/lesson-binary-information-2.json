@@ -9,6 +9,7 @@
   "beats": [
     {
       "beatId": "l2-recall",
+      "schemaId": "information-bound",
       "required": true,
       "prompt": "Quick recall from combinatorics. Match each pigeonhole situation to its result.",
       "interaction": {
@@ -73,6 +74,7 @@
     },
     {
       "beatId": "l2-win",
+      "schemaId": "information-bound",
       "required": true,
       "prompt": "Warm-up. I am thinking of a number from 1 to 100. Using only yes/no questions and halving each time, what is the minimum number of questions that guarantees you find it?",
       "interaction": {
@@ -139,6 +141,7 @@
     },
     {
       "beatId": "l2-apply",
+      "schemaId": "information-bound",
       "required": true,
       "prompt": "Scale it up. I am thinking of a number from 1 to 1,000,000. Using yes/no questions and halving each time, what is the minimum number of questions that guarantees you find it?",
       "interaction": {
@@ -163,6 +166,8 @@
     },
     {
       "beatId": "l2-transfer",
+      "schemaId": "information-bound",
+      "heldOut": true,
       "required": false,
       "track": "B",
       "prompt": "Apply the same method to a fresh size. I am thinking of a number from 1 to 500. What is the minimum number of yes/no questions that guarantees you find it?",
@@ -188,6 +193,7 @@
     },
     {
       "beatId": "l2-prove",
+      "schemaId": "information-bound",
       "required": true,
       "prompt": "Prove you have it. I am thinking of a number from 1 to 1000. What is the minimum number of yes/no questions — using the halving strategy — that guarantees you identify my number?",
       "interaction": {

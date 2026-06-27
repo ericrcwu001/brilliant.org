@@ -9,6 +9,7 @@
   "beats": [
     {
       "beatId": "l3-recall",
+      "schemaId": "binary-encoding",
       "required": true,
       "prompt": "Quick recall from Lessons 1 and 2. Match each number of bits k to the count of distinct items k bits can identify.",
       "interaction": {
@@ -75,6 +76,7 @@
     },
     {
       "beatId": "l3-win",
+      "schemaId": "binary-encoding",
       "required": true,
       "prompt": "Guaranteed early win. Label bottles 00, 01, 10, 11 in binary. Mouse 1 drinks from bottles whose bit 1 is 1; mouse 2 drinks from bottles whose bit 2 is 1. How many bottles can 2 mice clear in one round?",
       "interaction": {
@@ -142,6 +144,7 @@
     },
     {
       "beatId": "l3-apply",
+      "schemaId": "binary-encoding",
       "required": true,
       "comparison": true,
       "prompt": "A weighing interlude (seeding Lesson 4). You have 9 balls, one heavier than the rest. Using a two-pan balance — which has three outcomes (left heavy, balanced, right heavy) — what is the fewest number of weighings needed to always identify the heavy ball?",
@@ -167,6 +170,8 @@
     },
     {
       "beatId": "l3-transfer",
+      "schemaId": "binary-encoding",
+      "heldOut": true,
       "required": false,
       "track": "B",
       "prompt": "Transfer. You have only 600 bottles to test, one poisoned, one round of 18 hours. What is the minimum number of mice needed?",
@@ -192,6 +197,7 @@
     },
     {
       "beatId": "l3-prove",
+      "schemaId": "binary-encoding",
       "required": true,
       "prompt": "Mastery. The original problem: 1000 bottles, exactly one poisoned, 10 lab mice, one 18-hour round. What is the minimum number of mice needed to identify the poisoned bottle?",
       "interaction": {

@@ -9,6 +9,7 @@
   "beats": [
     {
       "beatId": "l5-recall",
+      "schemaId": "bit-invariants",
       "required": true,
       "prompt": "Quick recall. XOR is the secret weapon here — you met it in Game Theory as the nim-sum. Match each XOR fact to its value.",
       "interaction": {
@@ -75,6 +76,7 @@
     },
     {
       "beatId": "l5-win",
+      "schemaId": "bit-invariants",
       "required": true,
       "prompt": "Guaranteed early win. Is 16 a power of 2? Use x & (x−1) to decide — type true or false.",
       "interaction": {
@@ -142,6 +144,7 @@
     },
     {
       "beatId": "l5-apply",
+      "schemaId": "bit-invariants",
       "required": true,
       "prompt": "Apply it. How many set bits (1-bits) does 11 have? Use the repeated x&(x−1) trick to count.",
       "interaction": {
@@ -166,6 +169,8 @@
     },
     {
       "beatId": "l5-transfer",
+      "schemaId": "bit-invariants",
+      "heldOut": true,
       "required": false,
       "track": "B",
       "prompt": "Held-out transfer. Every number appears twice in [7, 3, 5, 3, 7] except one. XOR everything together to find the lone number.",
@@ -191,6 +196,7 @@
     },
     {
       "beatId": "l5-prove",
+      "schemaId": "bit-invariants",
       "required": true,
       "prompt": "Prove you've got it. Every number in [4, 1, 2, 1, 2] appears twice except one. Find the lone number by XOR-ing everything together.",
       "interaction": {

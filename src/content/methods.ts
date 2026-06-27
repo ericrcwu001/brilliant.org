@@ -29,6 +29,11 @@ export const METHODS = {
   'backward-induction':    { name: 'Backward induction',     domains: ['game-theory', 'optimal-stopping'] },
   'mixed-strategy':        { name: 'Mixed strategy / indifference', domains: ['game-theory'] },
   'threshold-rule':        { name: 'Threshold / secretary',  domains: ['optimal-stopping'] },
+  // ── binary & information (concept-binary-information) ─────────────────────
+  'binary-encoding':       { name: 'Binary / powers-of-two encoding', domains: ['binary-information'] },
+  'information-bound':     { name: 'Information bound (⌈log₂N⌉)', domains: ['binary-information'] },
+  'base-encoding':         { name: 'Base-b / balanced-ternary encoding', domains: ['binary-information'] },
+  'bit-invariants':        { name: 'Bit manipulation / XOR invariants', domains: ['binary-information'] },
 } as const
 
 export type MethodId = keyof typeof METHODS
@@ -65,4 +70,9 @@ export const CONFUSABLE: Record<MethodId, MethodId[]> = {
   'dominance-nash':        ['mixed-strategy', 'backward-induction'],
   'mixed-strategy':        ['dominance-nash'],
   'threshold-rule':        ['backward-induction'],
+  // ── binary & information ─────────────────────────────────────────────────
+  'binary-encoding':       ['base-encoding', 'information-bound', 'bit-invariants'],
+  'information-bound':     ['binary-encoding', 'base-encoding'],
+  'base-encoding':         ['binary-encoding', 'information-bound'],
+  'bit-invariants':        ['binary-encoding'],
 }

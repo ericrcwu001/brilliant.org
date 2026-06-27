@@ -9,6 +9,7 @@
   "beats": [
     {
       "beatId": "l6-recall",
+      "schemaId": "bit-invariants",
       "required": true,
       "prompt": "Mixed recall. Match each scenario to the encoding or tool that solves it.",
       "interaction": {
@@ -79,6 +80,7 @@
     },
     {
       "beatId": "l6-win",
+      "schemaId": "bit-invariants",
       "required": true,
       "prompt": "Guaranteed early win. The array [0, 1, 3] holds numbers from 0 to 3 with one missing. Use the XOR method to find the missing number.",
       "interaction": {
@@ -124,6 +126,7 @@
     },
     {
       "beatId": "l6-model",
+      "schemaId": "bit-invariants",
       "required": true,
       "comparison": true,
       "interviewNote": "Strong candidates name the *encoding* first — 'a balance is base-3, so think ⌈log₃⌉' or 'pairs cancel under XOR.' The information lower bound (⌈log_b N⌉) is the yardstick interviewers use to judge whether your scheme is optimal. For N=27: base-2 needs ⌈log₂27⌉=5 tests; base-3 needs ⌈log₃27⌉=3 weighings. Base-3 wins because each weighing extracts more information (log₂3 ≈ 1.585 bits vs 1 bit per yes/no).",
@@ -146,6 +149,7 @@
     },
     {
       "beatId": "l6-spaced",
+      "schemaId": "bit-invariants",
       "required": true,
       "prompt": "Spaced review. The number 2ⁿ keeps reappearing across the concept. Match each context to its 2ⁿ face.",
       "interaction": {
@@ -167,6 +171,8 @@
     },
     {
       "beatId": "l6-transfer",
+      "schemaId": "bit-invariants",
+      "heldOut": true,
       "required": false,
       "track": "B",
       "prompt": "Held-out transfer. The array [0, 1, 3, 4] holds numbers from 0 to 4 with one missing. Use XOR to find it.",
@@ -192,6 +198,7 @@
     },
     {
       "beatId": "l6-prove",
+      "schemaId": "bit-invariants",
       "required": true,
       "prompt": "Mastery challenge. The array [9, 6, 4, 2, 3, 5, 7, 0, 1] holds nine of the numbers 0 to 9 with exactly one missing. Use the XOR index-versus-value method to find the missing number.",
       "interaction": {
