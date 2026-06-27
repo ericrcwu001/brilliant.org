@@ -44,6 +44,8 @@ import { StoppingBoardBeat } from './StoppingBoardBeat'
 import { PayoffMatrixBeat } from './PayoffMatrixBeat'
 import { GameTreeBeat } from './GameTreeBeat'
 import { NimBoardBeat } from './NimBoardBeat'
+import { BitBoardBeat } from './BitBoardBeat'
+import { WeighingBeat } from './WeighingBeat'
 
 function ContinueStub({ beat, isLast, onAdvance }: BeatProps) {
   return (
@@ -150,6 +152,11 @@ export function BeatView(props: BeatProps) {
       return <GameTreeBeat {...props} />
     case 'nimBoard':
       return <NimBoardBeat {...props} />
+    // Binary & Information concept (Wave-0 contract — shared interactive widgets).
+    case 'bitBoard':
+      return <BitBoardBeat {...props} />
+    case 'weighing':
+      return <WeighingBeat {...props} />
     default:
       return <ContinueStub {...props} />
   }

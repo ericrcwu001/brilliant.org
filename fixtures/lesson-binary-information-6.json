@@ -1,0 +1,233 @@
+{
+  "lessonId": "lesson-binary-information-6",
+  "courseId": "course-binary-information",
+  "title": "Encoding the Answer",
+  "patternOptions": ["H"],
+  "milestoneId": "binary-information-synthesis",
+  "unlocks": null,
+  "schemaVersion": 1,
+  "beats": [
+    {
+      "beatId": "l6-recall",
+      "required": true,
+      "prompt": "Mixed recall. Match each scenario to the encoding or tool that solves it.",
+      "interaction": {
+        "type": "retrievalGrid",
+        "pairs": [
+          { "left": "Find one item among 1000 with yes/no questions", "right": "⌈log₂1000⌉ = 10 questions" },
+          { "left": "Find a fake coin among 12 on a balance scale", "right": "Base-3: 3 weighings" },
+          { "left": "Find the lone number in a list where every other appears twice", "right": "XOR-all" },
+          { "left": "Count all binary strings of length n", "right": "2ⁿ strings" }
+        ]
+      },
+      "feedback": {
+        "correct": "Same family — pick the base from the test's alphabet: binary (yes/no → 2 outcomes), base-3 (balance → 3 outcomes), XOR (pairs cancel → the survivor).",
+        "hints": [
+          "Yes/no → base-2; balance → base-3; pairs cancel → XOR.",
+          "Match each scenario to its unit of information: 1 bit, 1 trit, or 1 parity check.",
+          "Pairs: 1000 yes/no → 10; 12 coins scale → 3 weighings; lone loner → XOR-all; n-bit strings → 2ⁿ."
+        ]
+      }
+    },
+    {
+      "beatId": "l6-bet",
+      "required": true,
+      "prompt": "The array [3, 0, 1] holds the numbers 0 to n with exactly one missing (n = 3, so the full set is {0,1,2,3}). How would you find the missing number most efficiently?",
+      "interaction": {
+        "type": "prediction",
+        "options": [
+          "Sum then subtract (expected − actual)",
+          "Scan for the gap",
+          "XOR index⊕value — the answer is 2"
+        ]
+      },
+      "feedback": {
+        "byOption": {
+          "Sum then subtract (expected − actual)": {
+            "note": "Works, but XOR avoids integer overflow and is the bit-level twin of the loner trick from earlier — one pass, no subtraction needed."
+          },
+          "Scan for the gap": {
+            "note": "Worth testing — but XOR-all finds it in one pass with no comparison, and the answer is 2."
+          },
+          "XOR index⊕value — the answer is 2": {
+            "note": "Right — present numbers cancel in pairs; the lone survivor 2 is the gap.",
+            "correct": true
+          }
+        }
+      }
+    },
+    {
+      "beatId": "l6-primer",
+      "required": false,
+      "track": "A",
+      "prompt": "Match the encoding to the test's alphabet before we work through it.",
+      "interaction": {
+        "type": "primer",
+        "variant": "custom",
+        "title": "Encoding = alphabet + base",
+        "body": "Every problem here asks: how much information does one test give? A yes/no test has 2 outcomes → base-2 (⌈log₂N⌉ bits). A balance gives 3 outcomes → base-3 (⌈log₃N⌉ trits). A list where every value appears twice except one → XOR parity (pairs cancel, the lone value survives). Choose the base from the test's alphabet; the log gives the number of rounds.",
+        "collapsible": true
+      },
+      "feedback": {
+        "correct": "Keep it: yes/no → base-2, balance → base-3, pair-cancellation → XOR. The bit is the unit under all three.",
+        "hints": [
+          "Count the outcomes of a single test: 2 → binary, 3 → ternary, pairing → XOR.",
+          "The log base equals the number of test outcomes.",
+          "Read the card, then tap Continue."
+        ]
+      }
+    },
+    {
+      "beatId": "l6-win",
+      "required": true,
+      "prompt": "Guaranteed early win. The array [0, 1, 3] holds numbers from 0 to 3 with one missing. Use the XOR method to find the missing number.",
+      "interaction": {
+        "type": "answerEntry",
+        "fields": [
+          {
+            "id": "missing",
+            "label": "Missing number in [0, 1, 3] (from 0 to 3)",
+            "accept": ["2"],
+            "placeholder": "?"
+          }
+        ]
+      },
+      "feedback": {
+        "correct": "Yes — XOR {0,1,2,3} with {0,1,3}: equal terms cancel, leaving 2.",
+        "hints": [
+          "XOR all indices 0..3 together, then XOR in every value in the array.",
+          "Equal terms cancel: 0⊕0=0, 1⊕1=0, 3⊕3=0; the missing 2 has no partner.",
+          "The answer is 2."
+        ]
+      }
+    },
+    {
+      "beatId": "l6-explore",
+      "required": true,
+      "prompt": "Watch cancellation happen bit-by-bit. The running XOR folds in each index (0, 1, 2, 3) then each value (0, 1, 3) — equal bits cancel column by column. The survivor is the gap.",
+      "interaction": {
+        "type": "bitBoard",
+        "display": "register",
+        "op": "xor",
+        "operands": { "a": 0, "b": 2 },
+        "interactive": true,
+        "headline": "10"
+      },
+      "feedback": {
+        "correct": "The running XOR of 0⊕1⊕2⊕3⊕0⊕1⊕3 = 2 (binary: 10). Every present number paired with its index and cancelled; 2 survived because it had no matching value.",
+        "hints": [
+          "XOR is per-bit parity: a column with an even number of 1s collapses to 0.",
+          "Each column toggles when a 1 lands there — fold them all in and read the remainder.",
+          "The survivor bits spell out the missing value: binary 10 = decimal 2."
+        ]
+      }
+    },
+    {
+      "beatId": "l6-model",
+      "required": true,
+      "comparison": true,
+      "interviewNote": "Strong candidates name the *encoding* first — 'a balance is base-3, so think ⌈log₃⌉' or 'pairs cancel under XOR.' The information lower bound (⌈log_b N⌉) is the yardstick interviewers use to judge whether your scheme is optimal. For N=27: base-2 needs ⌈log₂27⌉=5 tests; base-3 needs ⌈log₃27⌉=3 weighings. Base-3 wins because each weighing extracts more information (log₂3 ≈ 1.585 bits vs 1 bit per yes/no).",
+      "prompt": "Which encoding distinguishes 27 items in fewer tests — a series of yes/no questions or a balance scale? Match the scenario to the better tool.",
+      "interaction": {
+        "type": "retrievalGrid",
+        "pairs": [
+          { "left": "Distinguish 27 items: yes/no questions", "right": "⌈log₂27⌉ = 5 questions" },
+          { "left": "Distinguish 27 items: balance scale", "right": "⌈log₃27⌉ = 3 weighings" }
+        ]
+      },
+      "feedback": {
+        "correct": "A balance — base-3 needs only ⌈log₃27⌉ = 3 weighings versus ⌈log₂27⌉ = 5 yes/no tests. The alphabet sets the rate.",
+        "hints": [
+          "Compare the alphabets: a balance gives 3 outcomes per test, not 2.",
+          "3ⁿ grows faster than 2ⁿ, so base-3 needs fewer tests to cover 27 items.",
+          "Pairs: yes/no → 5 questions; balance → 3 weighings."
+        ]
+      }
+    },
+    {
+      "beatId": "l6-spaced",
+      "required": true,
+      "prompt": "Spaced review. The number 2ⁿ keeps reappearing across the concept. Match each context to its 2ⁿ face.",
+      "interaction": {
+        "type": "retrievalGrid",
+        "pairs": [
+          { "left": "Binary strings of length n", "right": "2ⁿ distinct strings" },
+          { "left": "Sum of row n in Pascal's triangle", "right": "Row sum = 2ⁿ" },
+          { "left": "Pattern-overlap waiting times (Σ2^L)", "right": "Powers of 2 in the overlap sum" }
+        ]
+      },
+      "feedback": {
+        "correct": "2ⁿ is the doubling signature across the corpus — binary strings (combinatorics), Pascal rows (combinatorics), and overlap waits (patterns). Doubling is what one bit buys.",
+        "hints": [
+          "Where else has doubling appeared in this course?",
+          "Strings (2ⁿ), Pascal rows (row sum = 2ⁿ), overlap waits (Σ2^L).",
+          "All three are the same phenomenon: each binary choice doubles the count."
+        ]
+      }
+    },
+    {
+      "beatId": "l6-transfer",
+      "required": false,
+      "track": "B",
+      "prompt": "Held-out transfer. The array [0, 1, 3, 4] holds numbers from 0 to 4 with one missing. Use XOR to find it.",
+      "interaction": {
+        "type": "answerEntry",
+        "fields": [
+          {
+            "id": "missing",
+            "label": "Missing number in [0, 1, 3, 4] (from 0 to 4)",
+            "accept": ["2"],
+            "placeholder": "?"
+          }
+        ]
+      },
+      "feedback": {
+        "correct": "XOR {0,1,2,3,4} with {0,1,3,4}: the pairs cancel and 2 survives.",
+        "hints": [
+          "Same method, longer array — XOR indices 0..4, then XOR in every value.",
+          "XOR in order: 0⊕1⊕2⊕3⊕4 = 4; 4⊕0⊕1⊕3⊕4 = 2.",
+          "The answer is 2."
+        ]
+      }
+    },
+    {
+      "beatId": "l6-prove",
+      "required": true,
+      "prompt": "Mastery challenge. The array [9, 6, 4, 2, 3, 5, 7, 0, 1] holds nine of the numbers 0 to 9 with exactly one missing. Use the XOR index-versus-value method to find the missing number.",
+      "interaction": {
+        "type": "masteryChallenge",
+        "scenario": "Array: [9, 6, 4, 2, 3, 5, 7, 0, 1]. The full set is {0, 1, 2, …, 9}. XOR every index 0..9 with every value — present numbers cancel, and the survivor is the gap.",
+        "fields": [
+          {
+            "id": "missing",
+            "label": "Missing number",
+            "accept": ["8"],
+            "placeholder": "?"
+          }
+        ]
+      },
+      "feedback": {
+        "correct": "XOR all indices 0..9 with all nine values gives 8. Cancellation handles any array length — doubles vanish, the lone survivor is the gap.",
+        "hints": [
+          "XOR indices 0⊕1⊕…⊕9, then XOR in each value from the array; equal terms cancel.",
+          "Fold the indices (result = 1) then fold the values: 1⊕9⊕6⊕4⊕2⊕3⊕5⊕7⊕0⊕1 = 8.",
+          "The missing number is 8."
+        ]
+      }
+    },
+    {
+      "beatId": "l6-recap",
+      "required": true,
+      "prompt": "Close the loop.",
+      "interaction": { "type": "recap" },
+      "feedback": {
+        "correct": "Every problem here was one question: which encoding extracts a full unit of information per test? Binary (yes/no, ⌈log₂N⌉), base-3 (balance, ⌈log₃N⌉), or XOR parity (pairs cancel, the survivor is the answer). The unit underneath them all is the bit, and 2ⁿ is its signature — in binary strings, Pascal rows, and pattern-overlap waits.",
+        "hints": [
+          "Pick the base from the test's alphabet: 2 outcomes → binary, 3 outcomes → base-3, pairs → XOR.",
+          "The information lower bound ⌈log_b N⌉ tells you the minimum number of tests.",
+          "2ⁿ is the doubling signature across every context where binary choice appears."
+        ]
+      }
+    }
+  ]
+}

@@ -1,0 +1,92 @@
+{
+  "courseId": "course-binary-information",
+  "title": "Binary & Information",
+  "description": "Every integer is a unique sum of powers of two, and every yes/no test buys exactly one bit of information. Build numbers from bits, find the poisoned bottle with ten mice, weigh twelve coins in three tries, and master the bit tricks behind the ⌈log₂N⌉ floor on what any search can cost.",
+  "persona": "For the curious and for quant/SWE interviewees. No prerequisites beyond arithmetic; we build binary representation, information bounds, and bit tricks by toggling bits and reading the answer off the pattern.",
+  "completionMilestoneId": "binary-information-complete",
+  "schemaVersion": 1,
+  "domain": "Algorithms & Information",
+  "domainOrder": 2,
+  "order": 0,
+  "status": "live",
+  "tagline": "Every number is bits — and bits are information.",
+  "accent": "ch5",
+  "vizKey": "sum",
+  "chapters": [
+    {
+      "id": "ch-binary-information-1",
+      "label": "Numbers as Bits",
+      "accent": "ch1",
+      "lessonIds": ["lesson-binary-information-1", "lesson-binary-information-2"]
+    },
+    {
+      "id": "ch-binary-information-2",
+      "label": "Tests as Information",
+      "accent": "ch2",
+      "lessonIds": ["lesson-binary-information-3", "lesson-binary-information-4"]
+    },
+    {
+      "id": "ch-binary-information-3",
+      "label": "Bit Tricks & Synthesis",
+      "accent": "ch3",
+      "lessonIds": ["lesson-binary-information-5", "lesson-binary-information-6"]
+    }
+  ],
+  "lessons": [
+    {
+      "lessonId": "lesson-binary-information-1",
+      "title": "Every Number Is Bits",
+      "summary": "Every integer is a unique sum of distinct powers of two.",
+      "milestoneId": "binary-information-representation",
+      "built": true,
+      "glyphKey": "2ⁿ",
+      "vizKey": "sum"
+    },
+    {
+      "lessonId": "lesson-binary-information-2",
+      "title": "Bits as Information",
+      "summary": "n yes/no answers name 2ⁿ outcomes, so distinguishing N needs ⌈log₂N⌉ bits.",
+      "milestoneId": "binary-information-bound",
+      "built": true,
+      "glyphKey": "lg",
+      "vizKey": "sum"
+    },
+    {
+      "lessonId": "lesson-binary-information-3",
+      "title": "Group Testing (Poisoned Wine)",
+      "summary": "k parallel testers with binary labels cover 2ᵏ items in one round.",
+      "milestoneId": "binary-information-grouptest",
+      "built": true,
+      "glyphKey": "🐭",
+      "vizKey": "sum"
+    },
+    {
+      "lessonId": "lesson-binary-information-4",
+      "title": "The Scale Speaks Base-3",
+      "summary": "A balance answers three ways, so each weighing is a base-3 digit.",
+      "milestoneId": "binary-information-base3",
+      "built": true,
+      "glyphKey": "⚖",
+      "vizKey": "dice"
+    },
+    {
+      "lessonId": "lesson-binary-information-5",
+      "title": "Bit Tricks",
+      "summary": "Bitwise ops act per-bit in parallel: x&(x-1), shifts, and XOR parity.",
+      "milestoneId": "binary-information-bittricks",
+      "built": true,
+      "glyphKey": "&",
+      "vizKey": "coin"
+    },
+    {
+      "lessonId": "lesson-binary-information-6",
+      "title": "Encoding the Answer",
+      "summary": "Mixed review: pick the right encoding and read information off it.",
+      "milestoneId": "binary-information-synthesis",
+      "built": true,
+      "glyphKey": "Σ",
+      "vizKey": "sum"
+    }
+  ],
+  "roadmap": []
+}

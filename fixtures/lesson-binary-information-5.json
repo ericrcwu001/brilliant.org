@@ -1,0 +1,232 @@
+{
+  "lessonId": "lesson-binary-information-5",
+  "courseId": "course-binary-information",
+  "title": "Bit Tricks",
+  "patternOptions": ["H"],
+  "milestoneId": "binary-information-bittricks",
+  "unlocks": "lesson-binary-information-6",
+  "schemaVersion": 1,
+  "beats": [
+    {
+      "beatId": "l5-recall",
+      "required": true,
+      "prompt": "Quick recall. XOR is the secret weapon here — you met it in Game Theory as the nim-sum. Match each XOR fact to its value.",
+      "interaction": {
+        "type": "retrievalGrid",
+        "pairs": [
+          { "left": "nim-sum of {3, 4, 5}", "right": "2" },
+          { "left": "a ⊕ a for any a", "right": "0" }
+        ]
+      },
+      "feedback": {
+        "correct": "Nim-sum is just XOR — per-bit, no-carry addition. 3⊕4⊕5 = 011⊕100⊕101 = 010 = 2. And x⊕x = 0 because every bit cancels itself. This cancellation is exactly how we'll find the lone number.",
+        "hints": [
+          "XOR adds each bit column independently with no carry — 1+1 = 0, not 10.",
+          "3=011, 4=100, 5=101; XOR column by column: 0⊕1⊕1=0, 1⊕0⊕0=1, 1⊕0⊕1=0 → 010 = 2. And any x⊕x=0.",
+          "Match: nim-sum{3,4,5} → 2; a⊕a → 0."
+        ]
+      }
+    },
+    {
+      "beatId": "l5-bet",
+      "required": true,
+      "prompt": "Bet: in the list [4, 1, 2, 1, 2] every number appears twice except one. What is the fastest way to find the lone number?",
+      "interaction": {
+        "type": "prediction",
+        "options": ["Sort first", "Count each", "XOR them (4)"]
+      },
+      "feedback": {
+        "byOption": {
+          "Sort first": {
+            "note": "Worth testing — XOR-all is one pass with no sorting. Pairs cancel under XOR (x⊕x=0), so the survivor is the answer directly.",
+            "correct": false
+          },
+          "Count each": {
+            "note": "Worth testing — you don't need a tally at all. Equal values XOR to 0; unequal values survive. One loop, zero extra memory.",
+            "correct": false
+          },
+          "XOR them (4)": {
+            "note": "Right — pairs cancel under XOR; 4 survives. 4⊕1⊕2⊕1⊕2 = 4. One pass, no data structure needed.",
+            "correct": true
+          }
+        }
+      }
+    },
+    {
+      "beatId": "l5-primer",
+      "required": false,
+      "track": "A",
+      "prompt": "Before the tricks: one idea that makes all of them click.",
+      "interaction": {
+        "type": "primer",
+        "variant": "custom",
+        "title": "Bitwise = every bit, independently, at once",
+        "body": "AND, OR, XOR, and shift don't treat the whole number as one blob. They act on each bit column in parallel — bit 0 is independent of bit 1, bit 1 of bit 2, and so on. That's why x&(x−1) can surgically clear just the lowest 1-bit, and why XOR can cancel pairs simultaneously.",
+        "collapsible": true
+      },
+      "feedback": {
+        "correct": "Keep this in mind: bit ops work column by column, all columns at once. Each trick exploits one column's independence from the rest.",
+        "hints": [
+          "Think of each bit position as its own mini-circuit: AND/OR/XOR/shift run on all of them simultaneously.",
+          "That column-independence is why x&(x−1) clears exactly one bit, and why x⊕x=0 cancels every bit.",
+          "Read it, then tap Continue."
+        ]
+      }
+    },
+    {
+      "beatId": "l5-win",
+      "required": true,
+      "prompt": "Guaranteed early win. Is 16 a power of 2? Use x & (x−1) to decide — type true or false.",
+      "interaction": {
+        "type": "answerEntry",
+        "fields": [
+          {
+            "id": "pow2",
+            "label": "Is 16 a power of 2? (true/false)",
+            "accept": ["true", "yes"],
+            "placeholder": "true or false"
+          }
+        ]
+      },
+      "feedback": {
+        "correct": "True — 16 & 15 = 10000 & 01111 = 0, so 16 is a power of 2. x&(x−1) clears the lowest set bit; a power of 2 has exactly one set bit, so the result is 0.",
+        "hints": [
+          "Compute x & (x−1): if the result is 0 (and x > 0), x is a power of 2.",
+          "16 in binary is 10000; 15 is 01111. They share no 1-bit, so AND = 0 ⇒ power of 2.",
+          "The answer is true."
+        ]
+      }
+    },
+    {
+      "beatId": "l5-explore",
+      "required": true,
+      "prompt": "Watch x & (x−1) in action. Start with 12 = 1100₂ and tap Apply repeatedly — the lowest 1-bit clears each time. How many steps to reach 0?",
+      "interaction": {
+        "type": "bitBoard",
+        "display": "register",
+        "value": 12,
+        "op": "and-x-minus-1",
+        "interactive": true,
+        "headline": "1000"
+      },
+      "feedback": {
+        "correct": "12 → 8 (step 1), 8 → 0 (step 2): 2 set bits in 12 = 1100₂. Counting steps to 0 is how x&(x−1) computes popcount — one step per set bit.",
+        "hints": [
+          "x−1 flips the lowest 1-bit and all the zeros below it, then AND keeps only the higher 1-bits.",
+          "12=1100: 12&11=1000=8 (lowest 1 cleared); 8&7=0 (only set bit cleared). Two steps.",
+          "Each step to 0 counts one set bit — the step count is the popcount."
+        ]
+      }
+    },
+    {
+      "beatId": "l5-model",
+      "required": true,
+      "comparison": true,
+      "interviewNote": "These exact one-liners — power-of-2 test, multiply-by-shift, XOR-to-find-the-loner — are direct Green Book §7.2 interview questions. They're fast because they operate on all bits at once.",
+      "prompt": "Shifts multiply. Here x=6 is left-shifted by k=3 positions: each bit moves left, so the value doubles per step, giving 6 × 2³ = 48. The side panel shows (x<<3) − x = 8x − x = 7x, multiplying by 7 with no × operator.",
+      "interaction": {
+        "type": "bitBoard",
+        "display": "register",
+        "op": "shift",
+        "operands": { "a": 6, "k": 3 },
+        "headline": "110000"
+      },
+      "feedback": {
+        "correct": "x<<3 = x·2³ = 8x. Subtract the original: 8x−x = 7x. For x=6: 48−6=42. Shifting is free multiplication — and (x<<3)−x is the Green Book's trick for multiplying by 7.",
+        "hints": [
+          "Left-shifting by k positions appends k zero bits on the right, which multiplies the value by 2ᵏ.",
+          "So x<<3 = 8x. Then 8x−x = 7x — multiply by 7 without a * operator.",
+          "For x=6: 6<<3 = 48 = 110000₂; 48−6 = 42 = 7·6."
+        ]
+      }
+    },
+    {
+      "beatId": "l5-apply",
+      "required": true,
+      "prompt": "Apply it. How many set bits (1-bits) does 11 have? Use the repeated x&(x−1) trick to count.",
+      "interaction": {
+        "type": "answerEntry",
+        "fields": [
+          {
+            "id": "popcount",
+            "label": "Number of set bits in 11",
+            "accept": ["3"],
+            "placeholder": "count"
+          }
+        ]
+      },
+      "feedback": {
+        "correct": "11 = 1011₂ — three 1-bits. Via x&(x−1): 11→10→8→0, three steps. Each step clears one set bit.",
+        "hints": [
+          "Repeatedly clear the lowest 1-bit with n & (n−1); count the steps until you reach 0.",
+          "11=1011: 11&10=1010=10; 10&9=1000=8; 8&7=0. Three steps.",
+          "The answer is 3."
+        ]
+      }
+    },
+    {
+      "beatId": "l5-transfer",
+      "required": false,
+      "track": "B",
+      "prompt": "Held-out transfer. Every number appears twice in [7, 3, 5, 3, 7] except one. XOR everything together to find the lone number.",
+      "interaction": {
+        "type": "answerEntry",
+        "fields": [
+          {
+            "id": "loner",
+            "label": "The lone number",
+            "accept": ["5"],
+            "placeholder": "number"
+          }
+        ]
+      },
+      "feedback": {
+        "correct": "XOR cancels the pairs; 5 survives. 7⊕3⊕5⊕3⊕7: the 7s cancel, the 3s cancel, leaving 5.",
+        "hints": [
+          "XOR everything together: equal values cancel (x⊕x=0), the unique value remains.",
+          "7⊕3⊕5⊕3⊕7 = (7⊕7)⊕(3⊕3)⊕5 = 0⊕0⊕5 = 5.",
+          "The answer is 5."
+        ]
+      }
+    },
+    {
+      "beatId": "l5-prove",
+      "required": true,
+      "prompt": "Prove you've got it. Every number in [4, 1, 2, 1, 2] appears twice except one. Find the lone number by XOR-ing everything together.",
+      "interaction": {
+        "type": "masteryChallenge",
+        "scenario": "Given the array [4, 1, 2, 1, 2]: every element appears exactly twice except one. XOR all elements together — equal values cancel, and the survivor is your answer.",
+        "fields": [
+          {
+            "id": "loner",
+            "label": "The lone number",
+            "accept": ["4"],
+            "placeholder": "number"
+          }
+        ]
+      },
+      "feedback": {
+        "correct": "XOR-all: 4⊕1⊕2⊕1⊕2 = (1⊕1)⊕(2⊕2)⊕4 = 0⊕0⊕4 = 4. The pairs cancel, the loner survives — one pass, no extra memory.",
+        "hints": [
+          "XOR every element: equal values cancel to 0 (x⊕x=0), the unique element remains.",
+          "4⊕1⊕2⊕1⊕2: the two 1s cancel, the two 2s cancel, leaving 4.",
+          "The answer is 4."
+        ]
+      }
+    },
+    {
+      "beatId": "l5-recap",
+      "required": true,
+      "prompt": "Close the loop.",
+      "interaction": { "type": "recap" },
+      "feedback": {
+        "correct": "Bit tricks exploit the per-bit independence of bitwise ops. x&(x−1) clears the lowest set bit — so it's a power-of-2 test and a popcount engine. x<<k multiplies by 2ᵏ, giving tricks like (x<<3)−x = 7x. And XOR is carry-free parity: pairs cancel, the unique element survives. Next: Encoding the Answer — mixed review choosing the right encoding.",
+        "hints": [
+          "x&(x−1): clears the lowest set bit ⇒ power-of-2 test; count steps to 0 ⇒ popcount.",
+          "x<<k: multiplies by 2ᵏ. Combine shifts to multiply without *.",
+          "XOR: carry-free parity. Every pair cancels; the lone value survives."
+        ]
+      }
+    }
+  ]
+}

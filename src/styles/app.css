@@ -34,3 +34,4 @@
 @import './surfaces/game-theory-payoff.css' layer(components);
 @import './surfaces/game-theory-tree.css' layer(components);
 @import './surfaces/game-theory-nim.css' layer(components);
+@import './surfaces/binary-information.css' layer(components);

@@ -1,0 +1,233 @@
+{
+  "lessonId": "lesson-binary-information-1",
+  "courseId": "course-binary-information",
+  "title": "Every Number Is Bits",
+  "patternOptions": ["H"],
+  "milestoneId": "binary-information-representation",
+  "unlocks": "lesson-binary-information-2",
+  "schemaVersion": 1,
+  "beats": [
+    {
+      "beatId": "l1-recall",
+      "required": true,
+      "prompt": "Quick recall. From Combinatorics, match each number of coin flips to the count of distinct head/tail strings.",
+      "interaction": {
+        "type": "retrievalGrid",
+        "pairs": [
+          { "left": "1 flip", "right": "2" },
+          { "left": "2 flips", "right": "4" },
+          { "left": "3 flips", "right": "8" },
+          { "left": "10 flips", "right": "1024" }
+        ]
+      },
+      "feedback": {
+        "correct": "n flips → 2ⁿ strings. And those 2ⁿ strings are exactly the 2ⁿ numbers a length-n bit string can name: 0 to 2ⁿ−1.",
+        "hints": [
+          "Each flip doubles the number of possible strings.",
+          "1→2, 2→4, 3→8, and 10→2¹⁰=1024.",
+          "Match: 1 flip→2, 2 flips→4, 3 flips→8, 10 flips→1024."
+        ]
+      }
+    },
+    {
+      "beatId": "l1-bet",
+      "required": true,
+      "prompt": "You owe a worker 1 gram of gold a day for 7 days. You may cut your 7-gram gold bar as few times as possible. You must cover exactly 1, 2, 3, … 7 grams each morning — but you can give change and take pieces back. What is the fewest number of cuts needed?",
+      "interaction": {
+        "type": "prediction",
+        "options": ["6 cuts", "3 cuts", "2 cuts"]
+      },
+      "feedback": {
+        "byOption": {
+          "6 cuts": {
+            "note": "Worth testing — you don't need a fresh piece every day. You can take change back, so you can reuse pieces. The answer is much fewer than 6."
+          },
+          "3 cuts": {
+            "note": "Close in spirit, but 2 cuts already give you 3 pieces {1, 2, 4} — and that's enough to make every total from 1 to 7 by combining and swapping."
+          },
+          "2 cuts": {
+            "note": "Exactly right. Two cuts produce pieces of 1, 2, and 4 grams — the first three powers of two. Every total from 1 to 7 is a unique subset of those three pieces.",
+            "correct": true
+          }
+        }
+      }
+    },
+    {
+      "beatId": "l1-primer",
+      "required": false,
+      "track": "A",
+      "prompt": "One idea before we go further.",
+      "interaction": {
+        "type": "primer",
+        "variant": "custom",
+        "title": "A bit = one yes/no",
+        "body": "Each bit position asks: 'Is this power of 2 in the sum?' A 1 means yes, a 0 means no. That is all binary is — a column of yes/no answers, one per power of 2.",
+        "collapsible": true
+      },
+      "feedback": {
+        "correct": "Keep this in mind: each bit owns exactly one power of 2, and it either is or isn't in the sum.",
+        "hints": [
+          "A bit is a binary digit: 0 or 1.",
+          "Each position represents a power of 2: …8, 4, 2, 1 (right to left).",
+          "Read the card, then tap Continue."
+        ]
+      }
+    },
+    {
+      "beatId": "l1-win",
+      "required": true,
+      "prompt": "The gold rod: 2 cuts make 3 pieces that cover all daily totals 1–7. The pieces are powers of 2. What is the largest piece (in grams)?",
+      "interaction": {
+        "type": "answerEntry",
+        "fields": [
+          {
+            "id": "largest",
+            "label": "Largest piece (grams)",
+            "accept": ["4"],
+            "placeholder": "grams",
+            "suffix": "g"
+          }
+        ]
+      },
+      "feedback": {
+        "correct": "Exactly — the pieces are 1, 2, and 4 (the powers of two); the largest is 4.",
+        "hints": [
+          "The three pieces are the first three powers of 2. Which powers of 2 sum to 7?",
+          "1 + 2 + 4 = 7. The three pieces are 1, 2, 4. The largest is 4.",
+          "The answer is 4."
+        ]
+      }
+    },
+    {
+      "beatId": "l1-explore",
+      "required": true,
+      "prompt": "Toggle the bits to build the target number. Each bit position is a power of 2 — turning it on adds that power to the running sum. Try building 7, then 100.",
+      "interaction": {
+        "type": "bitBoard",
+        "display": "register",
+        "bits": 10,
+        "value": 7,
+        "interactive": true,
+        "headline": "111"
+      },
+      "feedback": {
+        "correct": "7 = 4 + 2 + 1 = 111₂. Each power of 2 is either in the sum (1) or not (0). That pattern of 1s and 0s is the binary label.",
+        "hints": [
+          "Start with the largest power of 2 that fits: for 7, that's 4.",
+          "7 − 4 = 3 → next power ≤ 3 is 2; 3 − 2 = 1 → last power is 1.",
+          "Bits at positions 4, 2, 1 → pattern 111."
+        ]
+      }
+    },
+    {
+      "beatId": "l1-model",
+      "required": true,
+      "interviewNote": "Interviewers love 'is x a power of 2?' / 'how many 1-bits?' — all of it rests on this: a number is its set of powers of two. Lesson 5 turns that into one-line tricks: isPowerOfTwo(x) = (x & (x−1)) === 0 checks exactly whether there is one 1-bit; popcount counts them all. The uniqueness of binary representation is why those tricks work.",
+      "prompt": "Toggle any bit and watch the value change by exactly that power. Notice: no two different patterns give the same number — the representation is unique.",
+      "interaction": {
+        "type": "bitBoard",
+        "display": "register",
+        "bits": 10,
+        "value": 1000,
+        "interactive": true,
+        "headline": "1111101000"
+      },
+      "feedback": {
+        "correct": "Toggling bit k changes the value by exactly 2ᵏ — up if you add it, down if you remove it. Every number has a unique bit pattern, so numbers and patterns are the same thing.",
+        "hints": [
+          "Each bit position owns one power of 2. Toggling it adds or removes that exact power.",
+          "If two patterns gave the same number, their difference would be zero — but toggling any bit always changes the value.",
+          "1000 = 512 + 256 + 128 + 64 + 32 + 8 = 1111101000₂."
+        ]
+      }
+    },
+    {
+      "beatId": "l1-apply",
+      "required": true,
+      "prompt": "Write 100 in binary. Which powers of 2 sum to 100?",
+      "interaction": {
+        "type": "answerEntry",
+        "fields": [
+          {
+            "id": "binary100",
+            "label": "100 in binary",
+            "accept": ["1100100"],
+            "placeholder": "binary digits"
+          }
+        ]
+      },
+      "feedback": {
+        "correct": "100 = 64 + 32 + 4 = 1100100₂. The 1s mark the bit positions for 64, 32, and 4; everything else is 0.",
+        "hints": [
+          "Subtract the biggest power of 2 that fits: 64 ≤ 100, so bit 64 is 1. Remainder: 100 − 64 = 36.",
+          "36 − 32 = 4 (bit 32 is 1); 4 − 4 = 0 (bit 4 is 1). Bits at 64, 32, 4.",
+          "100 = 64 + 32 + 4 → 1100100."
+        ]
+      }
+    },
+    {
+      "beatId": "l1-transfer",
+      "required": false,
+      "track": "B",
+      "prompt": "Held-out transfer. Write 43 in binary using the same method: subtract powers of 2 from largest to smallest.",
+      "interaction": {
+        "type": "answerEntry",
+        "fields": [
+          {
+            "id": "binary43",
+            "label": "43 in binary",
+            "accept": ["101011"],
+            "placeholder": "binary digits"
+          }
+        ]
+      },
+      "feedback": {
+        "correct": "43 = 32 + 8 + 2 + 1 = 101011₂.",
+        "hints": [
+          "Biggest power of 2 ≤ 43 is 32. Remainder: 43 − 32 = 11.",
+          "11 − 8 = 3 → 3 − 2 = 1 → 1 − 1 = 0. Bits at 32, 8, 2, 1.",
+          "43 = 32 + 8 + 2 + 1 → 101011."
+        ]
+      }
+    },
+    {
+      "beatId": "l1-prove",
+      "required": true,
+      "prompt": "Prove you've got it. Write 1000 in binary — the Green Book headline number.",
+      "interaction": {
+        "type": "masteryChallenge",
+        "scenario": "1000 is a sum of distinct powers of 2. Find all of them and write the binary label: a 1 where each power is present, a 0 elsewhere.",
+        "fields": [
+          {
+            "id": "binary1000",
+            "label": "1000 in binary",
+            "accept": ["1111101000"],
+            "placeholder": "binary digits"
+          }
+        ]
+      },
+      "feedback": {
+        "correct": "1000 = 512 + 256 + 128 + 64 + 32 + 8 = 1111101000₂. Six 1-bits at positions 512, 256, 128, 64, 32, 8 — the rest are 0.",
+        "hints": [
+          "Biggest power of 2 ≤ 1000 is 512. Remainder: 1000 − 512 = 488.",
+          "488 − 256 = 232 → 232 − 128 = 104 → 104 − 64 = 40 → 40 − 32 = 8 → 8 − 8 = 0.",
+          "1000 = 512 + 256 + 128 + 64 + 32 + 8 → 1111101000."
+        ]
+      }
+    },
+    {
+      "beatId": "l1-recap",
+      "required": true,
+      "prompt": "Close the loop.",
+      "interaction": { "type": "recap" },
+      "feedback": {
+        "correct": "Every non-negative integer is a unique sum of distinct powers of 2. Writing which powers are present (1) or absent (0) gives its binary label. Those 1s and 0s are bits — and they are the number. Next: how many bits do you need to name N things?",
+        "hints": [
+          "Any number = a unique subset of {1, 2, 4, 8, 16, …}.",
+          "Binary is just which powers of 2 are in that subset.",
+          "Next lesson: the information bound ⌈log₂N⌉."
+        ]
+      }
+    }
+  ]
+}

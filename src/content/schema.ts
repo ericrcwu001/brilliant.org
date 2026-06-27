@@ -582,6 +582,57 @@ export const InteractionSchema = z.discriminatedUnion('type', [
     // nim → String(nimSum(heaps)); subtraction → String(heaps[0] % (maxRemove+1)). 0 ⇒ mover loses.
     headline: z.string().optional(),
   }),
+  // ── Binary & Information concept (Wave-0 contract freeze). TWO new interaction
+  // types for lesson-binary-information-1..6; each maps 1:1 to a beat view in
+  // beats/index.tsx. Engine dep: src/engine/binary.ts (pure/exact, NO floats).
+  // Both follow the `chainBoard`/`stoppingBoard` precedent: NOT in
+  // GRADED_TYPES/HERO_TYPES/mastery.ts; they carry an engine-reproducible
+  // `headline` cross-checked by scripts/validate-fixtures.ts (§3f). Firestore-safe
+  // (no directly-nested arrays — `weights.set` wraps its array in an object).
+  //
+  // bitBoard — a row of toggleable bits. `display` folds the binary presentations:
+  //   'register'  — toggle `bits` bits to build/read `value` (L1); `op`+`operands`
+  //                 shows a bit-op result (and-x-minus-1 / shift / xor) for L5.
+  //   'questions' — the ⌈log₂n⌉ yes/no halving game; each answer fixes one bit (L2).
+  //   'groupTest' — the poisoned-wine grid: `items` columns labelled in binary,
+  //                 testers as rows; light the dead/alive pattern → recover `culprit`.
+  z.object({
+    type: z.literal('bitBoard'),
+    display: z.enum(['register', 'questions', 'groupTest']),
+    bits: z.number().int().positive().optional(),
+    value: z.number().int().nonnegative().optional(),
+    op: z.enum(['and-x-minus-1', 'shift', 'xor']).optional(),
+    operands: z
+      .object({
+        a: z.number().int(),
+        b: z.number().int().optional(),
+        k: z.number().int().optional(),
+      })
+      .optional(),
+    n: z.number().int().positive().optional(),
+    items: z.number().int().positive().optional(),
+    culprit: z.number().int().nonnegative().optional(),
+    interactive: z.boolean().optional(),
+    // register → toBinary(value) or the op-result string; questions → String(bitsNeeded(n));
+    // groupTest → String(fromBinary(deathPattern(culprit,items))). Validation anchor.
+    headline: z.string().optional(),
+  }),
+  // weighing — a two-pan balance the learner loads and reads (L4):
+  //   'scale'   — drag coins onto pans; the 3-way tilt is a base-3 digit; a
+  //               weighings counter (`items` coins, `directionKnown` heavy/light).
+  //   'ternary' — the Bachet number-line: place ±`weights.set` to balance `target`.
+  z.object({
+    type: z.literal('weighing'),
+    display: z.enum(['scale', 'ternary']),
+    items: z.number().int().positive().optional(),
+    directionKnown: z.boolean().optional(),
+    target: z.number().int().positive().optional(),
+    weights: z.object({ set: z.array(z.number().int().positive()) }).optional(),
+    interactive: z.boolean().optional(),
+    // scale → String(weighingsForN(items, directionKnown));
+    // ternary → balancedTernary(target, weights.set). Validation anchor.
+    headline: z.string().optional(),
+  }),
 ])
 
 const HintTripleSchema = z.tuple([z.string(), z.string(), z.string()])

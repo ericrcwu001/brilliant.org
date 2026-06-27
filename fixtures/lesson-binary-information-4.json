@@ -1,0 +1,229 @@
+{
+  "lessonId": "lesson-binary-information-4",
+  "courseId": "course-binary-information",
+  "title": "The Scale Speaks Base-3",
+  "patternOptions": ["H"],
+  "milestoneId": "binary-information-base3",
+  "unlocks": "lesson-binary-information-5",
+  "schemaVersion": 1,
+  "beats": [
+    {
+      "beatId": "l4-recall",
+      "required": true,
+      "prompt": "Quick recall. From the counterfeit-coin teaser, match each setup to its count.",
+      "interaction": {
+        "type": "retrievalGrid",
+        "pairs": [
+          { "left": "3 bags × 3 weight-states each", "right": "3³ = 27" },
+          { "left": "Outcomes of one balance weighing", "right": "left / balanced / right" },
+          { "left": "Base-3 digits per weighing", "right": "1" }
+        ]
+      },
+      "feedback": {
+        "correct": "3³ = 27 combos; a balance gives 3 answers per weighing — left, balanced, or right — so each weighing carries a base-3 digit.",
+        "hints": [
+          "Each weighing has three outcomes, not two.",
+          "Left / balanced / right = a base-3 digit; 3 bags × 3 states = 3³ = 27.",
+          "Match: 3 bags × 3 states → 3³=27; balance outcomes → left/balanced/right; digits per weighing → 1."
+        ]
+      }
+    },
+    {
+      "beatId": "l4-bet",
+      "required": true,
+      "prompt": "12 coins, exactly one is fake — heavier OR lighter, you don't know which. Using a balance scale, what is the minimum number of weighings needed to find the fake coin AND say whether it is heavy or light?",
+      "interaction": {
+        "type": "prediction",
+        "options": ["6", "4", "3"]
+      },
+      "feedback": {
+        "byOption": {
+          "6": {
+            "note": "Worth testing — you're halving like the mice; a scale gives three answers, so split into thirds instead of halves."
+          },
+          "4": {
+            "note": "Worth testing — 3³ = 27 outcomes already exceed the 25 you must distinguish (2·12+1 = 25), so 3 weighings suffice."
+          },
+          "3": {
+            "note": "Right — a balance is base-3, so split into thirds: 3 weighings.",
+            "correct": true
+          }
+        }
+      }
+    },
+    {
+      "beatId": "l4-primer",
+      "required": false,
+      "track": "A",
+      "prompt": "One idea to keep in mind.",
+      "interaction": {
+        "type": "primer",
+        "variant": "custom",
+        "title": "A balance is base-3, not base-2",
+        "body": "A yes/no question gives 2 answers (binary). A balance scale gives 3 answers: left pan heavier, balanced, or right pan heavier. Each weighing is therefore a base-3 digit, carrying ≈ 1.58 bits of information — more than a yes/no test.",
+        "collapsible": true
+      },
+      "feedback": {
+        "correct": "Left / balanced / right = three answers = one base-3 digit per weighing.",
+        "hints": [
+          "Count the outcomes: a scale always tilts left, stays level, or tilts right.",
+          "Three outcomes = one base-3 digit.",
+          "Read it, then tap Continue."
+        ]
+      }
+    },
+    {
+      "beatId": "l4-win",
+      "required": true,
+      "prompt": "9 coins — one is heavier than the rest (you already know the direction). What is the fewest number of weighings needed to find the heavy coin?",
+      "interaction": {
+        "type": "answerEntry",
+        "fields": [
+          {
+            "id": "weighings",
+            "label": "Minimum weighings to find 1 heavy coin among 9",
+            "accept": ["2"],
+            "placeholder": "weighings"
+          }
+        ]
+      },
+      "feedback": {
+        "correct": "Exactly — three groups of 3: one weighing per base-3 digit. ⌈log₃9⌉ = 2 weighings.",
+        "hints": [
+          "Split 9 into 3 equal groups; put one group on each pan. The tilt picks the group holding the heavy coin.",
+          "One weighing per base-3 digit: split the survivors into thirds again. Two weighings total.",
+          "The answer is 2."
+        ]
+      }
+    },
+    {
+      "beatId": "l4-explore",
+      "required": true,
+      "prompt": "Load the pans. Drag coin groups onto the two pans — the beam tilts left, stays level, or tilts right (the 3-way digit). Split suspects into thirds and the tilt picks the third. How many weighings does 12 coins need?",
+      "interaction": {
+        "type": "weighing",
+        "display": "scale",
+        "items": 12,
+        "directionKnown": false,
+        "interactive": true,
+        "headline": "3"
+      },
+      "feedback": {
+        "correct": "Each 3-way tilt eliminates two-thirds of the suspects. 12 coins needs 3 weighings.",
+        "hints": [
+          "Split into 3 equal groups, not 2. Put one group on each pan and leave one group off.",
+          "The tilt names which third holds the fake — eliminating 8 coins in one weighing.",
+          "12 coins → 3 weighings, since 3³ = 27 ≥ 2·12+1 = 25 outcomes to distinguish."
+        ]
+      }
+    },
+    {
+      "beatId": "l4-model",
+      "required": true,
+      "comparison": true,
+      "interviewNote": "The 12-coin and Bachet-weights puzzles are classic quant/brain-teaser questions. The unlock is recognizing the *alphabet* of the test — a balance has three letters, so think base-3, just as a yes/no test thinks base-2.",
+      "prompt": "Generalize: N items, each weighing gives 3 outcomes. See how ⌈log₃N⌉ compares to ⌈log₂N⌉, and why unknown heavy-or-light costs extra slack.",
+      "interaction": {
+        "type": "weighing",
+        "display": "scale",
+        "items": 12,
+        "directionKnown": false,
+        "interactive": false,
+        "headline": "3"
+      },
+      "feedback": {
+        "correct": "12 coins, direction unknown → 3 weighings: (3³−3)/2 = 12. Direction known → ⌈log₃12⌉ = 3 also, but the bound is tighter. A yes/no test would need ⌈log₂25⌉ = 5 questions for the same task.",
+        "hints": [
+          "A balance has 3 outcomes per step vs 2 for yes/no — so ⌈log₃N⌉ instead of ⌈log₂N⌉.",
+          "Unknown direction (heavier or lighter?) doubles the outcomes: 2N + 1 total possibilities, so the bound is (3ⁿ−3)/2 ≥ N.",
+          "n=3 works: (27−3)/2 = 12 ≥ 12."
+        ]
+      }
+    },
+    {
+      "beatId": "l4-apply",
+      "required": true,
+      "prompt": "Bachet's problem: you have a two-pan balance and can place weights on either pan. What is the smallest set of integer weights that can measure every whole-number mass from 1 to 40 grams? Enter the weights as a comma-separated list, or just the largest weight.",
+      "interaction": {
+        "type": "answerEntry",
+        "fields": [
+          {
+            "id": "weights",
+            "label": "Weight set covering 1–40 g (comma list, or just the largest)",
+            "accept": ["1,3,9,27", "27"],
+            "placeholder": "e.g. 1,3,9,27"
+          }
+        ]
+      },
+      "feedback": {
+        "correct": "Yes — powers of 3: {1, 3, 9, 27}. Weights on either pan give every mass 1–40 (1+3+9+27 = 40). This is balanced ternary, with digits −1, 0, +1.",
+        "hints": [
+          "You may place weights with the object (subtract). Putting a weight on the same pan as the mass is the same as subtracting it.",
+          "That makes base-3: each weight is either opposite (adds), off (ignores), or with the object (subtracts). You need powers of 3.",
+          "The set is {1, 3, 9, 27}: 1+3+9+27 = 40, covering every mass 1–40."
+        ]
+      }
+    },
+    {
+      "beatId": "l4-transfer",
+      "required": false,
+      "track": "B",
+      "prompt": "Held-out transfer: using weights {1, 3, 9, 27} and a two-pan balance, how do you weigh a 22 g object? Describe the placement as an equation (e.g. 27−9+3+1), or just enter 22 to confirm you know the mass.",
+      "interaction": {
+        "type": "weighing",
+        "display": "ternary",
+        "target": 22,
+        "weights": { "set": [1, 3, 9, 27] },
+        "interactive": true,
+        "headline": "+1,-1,+1,+1"
+      },
+      "feedback": {
+        "correct": "22 = 27−9+3+1: put 27 opposite the object, 9 on the same pan as the object, 3 and 1 opposite. Balanced-ternary digits of 22 over {27,9,3,1}: +1,−1,+1,+1.",
+        "hints": [
+          "You may place weights with the object (a negative contribution). Try 27 on the far pan.",
+          "27 − 9 = 18; add 3 and 1 on the far pan: 18+3+1 = 22. So 9 goes with the object.",
+          "Placement: 27−9+3+1 = 22. The balanced-ternary representation of 22."
+        ]
+      }
+    },
+    {
+      "beatId": "l4-prove",
+      "required": true,
+      "prompt": "Prove you have it. You have 12 coins and a balance scale. Exactly one coin is fake — it may be either heavier or lighter than a genuine coin, and you do not know which. What is the minimum number of weighings guaranteed to identify the fake coin and determine whether it is heavy or light?",
+      "interaction": {
+        "type": "masteryChallenge",
+        "scenario": "12 coins, one fake (heavier or lighter — direction unknown). Balance scale. Guarantee the fake's identity and direction.",
+        "fields": [
+          {
+            "id": "weighings",
+            "label": "Minimum weighings guaranteed",
+            "accept": ["3"],
+            "placeholder": "weighings"
+          }
+        ]
+      },
+      "feedback": {
+        "correct": "3 weighings. Each weighing gives 3 outcomes, so 3 weighings yield 3³ = 27 outcome sequences. You need to distinguish 2·12+1 = 25 possibilities (12 coins × 2 directions + the genuine result). The GB bound: (3ⁿ−3)/2 ≥ N → (27−3)/2 = 12 ≥ 12. ✓",
+        "hints": [
+          "Direction unknown means the fake could be heavier OR lighter — that doubles the outcomes you must distinguish: 2×12+1 = 25.",
+          "Use the bound (3ⁿ−3)/2 ≥ N. For n=3: (27−3)/2 = 12 ≥ 12. So 3 weighings suffice.",
+          "The answer is 3."
+        ]
+      }
+    },
+    {
+      "beatId": "l4-recap",
+      "required": true,
+      "prompt": "Close the loop.",
+      "interaction": { "type": "recap" },
+      "feedback": {
+        "correct": "A balance speaks base-3: three answers per weighing means ⌈log₃N⌉ weighings identify one defective among N (or ⌈log₃((3ⁿ−3)/2)⌉ when direction is unknown). Powers of 3 — {1,3,9,27} — measure every mass 1–40 via balanced ternary (digits −1, 0, +1). Next: bit tricks.",
+        "hints": [
+          "Each weighing is a base-3 digit: 3 outcomes, not 2.",
+          "Unknown direction needs (3ⁿ−3)/2 ≥ N; known direction needs 3ⁿ ≥ N.",
+          "Bachet weights are powers of 3; balanced ternary digits ∈ {−1, 0, +1} place weights on either pan."
+        ]
+      }
+    }
+  ]
+}

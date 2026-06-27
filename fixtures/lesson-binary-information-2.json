@@ -1,0 +1,229 @@
+{
+  "lessonId": "lesson-binary-information-2",
+  "courseId": "course-binary-information",
+  "title": "Bits as Information",
+  "patternOptions": ["H"],
+  "milestoneId": "binary-information-bound",
+  "unlocks": "lesson-binary-information-3",
+  "schemaVersion": 1,
+  "beats": [
+    {
+      "beatId": "l2-recall",
+      "required": true,
+      "prompt": "Quick recall from combinatorics. Match each pigeonhole situation to its result.",
+      "interaction": {
+        "type": "retrievalGrid",
+        "pairs": [
+          { "left": "N items, H holes — guaranteed busiest hole holds at least", "right": "⌈N/H⌉" },
+          { "left": "N > H items in H holes — what is always forced?", "right": "a collision" }
+        ]
+      },
+      "feedback": {
+        "correct": "Pigeonhole: N > H forces a shared box; the busiest box holds at least ⌈N/H⌉. We will use this as the proof that no search scheme can beat ⌈log₂N⌉ questions.",
+        "hints": [
+          "More items than boxes forces two items to share one.",
+          "⌈N/H⌉ is the guaranteed minimum load on the fullest box.",
+          "Match: N items / H holes → ⌈N/H⌉; N > H → a collision is forced."
+        ]
+      }
+    },
+    {
+      "beatId": "l2-bet",
+      "required": true,
+      "prompt": "I am thinking of a number from 1 to 1000. You may only ask yes/no questions: 'Is it bigger than 500?' Decisions are answered honestly. How many questions guarantee you find my number — no matter which number I pick?",
+      "interaction": {
+        "type": "prediction",
+        "options": ["500", "100", "10"]
+      },
+      "feedback": {
+        "byOption": {
+          "500": {
+            "note": "Let's test it — you don't check one number at a time; a good question halves the whole range. You can do much better than 500."
+          },
+          "100": {
+            "note": "Let's test it — even 100 is far too many. Halving 1000 reaches 1 in only 10 steps."
+          },
+          "10": {
+            "note": "Right — each yes/no halves 1000: 500, 250, 125, …, 1 in exactly 10 steps.",
+            "correct": true
+          }
+        }
+      }
+    },
+    {
+      "beatId": "l2-primer",
+      "required": false,
+      "track": "A",
+      "prompt": "One idea before we count: what does a single yes/no question actually do?",
+      "interaction": {
+        "type": "primer",
+        "variant": "custom",
+        "title": "One bit halves the field",
+        "body": "A well-chosen yes/no question splits the candidates into two equal halves and rules out roughly half of them — not just one. That is why the count of possibilities collapses geometrically: 1000 → 500 → 250 → … → 1.",
+        "collapsible": true
+      },
+      "feedback": {
+        "correct": "Each yes/no is one bit of information that halves the search space. Keep this in mind as we count the halvings.",
+        "hints": [
+          "A question that halves rules out ~500 items at once, not just one.",
+          "The range shrinks by a factor of 2 with every answer.",
+          "Read the card, then tap Continue."
+        ]
+      }
+    },
+    {
+      "beatId": "l2-win",
+      "required": true,
+      "prompt": "Warm-up. I am thinking of a number from 1 to 100. Using only yes/no questions and halving each time, what is the minimum number of questions that guarantees you find it?",
+      "interaction": {
+        "type": "answerEntry",
+        "fields": [
+          {
+            "id": "q",
+            "label": "Minimum questions for 1–100",
+            "accept": ["7"],
+            "placeholder": "questions"
+          }
+        ]
+      },
+      "feedback": {
+        "correct": "Exactly — 2⁷ = 128 ≥ 100, so 7 halvings suffice and 6 do not (2⁶ = 64 < 100).",
+        "hints": [
+          "Count doublings until you pass 100: 2, 4, 8, 16, 32, 64, 128 — that is 7.",
+          "2⁶ = 64 < 100, so 6 questions are not enough; 2⁷ = 128 ≥ 100, so 7 are.",
+          "The answer is 7."
+        ]
+      }
+    },
+    {
+      "beatId": "l2-explore",
+      "required": true,
+      "prompt": "Watch the halving game live. Tap Yes or No to each 'Is it bigger than the midpoint?' question and see the candidate range shrink to a single number in at most 10 steps.",
+      "interaction": {
+        "type": "bitBoard",
+        "display": "questions",
+        "n": 1000,
+        "interactive": true,
+        "headline": "10"
+      },
+      "feedback": {
+        "correct": "Each yes/no fixes one bit and halves the range. After 10 answers the range collapses to a single value — ⌈log₂1000⌉ = 10.",
+        "hints": [
+          "Halve the range, do not pick one number at a time.",
+          "1000 → 500 → 250 → 125 → … → 1 takes 10 halvings.",
+          "It takes exactly 10 questions."
+        ]
+      }
+    },
+    {
+      "beatId": "l2-model",
+      "required": true,
+      "comparison": true,
+      "interviewNote": "This ⌈log₂N⌉ floor is the 'information lower bound' interviewers probe with '20 questions' and 'find the fake coin' puzzles — no clever scheme beats counting answer-patterns. Proof: k yes/no answers produce at most 2ᵏ distinct answer strings. If 2ᵏ < N, two numbers share a string and you cannot distinguish them — pigeonhole forces a collision. So 2ᵏ ≥ N is necessary, which gives k ≥ ⌈log₂N⌉.",
+      "prompt": "Toggle bits and watch the count of named outcomes. This is Lesson 1's 2ⁿ run in reverse: there, n bits named 2ⁿ numbers; here, to tell apart N possibilities you must spend at least ⌈log₂N⌉ bits. The pigeonhole argument shows no scheme can do better.",
+      "interaction": {
+        "type": "bitBoard",
+        "display": "register",
+        "bits": 10,
+        "value": 1000,
+        "headline": "1111101000"
+      },
+      "feedback": {
+        "correct": "k bits produce 2ᵏ distinct answer-patterns. Pigeonhole: if 2ᵏ < N, two numbers share a pattern and no strategy separates them. So 2ᵏ ≥ N is forced — k ≥ ⌈log₂N⌉.",
+        "hints": [
+          "Count the distinct answer strings that k yes/no questions can produce: exactly 2ᵏ.",
+          "If 2ᵏ < N, the pigeonhole principle says two numbers share a string — impossible to distinguish.",
+          "Therefore k ≥ ⌈log₂N⌉ is a hard lower bound."
+        ]
+      }
+    },
+    {
+      "beatId": "l2-apply",
+      "required": true,
+      "prompt": "Scale it up. I am thinking of a number from 1 to 1,000,000. Using yes/no questions and halving each time, what is the minimum number of questions that guarantees you find it?",
+      "interaction": {
+        "type": "answerEntry",
+        "fields": [
+          {
+            "id": "q",
+            "label": "Minimum questions for 1–1,000,000",
+            "accept": ["20"],
+            "placeholder": "questions"
+          }
+        ]
+      },
+      "feedback": {
+        "correct": "Yes — 2²⁰ = 1,048,576 > 1,000,000, so 20 questions suffice. The count scales by doublings, not by size.",
+        "hints": [
+          "It is the exponent: how many doublings does it take to exceed a million?",
+          "2²⁰ = 1,048,576 > 1,000,000. The exponent is 20.",
+          "The answer is 20."
+        ]
+      }
+    },
+    {
+      "beatId": "l2-transfer",
+      "required": false,
+      "track": "B",
+      "prompt": "Apply the same method to a fresh size. I am thinking of a number from 1 to 500. What is the minimum number of yes/no questions that guarantees you find it?",
+      "interaction": {
+        "type": "answerEntry",
+        "fields": [
+          {
+            "id": "q",
+            "label": "Minimum questions for 1–500",
+            "accept": ["9"],
+            "placeholder": "questions"
+          }
+        ]
+      },
+      "feedback": {
+        "correct": "2⁸ = 256 < 500 ≤ 512 = 2⁹, so 9 halvings are needed. The answer is the exponent 9, not 8.",
+        "hints": [
+          "Is 256 enough? No — 2⁸ = 256 < 500, so 8 questions can only cover 256 possibilities.",
+          "You need 2⁹ = 512 ≥ 500. The exponent is 9.",
+          "The answer is 9."
+        ]
+      }
+    },
+    {
+      "beatId": "l2-prove",
+      "required": true,
+      "prompt": "Prove you have it. I am thinking of a number from 1 to 1000. What is the minimum number of yes/no questions — using the halving strategy — that guarantees you identify my number?",
+      "interaction": {
+        "type": "masteryChallenge",
+        "scenario": "You are playing a guessing game. I pick a secret integer from 1 to 1000 (inclusive). On each turn you ask 'Is it greater than X?' and I answer Yes or No honestly. You want to guarantee you find the number regardless of which number I chose and regardless of how the Yes/No answers fall.",
+        "fields": [
+          {
+            "id": "q",
+            "label": "Minimum questions guaranteed to find the number",
+            "accept": ["10"],
+            "placeholder": "questions"
+          }
+        ]
+      },
+      "feedback": {
+        "correct": "⌈log₂1000⌉ = 10: 2¹⁰ = 1024 ≥ 1000, and 2⁹ = 512 < 1000, so 10 halvings are necessary and sufficient.",
+        "hints": [
+          "How many halvings does it take to reduce 1000 to 1? Count: 1000 → 500 → 250 → 125 → 62 → 31 → 15 → 7 → 3 → 1.",
+          "2⁹ = 512 < 1000, so 9 questions are not enough. 2¹⁰ = 1024 ≥ 1000, so 10 are.",
+          "The answer is 10."
+        ]
+      }
+    },
+    {
+      "beatId": "l2-recap",
+      "required": true,
+      "prompt": "Close the loop.",
+      "interaction": { "type": "recap" },
+      "feedback": {
+        "correct": "One bit = one yes/no = one halving. To distinguish N possibilities you need at least ⌈log₂N⌉ bits — and no cleverer scheme can do better, because k bits produce only 2ᵏ distinct answer-patterns and pigeonhole forces 2ᵏ ≥ N. Next: Group Testing — how binary labels let k mice identify which of 2ᵏ bottles is poisoned in a single round.",
+        "hints": [
+          "⌈log₂N⌉ is the minimum bits needed to distinguish N outcomes.",
+          "Pigeonhole proves it is a hard lower bound: 2ᵏ < N is impossible.",
+          "Next lesson: Group Testing (Poisoned Wine)."
+        ]
+      }
+    }
+  ]
+}
