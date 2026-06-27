@@ -21,6 +21,10 @@ export type { ClientQuestion, Turn, InterviewReport, HireSignal }
 export type MintInterviewTokenInput = {
   conceptId: string
   mode?: 'voice' | 'text'
+  // spec-22 / D9: track-gated difficulty floor. The quant-intensity gate sends
+  // 'brutal'; Track A (default) sends 'hard'. Server-validated/clamped; absent
+  // ⇒ 'hard'. Threaded route → page → hook → mint (it already spreads ...input).
+  tierFloor?: 'hard' | 'harder' | 'brutal'
   // timezone is injected below; not part of the caller-facing type.
 }
 

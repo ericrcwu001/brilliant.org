@@ -29,7 +29,9 @@ export function OverlapBeat(props: BeatProps) {
   const ladder = useHintLadder({
     feedback: resolveFeedback(beat.feedback, pattern),
     required: beat.required,
-    maxHintLevel: beat.maxHintLevel,
+    // Honor the runtime cap-lift so a capped Overlap tap never dead-ends (R6 /
+    // spec-21 §3.5) — matches every other graded beat. Was bare beat.maxHintLevel.
+    maxHintLevel: props.hintCapOverride ?? beat.maxHintLevel,
     onNeedsReview: props.reportNeedsReview,
     initialLevel: props.initialHintLevel,
     onLevelChange: props.onHintLevelChange,

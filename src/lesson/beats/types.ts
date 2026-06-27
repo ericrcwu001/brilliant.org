@@ -57,6 +57,13 @@ export type BeatProps = {
   showConfidence?: boolean
   confidenceValue?: number
   onConfidence?: (value: number) => void
+  // Difficulty governor (spec-21 / D9): a graded checkpoint reports its
+  // correct/wrong outcome so the LessonPlayer can feed the retrieval-rep success
+  // window. ONLY beats that are retrieval reps (masteryChallenge today; the
+  // review/which-method surfaces added by spec-10/13) call this — ordinary graded
+  // teaching beats must NOT, to keep the window definitionally equal to
+  // isRetrievalRep (spec-03). The player further guards with isRetrievalRep.
+  onGraded?: (correct: boolean) => void
   // Label-stripping presentation mode (spec-13 / D12, §3.3). When true the
   // solving surface hides method-revealing chrome (lesson title + the player's
   // beat.prompt section) so a which-method gate measures recognition of deep

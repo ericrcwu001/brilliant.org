@@ -178,6 +178,10 @@ export function useRealtimeInterview(
   // via isQuantIntensity); the hook never reads userDoc. Default false ⇒ today's
   // flow (grade straight through), so the gate-off path is unchanged.
   showConfidence = false,
+  // Track-gated difficulty floor (spec-22 / D9): 'brutal' for the quant-intensity
+  // gate, 'hard' for Track A. Forwarded to mintInterviewToken. Default 'hard'
+  // everywhere ⇒ Track A and all existing tests/flows are unchanged.
+  tierFloor: 'hard' | 'harder' | 'brutal' = 'hard',
 ): UseRealtimeInterviewReturn {
   const [status, setStatus] = useState<InterviewStatus>('idle')
   const [transcript, setTranscript] = useState<Turn[]>([])
@@ -541,7 +545,7 @@ export function useRealtimeInterview(
       }
     } else {
       try {
-        mintResult = await mintInterviewToken({ conceptId })
+        mintResult = await mintInterviewToken({ conceptId, tierFloor })
       } catch (err: unknown) {
         const rawCode = (err as { code?: string })?.code
         const code = rawCode?.replace(/^functions\//, '')

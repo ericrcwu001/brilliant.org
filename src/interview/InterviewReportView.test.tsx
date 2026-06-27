@@ -32,6 +32,8 @@ const fixtureReport: InterviewReport = {
   summary: 'Good overall performance with minor gaps.',
   strengths: ['Correct setup', 'Clear articulation'],
   fixes: ['Justify convergence', 'Define random variable explicitly'],
+  tier: 'hard',
+  pressureNote: 'A live timed interview is harder than untimed practice.',
 }
 
 describe('InterviewReportView (smoke — renderToString)', () => {
@@ -115,5 +117,56 @@ describe('InterviewReportView (smoke — renderToString)', () => {
       />,
     )
     expect(html).toContain('Done')
+  })
+
+  it('hides the gap block when inAppAccuracy is null but renders the rest', () => {
+    const html = renderToString(
+      <InterviewReportView
+        report={fixtureReport}
+        attemptId="a1"
+        conceptId="course-expected-value"
+        inAppAccuracy={null}
+      />,
+    )
+    expect(html).not.toContain('Practice vs interview')
+    expect(html).toContain('Correctness') // rest of the report still renders
+  })
+
+  it('renders the gap block with the tier label and pressure note when inAppAccuracy is set', () => {
+    const brutalReport: InterviewReport = {
+      ...fixtureReport,
+      dimensions: {
+        ...fixtureReport.dimensions,
+        correctness: { score: 2, evidence: 'Partial.' }, // interview acc 0.4
+      },
+      tier: 'brutal',
+      pressureNote: 'Improving under-pressure retrieval is the goal.',
+    }
+    const html = renderToString(
+      <InterviewReportView
+        report={brutalReport}
+        attemptId="a1"
+        conceptId="course-expected-value"
+        inAppAccuracy={0.9} // gap = 0.5 ≥ threshold
+      />,
+    )
+    expect(html).toContain('Practice vs interview')
+    expect(html).toContain('brutal')
+    expect(html).toContain('Improving under-pressure retrieval is the goal.')
+    expect(html).toContain('In practice')
+    expect(html).toContain('In the interview')
+  })
+
+  it('falls back to a static pressure note when report.pressureNote is empty', () => {
+    const oldReport: InterviewReport = { ...fixtureReport, pressureNote: '' }
+    const html = renderToString(
+      <InterviewReportView
+        report={oldReport}
+        attemptId="a1"
+        conceptId="course-expected-value"
+        inAppAccuracy={0.9}
+      />,
+    )
+    expect(html).toContain('under-pressure retrieval')
   })
 })

@@ -13,10 +13,20 @@ import {
   hintLevelsOf,
   maxHintLevelsOf,
   confidencesOf,
+  repWindowOf,
   snapshotToLessonState,
   useSnapshotWriter,
   type SnapshotInput,
 } from './snapshot'
+import {
+  governorState,
+  pushRep,
+  effectiveHintCap,
+  EMPTY_WINDOW,
+  type RepWindow,
+  type GovernorState,
+} from './governor'
+import { isRetrievalRep } from './retrievalRep'
 import {
   completeLesson,
   recordQualifyingAction,
@@ -48,6 +58,7 @@ export function LessonPlayer({
   track = 'B',
   review = false,
   showConfidence = false,
+  quantGate = false,
   labelStripped = false,
 }: {
   lesson?: Lesson
@@ -70,6 +81,12 @@ export function LessonPlayer({
   // the player has no userDoc access and stays dumb. Default false ⇒ the rating
   // renders nowhere (Track A / gentle) until a route opts in.
   showConfidence?: boolean
+  // Quant-intensity gate (README §4 / D2 / D9): resolved by the CALLER via the
+  // shared isQuantIntensity helper (the player has no userDoc access and stays
+  // dumb — it never re-derives the gate from track/learningGoal). The difficulty
+  // governor (spec-21) runs ONLY when true; Track A is static (quantGate === false),
+  // so its experience is byte-for-byte unchanged. Default false ⇒ fail GENTLE.
+  quantGate?: boolean
   // Label-stripping presentation mode (spec-13 / §3.3). When true the player hides
   // the lesson title + the beat.prompt section surface-wide (the spec-20 queue sets
   // it). A which-method gate beat is ALWAYS stripped locally regardless. Default
@@ -131,6 +148,15 @@ export function LessonPlayer({
   const [confidenceByBeat, setConfidenceByBeat] = useState<
     Record<string, number>
   >(() => (initialSnapshot && !review ? confidencesOf(initialSnapshot) : {}))
+  // Difficulty-governor rolling window (spec-21 / D9). Only the quant-intensity
+  // gate runs the governor, so seed from the snapshot only then; Track A keeps the
+  // window empty + unpersisted (the governor never reads it). A review replay
+  // starts fresh, matching the maxHintLevelByBeat seeding guard above.
+  const [repWindow, setRepWindow] = useState<RepWindow>(() =>
+    initialSnapshot && !review && quantGate
+      ? { results: repWindowOf(initialSnapshot) }
+      : EMPTY_WINDOW,
+  )
   // Adaptive override (build-brief §4.10c): per-beat cap lift + re-prefill nonce.
   // When a learner reaches a capped beat's hint cap while still wrong, the cap is
   // lifted (the level-3 reveal becomes reachable — no dead-end) and, on an
@@ -171,9 +197,36 @@ export function LessonPlayer({
   const beat = visibleBeats[index]
   const isLast = index === visibleBeats.length - 1
   const chip = biasChipState(beat.beatId)
+
+  // Difficulty governor (spec-21 / D9). Runs ONLY on the quant-intensity gate;
+  // Track A always gets the static default (offerFade:false, hintCap:'default'),
+  // so its experience is byte-for-byte unchanged. The governor modulates ONLY
+  // scaffolding (fade density + hint cap) within a bounded closed enum — never
+  // retrieval volume or spacing (those are the queue's / transfer gate's job).
+  const gov: GovernorState = quantGate
+    ? governorState(repWindow)
+    : { offerFade: false, hintCap: 'default' }
+
   // Density is resolved by track: Track A gets the segmented/scaffolded rendering
-  // unless a beat pins its own `density`. Track B stays 'merged' (today).
-  const density = beat.density ?? (track === 'A' ? 'split' : 'merged')
+  // unless a beat pins its own `density`. Track B stays 'merged' (today) UNLESS the
+  // governor says "struggling" (gov.offerFade) — then the faded rung is OFFERED on
+  // the quant gate to make a too-hard streak easier. Author-pinned beat.density
+  // still wins; Track A is unaffected (gov is the static default there).
+  const density: 'split' | 'merged' =
+    beat.density ?? (track === 'A' ? 'split' : gov.offerFade ? 'split' : 'merged')
+
+  // Effective hint cap = max(governor cap, struggle cap-lift). effectiveHintCap is
+  // FLOORED at 2 (never strands a learner), and the struggle cap-lift to 3 always
+  // wins — so even when the governor tightens, a persistent learner reaches the
+  // level-3 reveal (R6 / §3.5). Off the quant gate this is undefined, preserving
+  // today's struggle-only behavior (Track A unchanged).
+  const govCap = effectiveHintCap(gov, beat.maxHintLevel)
+  const struggleLift = capLiftByBeat[beat.beatId] ? 3 : 0
+  const hintCapOverride: 1 | 2 | 3 | undefined = quantGate
+    ? ((Math.max(govCap, struggleLift) || beat.maxHintLevel) as 1 | 2 | 3 | undefined)
+    : capLiftByBeat[beat.beatId]
+      ? 3
+      : undefined
 
   // Label-stripping (spec-13 / §3.3): a which-method gate is ALWAYS title-stripped
   // locally (it must not reveal "Markov Chains → Lesson 3"); the spec-20 queue also
@@ -245,6 +298,31 @@ export function LessonPlayer({
     [beat.beatId, beat.maxHintLevel, clearRestoringNote],
   )
 
+  // Difficulty-governor retrieval-rep signal (spec-21 / D9). A graded checkpoint
+  // (masteryChallenge today; review/which-method surfaces added by spec-10/13)
+  // reports its correct/wrong outcome here. We gate the window append on
+  // isRetrievalRep (spec-03) so the window stays definitionally equal to "retrieval
+  // reps" even if a non-rep beat ever calls onGraded. Fires analytics.retrievalRep
+  // (spec-03's reserved hook) regardless of track; only appends to the governor
+  // window on the quant gate (Track A keeps the window empty). source:'lesson'
+  // until spec-10 surfaces review reps; beat.schemaId is undefined until spec-00
+  // backfill (the analytics field is optional).
+  const onGraded = useCallback(
+    (correct: boolean) => {
+      const ctx = { source: 'lesson' as const, schemaId: beat.schemaId }
+      if (!isRetrievalRep(beat, ctx)) return
+      analytics.retrievalRep({
+        lessonId,
+        beatId: beat.beatId,
+        schemaId: beat.schemaId,
+        correct,
+        source: 'lesson',
+      })
+      if (quantGate) setRepWindow((w) => pushRep(w, correct))
+    },
+    [beat, lessonId, quantGate],
+  )
+
   // Confidence rating chosen on a checkpoint beat (spec-02 / D6). Persisted into
   // confidenceByBeat exactly like maxHintLevelByBeat; never gates anything.
   const onConfidence = useCallback(
@@ -275,6 +353,10 @@ export function LessonPlayer({
       hintLevelByBeat,
       maxHintLevelByBeat,
       confidenceByBeat,
+      // Persist the governor window so it survives a mid-lesson refresh and (post-
+      // spec-10) accrues across the session. Empty for Track A (the governor never
+      // appends there), so this is a no-op write for gentle learners (spec-21 §3.6).
+      repWindow: repWindow.results,
     }),
     [
       lessonId,
@@ -285,6 +367,7 @@ export function LessonPlayer({
       hintLevelByBeat,
       maxHintLevelByBeat,
       confidenceByBeat,
+      repWindow,
     ],
   )
 
@@ -606,7 +689,7 @@ export function LessonPlayer({
         setLessonState={setLessonState}
         initialHintLevel={hintLevelByBeat[beat.beatId]}
         onHintLevelChange={onHintLevelChange}
-        hintCapOverride={capLiftByBeat[beat.beatId] ? 3 : undefined}
+        hintCapOverride={hintCapOverride}
         assist={{
           prefillToLastTerm: true,
           nonce: assistNonceByBeat[beat.beatId] ?? 0,
@@ -614,6 +697,7 @@ export function LessonPlayer({
         showConfidence={showConfidence && isCheckpointBeat(beat)}
         confidenceValue={confidenceByBeat[beat.beatId]}
         onConfidence={onConfidence}
+        onGraded={onGraded}
         labelStripped={stripped}
         milestone={milestone}
         lessonComplete={done}

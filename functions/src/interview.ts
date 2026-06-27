@@ -176,6 +176,25 @@ interface MintInterviewTokenInput {
   conceptId?: string
   timezone?: string
   mode?: 'voice' | 'text'
+  // spec-22 / D9: track-gated difficulty floor. The quant-intensity gate sends
+  // 'brutal'; Track A sends 'hard' (today's effective behaviour). A difficulty
+  // KNOB, not a security boundary (§3.0): server-validated/clamped, defaults to
+  // the gentle 'hard' for absent/invalid input (a stale client gets the safe
+  // default). The worst a spoofing client can do is ask itself harder/easier
+  // questions — it cannot leak answers, exceed quota, or change grading.
+  tierFloor?: 'hard' | 'harder' | 'brutal'
+}
+
+const TIERS = ['hard', 'harder', 'brutal'] as const
+
+// Resolve a safe tier floor from the (untrusted) mint input (spec-22 §3.1).
+// Absent/invalid → 'hard' (the gentle default — Track A, or a stale client).
+// Exported so the floor-resolution logic is unit-testable without invoking the
+// full callable (which needs OpenAI + Firestore).
+export function resolveTierFloor(value: unknown): (typeof TIERS)[number] {
+  return (TIERS as readonly string[]).includes(value as string)
+    ? (value as (typeof TIERS)[number])
+    : 'hard'
 }
 
 interface MintInterviewTokenOutput {
@@ -196,6 +215,8 @@ export const mintInterviewToken = onCall(
     const data = request.data ?? {}
     const conceptId = requireString(data.conceptId, 'conceptId')
     const mode: 'voice' | 'text' = data.mode === 'text' ? 'text' : 'voice'
+    // spec-22 §3.1: validate/clamp the client-supplied difficulty floor.
+    const tierFloor = resolveTierFloor(data.tierFloor)
 
     // 2 — resolve day from timezone
     const tz = isValidTimezone(data.timezone) ? data.timezone : FALLBACK_TZ
@@ -218,8 +239,15 @@ export const mintInterviewToken = onCall(
     const stateSnap = await stateRef.get()
     const seenQuestionIds: string[] = (stateSnap.data()?.seenQuestionIds ?? []) as string[]
 
-    // 6 — draw next unseen question (+ its followUps) via the pure P2A module
-    const draw = drawQuestion(pack, seenQuestionIds)
+    // 6 — draw next unseen question (+ its followUps) via the pure P2A module,
+    // floored to the track-gated tier (spec-22 §3.1). The brutal pool is smaller
+    // (e.g. EV: 13 brutal vs 58 total), so a heavy Track-B user can exhaust
+    // brutal-only sooner — fall back once to 'hard' before throwing so the mock
+    // degrades gracefully (R5) instead of dead-ending on "no questions".
+    let draw = drawQuestion(pack, seenQuestionIds, { tierFloor })
+    if (!draw && tierFloor !== 'hard') {
+      draw = drawQuestion(pack, seenQuestionIds, { tierFloor: 'hard' })
+    }
     if (!draw) {
       throw new HttpsError(
         'failed-precondition',
@@ -367,8 +395,37 @@ function denormSums(s: TrendSums): {
   }
 }
 
+// Tier-aware rubric scaling (spec-22 / D9). The 1–5 dimension scores must be
+// calibrated to the QUESTION'S tier so a brutal question is not graded on a
+// hard-question yardstick. This is a fairness fix for ALL tracks, not a Track-B
+// feature (README §1 row 6). The bands describe how to map performance → score
+// AT THIS TIER.
+const TIER_CALIBRATION: Record<'hard' | 'harder' | 'brutal', string> = {
+  hard:
+    'Standard interview difficulty. Grade against a solid prepared candidate: ' +
+    'a correct, well-explained solution earns 5; minor gaps earn 3–4.',
+  harder:
+    'Above standard. The problem has an extra twist or heavier computation. ' +
+    'Credit partial progress generously — reaching the right setup and a ' +
+    'mostly-correct path is a 4 even if the final value has a slip. Do NOT ' +
+    'penalize for the added difficulty itself.',
+  brutal:
+    'Top-tier / brain-teaser difficulty. Many strong candidates fail this. ' +
+    'Grade on insight and method, not just the final number: identifying the ' +
+    'key idea and a viable approach is already a 3–4; a complete rigorous ' +
+    'solution is a 5. A blank or fundamentally wrong approach is still low, ' +
+    'but do NOT deflate a genuine strong attempt because the question is hard.',
+}
+
 // JSON Schema for the grader's Structured Output (strict: every property in
 // `required`, additionalProperties:false everywhere). Mirrors InterviewReport.
+//
+// SHARED with spec-23 (README §3.5): spec-22 ADDS `tier`/`pressureNote` (here);
+// spec-23 REMOVES `hireSignal` and ADDS its calibration field. The two specs
+// touch DISJOINT properties — the only shared edit is the `required` array. When
+// spec-23 lands, the merger reconciles `required` to the final property set:
+// drop 'hireSignal', keep 'tier'/'pressureNote', add spec-23's calibration field
+// — or strict-mode grading throws at runtime.
 export const INTERVIEW_REPORT_SCHEMA = {
   type: 'object',
   properties: {
@@ -391,8 +448,15 @@ export const INTERVIEW_REPORT_SCHEMA = {
     summary: { type: 'string' },
     strengths: { type: 'array', items: { type: 'string' } },
     fixes: { type: 'array', items: { type: 'string' } },
+    // spec-22: the question's difficulty tier the score was calibrated against.
+    // The model echoes it from the prompt; the server OVERWRITES it post-parse
+    // from the attempt's known tier (authoritative — see gradeInterview).
+    tier: { type: 'string', enum: ['hard', 'harder', 'brutal'] },
+    // spec-22: a one-sentence "pressure graduation" note framing the result as
+    // under-pressure retrieval, never a hire/no-hire verdict.
+    pressureNote: { type: 'string' },
   },
-  required: ['dimensions', 'hireSignal', 'summary', 'strengths', 'fixes'],
+  required: ['dimensions', 'hireSignal', 'summary', 'strengths', 'fixes', 'tier', 'pressureNote'],
   additionalProperties: false,
   $defs: {
     dim: {
@@ -433,6 +497,10 @@ export function buildGraderPrompt(question: Question, transcript: Turn[]): strin
     `Accepted approaches: ${question.hidden.approaches.join('; ')}`,
     `Wrong turns to watch for: ${question.hidden.wrongTurns.join('; ')}`,
     '',
+    '## Question difficulty tier',
+    `This question is tier: ${question.tier}.`,
+    TIER_CALIBRATION[question.tier],
+    '',
     '## Rubric',
     `- Correctness: ${question.hidden.rubric.correctness}`,
     `- Approach: ${question.hidden.rubric.approach}`,
@@ -440,7 +508,12 @@ export function buildGraderPrompt(question: Question, transcript: Turn[]): strin
     `- Communication: ${question.hidden.rubric.communication}`,
     `- Speed: ${question.hidden.rubric.speed}`,
     '',
-    'Grade strictly against the ground truth. Output JSON matching the schema.',
+    'Grade strictly against the ground truth, scaling the 1–5 scores to the ' +
+      'difficulty tier above. Output JSON matching the schema.',
+    'Also output `pressureNote`: ONE sentence reminding the candidate that a ' +
+      'live, timed, spoken interview is harder than untimed practice, and that ' +
+      'improving under-pressure retrieval (not just knowing the method) is the ' +
+      'goal. Encouraging, forward-looking, never a hire/no-hire verdict.',
   ].join('\n')
 }
 
@@ -510,8 +583,18 @@ export const gradeInterview = onCall(
     const reportJson = extractGradeJson(gradeData)
     if (!reportJson.trim()) throw new HttpsError('internal', 'Grader returned no usable output')
     const report = JSON.parse(reportJson) as InterviewReport
-    if (!report.hireSignal || !report.dimensions || typeof report.dimensions !== 'object')
+    if (
+      !report.hireSignal ||
+      !report.dimensions ||
+      typeof report.dimensions !== 'object' ||
+      !report.pressureNote
+    )
       throw new HttpsError('internal', 'Grader returned an incomplete report')
+    // spec-22: the tier label is SERVER-AUTHORITATIVE — overwrite the model's
+    // echo with the drawn question's known tier (belt-and-suspenders; the model
+    // could echo wrong). tier/pressureNote ride inside the `report` blob written
+    // by the grade transaction below — no new Firestore field.
+    report.tier = question.tier
 
     // 4b — calibration (spec-12). Build CalibrationItem[] from the transcript:
     // each candidate turn carrying a finite spec-02 `confidence`. correct is

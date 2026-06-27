@@ -26,7 +26,96 @@ vi.mock('./interviewPack', () => ({
   toClientQuestion: vi.fn(),
 }))
 
-import { extractGradeJson } from './interview'
+import {
+  extractGradeJson,
+  buildGraderPrompt,
+  resolveTierFloor,
+  INTERVIEW_REPORT_SCHEMA,
+} from './interview'
+import type { Question } from './interviewPack'
+
+// Minimal stub question per tier — only the fields buildGraderPrompt reads.
+function stubQuestion(tier: 'hard' | 'harder' | 'brutal'): Question {
+  return {
+    id: `q-${tier}`,
+    tier,
+    fingerprint: 'fp',
+    prompt: 'Stub prompt',
+    source: 'stub',
+    engineCheck: { module: 'm', calls: [], answer: '42', verified: true },
+    hidden: {
+      answer: '42',
+      approaches: ['approach a'],
+      wrongTurns: ['wrong w'],
+      hintLadder: ['h1', 'h2', 'h3'],
+      rubric: {
+        correctness: 'c',
+        approach: 'a',
+        rigor: 'r',
+        communication: 'm',
+        speed: 's',
+      },
+    },
+    followUps: [],
+  } as Question
+}
+
+describe('buildGraderPrompt — tier-aware rubric scaling (spec-22)', () => {
+  it.each(['hard', 'harder', 'brutal'] as const)(
+    'states the tier and its calibration band for %s',
+    (tier) => {
+      const prompt = buildGraderPrompt(stubQuestion(tier), [])
+      expect(prompt).toContain(`This question is tier: ${tier}`)
+      // The matching calibration band is keyed off a tier-specific phrase.
+      const bandMarker =
+        tier === 'hard'
+          ? 'Standard interview difficulty'
+          : tier === 'harder'
+            ? 'Above standard'
+            : 'Top-tier / brain-teaser difficulty'
+      expect(prompt).toContain(bandMarker)
+    },
+  )
+
+  it('asks the grader for a forward-looking pressureNote', () => {
+    const prompt = buildGraderPrompt(stubQuestion('hard'), [])
+    expect(prompt).toContain('pressureNote')
+    expect(prompt).toContain('under-pressure retrieval')
+  })
+
+  it('instructs scaling the 1–5 scores to the difficulty tier', () => {
+    const prompt = buildGraderPrompt(stubQuestion('brutal'), [])
+    expect(prompt).toContain('scaling the 1–5 scores to the difficulty tier')
+  })
+})
+
+describe('resolveTierFloor (spec-22)', () => {
+  it.each([
+    ['brutal', 'brutal'],
+    ['harder', 'harder'],
+    ['hard', 'hard'],
+    [undefined, 'hard'],
+    ['garbage', 'hard'],
+    ['', 'hard'],
+    [null, 'hard'],
+    [3, 'hard'],
+  ])('resolves %s → %s', (input, expected) => {
+    expect(resolveTierFloor(input)).toBe(expected)
+  })
+})
+
+describe('INTERVIEW_REPORT_SCHEMA (spec-22)', () => {
+  it('requires tier and pressureNote, keeps additionalProperties false', () => {
+    expect(INTERVIEW_REPORT_SCHEMA.required).toContain('tier')
+    expect(INTERVIEW_REPORT_SCHEMA.required).toContain('pressureNote')
+    expect(INTERVIEW_REPORT_SCHEMA.additionalProperties).toBe(false)
+    expect(INTERVIEW_REPORT_SCHEMA.properties.tier.enum).toEqual([
+      'hard',
+      'harder',
+      'brutal',
+    ])
+  })
+})
 
 describe('extractGradeJson', () => {
   it('returns the JSON string from a message item when output[0] is a reasoning item', () => {

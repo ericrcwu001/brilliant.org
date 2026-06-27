@@ -3,7 +3,7 @@
 // done(report) → error. Mounts <Orb> for audio-reactive visuals and
 // <InterviewReportView> when the session ends.
 
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useContext, useEffect, useRef, useState } from 'react'
 import type { NavigateFn } from '../pages/routes'
 import type { RealtimeTransport } from '../interview/useRealtimeInterview'
 import { useRealtimeInterview } from '../interview/useRealtimeInterview'
@@ -11,6 +11,11 @@ import { Orb } from '../interview/Orb'
 import { InterviewReportView } from '../interview/InterviewReportView'
 import { ConfidenceRating } from '../lesson/ConfidenceRating'
 import { conceptPath } from './routes'
+import { AuthContext } from '../auth/authContext'
+import { loadCourseFromFirestore } from '../content/firestoreLoader'
+import { subscribeProgressMap } from '../progress/progress'
+import { computeInAppAccuracy, conceptLessonIds } from '../interview/gap'
+import type { Course, Progress } from '../content/schema'
 
 function formatMmSs(seconds: number): string {
   const m = Math.floor(seconds / 60)
@@ -23,6 +28,8 @@ export function InterviewPage({
   conceptId,
   _transport,
   showConfidence = false,
+  tierFloor = 'hard',
+  devInAppAccuracy,
 }: {
   navigate: NavigateFn
   conceptId: string
@@ -32,7 +39,19 @@ export function InterviewPage({
   // renders the rating whenever status === 'confidence', which the hook reaches
   // only when this is on.
   showConfidence?: boolean
+  // Track-gated difficulty floor (spec-22 / D9), resolved by App.tsx via the
+  // shared isQuantIntensity helper ('brutal' for the gate, 'hard' for Track A)
+  // and forwarded into the hook → mint. Default 'hard' ⇒ Track A unchanged.
+  tierFloor?: 'hard' | 'harder' | 'brutal'
+  // /dev harness stub for the practice-vs-performance gap (spec-22 §3.4): when
+  // provided, skip the real course/progress load and render the gap block with
+  // this value. Never set on the authed route.
+  devInAppAccuracy?: number | null
 }) {
+  // Read AuthContext directly (useContext, NOT useAuth) so the /dev/interview
+  // route — which renders this page with no <AuthProvider> — still renders.
+  // user === null there → the progress subscription below early-returns (fail gentle).
+  const user = useContext(AuthContext)?.user ?? null
   const {
     status,
     transcript,
@@ -46,7 +65,45 @@ export function InterviewPage({
     start,
     stop,
     submitConfidence,
-  } = useRealtimeInterview(conceptId, _transport, showConfidence)
+  } = useRealtimeInterview(conceptId, _transport, showConfidence, tierFloor)
+
+  // ── Practice-vs-performance gap data (spec-22 §3.3/§3.4) ───────────────────
+  // In-app accuracy is scoped to THIS concept: load the course for `conceptId`,
+  // derive its lessonIds, and intersect them with the whole-library progress map
+  // before computing accuracy. Passing the unfiltered map would compute accuracy
+  // across the learner's whole library (ProgressSchema has no conceptId). While
+  // the course is still loading, inAppAccuracy stays null and the gap block hides.
+  const [course, setCourse] = useState<Course | null>(null)
+  const [progressMap, setProgressMap] = useState<Record<string, Progress>>({})
+
+  useEffect(() => {
+    if (devInAppAccuracy !== undefined) return // /dev stub: skip the real load.
+    let cancelled = false
+    void loadCourseFromFirestore(conceptId)
+      .then((c) => {
+        if (!cancelled) setCourse(c)
+      })
+      .catch(() => {})
+    return () => {
+      cancelled = true
+    }
+  }, [conceptId, devInAppAccuracy])
+
+  useEffect(() => {
+    if (devInAppAccuracy !== undefined || !user) return // /dev stub: skip.
+    return subscribeProgressMap(user.uid, setProgressMap)
+  }, [user, devInAppAccuracy])
+
+  const inAppAccuracy: number | null =
+    devInAppAccuracy !== undefined
+      ? devInAppAccuracy
+      : course
+        ? computeInAppAccuracy(
+            Object.entries(progressMap)
+              .filter(([lessonId]) => conceptLessonIds(course).has(lessonId))
+              .map(([, p]) => p),
+          )
+        : null
 
   const audioRef = useRef<HTMLAudioElement | null>(null)
   const [audioBlocked, setAudioBlocked] = useState(false)
@@ -314,6 +371,7 @@ export function InterviewPage({
           report={report}
           attemptId={attemptId ?? ''}
           conceptId={conceptId}
+          inAppAccuracy={inAppAccuracy}
           onClose={handleBack}
         />
       </div>

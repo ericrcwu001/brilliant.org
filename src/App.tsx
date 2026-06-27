@@ -165,10 +165,13 @@ function GuardedRoutes({
       <InterviewPage
         navigate={navigate}
         conceptId={interviewConceptId}
-        // Confidence capture (spec-02 / D6) gates on the single quant-intensity
-        // helper (README §4; fails GENTLE). No per-concept progress here, so the
-        // gate uses userDoc (defaultTrack ?? 'A') + learningGoal.
+        // Confidence capture (spec-02 / D6) AND the track-gated brutal mock
+        // (spec-22 / D9) both gate on the single quant-intensity helper
+        // (README §4; fails GENTLE). No per-concept progress here, so the gate
+        // uses userDoc (defaultTrack ?? 'A') + learningGoal — do NOT inline the
+        // predicate (gate Issue #9).
         showConfidence={isQuantIntensity(userDoc)}
+        tierFloor={isQuantIntensity(userDoc) ? 'brutal' : 'hard'}
       />
     )
 

@@ -140,6 +140,14 @@ export interface InterviewReport {
   summary: string
   strengths: string[]
   fixes: string[]
+  // spec-22 / D9: the difficulty tier the score was tier-calibrated against
+  // (server-authoritative — overwritten from the drawn question's tier). The UI
+  // labels "Graded as a {tier} question". SHARED with spec-23 (README §3.5):
+  // spec-23 removes `hireSignal`; these two fields survive that removal.
+  tier: 'hard' | 'harder' | 'brutal'
+  // spec-22: a one-line "pressure graduation" note (under-pressure retrieval is
+  // the real signal), never a hire/no-hire verdict. Survives spec-23.
+  pressureNote: string
 }
 
 export interface Turn {
@@ -149,8 +157,7 @@ export interface Turn {
   final: boolean
   // Self-reported confidence on a candidate answer (spec-02 / D6). [0.5,1.0]
   // (ConfidenceRating's CONFIDENCE_SCALE). Optional; present only when the
-  // quant-intensity gate is on. spec-12 reads transcript[i].confidence for
-  // per-attempt calibration. Mirror of src/content/interviewPack.ts Turn.
+  // quant-intensity gate is on. spec-12/spec-23 read this for calibration.
   confidence?: number
 }
 

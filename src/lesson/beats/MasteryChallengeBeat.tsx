@@ -34,6 +34,10 @@ export function MasteryChallengeBeat(props: BeatProps) {
 
   function check() {
     const ok = gradeAcceptFields(fields, values)
+    // Difficulty-governor retrieval-rep signal (spec-21). masteryChallenge is
+    // always a retrieval rep (spec-03); the player gates the actual window append
+    // on isRetrievalRep + quantGate, so this is inert on Track A.
+    props.onGraded?.(ok)
     if (ok) {
       ladder.submitCorrect()
       setSolved(true)

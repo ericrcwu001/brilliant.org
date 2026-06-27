@@ -90,9 +90,13 @@ export function LessonPage({
   if (state.status === 'ready' && state.lessonId === lessonId && user) {
     // Effective track: per-concept calibrate ?? global default ?? 'B'.
     const effectiveTrack: Track = state.track ?? userDoc?.defaultTrack ?? 'B'
-    // Confidence capture (spec-02 / D6) gates on the single quant-intensity
-    // helper (README §4; fails GENTLE). The player stays userDoc-agnostic.
-    const showConfidence = isQuantIntensity(userDoc, { track: state.track ?? undefined })
+    // Quant-intensity gate (README §4 / D2 / D9): ONE shared predicate, resolved
+    // here where both userDoc and the per-concept track are in scope, so a learner
+    // is never quant-gated in one surface and gentle in another. Fails GENTLE. Pass
+    // the per-concept track so it wins over defaultTrack (as :92 does). Drives both
+    // confidence capture (spec-02) and the difficulty governor (spec-21); the player
+    // stays userDoc-agnostic and never re-derives the gate from track/learningGoal.
+    const quantGate = isQuantIntensity(userDoc, { track: state.track ?? undefined })
     return (
       <LessonPlayer
         key={lessonId}
@@ -102,7 +106,8 @@ export function LessonPage({
         track={effectiveTrack}
         review={state.completed}
         badge={state.badge}
-        showConfidence={showConfidence}
+        showConfidence={quantGate}
+        quantGate={quantGate}
         onExit={() => navigate(conceptPath(state.lesson.courseId))}
         onInterviewCta={() => navigate(interviewPath(state.lesson.courseId))}
       />

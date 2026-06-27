@@ -456,6 +456,73 @@
   color: var(--ergo-ink);
 }
 
+/* ── Practice-vs-performance gap (spec-22) ── */
+
+.iv-gap {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s2);
+  padding: var(--s3);
+  border: 1px solid var(--ergo-line);
+  border-radius: var(--r-sm);
+}
+
+.iv-gap--wide {
+  border-color: var(--ergo-brand);
+  background: var(--ergo-brand-tint, var(--ergo-surface-2));
+}
+
+.iv-gap__tier {
+  margin: 0;
+  font-size: calc(12px * var(--fs));
+  color: var(--ergo-ink-2);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.iv-gap__row {
+  display: flex;
+  align-items: center;
+  gap: var(--s2);
+}
+
+.iv-gap__row-label {
+  flex: 0 0 auto;
+  inline-size: 8.5em;
+  font-size: calc(13px * var(--fs));
+  color: var(--ergo-ink-2);
+}
+
+.iv-gap__bar {
+  flex: 1 1 auto;
+  block-size: var(--s2);
+  border-radius: var(--r-pill);
+  background: var(--ergo-line);
+  overflow: hidden;
+}
+
+.iv-gap__bar-fill {
+  display: block;
+  block-size: 100%;
+  background: var(--ergo-brand);
+}
+
+.iv-gap__row-value {
+  flex: 0 0 auto;
+  inline-size: 3em;
+  text-align: end;
+  font-size: calc(13px * var(--fs));
+  font-weight: 600;
+  color: var(--ergo-ink);
+}
+
+.iv-gap__note {
+  margin: 0;
+  font-size: calc(13px * var(--fs));
+  line-height: 1.5;
+  color: var(--ergo-ink-2);
+}
+
 /* ── Orb container — compact presence indicator on the live screen ── */
 
 .iv-orb {

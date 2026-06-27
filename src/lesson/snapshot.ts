@@ -49,6 +49,10 @@ export type SnapshotInput = {
   // probability in [0.5,1.0]; captured only on checkpoint beats, gated by track.
   // Empty for Track A; read by spec-12 for calibration (NOT scored here).
   confidenceByBeat: Record<string, number>
+  // Difficulty-governor rolling window (spec-21): the last ≤8 retrieval-rep
+  // outcomes (most-recent-last). Presentation tuning only — NOT progression/gold
+  // state. Empty for Track A (the governor never runs there); read by repWindowOf.
+  repWindow: boolean[]
 }
 
 const localKey = (uid: string, lessonId: string) =>
@@ -70,6 +74,7 @@ export function toSnapshot(input: SnapshotInput, updatedAt: string): Snapshot {
     hintLevelByBeat: input.hintLevelByBeat,
     maxHintLevelByBeat: input.maxHintLevelByBeat,
     confidenceByBeat: input.confidenceByBeat,
+    repWindow: input.repWindow,
   }
   // Omit the key entirely when absent so we never write `undefined` to Firestore.
   if (ls.equationTiles) interactionState.equationTiles = ls.equationTiles
@@ -112,6 +117,14 @@ export function maxHintLevelsOf(snap: Snapshot): Record<string, number> {
 // `undefined` to Firestore — mirrors maxHintLevelsOf exactly.
 export function confidencesOf(snap: Snapshot): Record<string, number> {
   return snap.interactionState.confidenceByBeat ?? {}
+}
+
+// Difficulty-governor rolling window (spec-21). Returns [] (never undefined) so the
+// player seeds an empty RepWindow and toSnapshot never writes `undefined` to
+// Firestore — mirrors maxHintLevelsOf / confidencesOf exactly. Presentation tuning
+// only; empty for Track A (the governor never runs there).
+export function repWindowOf(snap: Snapshot): boolean[] {
+  return snap.interactionState.repWindow ?? []
 }
 
 function readLocalSnapshot(uid: string, lessonId: string): Snapshot | null {
