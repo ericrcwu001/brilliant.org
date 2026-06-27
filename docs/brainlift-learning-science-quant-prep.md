@@ -1,5 +1,10 @@
 # BrainLift: Learning Science for Quant Interview Prep
 
+> **SUPERSEDED (2026-06-27).** This is an earlier draft. The authoritative version is
+> [`brainlift-learning-science-brilliant-quant-prep.md`](brainlift-learning-science-brilliant-quant-prep.md),
+> and the implementation plan derived from it lives in
+> [`docs/learning-science/README.md`](learning-science/README.md). Do not cite line numbers from this file.
+
 ## Owners
 
 - Eric Wu (eric.wu@alphaaiengineering.com)

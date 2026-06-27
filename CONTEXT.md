@@ -228,15 +228,86 @@ so the AI never voices unverified math.
 
 ## Interview report
 
-The graded result of a **capstone interview**: per-dimension rubric scores (correctness, approach,
-rigor, communication, speed) with quoted evidence, an overall **hire signal**, and concrete
-strengths and fixes. Produced by a server-side grading pass over the transcript and stored per
-attempt (latest + best surfaced); raw audio is never stored.
+The graded result of a **capstone interview**: the five rubric dimensions (correctness, approach,
+rigor, communication, speed) surfaced as feed-forward **next-fix cards** plus a **calibration**
+delta (predicted vs measured readiness). Produced by a server-side grading pass over the transcript
+and stored per attempt (latest + best surfaced); raw audio is never stored. _(No longer carries a
+**hire signal** — see ADR-0010.)_
 
 ## Hire signal
 
-A **capstone interview**'s overall verdict, expressed in desk language on a scale from Strong No
-to Strong Yes. Summarizes the **interview report**; does not gate concept mastery.
+_(Retired — removed by ADR-0010.)_ The old **capstone interview** overall verdict, expressed in desk
+language on a Strong No → Strong Yes scale. Removed because a person-level verdict is the weakest,
+most-often-harmful feedback type; the **interview report** now feeds forward (next-fix cards) and
+reports **calibration** instead.
+
+---
+
+## Learning-science overhaul
+
+_(New vocabulary for the spaced-retrieval / honest-mastery / calibration work — see
+[`docs/learning-science/README.md`](docs/learning-science/README.md), ADR-0009, ADR-0010.)_
+
+## Method tag
+
+The hidden **deep-structure** label on a graded problem naming the technique it trains (e.g.
+*first-step analysis*, *symmetry*, *conditioning*, *states/Markov*). Drawn from a single extensible
+registry (`src/content/methods.ts`); stored as `schemaId` on a beat. Enables interleaving "the same
+method in different costumes" across concepts and indexing a learner's weakness by method rather than
+by lesson. _Avoid_: topic, surface label, category.
+
+## Review card
+
+The per-problem spaced-retrieval scheduling record (one per graded beat per learner) holding its
+SM-2 state (`dueAt`, `intervalDays`, `easeFactor`, `reps`). Function-owned (client-read,
+client-write-denied), stored at `users/{uid}/reviews/{lessonId}__{beatId}`.
+
+## Spaced review
+
+A cold, delayed re-attempt of a previously-seen problem, scheduled by SM-2 and surfaced by the
+**Daily Review queue**. The act of passing one is a **retrieval rep** and (≥1 day after completion)
+can mint **gold** mastery.
+
+## Daily Review queue
+
+The home-screen hero and surface that presents due **review cards** — interleaved across concepts
+with surface labels hidden — as the recommended daily action. The catalog remains home; the
+label-stripped "Mixed Floor as home" is a deferred later phase.
+
+## Which-method gate
+
+A graded discrimination check, built on the `prediction` beat (with `byOption` refutation), shown
+before solving a label-stripped problem: the learner first commits to the **method** from a
+domain-appropriate menu. Selection is the graded act. Distinct from **Calibrate** (a prerequisite
+fluency gate). _Avoid_: building it on `patternPick` (ungraded, no `byOption`).
+
+## Calibration score
+
+A measure of how well a learner's stated confidence matches their accuracy (a Brier-style stat),
+captured on graded checkpoints and the interview. Surfaced as a predicted-vs-measured delta; the
+trader's-edge skill (bet sizing). Foregrounded for the **quant-intensity gate**.
+
+## Retrieval rep
+
+A cold-recall act — a **spaced review**, a `masteryChallenge`, or a **which-method gate** — as
+opposed to ordinary teaching interaction. A plumbing taxonomy that feeds the difficulty governor,
+calibration scoring, and analytics. Deliberately does **not** drive the streak.
+
+## Target interview date
+
+An optional date a learner sets in **onboarding** (editable in Profile); the SM-2 schedule bends
+around it so every problem gets a final cold review in the days before the date.
+
+## Quant-intensity gate
+
+The rule that activates the aggressive desirable-difficulty behaviors (difficulty governor, brutal
+mock, failure-first, calibration-forward report): **Track B `OR` `learningGoal === 'interview'`**.
+Track A stays gentle.
+
+## Transfer problem
+
+A held-out, fresh-surface problem of the same **method** as a lesson's checkpoint, authored per
+lesson and shown only as the **Track-B gold gate** (delayed transfer check).
 
 ---
 

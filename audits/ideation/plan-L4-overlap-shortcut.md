@@ -1,5 +1,10 @@
 # L4 — The Overlap Shortcut (`lesson-overlap-shortcut`)
 
+> **STALE NUMBERING (annotated 2026-06-27).** This file's "L4" and "Unlocks L5 States & Streaks" use the
+> retired ordering. **Canonical:** `lesson-overlap-shortcut` is the **final lesson, L6** (the martingale
+> retrieval capstone). See `CONTEXT.md` → "Lesson order (L1–L6)" and `docs/proposed-lessons.md §1`. The file
+> is not renamed to avoid breaking references; trust the canonical order, not the filename.
+
 **Agent 3 of 5 · Ideation plan · 2026-06-23**
 
 **Course position:** L4 on `course-pattern-hitting-times` (after L1 Pattern Hitting Times, L2 Penney's Game, L3 Gambler's Ruin). Unlocks L5 States & Streaks.

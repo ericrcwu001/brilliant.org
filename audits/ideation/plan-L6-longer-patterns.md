@@ -1,5 +1,10 @@
 # L6 Plan — Longer Patterns & Overlap (`lesson-longer-patterns`)
 
+> **STALE NUMBERING (annotated 2026-06-27).** The filename and "Final lesson (L6 of 6)" use the retired
+> ordering. **Canonical:** `lesson-longer-patterns` is **L5** (transfer check); `lesson-overlap-shortcut` is the
+> final **L6**. See `CONTEXT.md` → "Lesson order (L1–L6)" and `docs/proposed-lessons.md §1`. Not renamed to
+> avoid breaking references; trust the canonical order.
+
 **Agent:** 5 of 5 (curriculum / transfer lesson)  
 **Status:** Ideation → fixture-ready spec  
 **Course position:** Final lesson (L6 of 6); unlocks `six-lessons-complete` milestone  
