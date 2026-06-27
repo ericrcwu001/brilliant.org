@@ -623,6 +623,9 @@ const GATED = new Set([
   // concept-game-theory
   'lesson-game-theory-1','lesson-game-theory-2','lesson-game-theory-3',
   'lesson-game-theory-4','lesson-game-theory-5','lesson-game-theory-6',
+  // concept-covariance
+  'lesson-covariance-1','lesson-covariance-2','lesson-covariance-3',
+  'lesson-covariance-4','lesson-covariance-5','lesson-covariance-6',
 ])
 // L5 transfer lesson is the logged exception to the retrieval-opener rule.
 const NO_RETRIEVAL_OPENER = new Set(['lesson-longer-patterns'])
@@ -796,6 +799,9 @@ const MASTERY_LESSONS = new Set([
   // concept-game-theory
   'lesson-game-theory-1','lesson-game-theory-2','lesson-game-theory-3',
   'lesson-game-theory-4','lesson-game-theory-5','lesson-game-theory-6',
+  // concept-covariance
+  'lesson-covariance-1','lesson-covariance-2','lesson-covariance-3',
+  'lesson-covariance-4','lesson-covariance-5','lesson-covariance-6',
 ])
 for (const lesson of lessons) {
   if (!MASTERY_LESSONS.has(lesson.lessonId)) continue

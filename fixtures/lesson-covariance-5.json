@@ -1,0 +1,180 @@
+{
+  "lessonId": "lesson-covariance-5",
+  "courseId": "course-covariance",
+  "title": "The Correlation Triangle: 3-Variable Bounds",
+  "patternOptions": ["H"],
+  "milestoneId": "cov-triangle",
+  "unlocks": "lesson-covariance-6",
+  "schemaVersion": 1,
+  "beats": [
+    {
+      "beatId": "cov5-recall",
+      "required": true,
+      "prompt": "Two retrievals of the ρ definition from the last lesson. Match each statement to its value.",
+      "interaction": {
+        "type": "retrievalGrid",
+        "pairs": [
+          { "left": "ρ always lies in the interval…", "right": "[−1, 1]" },
+          { "left": "ρ = Cov / …", "right": "√(Var_X · Var_Y)" }
+        ]
+      },
+      "feedback": {
+        "correct": "ρ ∈ [−1,1], and ρ = Cov/√(Var_X·Var_Y) — the bound the geometry is about to tighten.",
+        "hints": [
+          "Both are the L4 ρ definition: the interval it lives in, and the denominator that normalizes it.",
+          "ρ normalizes Cov by the product of the SDs, which is √(Var_X·Var_Y).",
+          "ρ ∈ [−1,1]; ρ = Cov / √(Var_X·Var_Y)."
+        ]
+      }
+    },
+    {
+      "beatId": "cov5-bet",
+      "required": false,
+      "prompt": "x is 0.8-correlated with both y and z (ρ(x,y) = ρ(x,z) = 4/5). Can ρ(y,z) be anything in [−1,1]?",
+      "interaction": {
+        "type": "prediction",
+        "options": [
+          "Yes — y and z are free, any value in [−1,1]",
+          "Up to 1, but down to −1",
+          "No — pinned between 7/25 and 1"
+        ]
+      },
+      "feedback": {
+        "byOption": {
+          "Yes — y and z are free, any value in [−1,1]": {
+            "note": "Let's test it — correlations aren't free of each other. If x is strongly tied to both y and z, they can't be too unalike; the correlation matrix must be PSD, which fences ρ(y,z) (#10).",
+            "correct": false
+          },
+          "Up to 1, but down to −1": {
+            "note": "Let's test it — the top is right (it can reach 1), but the floor isn't −1: the PSD condition lifts the minimum up to 7/25 (#10).",
+            "correct": false
+          },
+          "No — pinned between 7/25 and 1": {
+            "note": "Good instinct — the PSD-determinant condition bounds it: ρ(y,z) ∈ [7/25, 1] (#10).",
+            "correct": true
+          }
+        }
+      }
+    },
+    {
+      "beatId": "cov5-primer-psd",
+      "required": false,
+      "track": "A",
+      "prompt": "Quick reminder before the geometry — read the card, then continue.",
+      "interaction": {
+        "type": "primer",
+        "variant": "custom",
+        "title": "A valid correlation matrix must be PSD",
+        "body": "A correlation matrix is positive semidefinite (PSD): for the 3×3 case [[1,ρ₁₂,ρ₁₃],[ρ₁₂,1,ρ₂₃],[ρ₁₃,ρ₂₃,1]], PSD requires its determinant ≥ 0. Solving det = 1 + 2ρ₁₂ρ₁₃ρ₂₃ − ρ₁₂² − ρ₁₃² − ρ₂₃² ≥ 0 for the third correlation pins it to a range. The determinant equals exactly 0 at the two attainable bounds.",
+        "collapsible": true
+      },
+      "feedback": {
+        "correct": "Valid correlation matrix ⇒ PSD ⇒ det ≥ 0; solving det ≥ 0 for the third ρ gives its range.",
+        "hints": ["Read the card.", "PSD ⇒ determinant ≥ 0; the bounds are where it equals 0.", "Continue when ready."]
+      }
+    },
+    {
+      "beatId": "cov5-explore",
+      "required": false,
+      "prompt": "Two vectors are fixed at ρ = 4/5 to x. Sweep the third vector and TRY to make y, z anti-correlated (ρ = −1). Watch the dot hit a wall.",
+      "interaction": {
+        "type": "covarianceBoard",
+        "display": "corrVectors",
+        "task": "corrRange",
+        "interactive": true,
+        "rho1": { "n": 4, "d": 5 },
+        "rho2": { "n": 4, "d": 5 },
+        "labels": ["x", "y", "z"],
+        "headline": "7/25,1"
+      },
+      "hero": {
+        "slowFirst": true,
+        "structuralReadout": "ρ(y,z) can't drop below 7/25 — the PSD floor. Range [7/25, 1].",
+        "reducedMotionFinalFrame": true
+      },
+      "feedback": {
+        "correct": "You found the floor — ρ(y,z) can't drop below 7/25. With ρ₁ = ρ₂ = 4/5 the attainable range is [7/25, 1], and the determinant hits 0 at each end.",
+        "hints": [
+          "Drag the third vector toward 'anti-correlated' and watch the dot on the number-line.",
+          "The dot slides toward the floor and STOPS — it can't reach −1 because the matrix must stay PSD.",
+          "Range [7/25, 1] (0.28–1.00); the floor is 7/25, not −1 (#10)."
+        ]
+      }
+    },
+    {
+      "beatId": "cov5-win",
+      "required": true,
+      "prompt": "Warm up with the ρ definition (spaced recall from L4). With Cov = 12, Var(X) = 9, Var(Y) = 25, what is ρ(X,Y)?",
+      "interaction": {
+        "type": "answerEntry",
+        "fields": [
+          { "id": "rho", "label": "ρ(X,Y)", "accept": ["4/5", "0.8", ".8"], "placeholder": "?/?" }
+        ]
+      },
+      "feedback": {
+        "correct": "ρ = 12/√(9·25) = 12/15 = 4/5 — the L4 definition, fresh from this lesson's opener.",
+        "hints": [
+          "ρ = Cov/√(Var·Var), which you just retrieved.",
+          "√(9·25) = 15.",
+          "12/15 = 4/5 (#5)."
+        ]
+      }
+    },
+    {
+      "beatId": "cov5-primer-hedge",
+      "required": false,
+      "track": "A",
+      "prompt": "One more reminder before the mastery — read the card, then continue.",
+      "interaction": {
+        "type": "primer",
+        "variant": "custom",
+        "title": "The optimal hedge is Cov/Var — no ρ, no √",
+        "body": "To minimize the variance of A − h·B, the optimal hedge ratio is h* = Cov(A,B)/Var(B). It is a single division — a covariance over a variance — and it never needs the correlation or a square root. (Equivalently h* = ρ·σ_A/σ_B, but Cov/Var avoids ρ entirely.)",
+        "collapsible": true
+      },
+      "feedback": {
+        "correct": "h* = Cov(A,B)/Var(B): one division, no ρ, no √.",
+        "hints": ["Read the card.", "Hedge = Cov over Var, not Cov over √(Var·Var).", "Continue when ready."]
+      }
+    },
+    {
+      "beatId": "cov5-mastery",
+      "required": true,
+      "density": "split",
+      "prompt": "Mastery — three parts. Part A: the attainable range of ρ(y,z). Part B: the equicorrelation floor. Interleave: the optimal hedge.",
+      "interaction": {
+        "type": "masteryChallenge",
+        "scenario": "Part A: ρ(x,y) = ρ(x,z) = 4/5. Give the minimum and maximum possible ρ(y,z) (the Pythagorean pair 4/5, 3/5 keeps every √ rational). Part B: three variables with ALL pairwise correlations equal to ρ — give the minimum possible ρ. Interleave: long 1 share A, short h shares B, with Cov(A,B) = −6 and Var(B) = 9 — give the variance-minimizing hedge h*.",
+        "fields": [
+          { "id": "rho-yz-min", "label": "min ρ(y,z)", "accept": ["7/25", "0.28", ".28"], "placeholder": "?/?" },
+          { "id": "rho-yz-max", "label": "max ρ(y,z)", "accept": ["1"], "placeholder": "?" },
+          { "id": "equicorr-min", "label": "min equicorrelation ρ (3 variables; general: −1/(n−1))", "accept": ["-1/2", "−1/2", "-0.5", "−0.5"], "placeholder": "?/?" },
+          { "id": "hedge", "label": "optimal hedge h* = Cov/Var", "accept": ["-2/3", "−2/3"], "placeholder": "?/?" }
+        ]
+      },
+      "feedback": {
+        "correct": "Part A: with ρ₁ = ρ₂ = 4/5 the leftover root is √(9/25) = 3/5, so min = 16/25 − 9/25 = 7/25 and max = 16/25 + 9/25 = 1. Part B: det = (1−ρ)²(1+2ρ) ≥ 0 ⇒ 1+2ρ ≥ 0 ⇒ ρ ≥ −1/2 (general −1/(n−1)). Interleave: h* = Cov/Var = −6/9 = −2/3 — a single division, no ρ.",
+        "hints": [
+          "Part A: the third ρ isn't free; min/max come from the PSD determinant. Part B: three mutually-negative correlations fight each other. Interleave: the hedge is Cov/Var, no ρ or √.",
+          "Part A: min = 16/25 − (3/5)(3/5), max = 16/25 + (3/5)(3/5). Part B: det (1−ρ)²(1+2ρ) ≥ 0 ⇒ 1+2ρ ≥ 0. Interleave: (−6)/9 — don't normalize into a correlation.",
+          "Part A: min = 7/25, max = 1 (#10). Part B: ρ ≥ −1/2 (#11); general −1/(n−1) (#12). Interleave: h* = −2/3 (#13)."
+        ]
+      }
+    },
+    {
+      "beatId": "cov5-recap",
+      "required": true,
+      "interviewNote": "Interview framing: the 3-variable correlation range is a Green-Book / Jane-Street classic — the PSD-determinant det = 1+2ρ₁ρ₂ρ−ρ₁²−ρ₂²−ρ² ≥ 0 fences the third correlation, and the equicorrelation floor is −1/(n−1) (so n correlated assets can't all be strongly negatively correlated). The hedge h* = Cov(A,B)/Var(B) is the minimum-variance hedge ratio — Cov over Var, never the correlation alone.",
+      "prompt": "Correlations live inside a box.",
+      "interaction": { "type": "recap" },
+      "feedback": {
+        "correct": "A valid correlation matrix must be PSD, so the third correlation is fenced (here [7/25, 1]), and equal pairwise correlations can't drop below −1/(n−1). Next: the synthesis capstone.",
+        "hints": [
+          "Read each recap card.",
+          "PSD ⇒ det ≥ 0 ⇒ the third ρ is bounded; the equicorrelation floor is −1/(n−1).",
+          "Tap to continue."
+        ]
+      }
+    }
+  ]
+}

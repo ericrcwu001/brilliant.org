@@ -7,7 +7,7 @@
 // (coral), Ch4 Roadmap (amber). Mirrors ERGO_CHAPTERS in pages/studyDesk.model.ts
 // and the lesson→chapter table in docs/ergo-lesson-restyle-brief.md.
 
-export type ChapterHue = 'ch1' | 'ch2' | 'ch3' | 'ch4'
+export type ChapterHue = 'ch1' | 'ch2' | 'ch3' | 'ch4' | 'ch5'
 
 const LESSON_CHAPTER: Record<string, ChapterHue> = {
   'lesson-first-heads': 'ch1',
@@ -38,6 +38,15 @@ const LESSON_CHAPTER: Record<string, ChapterHue> = {
   'lesson-game-theory-4': 'ch2',
   'lesson-game-theory-5': 'ch2',
   'lesson-game-theory-6': 'ch2',
+  // concept-covariance: ch-covariance-1 (ch5) / ch-covariance-2 (ch1) / ch-covariance-3 (ch3),
+  // mirroring course-covariance.json chapters[]. Drives the lesson-shell accent
+  // (data-ch → --accent via shell.css, which now carries a ch5 rule).
+  'lesson-covariance-1': 'ch5',
+  'lesson-covariance-2': 'ch5',
+  'lesson-covariance-3': 'ch1',
+  'lesson-covariance-4': 'ch1',
+  'lesson-covariance-5': 'ch3',
+  'lesson-covariance-6': 'ch3',
 }
 
 // Resolved hex per chapter — keep in sync with the --chN tokens in
@@ -47,6 +56,7 @@ const CHAPTER_HEX: Record<ChapterHue, string> = {
   ch2: '#0D9488',
   ch3: '#F0584A',
   ch4: '#E0982E',
+  ch5: '#7C5CF0',
 }
 
 /** The chapter hue token name for a lesson (defaults to ch1 / brand indigo). */
