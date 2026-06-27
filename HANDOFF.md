@@ -2,6 +2,14 @@
 
 <!-- Orientation doc for a fresh context. Session-by-session narration lives in git history; this file keeps only what's needed going forward. -->
 
+## Cursor Cloud env setup (2026-06-27, COMMITTED on branch)
+
+Set up the Cloud Agent dev environment for **manual browser testing**. Update script: `npm ci` (root). Documented two run paths in `AGENTS.md` → `## Cursor Cloud specific instructions`:
+- **Fast path (no Firebase/Java):** `./node_modules/.bin/vite`, then browser-test the `/dev/home` Study Desk harness and `/dev/lesson/:id` (bundled fixtures; `/dev/*` skips `<AuthProvider>` in `App.tsx`). Verified live with no emulator running — both render and are interactive (scenario switcher works; lesson MCQ feedback + pattern-preview respond), no fatal console errors.
+- **Full path (auth/Firestore/Functions):** needs Java + `npm ci --prefix functions` + build functions, then `npx firebase emulators:start` → `npm run seed` → `npm run dev`.
+
+Gitignored `.env.development` placeholder values are required because `src/firebase/app.ts` runs `initializeApp`/`getAuth` at import. `vitest` 1112/1112 green; `npm run lint` fails only on pre-existing `interviews/_build/*.ts` errors (not setup-related).
+
 ## Interview Barge-in / Audio-effect Fixes (2026-06-26, NOT COMMITTED)
 
 Two reported bugs in the realtime interview, verified against the OpenAI Realtime GA types before fixing.
