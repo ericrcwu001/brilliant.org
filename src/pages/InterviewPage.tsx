@@ -97,6 +97,10 @@ export function InterviewPage({
     else if (!userSpeaking) el.play().catch(() => {})
   }, [userSpeaking, isAiSpeaking])
 
+  useEffect(() => {
+    if (status === 'error') console.error('[iv] interview error', error)
+  }, [status, error])
+
   function handleBack() {
     navigate(conceptPath(conceptId))
   }
@@ -184,7 +188,7 @@ export function InterviewPage({
   // ── Error ─────────────────────────────────────────────────────────────────
 
   if (status === 'error') {
-    const isQuota  = error?.code === 'resource-exhausted'
+    const isQuota = error?.code === 'resource-exhausted' || error?.code === 'functions/resource-exhausted'
     const isGrade  = error?.stage === 'grade'
     const isMic    = error?.stage === 'awaitingMic'
     return (
@@ -231,6 +235,7 @@ export function InterviewPage({
           ) : (
             <>
               <p>Something went wrong. Please try again.</p>
+              {error?.code && <p className="iv-error__code">Error code: {error.code}</p>}
               <button type="button" className="btn btn--primary" onClick={start}>
                 Try again
               </button>

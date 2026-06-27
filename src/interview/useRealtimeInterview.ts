@@ -493,19 +493,41 @@ export function useRealtimeInterview(
 
     // 1. Mint ephemeral token.
     let mintResult: MintInterviewTokenOutput
-    try {
-      mintResult = await mintInterviewToken({ conceptId })
-    } catch (err: unknown) {
-      const code = (err as { code?: string })?.code
-      if (code === 'resource-exhausted') {
-        void analytics.interviewQuotaBlocked({ conceptId, reason: 'daily' })
-        setError({ stage: 'mint', code, err })
-      } else {
-        void analytics.interviewError({ conceptId, stage: 'mint' })
-        setError({ stage: 'mint', err })
+    if (_transport) {
+      // Dev/test path: skip the real Firebase call entirely.
+      mintResult = {
+        clientSecret: 'dev',
+        expiresAt: 0,
+        model: 'dev',
+        attemptId: 'dev-attempt',
+        question: {
+          id: 'dev-question',
+          tier: 'hard',
+          fingerprint: 'dev',
+          prompt: 'Dev stub question',
+          source: 'dev',
+          engineCheck: { module: 'stub', verified: true },
+          followUps: [],
+        },
+        sessionCapSeconds: SESSION_CAP_SECONDS,
+        dailyRemainingSeconds: SESSION_CAP_SECONDS,
       }
-      setStatusSafe('error')
-      return
+    } else {
+      try {
+        mintResult = await mintInterviewToken({ conceptId })
+      } catch (err: unknown) {
+        const rawCode = (err as { code?: string })?.code
+        const code = rawCode?.replace(/^functions\//, '')
+        console.error('[iv] mint failed', code, err)
+        if (code === 'resource-exhausted') {
+          void analytics.interviewQuotaBlocked({ conceptId, reason: 'daily' })
+        } else {
+          void analytics.interviewError({ conceptId, stage: 'mint' })
+        }
+        setError({ stage: 'mint', code, err })
+        setStatusSafe('error')
+        return
+      }
     }
     mintResultRef.current = mintResult
     setAttemptId(mintResult.attemptId)

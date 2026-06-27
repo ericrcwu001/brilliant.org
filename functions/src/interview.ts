@@ -45,6 +45,11 @@ const db = getFirestore()
 const SESSION_CAP_SECONDS = 480 // 8 min hard per-session
 const DAILY_QUOTA_SECONDS = 1800 // 30 min per user per day
 const TOKEN_TTL_SECONDS = 600 // expires_after.seconds at mint (>= session cap)
+// Bounds on the client-supplied transcript at grade time — generous enough that a
+// real <=8-min interview never trips them, but they cap grader token cost and keep
+// the attempt doc under the Firestore 1 MiB limit (CWE-770).
+const MAX_TRANSCRIPT_TURNS = 400
+const MAX_TRANSCRIPT_CHARS = 100_000
 const REALTIME_MODEL = 'gpt-realtime-2'
 const REALTIME_VOICE = 'marin'
 const GRADER_MODEL = 'gpt-5.5' // pin a snapshot for production
@@ -80,6 +85,11 @@ function loadPack(conceptId: string): InterviewPack {
   // CTAs pass `courseId`). Strip it so the filename is course-<slug>.json and
   // never the doubled course-course-*.json.
   const slug = conceptId.replace(/^course-/, '')
+  // Reject anything outside the legitimate course-id charset so a crafted
+  // conceptId can never traverse out of packs/ (CWE-22).
+  if (!/^[a-z0-9-]+$/.test(slug)) {
+    throw new HttpsError('invalid-argument', 'Invalid conceptId.')
+  }
   const filepath = path.join(__dirname, '../packs', `course-${slug}.json`)
   let raw: string
   try {
@@ -254,11 +264,6 @@ export const mintInterviewToken = onCall(
               transcription: {
                 model: 'gpt-realtime-whisper',
                 language: 'en',
-                // Bias the ASR toward the quant-interview vocabulary the candidate
-                // will use. If a future model rejects `prompt`, this field is safe
-                // to drop.
-                prompt:
-                  "Quantitative finance interview. Likely terms: expected value, variance, standard deviation, probability, conditional probability, Bayes' rule, Markov chain, combinatorics, permutations, binomial, geometric distribution, expected number of flips, hitting time.",
               },
               // server_vad gates on audio energy (semantic_vad has no threshold knob),
               // so background noise below threshold no longer interrupts the model.
@@ -283,8 +288,10 @@ export const mintInterviewToken = onCall(
     })
 
     if (!mintRes.ok) {
-      const body = await mintRes.text()
-      throw new HttpsError('internal', `OpenAI mint failed: ${mintRes.status} ${body}`)
+      // Log upstream detail server-side; never return the raw OpenAI body to the
+      // client (CWE-209).
+      console.error('OpenAI mint failed', mintRes.status, await mintRes.text())
+      throw new HttpsError('internal', 'Could not start the interview. Please try again.')
     }
 
     const mintData = (await mintRes.json()) as { value: string; expires_at: number }
@@ -403,6 +410,15 @@ export const gradeInterview = onCall(
     const transcript: Turn[] = Array.isArray(data.transcript) ? data.transcript : []
     const durationSec = typeof data.durationSec === 'number' ? data.durationSec : 0
 
+    // Reject oversized transcripts before they reach the grader / Firestore (CWE-770).
+    const transcriptChars = transcript.reduce(
+      (n, t) => n + (typeof t?.text === 'string' ? t.text.length : 0),
+      0,
+    )
+    if (transcript.length > MAX_TRANSCRIPT_TURNS || transcriptChars > MAX_TRANSCRIPT_CHARS) {
+      throw new HttpsError('invalid-argument', 'Transcript is too large.')
+    }
+
     // 2 — load + verify pending attempt (read before transaction)
     const attemptRef = db.doc(`users/${uid}/interviews/${attemptId}`)
     const attemptSnap = await attemptRef.get()
@@ -439,8 +455,10 @@ export const gradeInterview = onCall(
     })
 
     if (!gradeRes.ok) {
-      const body = await gradeRes.text()
-      throw new HttpsError('internal', `OpenAI grade failed: ${gradeRes.status} ${body}`)
+      // Log upstream detail server-side; never return the raw OpenAI body to the
+      // client (CWE-209).
+      console.error('OpenAI grade failed', gradeRes.status, await gradeRes.text())
+      throw new HttpsError('internal', 'Could not grade the interview. Please try again.')
     }
 
     const gradeData = (await gradeRes.json()) as { output?: unknown; output_text?: unknown }
