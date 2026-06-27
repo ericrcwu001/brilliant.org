@@ -11,7 +11,7 @@
 
 ## 1. Goal & non-goals
 
-**Goal.** Create the single source of truth for the hidden deep-structure **method** of every graded problem: a new `src/content/methods.ts` registry (`METHODS`, `MethodId`, `MethodIdSchema`), an additive optional `schemaId` field on `BeatSchema`, a `validate-fixtures` assertion that (once backfill completes) **requires** a valid `schemaId` on every graded beat, a one-time agent-assisted backfill of the 187 existing graded beats, and lesson-factory skill edits that make declaring `schemaId` mandatory for every newly-authored graded beat (with a documented registry-extension process). This is the foundation the which-method gate (`spec-13`), the method-indexed recommender / interleaved queue (`spec-10`), method-weakness on review cards (`spec-01`/`spec-10`), and transfer-problem matching (`spec-24`) all read.
+**Goal.** Create the single source of truth for the hidden deep-structure **method** of every graded problem: a new `src/content/methods.ts` registry (`METHODS`, `MethodId`, `MethodIdSchema`, plus a curated symmetric `CONFUSABLE` near-miss map that is the authoritative foil source for the which-method gate `spec-13` and interleave decoys `spec-10` — never `domains ∩`), an additive optional `schemaId` field on `BeatSchema`, a `validate-fixtures` assertion that (once backfill completes) **requires** a valid `schemaId` on every graded beat, a one-time agent-assisted backfill of the 187 existing graded beats, and lesson-factory skill edits that make declaring `schemaId` mandatory for every newly-authored graded beat (with a documented registry-extension process). This is the foundation the which-method gate (`spec-13`), the method-indexed recommender / interleaved queue (`spec-10`), method-weakness on review cards (`spec-01`/`spec-10`), and transfer-problem matching (`spec-24`) all read.
 
 **Non-goals.** No queue, no recommender wiring, no UI surface, no confidence/SR fields (those are `spec-10`/`spec-13`/`spec-01`/`spec-02`). No new graded interaction types. No changes to grading, mastery semantics, or `GRADED_BEAT_TYPES` membership (R2). `schemaId` is **content metadata only** in this spec — nothing reads it at runtime yet; it is captured so downstream specs can.
 
@@ -49,7 +49,7 @@ Four additive pieces, in dependency order. Nothing existing changes behavior.
 
 ### 3a. The registry — `src/content/methods.ts` (NEW)
 
-Single source of truth, shape per README §4 Foundation B (do not rename). Finalized id list in §4 below.
+Single source of truth, shape per README §4 Foundation B (do not rename). Finalized id list in §4 below. The file exports **two** consts: `METHODS` (the id registry) and `CONFUSABLE` (the curated near-miss map that is the authoritative foil source for `spec-13`/`spec-10` — see the note after the code block).
 
 ```ts
 // src/content/methods.ts — single source of truth for deep-structure method tags
@@ -89,9 +89,42 @@ export type MethodId = keyof typeof METHODS
 export const MethodIdSchema = z.enum(
   Object.keys(METHODS) as [MethodId, ...MethodId[]],
 )
+
+// ── CONFUSABLE — curated near-miss method pairs ──────────────────────────────
+// The SINGLE SOURCE OF TRUTH for which-method *foils* (spec-13 gate distractors)
+// and method-interleave decoys (spec-10). These are genuine deep-structure
+// near-misses a strong solver could plausibly mistake for the correct method on
+// the same surface — NOT "shares a domain". Do NOT derive foils from
+// `domains ∩` (two methods sharing 'probability' are not thereby confusable; and
+// two genuinely confusable methods may live in different domains). MUST be a
+// SYMMETRIC relation: if A lists B, B must list A (the methods.test.ts symmetry
+// case enforces this). Every key and every value MUST be a valid MethodId.
+export const CONFUSABLE: Record<MethodId, MethodId[]> = {
+  'first-step-analysis':   ['states-markov', 'backward-induction', 'recursion-self-reference', 'absorbing-states'],
+  'states-markov':         ['first-step-analysis', 'absorbing-states', 'stationary-distribution'],
+  'backward-induction':    ['first-step-analysis', 'threshold-rule', 'recursion-self-reference', 'dominance-nash'],
+  'recursion-self-reference': ['first-step-analysis', 'backward-induction', 'conditioning'],
+  'absorbing-states':      ['states-markov', 'first-step-analysis', 'stationary-distribution'],
+  'stationary-distribution': ['states-markov', 'absorbing-states'],
+  'symmetry':              ['complementary-counting', 'conditioning'],
+  'complementary-counting':['symmetry', 'inclusion-exclusion'],
+  'inclusion-exclusion':   ['complementary-counting', 'counting-product-rule'],
+  'counting-product-rule': ['inclusion-exclusion', 'choose-vs-arrange'],
+  'choose-vs-arrange':     ['counting-product-rule', 'pigeonhole'],
+  'pigeonhole':            ['choose-vs-arrange'],
+  'conditioning':          ['prior-update', 'natural-frequencies', 'recursion-self-reference', 'symmetry', 'linearity-indicators'],
+  'prior-update':          ['conditioning', 'natural-frequencies'],
+  'natural-frequencies':   ['prior-update', 'conditioning'],
+  'linearity-indicators':  ['conditioning'],
+  'dominance-nash':        ['mixed-strategy', 'backward-induction'],
+  'mixed-strategy':        ['dominance-nash'],
+  'threshold-rule':        ['backward-induction'],
+} as const
 ```
 
 > The `domains` strings are informational (used by `spec-24` transfer matching + author guidance), not enforced against `courseId`. **Keep ids stable forever** once backfilled — they are persisted on review cards (`reviews/{cardId}.schemaId`, Foundation A) and any rename silently orphans a learner's method-weakness history (R4: schema is permanent).
+>
+> **`CONFUSABLE` is the authoritative foil source (README §4 Foundation B).** `spec-13`'s which-method gate draws its wrong-answer options (and `spec-10`'s interleave decoys) from `CONFUSABLE[correctMethodId]`, **never** from `domains ∩` set intersection — a shared `domains` entry means "taught in the same course," not "a solver could mistake one for the other." Keeping foils curated here (rather than computed) is what makes the gate diagnostic of real method discrimination (D12) instead of testing domain trivia. Adding a method to `METHODS` therefore requires deciding its `CONFUSABLE` neighbours (symmetrically) as part of the same Wave-0 registry-extension review (§3d). `linearity-indicators` and `pigeonhole` are kept deliberately sparse: their near-misses are genuinely few, and an empty/over-broad foil list degrades the gate.
 
 ### 3b. `BeatSchema.schemaId` — `src/content/schema.ts` (EDIT, additive)
 
@@ -182,8 +215,9 @@ The per-beat assignment is the backfill's job (§6); this table is the author/re
 
 > Run all commands from repo root. Binaries direct, never `npm run` (AGENTS.md / HANDOFF.md).
 
-1. **Create the registry.** Write `src/content/methods.ts` exactly as §3a (the 19-id list).
+1. **Create the registry.** Write `src/content/methods.ts` exactly as §3a (the 19-id list **and** the `CONFUSABLE` map).
    → verify: `./node_modules/.bin/tsx -e "import('./src/content/methods.ts').then(m=>{console.log(Object.keys(m.METHODS).length); m.MethodIdSchema.parse('first-step-analysis'); try{m.MethodIdSchema.parse('nope');process.exit(2)}catch{console.log('rejects unknown ok')}})"` → prints `19` then `rejects unknown ok`.
+   → verify (CONFUSABLE symmetry, no invalid ids): `./node_modules/.bin/tsx -e "import('./src/content/methods.ts').then(m=>{const ids=new Set(Object.keys(m.METHODS));for(const[k,vs]of Object.entries(m.CONFUSABLE)){if(!ids.has(k))process.exit(3);for(const v of vs){if(!ids.has(v))process.exit(4);if(!m.CONFUSABLE[v]||!m.CONFUSABLE[v].includes(k))process.exit(5)}}console.log('CONFUSABLE symmetric + valid ok')})"` → prints `CONFUSABLE symmetric + valid ok` (the methods.test.ts case in §7 is the durable form of this).
 
 2. **Add `schemaId` to `BeatSchema`.** In `src/content/schema.ts`: add `import { MethodIdSchema } from './methods'` near the top (after the `zod` import, `:12`); add the `schemaId: MethodIdSchema.optional()` field with its comment inside `BeatSchema` (after `interviewNote`, `:651`).
    → verify: `./node_modules/.bin/tsc -b` clean; `tsx scripts/validate-fixtures.ts` still prints `All fixtures valid.` (field is optional, so pre-backfill fixtures pass).
@@ -233,6 +267,7 @@ The per-beat assignment is the backfill's job (§6); this table is the author/re
   - `METHODS` has the expected ids (assert count = 19 and a few key ids present); every entry has a non-empty `name` and `domains` array.
   - `MethodIdSchema.parse('first-step-analysis')` succeeds; `MethodIdSchema.safeParse('not-a-method').success === false`.
   - Every `domains` string is from a known set (`probability`, the 6 concept slugs, `markov-chains`, etc.) — guards typos.
+  - **`CONFUSABLE` validity + symmetry (the assigned case).** For every `[k, vs]` of `Object.entries(CONFUSABLE)`: `k` is a valid `MethodId` (`k in METHODS`); every `v` in `vs` is a valid `MethodId`; `v !== k` (no self-pairing); `vs` has no duplicates; and the relation is **symmetric** — `CONFUSABLE[v]` exists and `includes(k)`. (This is the load-bearing test for foil correctness: an asymmetric or typo'd entry would silently give `spec-13` a wrong-direction or invalid foil.) Optionally also assert every `MethodId` appears as a key (so adding a method without confusables is a conscious `[]`, not an omission).
 - **`src/content/schema.test.ts` (EDIT):** add a case that `BeatSchema` accepts a beat with a valid `schemaId`, accepts one with **no** `schemaId` (optional), and rejects `schemaId: 'bogus'`.
 - **`src/lesson/mastery.test.ts` (EDIT, minimal):** add an assertion that `isGradedBeat` is exported and returns true for a `masteryChallenge` beat and false for a `recap`/`primer` (locks the predicate the validator depends on).
 - **Fixture validation:** `tsx scripts/validate-fixtures.ts` green in advisory mode pre-backfill; green with `✓ method-tag gate` post-backfill+flip. After step 6, `REQUIRE_SCHEMA_ID` is gone and the gate is unconditional.
@@ -242,7 +277,7 @@ The per-beat assignment is the backfill's job (§6); this table is the author/re
 
 ## 8. Data / schema deltas (only deltas; shapes per README §4)
 
-- **`src/content/methods.ts`** (NEW): `METHODS`, `MethodId`, `MethodIdSchema` — README §4 Foundation B, finalized in §4 above. **New shared vocabulary**, consumed by `spec-01`, `spec-03`, `spec-10`, `spec-11`, `spec-13`, `spec-24`.
+- **`src/content/methods.ts`** (NEW): `METHODS`, `MethodId`, `MethodIdSchema`, **`CONFUSABLE`** — README §4 Foundation B, finalized in §4 / §3a above. **New shared vocabulary**, consumed by `spec-01`, `spec-03`, `spec-10`, `spec-11`, `spec-13`, `spec-24`. `CONFUSABLE` (symmetric `Record<MethodId, MethodId[]>`) is the authoritative near-miss/foil source for `spec-13` (gate distractors) and `spec-10` (interleave decoys) — those specs import it; they must **not** compute foils from `domains ∩`.
 - **`BeatSchema.schemaId?: MethodId`** (`src/content/schema.ts`): additive, optional now → validator-required-on-graded-beats after backfill. No other schema field changes.
 - **No Firestore changes** in this spec. (`reviews/{cardId}.schemaId` is denormalized there by Foundation A / `spec-01`, which imports `MethodId` from here — flagged so `spec-01` reuses this type, not a string.)
 
@@ -259,7 +294,7 @@ The per-beat assignment is the backfill's job (§6); this table is the author/re
 
 ## 10. Definition of Done
 
-- `src/content/methods.ts` exists with the 19-id registry; `MethodId`/`MethodIdSchema` exported.
+- `src/content/methods.ts` exists with the 19-id registry; `MethodId`/`MethodIdSchema` exported. `CONFUSABLE` exported — a symmetric `Record<MethodId, MethodId[]>` of curated near-misses, declared (here and in README §4 Foundation B) the single source of truth for `spec-13` foils / `spec-10` decoys (never `domains ∩`); `methods.test.ts` proves every key/value is a valid `MethodId` and the relation is symmetric.
 - `BeatSchema.schemaId` added (optional); `isGradedBeat` exported from `mastery.ts`.
 - `scripts/validate-fixtures.ts` enforces a valid `schemaId` on every graded beat **unconditionally** (flag removed in step 6) — `✓ method-tag gate` prints, and removing any `schemaId` fails CI.
 - All 48 fixtures backfilled and human-reviewed; `tsx scripts/validate-fixtures.ts` ends `All fixtures valid.` and exits 0.

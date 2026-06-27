@@ -96,7 +96,12 @@ z.object({
       // Registry ids for each visible option, positionally aligned with `options`
       // (options[i] is the display label for optionMethods[i]). Lets the renderer
       // grade a click without string-matching display copy, and lets the validator
-      // assert the labels match the registry.
+      // assert the labels match the registry. The distractor ids are NOT ad-hoc
+      // author choices or arbitrary domain-overlap picks: they are drawn from the
+      // curated CONFUSABLE[gate.correct] map in methods.ts (Foundation B, owned by
+      // spec-00 — this spec only consumes it). Track B uses a fuller confusable
+      // subset; Track A uses 2–3. The validator cross-checks every distractor is a
+      // declared confusable of `correct` (§3.1.1, step 6g).
       optionMethods: z.array(MethodIdSchema).min(2),
     })
     .optional(),
@@ -114,6 +119,32 @@ z.object({
 `MethodIdSchema` is imported from `spec-00`'s `src/content/methods.ts` (`README` §4 Foundation B). If `schema.ts`
 cannot import `methods.ts` due to a cycle, mirror the pattern `spec-00` uses (it already lands `MethodIdSchema` for
 the `BeatSchema.schemaId` field, so the import path is established by `spec-00`).
+
+### 3.1.1 Distractor source — `CONFUSABLE[correct]` from `methods.ts` (consume, don't define)
+
+A gate's distractors are **not** chosen ad-hoc by the author and **not** derived from raw domain overlap (e.g.
+"both methods touch `probability`"). Two methods sharing a domain are not necessarily *confusable under pressure*;
+the discrimination the gate trains is between methods a learner actually mistakes for one another. So
+`gate.optionMethods` is drawn from a **curated confusability map** keyed on the correct method:
+
+```ts
+// src/content/methods.ts (Foundation B) — OWNED BY spec-00. This spec only CONSUMES it.
+// CONFUSABLE[m] = the near-miss methods a learner plausibly picks instead of `m`.
+export const CONFUSABLE: Record<MethodId, MethodId[]>
+```
+
+- **Ownership.** `CONFUSABLE` is a `spec-00` deliverable on `methods.ts` (the method-taxonomy single source of
+  truth, README §4 Foundation B, D5 "controlled-vocabulary registry"). **spec-13 does not define or edit
+  `CONFUSABLE`** — it imports and consumes it. If `CONFUSABLE` is absent when this spec is implemented, that is a
+  missing Foundation B deliverable: coordinate with spec-00 to add it (do not stub it inline here — R5), and flag in
+  the structured output.
+- **Authoring rule.** When an author sets a gate, `gate.correct`'s distractors must be a subset of
+  `CONFUSABLE[gate.correct]`. The author picks *how many* (Track-aware, §5), not *which arbitrary* methods.
+- **Track sizing.** Track A: `correct` + **2–3** entries from `CONFUSABLE[correct]` (smaller, less-confusable
+  set). The quant-intensity gate (Track B / `learningGoal==='interview'`): a **fuller** subset — more of the
+  declared confusables — for a harder discrimination (§5 "Option count").
+- The validator enforces the subset relation (step 6g), so a fixture cannot ship a distractor that the registry does
+  not declare confusable with `correct`.
 
 ### 3.2 Grading semantics
 
@@ -177,9 +208,11 @@ the documented insertion point and do not block.
 > Commands: `./node_modules/.bin/vitest run`, `tsx scripts/validate-fixtures.ts`, `./node_modules/.bin/eslint .`
 > Manual UI: `/dev/*` routes (no Firebase/Java — see `AGENTS.md`).
 
-1. **Confirm `spec-00` foundations exist.** `rg "export const MethodIdSchema" src/content/methods.ts` and
-   `rg "schemaId" src/content/schema.ts`.
-   → verify: both return a hit. If not, build `spec-00` first (R5); do not proceed with a stub.
+1. **Confirm `spec-00` foundations exist.** `rg "export const MethodIdSchema" src/content/methods.ts`,
+   `rg "export const CONFUSABLE" src/content/methods.ts`, and `rg "schemaId" src/content/schema.ts`.
+   → verify: all return a hit. If `CONFUSABLE` is missing it is a missing Foundation B deliverable — coordinate with
+   spec-00 to add it (the gate consumes it for distractor selection, §3.1.1); do not stub it inline (R5). If
+   `MethodIdSchema`/`schemaId` are missing, build `spec-00` first (R5); do not proceed with a stub.
 
 2. **Extend the `prediction` schema** (`src/content/schema.ts:121`) with the optional `gate` object from §3.1.
    Import `MethodIdSchema` from `./methods` (match `spec-00`'s import for `schemaId`).
@@ -274,7 +307,8 @@ the documented insertion point and do not block.
    → verify: `/dev` manual check (step 9) — picking the wrong method shows the refutation and does **not** advance;
    the right method advances; `rg "export function WhichMethodGate" src/lesson/WhichMethodGate.tsx` hits once.
 
-6. **Validator assertion — gate well-formedness** (`scripts/validate-fixtures.ts`). Add a pass (after the
+6. **Validator assertion — gate well-formedness** (`scripts/validate-fixtures.ts`). Import `CONFUSABLE` from
+   `src/content/methods.ts` (Foundation B / spec-00 — consumed, not defined here). Add a pass (after the
    inclusivity loop, ~line 681) over **every** lesson beat (not just GATED lessons) — a helper:
    ```ts
    // ── Which-method gate well-formedness (spec-13 / D12).
@@ -306,6 +340,15 @@ the documented insertion point and do not block.
        // f) the gate's schemaId is the method it tests (Foundation B coherence)
        if (beat.schemaId && beat.schemaId !== it.gate.correct)
          fail(`${where}: beat.schemaId "${beat.schemaId}" != gate.correct "${it.gate.correct}"`)
+       // g) every distractor is a DECLARED confusable of `correct` (no ad-hoc /
+       //    domain-overlap distractors). CONFUSABLE is owned by spec-00 (methods.ts,
+       //    Foundation B); this spec imports it. `correct` itself is exempt.
+       const confusable = new Set(CONFUSABLE[it.gate.correct] ?? [])
+       for (const m of it.gate.optionMethods) {
+         if (m === it.gate.correct) continue
+         if (!confusable.has(m))
+           fail(`${where}: distractor "${m}" is not in CONFUSABLE["${it.gate.correct}"] (use a declared near-miss, not an ad-hoc/domain-overlap pick)`)
+       }
        console.log(`✓ which-method gate: ${where}`)
      }
    }
@@ -350,7 +393,10 @@ the documented insertion point and do not block.
 9. **Dev example.** Add one worked gate to an existing dev fixture or a new `/dev` example (e.g. a probability
    gate: options `['First-step analysis','Symmetry','Conditioning']`, `optionMethods:
    ['first-step-analysis','symmetry','conditioning']`, `correct:'first-step-analysis'`, matching `byOption` notes,
-   `schemaId:'first-step-analysis'`), reachable on a `/dev` route, so a reviewer can click through.
+   `schemaId:'first-step-analysis'`), reachable on a `/dev` route, so a reviewer can click through. The two
+   distractors must be members of `CONFUSABLE['first-step-analysis']` (§3.1.1) — confirm against the spec-00
+   registry; if `symmetry`/`conditioning` aren't declared confusable with `first-step-analysis`, pick distractors
+   that are (the validator step-6g check rejects non-confusable distractors).
    → verify: `npm run dev`-equivalent dev route shows the gate; right pick advances, wrong pick refutes and holds.
 
 10. **Lint.** `./node_modules/.bin/eslint src/lesson/WhichMethodGate.tsx src/lesson/beats/PredictionBeat.tsx
@@ -367,7 +413,7 @@ The gate is a **discrimination checkpoint**, which is exactly the kind of move D
 | Aspect | Track A (gentle default) | Quant-intensity gate (Track B **OR** `learningGoal==='interview'`) |
 |---|---|---|
 | Where it appears | Designated in-lesson checkpoints only; queue placement is light. | In-lesson checkpoints **and** before every due problem in the Daily Review queue (`spec-20`). |
-| Option count | Smaller, less-confusable method set (2–3 options) — author chooses fewer near-miss distractors. | Fuller, more-confusable subset (more near-miss methods from the registry). |
+| Option count | `correct` + **2–3** distractors drawn from `CONFUSABLE[correct]` (Foundation B / spec-00) — author chooses fewer near-miss distractors, never ad-hoc or domain-overlap picks. | Fuller subset of `CONFUSABLE[correct]` — more of the declared near-miss methods, for a harder discrimination. |
 | Confidence (D6) | Light or off (no celebrated calibration). | Confidence rating shown on the gate; feeds calibration (`spec-12`). |
 | Label-stripping | Local (the gate hides its own title). | Surface-wide (queue strips topic/chapter chrome across the session). |
 | Wrong-pick behavior | Same: refute via `byOption`, stay on the gate. (Track-A copy softer; still graded.) | Same. |
@@ -383,7 +429,11 @@ beat may itself be `track:'A'|'B'|'both'` (`schema.ts:616-618`) — a Track-excl
 - **`InteractionSchema` `prediction` member** (`src/content/schema.ts:121`): add optional
   `gate: { kind:'which-method', correct: MethodId, optionMethods: MethodId[] (min 2) }`. **Owned by this spec and
   recorded in README §4.5 + §5 collision matrix** (`src/content/schema.ts` row). Consumers detect a gate via
-  `interaction.type === 'prediction' && !!interaction.gate`.
+  `interaction.type === 'prediction' && !!interaction.gate`. `gate.optionMethods` distractors are drawn from
+  `CONFUSABLE[gate.correct]` (§3.1.1).
+- **Consumes (does not define) `CONFUSABLE`** from `src/content/methods.ts` (Foundation B, **owned by `spec-00`**) —
+  the curated near-miss map that sources gate distractors (Track B fuller, Track A 2–3). Imported by the validator
+  (step 6g) and by the lesson-factory authoring guidance. No edit to `methods.ts` from this spec.
 - **`src/lesson/WhichMethodGate.tsx`** (**NEW**, README §5 collision matrix): exported `WhichMethodGate` component
   with props `{ beat, schemaId, onResolved }` — the canonical gate renderer mounted by both `PredictionBeat` and
   `spec-20`'s queue (gate Issue #11).
@@ -421,8 +471,9 @@ beat may itself be `track:'A'|'B'|'both'` (`schema.ts:616-618`) — a Track-excl
 **Fixture validation (`tsx scripts/validate-fixtures.ts`):**
 - The whole corpus still validates (existing predictions untouched).
 - A throwaway malformed gate (wrong `optionMethods` length, `correct` not in `optionMethods`, missing `byOption`,
-  or `byOption.correct` disagreeing with `gate.correct`) is caught (assert by temporarily editing a fixture in a
-  test harness or documenting the manual check; do **not** commit the malformed fixture).
+  `byOption.correct` disagreeing with `gate.correct`, **or a distractor not in `CONFUSABLE[correct]`**) is caught
+  (assert by temporarily editing a fixture in a test harness or documenting the manual check; do **not** commit the
+  malformed fixture).
 
 **Manual (`/dev`):**
 - Gate renders with no lesson title (label-stripped); right pick advances; wrong pick refutes and holds; the
@@ -436,9 +487,11 @@ beat may itself be `track:'A'|'B'|'both'` (`schema.ts:616-618`) — a Track-excl
   selection path here), **never** `patternPick` (no `byOption`, ungraded — verified `schema.ts:122-131`). This is
   explicit in §2, §3, and the schema delta. `DiagnosticGate` (the "Quick check") is untouched — it stays a
   prerequisite gate (D12); this is a *separate* discrimination checkpoint.
-- **R5.** The gate **needs `schemaId` + `MethodIdSchema` from `spec-00`** (R5). Step 1 hard-checks they exist and
-  forbids stubbing; `gate.correct`/`optionMethods` are `MethodId`s, and the validator asserts `schemaId ===
-  gate.correct`. No foundation is faked.
+- **R5.** The gate **needs `schemaId` + `MethodIdSchema` + `CONFUSABLE` from `spec-00`** (R5). Step 1 hard-checks
+  they exist and forbids stubbing; `gate.correct`/`optionMethods` are `MethodId`s, the validator asserts `schemaId
+  === gate.correct`, and distractors are validated against `CONFUSABLE[gate.correct]` (step 6g) — they are **not**
+  ad-hoc author picks or domain-overlap picks. No foundation is faked; `CONFUSABLE` is consumed from spec-00, never
+  defined here.
 - **R2.** `GRADED_BEAT_TYPES` is left stable; the gate is recognised by the *presence of `gate`*, not by widening
   the set — so the opening-bet `prediction` stays ungraded and the medallion/recommender mastery reads don't shift
   unexpectedly. The mastery test asserts both the graded-gate and ungraded-bet paths.
@@ -464,7 +517,8 @@ beat may itself be `track:'A'|'B'|'both'` (`schema.ts:616-618`) — a Track-excl
       (`topbar__title` at `:494`/`:408`) **and** neutralizes the `beat.prompt` section (`:528-531`) under it (and
       always for a gate beat). `LessonPage.tsx` is not edited (it never renders the title during play).
 - [ ] Validator asserts gate well-formedness (length, `correct ∈ optionMethods`, distinct, `byOption` present and
-      agreeing, `schemaId === gate.correct`).
+      agreeing, `schemaId === gate.correct`, and every distractor ∈ `CONFUSABLE[correct]` — distractors come from the
+      spec-00 confusability map, not ad-hoc author choice).
 - [ ] One worked gate reachable on a `/dev` route.
 - [ ] `./node_modules/.bin/vitest run` green (incl. new `PredictionBeat.test.tsx` + extended `mastery.test.ts`).
 - [ ] `tsx scripts/validate-fixtures.ts` passes; a malformed gate is provably rejected.

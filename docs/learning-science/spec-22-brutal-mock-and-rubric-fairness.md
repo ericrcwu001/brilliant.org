@@ -97,7 +97,7 @@ drift hazard entirely for change #1.
 The quant-intensity gate is the **shared `isQuantIntensity(userDoc, conceptProgress?)` helper** in `src/auth/track.ts`
 (README §4 — *Shared helper, resolves gate Issue #9*). It encodes the canonical predicate
 `effectiveTrack === 'B' || userDoc.learningGoal === 'interview'`, where
-`effectiveTrack = conceptProgress?.track ?? userDoc?.defaultTrack ?? 'B'`. **This spec imports that helper; it must
+`effectiveTrack = conceptProgress?.track ?? userDoc?.defaultTrack ?? 'A'` (fail GENTLE). **This spec imports that helper; it must
 NOT re-derive the predicate from `defaultTrack` alone** (gate Issue #9 — a learner must never be quant-gated in one
 surface and gentle in another). The server mint (`mintInterviewToken`) does **not** read the progress/userDoc track
 today. Two options:

@@ -15,6 +15,8 @@
 
 **Non-goals.** No queue/draw logic, no gold-mint logic, no UI — `spec-11` (mint) and `spec-10`/`spec-20` (queue surface) consume these beats; this spec only *produces* the content + the marker. No Track-A re-retrieval content (Track A re-asks the *same* checkpoint cold — no new content needed; D7). No new graded interaction **types** (transfer beats reuse existing graded types — usually `masteryChallenge`/`answerEntry`). No change to `GRADED_BEAT_TYPES`, grading, or mastery semantics (R2). No change to the live lesson runtime (a `required:false` heldOut beat is already filtered out of the visible flow — see §3.3).
 
+> **RISK (accepted).** All ~48 transfer problems are **hand-authored, source-anchored, engine-verified** (§3.5) — a **serial bottleneck on the Track-B gold critical path** (D15 carries this workstream's cost explicitly; §7 critical-path notes). The cost is owned, not designed away. **Mitigation:** (1) **per-concept incremental** — the validator gate (§3.4) is not allowlist-gated and presence stays **advisory** until `REQUIRE_TRANSFER=1`, so any unauthored lesson **degrades to silver** (gold simply never mints for it; R5 — no stubbed foundation, the feature absence is graceful, not broken); (2) **`REQUIRE_TRANSFER` stays advisory** (`⚠`, never red CI) until authoring completes and `spec-00`'s `REQUIRE_SCHEMA_ID=1` + backfill have landed (R-rollout; gate Issue #12); (3) **author the flagship `pattern-hitting-times` concept FIRST** (canonical order, §4 / R8) so the demo path has gold before the long tail is done. This preserves graceful degradation: a learner on an unauthored lesson still earns silver instantly and is never blocked.
+
 ---
 
 ## 2. Current reality (verified against the code)

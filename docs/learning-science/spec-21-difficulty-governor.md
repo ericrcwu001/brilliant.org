@@ -41,6 +41,13 @@
 - **No change to `GRADED_BEAT_TYPES`, mastery semantics, or the streak.** R2/R9 preserved.
 - This spec does **not** redefine fade behavior itself — it only chooses *whether* the existing `density:'split'` faded
   rung and the hint cap are offered, per learner, within bounds.
+- **Scope: scaffolding only, not retrieval effort.** Both knobs (fade density, hint availability) modulate the
+  **scaffolding** around a problem — how much help is on offer — never the **retrieval effort** itself. The governor
+  does **not** add reps, tighten spacing, or promote transfer/harder items: selecting *which* problems are asked and
+  *how often* is a selection-side concern owned by the queue (`spec-10`) and the transfer gate (`spec-11`), and is
+  deliberately out of scope here (it is also what D9's "modulates SCAFFOLDING only" wording locks). This keeps the
+  governor's effect bounded by the **closed enum** over `{offerFade, hintCap}` and its window confined to
+  **retrieval reps only** (§3.4) — it never reaches into the queue's volume or cadence.
 
 ---
 
@@ -78,9 +85,13 @@ A new **pure module** `src/lesson/governor.ts` (dependency-free, node-testable l
 - `pushRep(window, correct) → RepWindow` — append, drop oldest past `WINDOW_SIZE`.
 - `successRate(window) → number | null` — `null` until `MIN_REPS` reached (don't govern on noise).
 - `governorState(window) → GovernorState` — the bounded decision (see §3.3).
-- Constants: `WINDOW_SIZE = 8`, `MIN_REPS = 4`, target band `LOWER = 0.50`, `UPPER = 0.70`, plus the
-  harder/easier thresholds `EASIER_BELOW = 0.50`, `HARDER_ABOVE = 0.85`. **All untuned — revisit with real
-  retention data** (mirror the SM-2 constants caveat in D4).
+- Constants: `WINDOW_SIZE = 8`, `MIN_REPS = 4`, plus the only two **active** thresholds the decision function reads:
+  `EASIER_BELOW = 0.50` and `HARDER_ABOVE = 0.85`. The governor *acts* below 50% (easier) or above 85% (harder) and
+  **leaves the learner alone inside the inactive band `[EASIER_BELOW, HARDER_ABOVE]` = 50–85%**. The brainlift/D9
+  "~50–70%" figure is an **aspirational desirable-difficulty target, UNTUNED** — it is *not* a code constant and is
+  **not** wired into any branch (a separate `UPPER = 0.70` would be dead code, so it is deliberately omitted; see
+  §3.1's exported list and §3.3). **All thresholds untuned — re-tuned per spec-04** with real retention data (mirror
+  the SM-2 constants caveat in D4).
 
 The governor is driven from `LessonPlayer.tsx`, which already holds the per-beat hint/assist override state and the
 `density` resolution — the natural single integration point.
@@ -121,7 +132,7 @@ export function governorState(window: RepWindow): GovernorState {
   if (rate === null) return { offerFade: false, hintCap: 'default' } // not enough reps: static
   if (rate > HARDER_ABOVE) return { offerFade: false, hintCap: 'tighten' } // coasting → harder
   if (rate < EASIER_BELOW) return { offerFade: true,  hintCap: 'loosen'  } // struggling → easier
-  return { offerFade: false, hintCap: 'default' } // inside 50–70% band: leave it
+  return { offerFade: false, hintCap: 'default' } // inside the inactive 50–85% band [EASIER_BELOW,HARDER_ABOVE]: leave it
 }
 ```
 
@@ -191,8 +202,11 @@ Dependency-free; mirror the `mastery.ts` header/style. Export `RepWindow`, `Gove
 // Light bounded difficulty governor (README §4 consumers; Decision D9, app-action #4).
 // PURE + dependency-free (node Vitest). Quant-intensity gate only; Track A never
 // calls this. Counts ONLY retrieval reps (isRetrievalRep, spec-03) into a rolling
-// window and nudges fade-density + hint cap toward a 50–70% desirable-difficulty
-// band, BOUNDED (closed enum) so it can never strand a learner. Constants UNTUNED.
+// window and nudges fade-density + hint cap toward the ~50–70% desirable-difficulty
+// TARGET (aspirational, UNTUNED). Active thresholds: acts <50% (EASIER_BELOW) and
+// >85% (HARDER_ABOVE); the inactive band [EASIER_BELOW,HARDER_ABOVE]=50–85% is left
+// alone. 0.70 is NOT a code constant (would be dead) — only EASIER_BELOW/HARDER_ABOVE
+// are. BOUNDED (closed enum) so it can never strand a learner. Constants UNTUNED.
 
 export const WINDOW_SIZE = 8
 export const MIN_REPS = 4
@@ -451,7 +465,10 @@ governor uses the *same* gate as every other aggressive behavior (no per-surface
 1. `successRate` is `null` below `MIN_REPS`; correct fraction at/above it.
 2. `pushRep` caps at `WINDOW_SIZE` (oldest dropped, most-recent-last order).
 3. `governorState`: `null` window → `{offerFade:false, hintCap:'default'}`; rate `0.9` (>0.85) → `tighten`;
-   rate `0.3` (<0.5) → `{offerFade:true, hintCap:'loosen'}`; rate `0.6` (band) → `default`.
+   rate `0.3` (<0.5) → `{offerFade:true, hintCap:'loosen'}`; rate `0.6` (inside the inactive 50–85% band) →
+   `default`. **Band-boundary assertions:** rate exactly `0.50` (`==EASIER_BELOW`, not `<`) → `default` (not
+   `loosen`); rate exactly `0.85` (`==HARDER_ABOVE`, not `>`) → `default` (not `tighten`). These pin the inactive
+   band as the half-open `[EASIER_BELOW, HARDER_ABOVE]` the code implements.
 4. **Bounding (D9 core):** `effectiveHintCap({hintCap:'tighten'}, 1)` and `(…, undefined)` never return `<2`;
    `'loosen'` always returns `3`; `'default'` returns the author cap. Assert no path yields `0`/`1` for `tighten`.
 5. Monotone tracking: starting from a coasting window, one wrong rep moving the rate into the band flips `tighten`→

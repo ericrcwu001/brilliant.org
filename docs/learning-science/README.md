@@ -61,7 +61,9 @@ premise.
 ## §2. Thesis (one paragraph)
 
 Quant-interview readiness is durable, transferable, under-pressure retrieval — not comprehension. Ergo today
-optimizes in-session fluency, which is negatively diagnostic of readiness. This plan inverts that: spaced
+optimizes in-session fluency, which is an unreliable — and often misleading — proxy for durable readiness
+(immediate performance and long-term retention are dissociable; desirable difficulties depress in-session fluency
+while improving retention; cf. Soderstrom & Bjork 2015). This plan inverts that: spaced
 problem-level retrieval (SM-2, interview-date-anchored), interleaving by hidden **method**, honest **delayed**
 mastery, calibration as a first-class signal, a desirable-difficulty governor, and an interview report that
 feeds forward instead of judging the person. All aggressive moves are **two-track**: gentle by default, brutal
@@ -74,21 +76,22 @@ for the quant audience.
 | # | Decision | Resolution |
 |---|---|---|
 | D1 | **Plan shape** | Foundation-first, full program, phased. Deliverable = this README + phase-grouped `spec-*.md`. |
-| D2 | **Persona & intensity** | **Two-track.** Track A = gentle default (scaffolds on, gamification intact, mock = `hard`). Aggressive inversions (50–70% governor, failure-first, brutal mock, calibration-forward report) gate on **Track B `OR` `userDoc.learningGoal === 'interview'`**. Call this the **quant-intensity gate** throughout. |
+| D2 | **Persona & intensity** | **Two-track.** Track A = gentle default (scaffolds on, gamification intact, mock = `hard`). Aggressive inversions (50–70% governor, failure-first *(failure-first sequencing is named as a quant-intensity property but is explicitly OUT OF SCOPE for v1 — see §7)*, brutal mock, calibration-forward report) gate on **Track B `OR` `userDoc.learningGoal === 'interview'`**. Call this the **quant-intensity gate** throughout. |
 | D3 | **SR atomic unit** | **Problem (graded beat) level**, with a hidden **method tag** (`schemaId`) on each graded problem. The queue re-asks specific due problems, interleaved, labels hidden; weakness is also indexed by method. |
-| D4 | **Scheduling model** | **SM-2** (init ease 2.5, ease floor 1.3; wrong → interval resets to 1d *and* ease −0.20; right → ease +0.10, interval ×ease). **Plus interview-date anchoring**: cap `dueAt` to never exceed the target date, force a final review into the last 3 days, ramp queue volume as the date nears. SM-2 constants are **untuned — revisit with real retention data.** |
+| D4 | **Scheduling model** | **SM-2** (init ease 2.5, ease floor 1.3; wrong → interval resets to 1d *and* ease −0.20; right → ease +0.10, interval ×ease). **Plus interview-date anchoring**: cap `dueAt` to never exceed the target date, force a final review into the last 3 days, ramp queue volume as the date nears. SM-2 constants are **untuned — revisit with real retention data.** The retention-data feedback loop that tunes these constants is owned by **spec-04**; constants ship as placeholders and are re-tuned per spec-04's process. SM-2 was an explicit decision over fixed-interval/Leitner; with binary pass/fail the ease factor degenerates toward an expanding-interval ladder, so the v1 fallback if constants prove unstable is a **Leitner ladder behind the same `nextSchedule()` seam**. |
 | D5 | **Method taxonomy** | **Hybrid, extensible controlled-vocabulary registry.** Cross-domain methods shared; domain-specific added per concept. Tagging baked into the **lesson-factory skill** (every new graded beat must declare a `schemaId`); a one-time agent-assisted **backfill** of existing content; the fixture **validator** flips to *require* a valid `schemaId` on graded beats once backfill completes. |
 | D6 | **Confidence capture** | On graded **checkpoints** (mastery challenge, which-method gate, spaced-review problem) **and** the interview. **Not** on teaching beats. **Track-aware**: Track B sees it + a celebrated calibration score; Track A light/off. The qualitative opening bet is exempt. |
 | D7 | **Honest mastery** | Hints used while learning are **forgiven** (no longer bar gold). **Gold/mastered is gated on a delayed (≥1 day) success** via the SR system: **Track A** = re-retrieve the *same* checkpoint problem cold; **Track B** = solve a held-out **transfer** problem (fresh surface, same method). **Silver awards instantly** on completion; **gold mints asynchronously** when the delayed check passes. This single mechanism **is** "honest mastery (#2)" + "transfer-gated medallions". |
 | D8 | **Home surface** | **Daily Review queue as a hero on the existing home**, catalog stays home. The interleaved, label-stripped queue (with the which-method gate inside) is the recommended daily action. **Mixed-Floor-as-home is deferred** to a later Track-B phase (`spec-20` documents it as Phase-Next, not built now). |
-| D9 | **Difficulty** | **Light bounded auto-governor** for the quant-intensity gate: rolling success over recent **retrieval reps** nudges fade-density + hint availability toward ~50–70%, bounded so it can't spiral. **Track A static.** **Tier-aware rubric scaling = bug fix (all tracks).** **Brutal mock default for the quant-intensity gate**, `hard` for Track A. |
+| D9 | **Difficulty** | **Light bounded auto-governor** for the quant-intensity gate: rolling success over recent **retrieval reps** nudges toward a desirable-difficulty target (acts below ~50% / above ~85%; ~50–70% is the heuristic target band, **UNTUNED** — re-tuned per spec-04). The governor modulates **SCAFFOLDING only** (fade density + hint cap), never retrieval volume or spacing. **Track A static.** **Tier-aware rubric scaling = bug fix (all tracks).** **Brutal mock default for the quant-intensity gate**, `hard` for Track A. |
 | D10 | **Streak** | **Unchanged behavior.** Build the **retrieval-rep taxonomy** as plumbing for the governor, calibration, and analytics; an optional informational "retrieval reps" stat is allowed; the streak number is **not** re-based. |
 | D11 | **Hire signal** | **Removed entirely.** The interview report becomes feed-forward "next fix" cards + a predicted-vs-measured **calibration** delta. No Strong-No→Strong-Yes verdict anywhere. **Supersedes the hire-signal parts of ADR-0008** (see ADR-0010). |
 | D12 | **Calibrate vs discrimination** | `DiagnosticGate` (the "Quick check") **stays a prerequisite gate** (foundational fluency → Track A/B). Method **discrimination** is a *separate* which-method gate built on the `prediction` beat, living in the queue + designated in-lesson checkpoints. Never overload Calibrate; never use `patternPick`. |
 | D13 | **Interview-date capture** | One optional **target interview date** field added to the existing `OnboardingSurvey` (and editable in Profile). Stored on `userDoc`. Drives D4 anchoring. Intensity-gating uses existing `learningGoal`/track — no new gate field needed. |
-| D14 | **SR write-path** | Client computes "what's due" by reading review state and comparing `dueAt` to `now`. Review scheduling state is **Function-written** (Firestore rules forbid client writes to progression). **No scheduled Cloud Function / push notifications in v1** (noted as future). |
+| D14 | **SR write-path** | Client computes "what's due" by reading review state and comparing `dueAt` to `now`. Review scheduling state is **Function-written** (Firestore rules forbid client writes to progression). **No scheduled Cloud Function / push notifications in v1** (noted as future). **Risk:** with no return-trigger, delayed gold can never mint for a non-returning user (a motivation cliff between instant silver and never-earned gold). v1 mitigation is **in-app only** (Daily Review hero + silver tooltip); an active re-engagement channel (push/email digest) is explicit future work. |
 | D15 | **Transfer-problem content** | In scope as its own workstream (`spec-24`): ~1 held-out transfer problem per lesson (~48 lessons) for the Track-B gold gate, authored via a lesson-factory update. Cost is called out. |
 | D16 | **Housekeeping** | Mark the older `docs/brainlift-learning-science-quant-prep.md` superseded; annotate the mis-numbered `audits/ideation/plan-L4-overlap-shortcut.md` (actually L6) and `plan-L6-longer-patterns.md` (actually L5); add ADR-0009 (SR + honest-mastery architecture) and ADR-0010 (hire-signal removal); update `CONTEXT.md`. |
+| D17 | **Rollout posture** | Net-new runtime behaviors (SR queue, async gold-mint, difficulty governor, brutal mock) ship behind a **runtime flag** with a **holdout cohort** and **per-feature kill switch** — owned by `spec-05`; `isQuantIntensity` is the integration chokepoint (mirrors how D14 locked no-scheduled-Function). |
 
 ---
 
@@ -131,14 +134,18 @@ creates a card for **every graded-required beat AND every `heldOut` transfer bea
 never mint). On a transfer card set `isTransfer:true` and `track:'B'`. This makes spec-01 read
 `BeatSchema.heldOut` → a real **spec-01 → spec-24 dependency** (reflected in §7).
 
-**`submitReview` callable signature (authoritative — resolves gate Issue #2/#7).** One shape only:
-`submitReview({ cardId: string; result: 'pass'|'fail'; confidence?: number })`. **spec-01 owns** the callable
-declaration + card-creation in `functions/src/review.ts`; **spec-10** fills the SM-2 advance body; **spec-11**
-adds the gold-mint branch. `confidence` is optional (the Daily-Review surface passes it per D6; it lands in
-`lastConfidence`). No `{lessonId,beatId}` variant — the client derives `cardId = \`${lessonId}__${beatId}\``.
+**`submitReview` callable signature (authoritative — resolves gate Issue #2/#7; SERVER-GRADED per R13).** One shape
+only: `submitReview({ cardId: string; answer: <beat-answer payload>; confidence?: number })`. The client sends the
+learner's **raw answer**, NOT a pass/fail — the server loads the card's beat (`cardId = lessonId__beatId`), grades
+`answer` against the fixture accept-list (reuse `loadLesson`), and derives `result: 'pass'|'fail'` itself (R13). A
+client cannot mint gold by asserting a pass. **spec-01 owns** the callable declaration + server-grading + card
+creation in `functions/src/review.ts`; **spec-10** fills the SM-2 advance body (which consumes the *server-derived*
+`result`); **spec-11** adds the gold-mint branch. `confidence` is optional (the Daily-Review surface passes it per
+D6; it lands in `lastConfidence`). No `{lessonId,beatId}` and **no client `result`** variant — the client derives
+`cardId = \`${lessonId}__${beatId}\`` and may grade locally only for instant UX, never authoritatively.
 
 - **userDoc additions** (`src/auth/userDoc.ts`): `targetInterviewDate?: string` (YYYY-MM-DD; client-writable; D13).
-- **Pure SM-2 module** `src/progress/scheduling.ts`: `nextSchedule(card, result, targetDate?) → {dueAt, intervalDays, easeFactor, reps, lapses}`. Anchoring/capping logic lives here (pure, unit-tested).
+- **Pure SM-2 module** `src/progress/scheduling.ts`: `nextSchedule(card, result, { now, targetDate? }) → {dueAt, intervalDays, easeFactor, reps, lapses}` — the 3rd arg is an opts object whose `now` is a **required** server-supplied `Date` (spec-01 §4 `NextScheduleOpts`). Anchoring/capping logic lives here (pure, unit-tested).
 - **Firestore rules**: add a `reviews` block — owner read, client write **denied**, Functions write.
 - **Index**: `firestore.indexes.json` is currently empty. A query on the `reviews` subcollection `where('dueAt','<=',now).orderBy('dueAt')` needs only the automatic single-field index; if combined with `where('schemaId','==',…)`, add a composite `(schemaId ASC, dueAt ASC)`. State whichever queries the spec actually uses and pre-create their indexes.
 - **Write path** (D14): a `submitReview` callable (new, in `functions/src/review.ts`) writes the card on each review; the first card per beat is created at lesson completion (extend `completeLesson` or create-on-first-review). Never key scheduling off a client-supplied timestamp (foolproofing R12) — use server `now`.
@@ -168,6 +175,11 @@ src/content/methods.ts   (NEW — single source of truth)
 > The exact starter id list above is a **proposed taxonomy** for `spec-00` to finalize against the real corpus —
 > not frozen vocabulary. The *structure* (shared + domain-specific, stable ids, extensible) is locked (D5).
 
+**CONFUSABLE map (Foundation-B contract).** `methods.ts` also exports a curated, **symmetric**
+`CONFUSABLE: Record<MethodId, MethodId[]>` of genuine near-misses; it (**NOT** `domains ∩`) is the source of
+truth for which-method foils (spec-10) and gate distractors (spec-13). Domain overlap is a **fallback only** when
+`CONFUSABLE` has no entry.
+
 - **`BeatSchema`** (`src/content/schema.ts:608`): add `schemaId: MethodIdSchema.optional()`. Optional during backfill; the validator enforces required-on-graded-beats afterward.
 - **Validator** (`scripts/validate-fixtures.ts`): assert every graded beat (`GRADED_BEAT_TYPES` in `src/lesson/mastery.ts:11` ∪ accept-gated `countingTree`/`selectionGrid` carrying `accept`) has a valid `schemaId`. Gate this behind a flag until backfill is done, then make it hard.
 - **lesson-factory skill** (`.cursor/skills/lesson-factory/{departments.md,qa-rubric.md,artifacts.md}`): every authored graded beat declares a `schemaId`; if none fits, the author proposes a registry addition. This is the "prepared for new concepts" requirement (D5).
@@ -192,12 +204,17 @@ Every aggressive behavior (D2) gates on ONE helper, so a learner is never quant-
 in another. Add `src/auth/track.ts`:
 
 ```ts
-// effectiveTrack = per-concept progress.track ?? userDoc.defaultTrack ?? 'B'
+// effectiveTrack = per-concept progress.track ?? userDoc.defaultTrack ?? 'A'  (fail GENTLE)
 export function isQuantIntensity(userDoc, conceptProgress?): boolean {
-  const track = conceptProgress?.track ?? userDoc?.defaultTrack ?? 'B'
+  const track = conceptProgress?.track ?? userDoc?.defaultTrack ?? 'A'
   return track === 'B' || userDoc?.learningGoal === 'interview'
 }
 ```
+
+**Default GENTLE** — a missing/loading track must never put a learner on the aggressive path (matches
+`comfortToDefaultTrack`: new/dabbled → A). `learningGoal === 'interview'` is the only implicit opt-in to
+intensity. **NOTE:** the EXISTING app convention is `defaultTrack ?? 'B'`; the intensity gate deliberately
+diverges to fail gentle.
 
 All of spec-02/13/20/21/22/23 import this; none re-derives the predicate from `defaultTrack` alone.
 
@@ -218,12 +235,55 @@ collision matrix for who-edits-what ordering.
 | `Turn.confidence?: number` | interview transcript turn | spec-02 | 12 (reads `transcript[i].confidence`) |
 | `users/{uid}/calibration/summary` doc + per-attempt `calibration` block; `GradeInterviewOutput.calibration` returned (not just written) | calibration store | spec-12 | 23 (report renders the returned `calibration`) |
 | `InterviewReport.tier`, `InterviewReport.pressureNote` | interview report | spec-22 | 23 |
+| **Rollout cohort enum** (co-defined, one source of truth): persisted `userDoc.rolloutCohort?: 'treatment' \| 'holdout'` and the `assignCohort()` return value are **`'treatment' \| 'holdout'`** — the control arm is named **`'holdout'`**, there is **no `'control'` literal**. The same two literals are the values of the analytics `cohort` dimension (spec-04 Layer 1) and the read key of every efficacy A-B split. **spec-05 owns assignment** (persists the field, stamps the dimension); **spec-04 owns the analytics dimension contract + read** (treats `'holdout'` as its control arm). Both specs MUST use these exact literals; a spec using `'control'` will silently never match spec-05-stamped data. | `userDoc` (persisted) + `cohort` analytics dimension | spec-05 (assignment) | spec-04 (efficacy read), all events (carry the dimension) |
 
 **`isCheckpointBeat` / `isRetrievalRep` vs the opening bet (resolves gate Issue #4/#5):** both the opening
 qualitative bet and the which-method gate use the `prediction` interaction. The gate is distinguished **only** by
 `interaction.gate` being present. `isCheckpointBeat` (spec-02) and `isRetrievalRep` (spec-03) must therefore test
 `type==='prediction' && !!interaction.gate` — they must **not** add `'prediction'` to a beat-type set (that would
 capture confidence on the exempt opening bet, violating D6).
+
+---
+
+## §4.6 — Data privacy, retention & deletion (cross-spec)
+
+This plan adds new **personal data**. Enumerated:
+
+- `userDoc.targetInterviewDate` (YYYY-MM-DD; D13).
+- Per-attempt **calibration** block on `interviews/{attemptId}` (spec-12).
+- `calibration/summary` **overconfidence trend** (cross-concept; spec-12).
+- **Method-weakness** signal on `reviews/{cardId}` (`lastResult`, `lapses`, `schemaId`; spec-01/10).
+- The **interview transcript** `Turn[]` (spoken-answer text + per-turn confidence; spec-02).
+
+**Self-only use.** All of the above is **owner-only read** (per `firestore.rules`) and drives **only the
+learner's own** scheduling, calibration, and report. It is **never shared** with recruiters, instructors, or other
+learners, and is **never a gate** (D11 removed the hire signal). **Audio is NEVER stored** — transcripts retain
+the spoken-answer **TEXT** only (carried forward from the capstone-interview contract).
+
+**Retention posture.** Personal review/calibration/interview data is retained while the account is active to power
+the learner's own scheduling and trend; it is not aged out automatically in v1 (the SR queue depends on full
+history). A learner-initiated **delete path** must wipe it.
+
+**Delete path (FLAG).** `firestore.rules` currently **hard-deny `delete`** on `userDoc`/progress, so a client
+delete cannot cascade. A **Function-driven recursive cascade-delete** of the `reviews`, `interviews`, and
+`calibration` subcollections (plus the new `userDoc` fields) must be specified. **Owner: `spec-05`** (rollout/ops)
+— assigned here so the delete path is not orphaned.
+
+---
+
+## §4.7 — Cross-module signatures (frozen)
+
+These signatures are **frozen** so specs that consume them do not drift:
+
+```ts
+dueCards(cards: ReviewCard[], now: Date): ReviewCard[]
+buildQueue(cards: ReviewCard[], order: PrereqOrder, now: Date, opts: { maxItems: number; foils: …}): QueueItem[]
+loadDueQueue(uid: string, now: Date): Promise<QueueItem[]>
+```
+
+**Canonical homes.** `ReviewCard` / `ReviewCardSchema` live in **`src/content/schema.ts`**. Pure SM-2
+(`nextSchedule` / `initialSchedule` / `SchedulingState`) lives in **`src/progress/scheduling.ts`**
+(**Firebase-free**). The clock value **`now` is a `Date` everywhere** (convert with `Timestamp.fromDate`).
 
 ---
 
@@ -234,7 +294,7 @@ Files touched by more than one spec. Coordinate via this README's contracts; seq
 | File | Specs (apply additively) | Note |
 |---|---|---|
 | `src/content/schema.ts` | ✎00 (`BeatSchema.schemaId`), ✎01 (`ReviewCardSchema` new), ✎02 (`SnapshotSchema.interactionState.confidenceByBeat`), ✎12 (`CalibrationSummarySchema` new), ✎13 (`InteractionSchema` `prediction.gate`), ✎21 (`SnapshotSchema.interactionState.repWindow`), ✎24 (`BeatSchema.heldOut`) | **7 specs.** `BeatSchema` optional block: 00+24. `prediction` member: 13. `SnapshotSchema.interactionState`: 02+21. All shapes are in §4/§4.5; apply additively, never clobber a sibling field. |
-| `functions/src/review.ts` (NEW) | ✚01 (declares `submitReview` + `writeCardsForCompletion`), ✎10 (SM-2 advance body), ✎11 (gold-mint branch) | **3 specs, one file.** Signature frozen in §4 (`{cardId,result,confidence?}`). |
+| `functions/src/review.ts` (NEW) | ✚01 (declares `submitReview` + server-grading + `writeCardsForCompletion`), ✎10 (SM-2 advance body), ✎11 (gold-mint branch), ✎05 (`goldMint`/review kill switch) | **4 specs, one file.** Signature frozen in §4: `submitReview({ cardId, answer, confidence? })` — **server-graded** (R13), no client `result`. |
 | `functions/src/index.ts` | ✎01 (call `writeCardsForCompletion` from `completeLesson`), ✎11 (`buildDerived.mastered:false`, remove `improveMastered`) | Both touch `completeLesson`; §7 sequences 01 before 11. |
 | `src/lesson/mastery.ts` | ✎00 (export `isGradedBeat`), ✎02 (`isCheckpointBeat`/`CHECKPOINT_BEAT_TYPES`), ✎11 (`computeMastered` semantics), ✎13 (`isGradedBeat`/`isCheckpointBeat` recognize a gate `prediction`) | spec-03 does **NOT** edit this file. Keep `GRADED_BEAT_TYPES` stable; R2 applies. |
 | `src/lesson/LessonPlayer.tsx` | ✎11 (exclude `heldOut` beats from the visible/required walk), ✎13 (mount the gate), ✎21 (governor knobs) | `heldOut` exclusion is **owned by spec-11** (gate Issue #10). |
@@ -244,7 +304,11 @@ Files touched by more than one spec. Coordinate via this README's contracts; seq
 | `src/pages/studyDesk.model.ts` / `CourseJourney.tsx` | ✎10 (recommender call site), ✎20 (Daily Review entry) | `recommendedAction` is the live entry point. |
 | `functions/src/interview.ts` | ✎22 (tier-aware rubric scaling, `tierFloor` by gate), ✎23 (remove `hireSignal`) | Shared `INTERVIEW_REPORT_SCHEMA.required`: 22 adds `tier`/`pressureNote`, 23 removes `hireSignal`; both spell out the merge. |
 | `functions/src/calibration.ts` (NEW) ↔ `src/progress/calibration.ts` | ✚12 (Brier; byte-mirror src↔functions) | `CalibrationResult` mirrored both sides (parity test); imported by spec-23's `GradeInterviewOutput`. |
-| `src/auth/userDoc.ts` + `src/auth/track.ts` (NEW) | ✎01 (`targetInterviewDate`), ✚§4 (`isQuantIntensity` helper) | Client-writable; not in rules deny-list. |
+| `src/auth/userDoc.ts` + `src/auth/track.ts` (NEW) | ✎01 (`targetInterviewDate`), ✚§4 (`isQuantIntensity` helper), ✎05 (helper also consults flag+cohort), consumed by 20/21/22/23 | Client-writable; not in rules deny-list. `isQuantIntensity` is the single gate chokepoint (D17). |
+| `src/analytics/events.ts` | ✎01 (per-interval review outcome), ✎03 (`retrievalRep`), ✎04 (`cohort`/`track` dimensions + efficacy events), ✎05 (flag/cohort assignment events), ✎12 (calibration events), ✎13 (`method_gate_picked`), ✎20 (queue events), ✎23 (report events) | **8 specs — highest-collision file.** All additive `track(name, params)` entries; never reorder existing events. spec-04 owns the shared `cohort`/`track` dimension all others should carry. |
+| `src/analytics/efficacy.ts` (NEW) | ✚04 (metric formulas + rollup) | Consumes spec-01/02/03/12 signals; does not rebuild them. |
+| `src/config/flags.ts` + `functions/src/flags.ts` (NEW) | ✚05 (flag read + cohort assignment, client + server) | The flag mechanism (Remote Config or `config/flags` doc); none exists today (R14). |
+| `functions/src/privacy.ts` (NEW) | ✚05 (`deleteLearningData` recursive cascade-delete) | Owns the §4.6 delete path (rules hard-deny client delete). |
 | `firestore.rules` + `firestore.indexes.json` | ✎01 (reviews block; index only if a `schemaId==` query is actually issued — see gate Issue #14) | Indexes file is currently empty. `loadDueQueue` uses single-field `dueAt`; method-grouping is in-memory, so the `(schemaId,dueAt)` composite is **speculative-for-later** — add only when a query needs it. |
 | `src/lesson/queue.ts` (NEW) | ✚10 (`loadDueQueue`, `buildQueue(cards, order, now, {maxItems,foils})`, `dueCards`) | spec-20 **consumes these exact names/arity** (gate Issue #4/#12) — must pass the prereq-`order` map (R5) and `{foils}` (D2). |
 | `src/lesson/WhichMethodGate.tsx` (NEW) | ✚13 (exported `{beat, schemaId, onResolved}` component) | spec-20 mounts this exact component (gate Issue #11). |
@@ -263,6 +327,7 @@ Status legend: **Planned** (this drop) — none built yet.
 | [`spec-01-time-axis-and-scheduling.md`](spec-01-time-axis-and-scheduling.md) | `reviews/{cardId}` schema, SM-2 module, interview-date capture, rules + index, write-path | — |
 | [`spec-02-confidence-capture.md`](spec-02-confidence-capture.md) | `confidenceByBeat` snapshot field, interview confidence, checkpoint rating UI | — |
 | [`spec-03-retrieval-rep-taxonomy.md`](spec-03-retrieval-rep-taxonomy.md) | `isRetrievalRep` classifier + consumers wiring (plumbing only) | spec-00 (beat types) |
+| [`spec-04-efficacy-measurement.md`](spec-04-efficacy-measurement.md) | **Phase 0 — Measurement.** Retention-data feedback loop that tunes SM-2/governor constants (D4/D9); efficacy instrumentation over the new review/calibration data | 01, 02, 03 |
 
 ### Phase 1 — Logic (consumes Phase 0)
 
@@ -281,7 +346,8 @@ Status legend: **Planned** (this drop) — none built yet.
 | [`spec-21-difficulty-governor.md`](spec-21-difficulty-governor.md) | Light bounded rolling-success governor (quant-intensity gate); extend assist/`hintCapOverride` beyond `equationTiles` | 03 |
 | [`spec-22-brutal-mock-and-rubric-fairness.md`](spec-22-brutal-mock-and-rubric-fairness.md) | Track-gated tier floor + tier-aware rubric scaling (bug fix) + in-app-vs-interview gap surfacing | 02 |
 | [`spec-23-interview-report-feedforward.md`](spec-23-interview-report-feedforward.md) | Remove `hireSignal`; feed-forward fix cards + calibration delta; ADR-0008 supersede | 12, 22 |
-| [`spec-24-transfer-problem-content.md`](spec-24-transfer-problem-content.md) | Author ~1 held-out transfer problem per lesson; lesson-factory update; held-out marking | 00 |
+| [`spec-24-transfer-problem-content.md`](spec-24-transfer-problem-content.md) | Author ~1 held-out transfer problem per lesson; lesson-factory update; held-out marking *(build-order: Phase 0/1 — see §7; listed under Phase 2)* | 00 |
+| [`spec-05-rollout-flags-and-kill-switches.md`](spec-05-rollout-flags-and-kill-switches.md) | **Phase-2 cross-cutting.** Runtime flag + holdout cohort + per-feature kill switch (D17); gates all net-new aggressive surfaces; owns the cascade-delete path (§4.6) | 04 |
 
 ---
 
@@ -297,6 +363,9 @@ Phase 0 (foundations, parallel):
 Phase 0 also includes (content long pole — start now):
   spec-24 transfer problem content  ← 00     (re-tagged Phase-0/1; feeds spec-11 Track-B; also → spec-01 card creation)
 
+Phase 0 — Measurement:
+  spec-04 efficacy measurement      ← 01, 02, 03   (retention feedback loop; re-tunes D4/D9 constants)
+
 Phase 1 (logic):
   spec-10 SR engine + recommender   ← 00, 01
   spec-13 which-method gate         ← 00
@@ -309,11 +378,20 @@ Phase 2 (surfaces):
   spec-21 difficulty governor       ← 03
   spec-22 brutal mock + rubric fix  ← 02, 12 (shares the correctness-binarization constant; spec-12 owns it)
   spec-23 report feed-forward       ← 12, 22
+  spec-05 rollout flags + kill      ← 04            (cross-cutting; gates all net-new aggressive surfaces)
 ```
+
+> **spec-04 ↔ spec-05 cohort contract is co-defined (two-way).** The edge is drawn `04 → 05` because spec-05
+> *consumes* spec-04's metric definitions, but spec-04 also *reads* the holdout `cohort` that spec-05 stamps. They
+> resolve cleanly without a deadlock: spec-05 ships flags default-off and stamps `cohort`; spec-04 treats `cohort`
+> as `undefined` until spec-05 lands (degrading to pre/post rather than control/treatment). Co-define the `cohort`
+> field once (spec-04 owns the analytics dimension; spec-05 owns assignment).
 
 **Critical-path notes.** `spec-24` (content authoring) is the long pole; it is re-tagged **Phase-0/1** and must
 start early because (a) it feeds `spec-11`'s Track-B gold gate and (b) `spec-01` reads `BeatSchema.heldOut` to set
-`isTransfer` on transfer cards. **spec-11 ships in two stages:** Track-A gold (re-retrieval) works in Phase 1 with
+`isTransfer` on transfer cards. **Per-item cost:** ~48 individually hand-authored transfer problems, each
+source-anchored AND engine-verified — this is **effort-bound, not just dependency-bound**; prioritize the
+flagship **pattern-hitting-times** concept first so the demo path has gold. **spec-11 ships in two stages:** Track-A gold (re-retrieval) works in Phase 1 with
 no dependency on 24; **Track-B gold (transfer) is non-functional until 24 lands** — so the `24 → 11` edge is
 solid, not optional. `spec-01` before `spec-11` (both edit `completeLesson`/`review.ts`). `spec-00` is upstream of
 00 → 03, 10, 11, 13, 24. Phases are shippable in order, with the one caveat that the Track-B half of D7 waits on 24.
@@ -342,6 +420,32 @@ These come from a verified subsystem audit. A fresh session fails predictably wi
 - **(R10 intentionally unused — the numbering jumps R9 → R11; not a missing item.)**
 - **R11 — Calibrate/discrimination + patternPick trap.** The which-method gate is built on `prediction` (has `byOption`), never `patternPick` (no `byOption`, ungraded). Keep `DiagnosticGate` as a prerequisite gate (D12).
 - **R12 — Client timestamps are spoofable.** SR scheduling keys only off server-controlled time (`completedAt`, `gradedAt`, server `now`), never client `startedAt`.
+- **R13 — Review pass/fail must be SERVER-GRADED, not client-asserted.** `submitReview` must not trust a client `result`; it loads the card's beat (`cardId = lessonId__beatId`), grades the raw answer server-side against the fixture accept-list (reuse `loadLesson`), and derives `result` server-side. The client may grade locally for UX, but the gold-minting result is the server's. (spec-01, spec-11)
+- **R14 — No feature-flag/remote-config/kill-switch infra exists today** (verified: 0 hits in `src` + `functions/src`). Staged rollout / holdout / kill MUST be built (`spec-05`); net-new aggressive features otherwise ship **ON** once merged.
+
+---
+
+## §8.5 — Gate issues index
+
+The cross-spec gate "Issue #N" references (cited throughout §4/§5) are reconstructed here from the two prior gate
+reports' resolved cross-spec consistency findings, so they are defined in one place. Each is resolved.
+
+| # | Concern | Resolution | Owning spec |
+|---|---|---|---|
+| 1 | Transfer-card creation predicate would miss `heldOut` beats | `writeCardsForCompletion` creates a card for every graded-required beat AND every `heldOut` transfer beat (§4 Foundation A) | spec-01 / spec-11 |
+| 2 | `submitReview` signature drift / client-asserted result | One shape: `submitReview({ cardId, answer, confidence? })` — **server-graded** (R13), no client `result`, no `{lessonId,beatId}` variant (§4) | spec-01 |
+| 3 | Collision matrix / who-edits-what ordering unclear | §5 shared file map lists every multi-spec file with additive ordering | README §5 |
+| 4 | Queue API name/arity drift between producer and consumer | `loadDueQueue` / `buildQueue(cards, order, now, {maxItems,foils})` / `dueCards` frozen (§4.7) | spec-10 / spec-20 |
+| 5 | `isRetrievalRep` gate detection ambiguous vs opening bet | Gate detected by `type==='prediction' && !!interaction.gate`, not a beat-type set (§4.5) | spec-03 / spec-13 |
+| 6 | App-action #5 (failure-first sequencing) ownership | Explicitly OUT OF SCOPE for v1; no spec owns it by design (§7) | §7 |
+| 7 | `review.ts` ownership across specs | spec-01 owns the callable + card-creation; spec-10 fills SM-2 body; spec-11 adds gold-mint branch (§4) | spec-01 |
+| 8 | Review-card confidence capture path | `lastConfidence` on the card; `Turn.confidence` on the transcript; consumed by calibration (§4.5) | spec-20 / spec-12 |
+| 9 | `isQuantIntensity` track source ambiguous | Single helper `src/auth/track.ts`; effectiveTrack = progress.track ?? defaultTrack ?? 'A' (§4 helper) | spec-13 (helper) |
+| 10 | `heldOut` beats leaking into the visible/required walk | spec-11 owns excluding `heldOut` beats from the normal walk in `LessonPlayer.tsx` (§5) | spec-11 |
+| 11 | `WhichMethodGate` component name/props drift | spec-13 exports `{beat, schemaId, onResolved}`; spec-20 mounts that exact component (§5) | spec-13 / spec-20 |
+| 12 | Validator flag-flip ordering | Do not flip `REQUIRE_TRANSFER=1` before `REQUIRE_SCHEMA_ID=1` + backfill (§5) | spec-00 / spec-24 |
+| 13 | `mastery.ts` `isGradedBeat` export/body | spec-00 exports `isGradedBeat`; spec-13 makes it (and `isCheckpointBeat`) recognize a gate `prediction` (§5) | spec-00 / spec-13 |
+| 14 | Speculative `(schemaId,dueAt)` composite index | Add only when a `schemaId==` query is actually issued; method-grouping is in-memory (§5) | spec-01 / spec-10 |
 
 ---
 

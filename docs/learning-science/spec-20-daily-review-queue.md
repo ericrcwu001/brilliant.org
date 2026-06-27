@@ -8,7 +8,7 @@
 > Read [`README.md`](README.md) §1 (corrected premise **#8** — home is `ConceptCatalog`, there is no Mixed Floor),
 > §3 (D8, D2 the quant-intensity gate, D6 confidence capture), §4 Foundation A (the `reviews/{cardId}` shape — the
 > queue's input — incl. `lastConfidence`), §4 the **`isQuantIntensity` helper** (`src/auth/track.ts` — the *only*
-> way to compute the gate), §4.5 (`submitReview({cardId,result,confidence?})`), §5 collision matrix (the exact
+> way to compute the gate), §4.5 (`submitReview({cardId,answer,confidence?})` — **server-graded**, R13), §5 collision matrix (the exact
 > `src/lesson/queue.ts` names/arity and the `<WhichMethodGate>` component), §8 (R1, R4, R5, R7, R12) first. This
 > spec is **surface only**: it renders what `spec-10`'s `queue.ts` selects and fronts each card with `spec-13`'s
 > gate. It defines **no** scheduling maths, **no** new Firestore writes beyond calling `spec-10`'s `submitReview`,
@@ -38,6 +38,15 @@ the harder framing; everyone gets the queue.
 - **Mixed-Floor-as-home** (the full label-stripped home replacing the catalog for Track B) — explicitly
   **deferred**; documented in §11 as Phase-Next, **not built now** (D8).
 - Scheduled push / cron reminders — out of scope in v1 (D14).
+- **Due-card reminders / re-engagement (the primary motivation risk — deliberately unowned here).** Because gold
+  (spec-11) only mints on a **returned** delayed review, and v1 ships **no** reminder of any kind (D14: no scheduled
+  Function / push / email), the absence of a due-card reminder is the dominant motivation risk: a learner who does
+  not happen to reopen the app never returns to clear the queue, so delayed gold can never mint (the instant-silver
+  → never-earned-gold cliff called out in D14). This spec's in-app **Daily Review hero is the *only* v1 mitigation**
+  and works only for learners who already return. A real fix — an **active** due-card reminder channel
+  (push / email digest) — is **explicitly future work**, deferred per D14, and should be owned by a dedicated
+  **re-engagement spec** (Phase-Next), **not** retrofitted into this surface. Noted here so a future session sees
+  the gap is intentional and pointed at the right owner.
 
 ---
 
@@ -107,10 +116,13 @@ and `DailyReview`.
   returns** (§9 R5) — it just supplies the inputs `buildQueue` requires so the engine can honor prerequisites.
 - **`foils` (D2 — this spec must pass it).** Compute `foils: isQuantIntensity(userDoc, conceptProgress?)` (the §4
   helper) and pass it in the options bag. Track A → `false` (gentle interleave); quant-intensity gate → `true`.
-- **`functions/src/review.ts`** → client wrapper. The callable signature is **frozen in README §4.5**:
-  `submitReview({ cardId: string; result: 'pass'|'fail'; confidence?: number })`. Called once per card on grade.
-  `confidence` is the D6 third-capture value (lands in `card.lastConfidence`). **Server owns the timestamp** (R12) —
-  never pass a client `now` into scheduling. There is **no** `{lessonId,beatId}` variant.
+- **`functions/src/review.ts`** → client wrapper. The callable signature is **frozen in README §4.5** (**server-graded**, R13):
+  `submitReview({ cardId: string; answer: <beat-answer payload>; confidence?: number })`. Called once per card on grade —
+  the client sends the learner's **raw answer**, never a pass/fail `result`; the server grades `answer` against the
+  fixture accept-list and derives `result` itself (a client cannot mint gold by asserting a pass). The client may grade
+  locally for instant UX only. `confidence` is the D6 third-capture value (lands in `card.lastConfidence`). **Server owns
+  the timestamp** (R12) — never pass a client `now` into scheduling. There is **no** `{lessonId,beatId}` variant and
+  **no** client `result`.
 - **`src/lesson/WhichMethodGate.tsx`** (spec-13 — README §5, exact component):
   `<WhichMethodGate beat={predictionBeat} schemaId={item.schemaId} onResolved={({ correct, picked }) => …} />` —
   renders the `prediction`-based picker **with method labels stripped** and reports the learner's pick before the
@@ -138,19 +150,41 @@ and `DailyReview`.
 ### 4.2 The hero (on the existing catalog home)
 
 A new presentational `DailyReviewHero` rendered as the **first child of `<main>`** in `ConceptCatalog.tsx`, above
-`ResumeHero`. Pure: receives a small view-model and an `onStart` callback. Three states:
+`ResumeHero`. Pure: receives a small view-model and an `onStart` callback. The view-model exposes a
+discriminated `state` field so the **two empty states are never conflated** (Issue #4):
+
+```ts
+type DailyReviewHeroState =
+  | 'due'          // dueCount > 0
+  | 'ramp'         // dueCount > 0 AND target date near
+  | 'caught-up'    // cards EXIST (hasAnyCards), none currently due
+  | 'no-deck'      // NO cards exist at all (pre-SR / pre-backfill)
+  | 'hidden'       // brand-new user, no completed lessons — defer to ResumeHero
+```
+
+States:
 
 1. **Due (`dueCount > 0`)** — eyebrow `Daily Review`, headline `N due`, sub copy (track-aware, §6), CTA
    `Review now →` → `onStart()`.
-2. **Empty (`dueCount === 0`)** — calm empty state: `Nothing due today` + a one-liner (`You're caught up — new
-   reviews unlock as you learn.`). No CTA, or a muted `Browse concepts` that just scrolls to shelves. Never a
-   guilt-trip (Track A) / a terse `Caught up. Come back when cards are due.` (quant gate, §6).
-3. **Ramp (`dueCount > 0` AND target date near)** — same as Due plus a **ramp line** computed from
+2. **Ramp (`dueCount > 0` AND target date near)** — same as Due plus a **ramp line** computed from
    `userDoc.targetInterviewDate` (§4.4). Hidden entirely when the date is absent or far.
+3. **Caught-up (cards exist, `dueCount === 0`)** — calm empty state: `Nothing due today` + a one-liner
+   (`You're caught up — new reviews unlock as you learn.`). No CTA, or a muted `Browse concepts` that just scrolls
+   to shelves. Never a guilt-trip (Track A) / a terse `Caught up. Come back when cards are due.` (quant gate, §6).
+4. **No-deck (no review cards exist at all — pre-SR / pre-backfill, `hasAnyCards === false` but the user *has*
+   completed lessons)** — this learner finished lessons before the SR system (or before spec-01's backfill) minted
+   any cards. Showing "all caught up" here is **misleading** — there is nothing to be caught up *on*. Instead show a
+   **`Build your review deck`** affordance whose CTA triggers spec-01's **lazy backfill** (`writeCardsForCompletion`
+   over the learner's already-completed lessons — see §4.5) and then re-runs `loadDueQueue`. Equivalently, the
+   container may fire that lazy backfill automatically on the **first** queue/home load for such a learner and fall
+   through to `due`/`caught-up`; the hero copy must never be the caught-up line while `hasAnyCards === false`.
+   Track-aware copy in §6.
 
-The hero is **only rendered when review data has loaded** and the user has at least one review card ever (i.e.
-don't show "Nothing due" to a brand-new user who has completed no lessons — show nothing, deferring to the resume
-hero). View-model field `hasAnyCards: boolean` drives this.
+The hero is **only rendered when review data has loaded** (`state !== 'hidden'`). The `hidden` state covers the
+brand-new user who has completed **no** lessons — show nothing, deferring to the resume hero. The view-model
+fields `hasAnyCards: boolean` (any review card ever) and `hasCompletedLessons: boolean` together disambiguate
+`no-deck` (completed lessons, no cards) from `hidden` (no completed lessons): `no-deck` requires
+`!hasAnyCards && hasCompletedLessons`; `hidden` is `!hasAnyCards && !hasCompletedLessons`.
 
 ### 4.3 The queue surface (`DailyReviewPage` + `DailyReview`)
 
@@ -169,8 +203,10 @@ hero). View-model field `hasAnyCards: boolean` drives this.
      grading/hints/assist behave identically to in-lesson. **For the quant-intensity gate, mount
      `<ConfidenceRating>` (spec-02) on this problem** (D6 third capture site) and hold its value in local state;
      Track A omits it entirely.
-  3. On grade, capture `result: 'pass' | 'fail'` and (for the quant gate) the `confidence` from `ConfidenceRating`,
-     call `submitReview({ cardId: current.cardId, result, confidence })` (the §4.5 shape; `confidence` is omitted
+  3. On grade, capture the learner's raw `answer` payload (grade `result: 'pass' | 'fail'` **locally only** for
+     instant UX) and (for the quant gate) the `confidence` from `ConfidenceRating`,
+     call `submitReview({ cardId: current.cardId, answer, confidence })` (the §4.5 **server-graded** shape, R13 — the
+     server grades `answer`, never a client-asserted `result`; `confidence` is omitted
      for Track A → lands as `null` in `card.lastConfidence`), then advance to the next item.
   - A minimal top chrome: `Daily Review` wordmark + an **un-numbered** progress dots/`k of N` indicator (showing
     position is fine; showing *which concept* is not). A `Done` summary when the queue empties (count reviewed,
@@ -193,6 +229,39 @@ spec-10's scheduling already **caps `dueAt`** to the target date and forces a fi
 - Pure, date-only (parse `YYYY-MM-DD` against `now`'s local date), unit-tested. No timezone cleverness beyond
   comparing calendar days; matches how streaks treat local days.
 
+### 4.5 Two empty states (caught-up vs no-deck) and the lazy-backfill affordance
+
+The queue has **two structurally different "empty" conditions** that must produce different UX (Issue #4):
+
+- **caught-up** — `hasAnyCards === true` and `loadDueQueue` returned `[]`. The deck exists; nothing is due right
+  now. This is the genuine "all caught up" state (§4.2 state 3 / §6).
+- **no-deck** — `hasAnyCards === false` for a learner who **has completed lessons**. No `reviews/{cardId}` cards
+  were ever minted for them. This happens for any learner who finished lessons **before** spec-01's
+  `writeCardsForCompletion` existed, or before the one-time backfill ran. Rendering the caught-up copy here is a
+  bug: it tells the learner they are done when in fact no review deck has been built. Render `Build your review
+  deck` instead.
+
+**Lazy backfill (spec-01-owned write path; this spec only triggers it).** spec-01 owns
+`writeCardsForCompletion(uid, lessonId)` (README §4 Foundation A — Function-owned card creation). This spec adds a
+**no-deck recovery trigger**, it does **not** create cards client-side (R4):
+
+- A thin client wrapper calls a spec-01 callable that runs `writeCardsForCompletion` over the learner's
+  already-completed lessons (derivable server-side from existing progress docs). spec-20 calls it; spec-01 owns the
+  callable body. If that callable does not yet exist, **stop and build it in spec-01** (R5 gate) — do **not** stub
+  a client-side card writer (would violate R4 / the rules deny-list).
+- **Trigger options (either is acceptable; pick one and test it):**
+  1. **Explicit:** the `no-deck` hero's `Build your review deck` CTA invokes the backfill, shows a brief building
+     state, then re-runs `loadDueQueue` and re-derives the hero state.
+  2. **Automatic-once:** on the **first** home/queue load where `!hasAnyCards && hasCompletedLessons`, the container
+     fires the backfill once (idempotent — `writeCardsForCompletion` must not duplicate existing cards), then falls
+     through to `due` / `caught-up`. Guard against re-firing every load.
+- **Invariant:** the caught-up copy must never render while `hasAnyCards === false`. Either the deck gets built (→
+  `due`/`caught-up`) or the `no-deck` affordance shows — never "all caught up" over an empty deck.
+
+> spec-01's backfill is the authoritative card-creation path; this spec is **trigger-only** and adds no new
+> persisted field or write. If the backfill is deferred, the `no-deck` hero still renders its affordance (it simply
+> has nothing to call yet) — it must still never show the misleading caught-up line.
+
 ---
 
 ## 5. Step-by-step implementation
@@ -214,8 +283,11 @@ spec-10's scheduling already **caps `dueAt`** to the target date and forces a fi
 
 3. **Create the hero model** `src/pages/dailyReview.model.ts` (pure, dependency-free, node-testable):
    ```ts
+   export type DailyReviewHeroState = 'due' | 'ramp' | 'caught-up' | 'no-deck' | 'hidden'
    export interface DailyReviewHeroModel {
+     state: DailyReviewHeroState   // discriminant — drives which copy renders (§4.5)
      hasAnyCards: boolean
+     hasCompletedLessons: boolean  // disambiguates no-deck from hidden (§4.2 / §4.5)
      dueCount: number
      rampNote: string | null
    }
@@ -227,27 +299,43 @@ spec-10's scheduling already **caps `dueAt`** to the target date and forces a fi
    export function buildHeroModel(
      dueCount: number,
      hasAnyCards: boolean,
+     hasCompletedLessons: boolean,
      targetInterviewDate: string | undefined,
      now: Date,
-   ): DailyReviewHeroModel { /* compose */ }
+   ): DailyReviewHeroModel {
+     /* compose; derive state (§4.5):
+        !hasAnyCards && !hasCompletedLessons      → 'hidden'
+        !hasAnyCards &&  hasCompletedLessons      → 'no-deck'
+        dueCount > 0 && rampNote !== null         → 'ramp'
+        dueCount > 0                              → 'due'
+        else (hasAnyCards, dueCount === 0)        → 'caught-up'  */
+   }
    ```
    → **verify:** `./node_modules/.bin/vitest run src/pages/dailyReview.model.test.ts` (written in step 9) green.
 
 4. **Create the presentational hero** `DailyReviewHero` (co-locate in `ConceptCatalog.tsx` next to `ResumeHero`,
    or a sibling file `src/pages/DailyReviewHero.tsx` if it keeps `ConceptCatalog.tsx` tidy — match the file's
    current size; `ConceptCatalog.tsx` already holds `ResumeHero` inline, so inline is consistent). Props:
-   `{ model: DailyReviewHeroModel; quantGate: boolean; onStart: () => void }`. Render the three states of §4.2.
-   Use `ergo-card` + an `ergo-review-hero` class; reuse the `ergo-resume-hero__*` structural classes' spirit
-   (eyebrow/title/footer/cta) so it visually rhymes with the resume hero.
-   → **verify:** `/dev/review` (step 8) renders all three states via its scenario switcher.
+   `{ model: DailyReviewHeroModel; quantGate: boolean; onStart: () => void; onBuildDeck?: () => void }`.
+   Switch on `model.state` to render the states of §4.2 (`due`, `ramp`, `caught-up`, `no-deck`); render `null` for
+   `hidden`. The `no-deck` state's `Build your review deck` CTA calls `onBuildDeck` (§4.5). Use `ergo-card` + an
+   `ergo-review-hero` class; reuse the `ergo-resume-hero__*` structural classes' spirit (eyebrow/title/footer/cta)
+   so it visually rhymes with the resume hero.
+   → **verify:** `/dev/review` (step 8) renders all four visible states (`due`/`ramp`/`caught-up`/`no-deck`) via its
+   scenario switcher, and renders nothing for `hidden`; the `no-deck` CTA fires `onBuildDeck`.
 
 5. **Render the hero in the catalog.** In `ConceptCatalogPage.tsx` (the container), call `loadDueQueue(user.uid,
    new Date())` to get the due items, derive `dueCount = items.length` and `hasAnyCards` (true once the user has any
-   review card ever — see §4.2; spec-10 exposes a cheap existence check or the container caches it), build the hero
-   view-model via `buildHeroModel(...)`, compute `quantGate = isQuantIntensity(userDoc)`, and pass `reviewHero` +
-   `onStartReview = () => navigate(ROUTES.review)` + `quantGate` down. In `ConceptCatalog.tsx`, add an optional prop
-   `reviewHero?: DailyReviewHeroModel` and `onStartReview?: () => void` to `ConceptCatalogProps`, and render
-   `{reviewHero?.hasAnyCards && <DailyReviewHero model={reviewHero} quantGate={quantGate} onStart={onStartReview!} />}`
+   review card ever — see §4.2; spec-10 exposes a cheap existence check or the container caches it), derive
+   `hasCompletedLessons` from the existing progress the container already subscribes to (`:42`) — true if the
+   learner has completed ≥1 lesson — build the hero view-model via `buildHeroModel(dueCount, hasAnyCards,
+   hasCompletedLessons, userDoc?.targetInterviewDate, new Date())`, compute `quantGate = isQuantIntensity(userDoc)`,
+   and pass `reviewHero` + `onStartReview = () => navigate(ROUTES.review)` + `onBuildDeck` (§4.5; calls spec-01's
+   backfill callable then re-runs `loadDueQueue`) + `quantGate` down. For the **automatic-once** variant (§4.5),
+   fire `onBuildDeck` once when `reviewHero.state === 'no-deck'`, guarded so it does not re-fire on every render.
+   In `ConceptCatalog.tsx`, add optional props `reviewHero?: DailyReviewHeroModel`, `onStartReview?: () => void`,
+   and `onBuildDeck?: () => void` to `ConceptCatalogProps`, and render
+   `{reviewHero && reviewHero.state !== 'hidden' && <DailyReviewHero model={reviewHero} quantGate={quantGate} onStart={onStartReview!} onBuildDeck={onBuildDeck} />}`
    as the **first child of `<main>`** (before the `model.resume` hero, `:481-483`). Thread `quantGate` in as a prop
    too — **computed in the `ConceptCatalogPage` container via `isQuantIntensity(userDoc)`** (the §4 helper; the
    container already subscribes to `userDoc` at `:20`), never via a bare `defaultTrack` check. Keep it optional so
@@ -269,11 +357,18 @@ spec-10's scheduling already **caps `dueAt`** to the target date and forces a fi
      `quantGate`.
    - Render `<DailyReview items={items} lessonsById={…} track={track} quantGate={quantGate} onSubmit={submit}
      navigate={navigate} />` where
-     `submit = (cardId, result, confidence?) => submitReview({ cardId, result, confidence })` (the §4.5 frozen
-     shape).
+     `submit = (cardId, answer, confidence?) => submitReview({ cardId, answer, confidence })` (the §4.5 frozen
+     shape — **server-graded**, R13). The Daily-Review surface passes the learner's **raw answer** to be graded
+     server-side (it may grade locally only for instant UX); it never sends a client-asserted pass/fail `result`.
+   - **Empty handling (deep-link, §4.5):** when `loadDueQueue` returns `[]`, render the inline empty state — but
+     distinguish **caught-up** (`hasAnyCards`) from **no-deck** (`!hasAnyCards && hasCompletedLessons`, where the
+     learner deep-linked to `/review` with no deck built). For `no-deck`, render the `Build your review deck`
+     affordance (reuse `DailyReviewHero`'s `no-deck` rendering or a shared snippet) wired to the same backfill
+     trigger; never the caught-up copy. Do **not** hard-redirect.
    → **verify:** `grep -n "isQuantIntensity" src/pages/DailyReviewPage.tsx` shows the helper import + call and no
    bare `defaultTrack === 'B'` gating; `/review` loads (emulator or live) without console errors; with zero due
-   cards it shows the inline empty state, not a crash.
+   cards it shows the inline empty state, not a crash; with `!hasAnyCards && hasCompletedLessons` it shows the
+   `Build your review deck` affordance, not the caught-up copy.
 
 7. **Create the presentational queue** `src/pages/DailyReview.tsx` (§4.3 stepper). Key points:
    - Maintain `index` state; `current = items[index]`; `phase: 'gate' | 'problem'` per item; and (quant gate only)
@@ -285,7 +380,8 @@ spec-10's scheduling already **caps `dueAt`** to the target date and forces a fi
    - `phase==='problem'`: render the single problem beat via the existing beat renderer (the component
      `LessonPlayer` uses to render one beat) with **no surface chrome**. **When `quantGate` is true, also mount
      `<ConfidenceRating value={confidence} onChange={setConfidence} />` (spec-02 — D6 third capture site)**; Track A
-     does not mount it. On grade callback → `onSubmit(current.cardId, result, quantGate ? confidence : undefined)`
+     does not mount it. On grade callback → `onSubmit(current.cardId, answer, quantGate ? confidence : undefined)`
+     (the raw `answer` for server grading; `result` is graded locally only for instant UX)
      → `setIndex(i+1)`, `setPhase('gate')`, clear `confidence`.
    - When `index >= items.length`: render the `Done` summary; CTA `Back to home` → `navigate(ROUTES.landing)`.
    - **Label-stripping:** do not render `current.conceptId`, lesson title, or method name; set the document title
@@ -295,14 +391,17 @@ spec-10's scheduling already **caps `dueAt`** to the target date and forces a fi
 
 8. **Create the dev harness** `src/pages/DevReviewPage.tsx` + dispatch in `DevRoutes.tsx` (`if (path ===
    ROUTES.devReview) return <DevReviewPage />`). Mirror `DevHomePage.tsx`'s scenario switcher: scenarios
-   `empty`, `due-3`, `ramp-final` (a date 2 days out), plus a `track-A` vs `quant` toggle. Feed `DailyReview` and
+   `caught-up` (cards exist, none due), `no-deck` (`!hasAnyCards && hasCompletedLessons` — exercises the `Build your
+   review deck` affordance; `onBuildDeck` is a no-op log in `/dev`), `due-3`, `ramp-final` (a date 2 days out), plus
+   a `track-A` vs `quant` toggle. Feed `DailyReview` and
    `DailyReviewHero` fixture `QueueItem[]` + fixture lesson content (reuse `loadDevLesson` /
    `course-pattern-hitting-times.json` like `DevHomePage.tsx:8`). `devNavigate` is a no-op (copy `DevHomePage.tsx:86-88`).
    The `track-A` vs `quant` toggle feeds `quantGate` straight into `DailyReview`/`DailyReviewHero` (the harness sets
    it directly — `isQuantIntensity` is exercised in the container's unit test, not needed in `/dev`).
-   → **verify:** open `/dev/review`, click through every scenario + the track toggle; the hero's three states and
-   the queue's gate→problem→done flow all render with no Firebase; the `quant` toggle shows `<ConfidenceRating>` on
-   the problem, `track-A` does not.
+   → **verify:** open `/dev/review`, click through every scenario + the track toggle; the hero's four visible states
+   (`due`/`ramp`/`caught-up`/`no-deck`) and the queue's gate→problem→done flow all render with no Firebase; the
+   `no-deck` scenario shows `Build your review deck` (not the caught-up copy) and its CTA fires `onBuildDeck`; the
+   `quant` toggle shows `<ConfidenceRating>` on the problem, `track-A` does not.
 
 9. **Tests** (§8). → **verify:** all green per §10.
 
@@ -317,7 +416,8 @@ never availability:
 | Surface element | Track A (gentle, default) | Quant-intensity gate (`isQuantIntensity(userDoc)` true) |
 |---|---|---|
 | Hero sub-copy (due) | `Keep your skills warm — {N} ready to revisit.` | `{N} cards due. Recall cold — no peeking.` |
-| Empty state | `You're all caught up. Nice work.` | `Caught up. Come back when cards are due.` (terse, no praise) |
+| Empty — **caught-up** (deck exists, none due) | `You're all caught up. Nice work.` | `Caught up. Come back when cards are due.` (terse, no praise) |
+| Empty — **no-deck** (no cards minted yet, §4.5) | `Build your review deck — turn completed lessons into spaced reviews.` + `Build deck` CTA | `No review deck yet. Build it.` + `Build deck` CTA. **Never** the caught-up line. |
 | Label-stripping | On (it is D8's whole point), but the gate may be gentler (spec-13 decides) | On + the which-method gate is mandatory framing; brutal "name the method first" tone |
 | Confidence rating on each card | **Not mounted** (D6 light/off); `submitReview` called with no `confidence` ⇒ `card.lastConfidence` stays `null` | **`<ConfidenceRating>` mounted on the spaced-review problem** (D6's third capture site); the captured value is passed as `submitReview`'s `confidence` → lands in `card.lastConfidence` (read by spec-12 calibration) |
 | Ramp note | Forgiving final-stretch line; never alarmist | Same lines but the terse register; final-stretch emphasized |
@@ -329,7 +429,7 @@ The component takes `quantGate: boolean` (+ `track`) and selects copy from a sma
 
 ## 7. Data / schema changes
 
-**None persisted by this spec.** It writes only via spec-10's `submitReview({ cardId, result, confidence? })`
+**None persisted by this spec.** It writes only via spec-10's `submitReview({ cardId, answer, confidence? })`
 (Function-owned `reviews/{cardId}`, README §4 Foundation A / §4.5 frozen signature — R4 satisfied: no client write
 to progression). The optional `confidence` it passes for the quant-intensity gate (D6) is **persisted by spec-01's
 callable into `card.lastConfidence`** — this spec defines no new field, it only supplies the value at the third
@@ -356,13 +456,19 @@ Unit (vitest — `./node_modules/.bin/vitest run`):
 1. **`src/pages/dailyReview.model.test.ts`**
    - `rampNote`: returns `null` when `targetInterviewDate` undefined; `null` when `daysUntil > 14`; the 8–14 / 4–7
      / ≤3 / day-of strings at boundary days (13, 14, 7, 8, 3, 4, 0, -1); `null` when `dueCount === 0`.
-   - `buildHeroModel`: `hasAnyCards=false` ⇒ hero suppressed regardless of count; `dueCount` passthrough; rampNote
-     composition.
+   - `buildHeroModel` **state derivation (§4.5 — covers both empty states):**
+     - `!hasAnyCards && !hasCompletedLessons` ⇒ `state==='hidden'` (regardless of `dueCount`).
+     - `!hasAnyCards && hasCompletedLessons` ⇒ `state==='no-deck'` (the pre-SR/pre-backfill learner) — **never**
+       `'caught-up'`.
+     - `hasAnyCards && dueCount===0` ⇒ `state==='caught-up'`.
+     - `hasAnyCards && dueCount>0` ⇒ `state==='due'`; with a near target date ⇒ `state==='ramp'`.
+     - `dueCount` passthrough; rampNote composition.
 2. **`src/pages/DailyReview.test.tsx`** (render test)
    - The stepper advances gate→problem→next on a mocked `WhichMethodGate.onResolved` + a mocked grade callback;
-     `onSubmit` is called once per card with the **`{ cardId, result, confidence }` shape** matching §4.5.
+     `onSubmit` is called once per card with the **`{ cardId, answer, confidence }` shape** matching §4.5 (the raw
+     `answer` for server grading, never a client `result`).
    - **Confidence pass-through (D6 — quant gate):** with `quantGate=true`, `<ConfidenceRating>` (mocked) is mounted
-     on the problem; setting its value and grading calls `onSubmit(cardId, result, <thatValue>)`. With
+     on the problem; setting its value and grading calls `onSubmit(cardId, answer, <thatValue>)`. With
      `quantGate=false`, `ConfidenceRating` is **not** rendered and `onSubmit` is called with `confidence` undefined.
    - **Label-stripping invariant:** given a `QueueItem` whose `conceptId='probability'`, `lessonId='lesson-…'`,
      `schemaId='symmetry'`, the rendered DOM (`container.textContent` + every `aria-label`) contains **none** of
@@ -372,15 +478,24 @@ Unit (vitest — `./node_modules/.bin/vitest run`):
    - **No item fabrication/reorder (R5):** given a fixed `QueueItem[]`, the stepper visits them in array order and
      submits exactly those `cardId`s — the surface never synthesizes or reorders cards beyond what `buildQueue`
      returned.
-3. **`DailyReviewHero`** (can live in `DailyReview.test.tsx` or its own): due / empty / ramp states render the
-   right copy per `quantGate`; `onStart` fires from the due-state CTA; `hasAnyCards=false` ⇒ renders nothing.
-4. **Catalog regression:** existing `ConceptCatalog` tests stay green with the new optional props omitted.
+3. **`DailyReviewHero`** (can live in `DailyReview.test.tsx` or its own): `due` / `caught-up` / `ramp` states render
+   the right copy per `quantGate`; `onStart` fires from the due-state CTA. **Two empty states (§4.5):**
+   - `state==='caught-up'` renders the caught-up copy (per track) and no `Build deck` CTA.
+   - `state==='no-deck'` renders the `Build your review deck` affordance (per track), **does not** render the
+     caught-up copy, and its CTA fires `onBuildDeck`.
+   - `state==='hidden'` renders nothing.
+4. **No-deck backfill trigger (§4.5):** in the chosen variant, exercise it. *Explicit:* clicking `Build your review
+   deck` calls the backfill wrapper exactly once and then re-runs `loadDueQueue`. *Automatic-once:* mounting the
+   container with `!hasAnyCards && hasCompletedLessons` fires the backfill **once** (not per render), and a learner
+   with `hasAnyCards` does not trigger it. The backfill wrapper is mocked (no real Firestore write — R4).
+5. **Catalog regression:** existing `ConceptCatalog` tests stay green with the new optional props omitted.
 
 Fixture validation: `tsx scripts/validate-fixtures.ts` — unaffected (no fixture/schema change here); run to confirm
 no regression.
 
-Manual `/dev` check (no Firebase): `/dev/review` exercises hero (due/empty/ramp), the track toggle, and the
-gate→problem→done loop. `/dev/home` still renders unchanged.
+Manual `/dev` check (no Firebase): `/dev/review` exercises hero (`due`/`caught-up`/`no-deck`/`ramp`), the track
+toggle, and the gate→problem→done loop; the `no-deck` scenario shows `Build your review deck` (not caught-up).
+`/dev/home` still renders unchanged.
 
 ---
 
@@ -417,15 +532,19 @@ gate→problem→done loop. `/dev/home` still renders unchanged.
 - New files: `src/pages/dailyReview.model.ts`, `src/pages/DailyReview.tsx`, `src/pages/DailyReviewPage.tsx`,
   `src/pages/DevReviewPage.tsx`; `DailyReviewHero` added (inline in `ConceptCatalog.tsx` or its own file);
   `ConceptCatalog.tsx` renders the hero above `ResumeHero` behind optional props.
-- The catalog shows `Daily Review · N due` when cards are due, an empty state when none, and a ramp line near the
-  target date; `Review now →` launches `/review`.
+- The catalog shows `Daily Review · N due` when cards are due, and a ramp line near the target date; `Review now →`
+  launches `/review`. The **two empty states are distinct** (§4.5): `caught-up` (deck exists, none due) shows the
+  all-caught-up copy; `no-deck` (`!hasAnyCards && hasCompletedLessons` — pre-SR / pre-backfill) shows a `Build your
+  review deck` affordance that triggers spec-01's lazy backfill (or the container fires it automatically on first
+  load) — **never** the misleading caught-up copy over an empty deck. Brand-new users (no completed lessons) see
+  nothing (defer to the resume hero).
 - The surface consumes spec-10's **exact** queue API: `loadDueQueue(uid, now)` + the 4-arg
   `buildQueue(cards, order, now, {maxItems, foils})` (prereq `order` map built and passed; `foils =
   isQuantIntensity(userDoc)`) — **no 2-arg `buildQueue` call** anywhere.
 - The quant-intensity gate is computed **only** via `isQuantIntensity(userDoc)` from `src/auth/track.ts` (in both
   `ConceptCatalogPage` and `DailyReviewPage`) — `grep` shows no bare `defaultTrack === 'B'` gating in the new code.
 - `/review` presents due cards interleaved (spec-10 order), labels stripped, each fronted by spec-13's
-  `<WhichMethodGate beat schemaId onResolved/>`, calling `submitReview({ cardId, result, confidence? })` per card;
+  `<WhichMethodGate beat schemaId onResolved/>`, calling `submitReview({ cardId, answer, confidence? })` per card;
   for the quant gate, `<ConfidenceRating>` is mounted on the problem and its value flows into `confidence`
   (→ `card.lastConfidence`, D6). A `Done` summary on completion.
 - Two-track copy verified on `/dev/review` (gentle vs quant); the quant path shows `ConfidenceRating`, Track A

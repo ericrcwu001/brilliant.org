@@ -55,20 +55,38 @@ delta. The capture is **track-aware** (D6/D2): the quant-intensity gate sees it;
 
 ## 3. Design
 
-### 3.1 The scale — DECISION: **4 discrete buckets, stored as the 0.5–1.0 midpoint**
+### 3.1 The scale — DECISION: **4 discrete buckets, stored as a `[0,1]` SELF-REPORT value**
 
 D6/Foundation C leave the scale to this spec (`0.5–1.0` *or* 4 buckets). **Decision: present 4 buckets, persist a
-number in `[0.5, 1.0]`.** Justification:
+number in `[0.5, 1.0]` that is a SELF-REPORTED subjective probability of being correct — NOT a chance-adjusted
+floor.** Justification:
 
 - **UX:** a 4-button row ("Guessing / Shaky / Fairly sure / Certain") is one tap, no slider, matches the chip/button
   idiom already in the codebase (`PredictionBeat` chips, `BeatShell` buttons). A continuous slider invites
   false precision and adds friction on a checkpoint.
-- **Storage as a probability, not an ordinal:** spec-12's Brier score needs a **probability** `p ∈ [0,1]` for a
-  binary correct/incorrect outcome. For a 2-option-or-better correct/wrong checkpoint, a rational floor is ~0.5
-  (chance), ceiling <1.0. Mapping the 4 buckets to **`{0.5, 0.7, 0.85, 1.0}`** (clamped, never literally storing a
-  number outside `[0.5,1.0]`) gives spec-12 a ready probability with **zero re-mapping**, while the UI stays
-  discrete. This is why we store the midpoint number, not the bucket index — it makes `confidenceByBeat: Record<beatId, number>`
-  (the Foundation-C contract field, **already named in §4**) directly consumable.
+- **What the number means (corrected — gate audit #7).** Earlier drafts justified the `0.5` floor as "chance" on a
+  "2-option-or-better" checkpoint. **That justification was wrong for the checkpoint that actually exists:** the
+  only checkpoint today is `masteryChallenge`, a **free-text type-in** whose chance of a correct guess is ≈0, not
+  0.5. There is no binary item in scope. So the stored value is **not** a chance-adjusted probability; it is a
+  **learner self-report** of "how sure are you," where `0.5` ("Guessing") is the bottom of the *self-report* scale,
+  not the random-guess baseline. We deliberately do **not** map type-in confidence down to a ≈0 chance floor —
+  forcing a type-in learner to express "I had no idea" as `p≈0` is neither natural nor what the 4-button UI affords.
+- **Why the values still live in `[0.5, 1.0]`:** the four buckets map to **`{0.5, 0.7, 0.85, 1.0}`** (clamped,
+  never literally storing a number outside `[0.5,1.0]`). spec-12 consumes a number `p ∈ [0,1]` with **zero
+  re-mapping**; storing the midpoint number (not the bucket index) makes `confidenceByBeat: Record<beatId, number>`
+  (the Foundation-C contract field, **already named in §4**) directly consumable. The `[0.5,1.0]` *range* is a
+  property of the self-report UI, not a claim about item chance.
+- **Item-type awareness for the future.** Should a genuinely **binary** checkpoint ever enter scope (e.g. a 2-option
+  which-method gate), `0.5` *would* legitimately be the chance floor for that item — at which point the scale is
+  already correctly anchored. The scale is therefore item-type-*compatible*: `0.5` reads as "no information /
+  guessing" in both the type-in self-report and a future binary item, so no per-item-type re-keying is required.
+
+> **Instruction to spec-12 (calibration scoring):** treat `confidenceByBeat[*]` and `Turn.confidence` as
+> **self-reported subjective probabilities**, NOT chance-calibrated probabilities. On a **type-in** checkpoint
+> (today's only kind) do **not** interpret `0.5` as the random-guess baseline — it is the floor of the self-report
+> scale, and the item's true chance is ≈0. Brier still scores fine against the binary correct/incorrect outcome,
+> but any "calibration vs chance" framing must be keyed off the **item's interaction type** (type-in/voice ⇒ chance≈0;
+> reserve a 0.5 chance baseline for a genuine binary item), not off the stored number.
 
 > The exact bucket→number map (`CONFIDENCE_SCALE`) is a constant in `ConfidenceRating.tsx`, exported so spec-12
 > imports it rather than hard-coding. The **field name and type** (`confidenceByBeat?: Record<string, number>`) are
@@ -86,6 +104,31 @@ A small presentational component: a labelled row of 4 buttons. It renders **insi
 beat owns placement), is shown **after** the learner has answered (so confidence is about *their* answer, captured
 once, not re-litigated), and reports the chosen number up via a callback. Track-aware suppression is decided by the
 **player** (it knows the track) — the component is dumb.
+
+#### 3.3.1 Capture timing: POST-feedback, and the hindsight-bias caveat (gate audit #7)
+
+**Decision: capture is POST-feedback** — the in-lesson rating is gated on `solved` (step 8 renders it only once
+`solved === true`, i.e. **after** the learner has checked their answer and seen correct/incorrect feedback), and the
+interview rating is captured **after** the session ends (§3.5, post-outcome by construction). The prompt is phrased
+retrospectively ("How sure were you **before checking**?") to ask for the learner's *pre-feedback* confidence.
+
+This is a deliberate, documented trade-off:
+
+- **Why post-feedback:** it is the only one-tap seam that does not interrupt the solve. Inserting a confidence gate
+  *between* commit and feedback would (a) add friction to every checkpoint, (b) require blocking advance on the
+  rating (we explicitly do **not** gate advance — §1, step 8), and (c) for the interview, has **no seam at all**
+  (grading runs synchronously inside `stop()`; the only non-intrusive insertion point is post-session — §3.5).
+- **The cost — hindsight bias.** Asking "how sure *were* you" **after** the outcome is known is subject to
+  hindsight/"knew-it-all-along" bias: a learner who just saw they were right tends to over-report prior confidence,
+  and one who saw they were wrong tends to under-report. The stored value is therefore a **post-outcome
+  reconstruction** of pre-answer confidence, not a clean pre-commit measurement. We accept this for v1 to keep
+  capture frictionless; a future spec may move in-lesson capture to **after-commit-before-feedback** if calibration
+  data proves the bias material.
+
+> **FLAG to spec-12 (calibration scoring):** every value this spec writes (`confidenceByBeat[*]`,
+> `Turn.confidence`) is captured **post-outcome** (after the learner has seen correctness/feedback). It is a
+> hindsight-susceptible self-report, not a pre-commit measurement. Caveat any "calibration" framing accordingly and
+> do not present the Brier delta as a clean predicted-vs-measured signal without noting the post-outcome capture.
 
 ### 3.4 Which beats show it
 
@@ -137,8 +180,8 @@ D6 names **three** confidence sites: the in-lesson checkpoint (§3.1–3.4), the
 
 - The review surface is **spec-20**. It mounts the **same `ConfidenceRating` component** built here (Track B /
   quant-intensity-gated only, per D6) and passes the chosen number as the optional `confidence?` arg of
-  **`submitReview({ cardId, result, confidence? })`** — the callable owned by **spec-01** (signature frozen in
-  README §4 Foundation A).
+  **`submitReview({ cardId, answer, confidence? })`** — the callable owned by **spec-01** (signature frozen in
+  README §4 Foundation A; **server-graded** — the client sends the learner's raw answer, never a pass/fail).
 - Inside that callable the number lands in **`reviews/{cardId}.lastConfidence`** (`number | null`, README §4
   Foundation A card shape — the explicit "D6 third capture site" field). spec-12 reads `lastConfidence` for
   calibration, exactly as it reads `confidenceByBeat` and `Turn.confidence`.
@@ -156,6 +199,8 @@ D6 names **three** confidence sites: the in-lesson checkpoint (§3.1–3.4), the
    ```ts
    // Confidence rating captured on checkpoint beats (spec-02 / Foundation C).
    // Client-written; scale = ConfidenceRating's CONFIDENCE_SCALE midpoints in [0.5,1.0].
+   // SELF-REPORTED subjective probability, NOT a chance-adjusted floor (today's
+   // checkpoint is a free-text type-in, chance≈0; 0.5 = "Guessing", not random baseline).
    // Captured only on checkpoint beats (D6); never on teaching beats or the opening bet.
    // spec-12 reads this to compute a calibration (Brier) signal — NOT computed here.
    confidenceByBeat: z.record(z.string(), z.number()).optional(),
@@ -166,8 +211,10 @@ D6 names **three** confidence sites: the in-lesson checkpoint (§3.1–3.4), the
 2. **`ConfidenceRating` component** — create `src/lesson/ConfidenceRating.tsx`:
    ```tsx
    // Confidence capture on checkpoint beats (spec-02 / D6). One-tap, 4 buckets,
-   // stored as a probability midpoint in [0.5,1.0] so spec-12 can score Brier
-   // directly. Track-aware suppression is the caller's job (the player knows the
+   // stored as a SELF-REPORTED subjective probability in [0.5,1.0] (NOT a
+   // chance-adjusted floor — today's checkpoint is a type-in, chance≈0). spec-12
+   // scores Brier against the binary outcome but must not read 0.5 as chance.
+   // Track-aware suppression is the caller's job (the player knows the
    // track) — this component is presentational.
    export const CONFIDENCE_SCALE = [
      { label: 'Guessing', value: 0.5 },
@@ -517,6 +564,30 @@ Function-written and this spec adds no new attempt field beyond the existing `tr
 - **R5 (avoid silently degrading a foundation):** spec-12 depends on this capture. The field name/shape match README
   §4 exactly so spec-12 is not stubbed against a wrong name. The one open shape choice (`Turn.confidence` vs an
   attempt field) is flagged for the gate (§3.5).
+
+### 8.1 Privacy note (data this spec persists)
+
+This spec persists a new per-learner behavioral signal; call out the data-handling implications so a fresh session
+does not treat confidence as ephemeral UI state:
+
+- **Per-question confidence persists.** The interview `Turn.confidence` is stored on the **transcript**, which is
+  written into the Function-owned interview attempt doc (`users/{uid}/interviews/{attemptId}.transcript`) at grade
+  time — it is **durable**, not transient. The in-lesson `confidenceByBeat` persists in the client-written snapshot
+  (`users/{uid}/snapshots/{lessonId}`). Both are retained for as long as their containing doc is retained.
+- **It feeds a derived profile.** These values are not write-only telemetry: spec-12 reads all confidence values
+  (`confidenceByBeat`, `Turn.confidence`, `card.lastConfidence`) to compute a **calibration (Brier) signal** that is
+  stored as a per-learner trend (`users/{uid}/calibration/summary`, README §4.5) and surfaced back to the learner
+  (spec-23 report). So a learner's self-reported confidence becomes part of a **derived, surfaced profile of how
+  well-calibrated they are** — treat it with the same care as other progression data.
+- **Audio is never stored.** Reiterating the capstone-interview contract: the interview runs speech-to-speech but
+  **only text + (now) confidence are persisted** — raw audio is never written to Firestore or anywhere server-side
+  (see `docs/capstone-interview/README.md`: "Audio is never stored"; this spec adds **only** the `confidence` number
+  to the existing text `Turn`, no audio). Adding confidence capture does **not** change the audio-handling posture.
+- **Cross-ref:** README §4 Foundation C and §4.5 (the authoritative confidence-field contracts:
+  `confidenceByBeat`, `Turn.confidence`, `card.lastConfidence`, and the `calibration/summary` derived doc) for where
+  each value lives and who consumes it. *(The brief referenced a README "§4.6"; no such section exists today — the
+  confidence/calibration contracts live in §4/§4.5, cited here instead. If a dedicated §4.6 privacy section is later
+  added to the README, point this note at it.)*
 
 ---
 

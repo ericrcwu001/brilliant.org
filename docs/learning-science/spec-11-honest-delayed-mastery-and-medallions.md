@@ -21,7 +21,7 @@
 - Building the SR card schema, the SM-2 module, the `submitReview` callable, or the queue/recommender — those are spec-01 / spec-10. This spec *consumes* them and adds the gold-mint branch.
 - Authoring the transfer problems themselves — that is **spec-24, a solid prerequisite for the Track-B gold gate** (not parenthetical). This spec defines how a transfer card is *recognized* (reads `card.isTransfer`, written by spec-01 from `BeatSchema.heldOut`) and *gates* gold, and degrades gracefully (Track-B gold simply cannot mint) until spec-24 ships content (R5).
 - Changing silver semantics, unlock gating, the streak, or the celebration (`size==='lg'`) medallion.
-- No scheduled Cloud Function / push (D14) — gold mints inside the `submitReview` call that passes.
+- No scheduled Cloud Function / push (D14) — gold mints inside the `submitReview` call that passes. A consequence (preserved as a **deliberate** D14 deferral, not an oversight): gold can only mint when the user **voluntarily returns** and submits a delayed review. There is **no reminder, push, or scheduled job** that pulls them back, so a user who never returns stays at **silver indefinitely** even if they would have passed. This is the honest interim cost of D14 (no scheduled function / push in v1); re-engagement (reminding non-returning users to do their due review) is **flagged for a future re-engagement spec**, not built here.
 
 ---
 
@@ -67,17 +67,22 @@ At completion, `derived.mastered` must be **`false`** (gold is no longer earnabl
 
 Gold mints when a **qualifying delayed review passes**. spec-01 owns `submitReview` (in `functions/src/review.ts`); this spec adds the gold-mint branch to it. A review **qualifies to mint gold** when all hold:
 
-1. `result === 'pass'`.
+1. The review's **server-graded** result is a pass (R13). The mint reads the result the **server** produced by checking the submitted answer against the card's fixture accept-list — **not** a client-supplied `result` string. A client cannot fake gold by POSTing `result: 'pass'`: `submitReview` re-grades the answer server-side (spec-01/10 own the grading), and only that server verdict reaches `qualifiesForGoldMint`. A wrong answer submitted with `result: 'pass'` is graded `fail` server-side and mints nothing.
 2. The card's `lastReviewedAt` was ≥ **1 day** before server `now`, **or** `reps >= 1` already (i.e. this is not the same-day first sit) — concretely: the card existed and was created/last-reviewed on an earlier local day. Use server time only (R12). The simplest robust rule: **the card's `createdAt` is on an earlier UTC day than the server `now`** (a delayed retrieval), which the SM-2 scheduling already guarantees because the first interval is ≥1d.
 3. **Track gate** (see §5): Track A — the passing card is the **same checkpoint** problem (`cardId` corresponds to an in-lesson graded beat). Quant-intensity gate — the passing card must be a **transfer** card for that lesson (`card.isTransfer === true`, written by spec-01 at card creation from `BeatSchema.heldOut` — README §4; this spec only reads it, §6.1).
 
 On a qualifying pass, mint gold for that lesson by setting `progress.derived.mastered = true` (Function-written; mirrors the existing upgrade-only write at `index.ts:160-168`). Re-use the **upgrade-only, idempotent** discipline: only ever write `mastered: true`, never demote. This keeps the medallion read (`lessonAced`) correct and never regresses an earned gold (R2).
+
+> **Existing-user note (gold-preserving; upgrade-only).** Because every write to `derived.mastered` is upgrade-only and never demotes, existing completions that already earned gold under the old zero-hint rule **keep their gold** — this spec never revokes it. But existing users who currently hold only **silver** have **no `reviews/{cardId}` cards** (the cards are created at completion, and they completed before spec-01 shipped), so there is nothing for `submitReview` to pass and they **cannot earn gold** until spec-01's existing-user **card backfill** seeds their checkpoint (and, post-spec-24, transfer) cards. Until that backfill runs, an existing silver user stays silver — honest, not broken (R5). New gold for existing users is therefore blocked on spec-01's backfill, not on this spec.
 
 **`reviews/{cardId}.suspended` ownership (spec-01 §5a / README §4).** spec-01 initializes every card with `suspended: false` and hands the field to this spec ("set true when gold via transfer is reached — maintenance cadence only"). spec-11 honors that contract here: when a **transfer** card (`card.isTransfer === true`) mints gold, the same transaction flips that card to `suspended: true`, so the queue drops it to maintenance cadence. A Track-A same-checkpoint card is **not** suspended — that card stays in the active SR rotation (the field is documented specifically for the transfer/gold-reached case), so spec-11 only writes `suspended` on the transfer-card branch. `submitReview`'s SM-2 write (spec-01 §5a step 6) is a `merge` write and never touches `suspended`, so this is the field's only writer. The card write joins the same transaction as the progress write, keeping the two coherent and idempotent (never re-write once already gold).
 
 ```
 // functions/src/review.ts  (branch added by spec-11 inside submitReview, after the SM-2 card write)
 // Gold mint: an honest, delayed pass on a qualifying card upgrades the lesson to gold.
+// `result` here is the SERVER-GRADED verdict (spec-01/10 grade the submitted answer against the
+// card's fixture accept-list); it is NOT the client-supplied result string (R13). A client cannot
+// fake gold by POSTing result:'pass' — a wrong answer is graded `fail` server-side and never reaches here.
 if (result === 'pass' && qualifiesForGoldMint(card, now, track)) {
   const progressRef = db.doc(`users/${uid}/progress/${card.lessonId}`)
   const cardRef = db.doc(`users/${uid}/reviews/${cardId}`)
@@ -118,6 +123,8 @@ export function qualifiesForGoldMint(
 ```
 
 > **R5 graceful degradation.** Until spec-24 authors transfer content, Track-B lessons have no transfer card, so `qualifiesForGoldMint` is never true for them → Track-B users stay **silver**. That is the correct, non-broken interim state (silver is honest; gold is simply not yet attainable). The medallion gallery still renders; nothing throws.
+
+> **k-of-n noise (v1 accepts a single delayed pass).** v1 mints gold on a **single** delayed pass, which is statistically noisy — one lucky retrieval can mint gold. This is accepted for v1 for two reasons: (1) gold is **upgrade-only**, so a noisy early mint is not catastrophic and a genuinely-mastered learner still mints on any later pass; and (2) a robust k-of-n gate needs **>1 authored transfer item** per lesson for the Track-B half, which is a real **spec-24** content cost (spec-24 authors ~1 transfer problem per lesson today). **FUTURE:** strengthen the gate by requiring `card.reps >= 2` (the `reps` counter already exists in the Foundation A card shape — README §4) **or** passes on **2 distinct transfer items**. If k-of-n is later adopted, **defer the `suspended: true` (transfer-gold) flip until the n-th qualifying pass** so a transfer card is not dropped to maintenance cadence before the gold gate actually closes.
 
 ### 3.4 The two meanings of "mastered" after this spec (R2 reconciliation table)
 
@@ -243,6 +250,7 @@ No other schema changes. `progress.derived.mastered` already exists (`schema.ts:
 - Track B delayed pass on a checkpoint card does **not** mint; on a transfer card it **does**.
 - Track B transfer-card mint also sets `card.suspended: true`; a Track-A checkpoint-card mint leaves `suspended` **false** (only transfer cards are suspended — §3.3 / §6.2).
 - A `fail` never mints; an already-gold lesson is never demoted (and `suspended` is not re-written on the idempotent second pass).
+- **Server-graded gate (R13):** a **wrong** answer submitted with a client-claimed `result: 'pass'` is graded `fail` server-side and does **NOT** mint gold (`derived.mastered` stays `false`) — proving the mint keys off the server's grading verdict, not the client-supplied `result` string. A client cannot fake gold by POSTing `result: 'pass'`.
 
 **R2 two-source assertion** (new test in `src/progress/recommend.test.ts` or a small `src/habit/milestones.test.ts` addition): after the change, with a hinted-but-completed lesson:
 - **Medallion path:** `isMilestoneMastered(milestoneId, { [lessonId]: { derived: { mastered: false } } })` is **false** at completion, and **true** once `derived.mastered` is set (simulating the delayed mint).
@@ -257,7 +265,7 @@ No other schema changes. `progress.derived.mastered` already exists (`schema.ts:
 ## 8. Foolproofing (§8 items this spec satisfies)
 
 - **R2 — Two mastery sources of truth (CRITICAL).** This spec is the canonical R2 case. We change `derived.mastered` (frozen, medallion) to *delayed gold* and **explicitly keep** `masteredFromLive` (live, recommender) as the zero-hint struggle predicate (§3.1, §3.4). Step 9 adds a test asserting **both** the medallion tier and the recommender after the change. We never collapse the two predicates into one function.
-- **R3 — Mastery computes client-side, persists server-side.** `computeMastered` still runs in `LessonPlayer` and is sent in `data.derived`, but the server no longer trusts it for gold (§3.2); gold is server-minted in `submitReview` (R3-safe: the snapshot-writer's silent offline failure can no longer fake gold, because gold requires a server-side delayed review).
+- **R3 — Mastery computes client-side, persists server-side.** `computeMastered` still runs in `LessonPlayer` and is sent in `data.derived`, but the server no longer trusts it for gold (§3.2); gold is server-minted in `submitReview` (R3-safe: the snapshot-writer's silent offline failure can no longer fake gold, because gold requires a delayed pass **whose result is SERVER-GRADED against the fixture accept-list** — a client cannot fake gold by POSTing `result: 'pass'` (R13). The mint reads the server's grading verdict, never the client-claimed result).
 - **R5 — Missing foundations silently degrade.** Track-B gold depends on spec-24 transfer content; until it exists, `qualifiesForGoldMint` returns false for Track B → silver stays (honest), nothing throws (§3.3 note). We do not stub a transfer card.
 - **R6 — Held-out transfer beats must not render in normal flow (spec-11 OWNS this — README §8 R6).** Step 3 excludes `heldOut` beats from the `visibleBeats` walk in `LessonPlayer.tsx`, so a held-out transfer problem is served **only** by the SR queue (spec-10/20) as a delayed retrieval, never inline. Without this, a Track-B learner sees the transfer problem the same day and the gold gate is defeated. The filter is a safe no-op until `BeatSchema.heldOut` (spec-24) exists.
 - **R12 — Client timestamps are spoofable.** The delay check keys off the card's server-written `createdAt`/`lastReviewedAt` and server `now`, never a client-supplied timestamp (§3.3, §5).

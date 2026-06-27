@@ -84,6 +84,20 @@ The single source of the maths. **Pure, dependency-free, node-testable** (mirror
 //   - accuracy        = mean(correct)                (what actually happened)
 //   - overconfidence  = meanConfidence - accuracy    (the predicted-vs-measured delta;
 //                                                      >0 overconfident, <0 underconfident)
+//
+// Two guards on SURFACING (not on computation — numbers always compute/store):
+//   - format          each item is binary|typein|voice; per-format sub-summaries
+//                      keep the interview (voice) delta free of 0.5-floored type-in
+//                      contamination. spec-23 reads byFormat.voice for the interview delta.
+//   - reliable        = n >= MIN_CALIBRATION_N (pooled and per format). spec-23 must
+//                      not surface/celebrate a delta whose bucket is unreliable.
+
+/** Capture format an item came from. Kept on every item so we can split Brier by
+ *  format (a 0.5-floored in-lesson type-in must not contaminate the interview
+ *  free-response calibration delta spec-23 surfaces). `binary` = a forced-choice /
+ *  which-method-gate answer; `typein` = an in-lesson numeric/type-in checkpoint;
+ *  `voice` = an interview spoken free-response answer. */
+export type CalibrationFormat = 'binary' | 'typein' | 'voice'
 
 /** One graded answer's calibration input. `confidence` already normalized to [0,1]
  *  by spec-02's scale; `correct` is the binary grade outcome for that answer. */
@@ -91,7 +105,15 @@ export interface CalibrationItem {
   confidence: number // [0,1]
   correct: boolean
   hard?: boolean // true for harder/brutal-tier items; powers the reward weighting
+  format?: CalibrationFormat // capture format; drives the per-format sub-summaries
 }
+
+/** Minimum graded answers before a Brier / overconfidence number is statistically
+ *  worth surfacing or celebrating. Below this, a result is PROVISIONAL — spec-23
+ *  must hide or label it (§3.5). Owned by spec-12; imported by spec-23's hand-off.
+ *  Set to 5 (lower bound of the 5–10 range): per-attempt interview Brier is over a
+ *  tiny n by design (§2), so the trend doc is the first place this gate clears. */
+export const MIN_CALIBRATION_N = 5
 
 export interface CalibrationResult {
   n: number
@@ -99,6 +121,13 @@ export interface CalibrationResult {
   meanConfidence: number | null
   accuracy: number | null
   overconfidence: number | null // meanConfidence - accuracy
+  /** false until n >= MIN_CALIBRATION_N. When false, brier/overconfidence are
+   *  informational only — spec-23 must NOT surface or celebrate them (§3.5). */
+  reliable: boolean
+  /** Per-format Brier sub-summaries so a 0.5-floored type-in cannot pollute the
+   *  interview (voice) calibration delta. Each present format carries its own
+   *  {n, brier, overconfidence}; absent formats are omitted. */
+  byFormat?: Partial<Record<CalibrationFormat, { n: number; brier: number | null; overconfidence: number | null }>>
 }
 
 /** Owned by spec-12; imported by spec-22/23. A per-question correctness score
@@ -122,11 +151,32 @@ export function brierScore(items: CalibrationItem[]): number | null {
   return sum / valid.length
 }
 
+/** Per-format {n, brier, overconfidence} for each format present in the items.
+ *  Lets spec-23 read the `voice` (interview free-response) calibration in isolation
+ *  from `typein` (the 0.5-floored in-lesson capture). Items with no `format` are
+ *  not bucketed (they only count toward the pooled top-level result). */
+function byFormatSummaries(
+  valid: CalibrationItem[],
+): Partial<Record<CalibrationFormat, { n: number; brier: number | null; overconfidence: number | null }>> | undefined {
+  const formats = [...new Set(valid.map((it) => it.format).filter((f): f is CalibrationFormat => !!f))]
+  if (formats.length === 0) return undefined
+  const out: Partial<Record<CalibrationFormat, { n: number; brier: number | null; overconfidence: number | null }>> = {}
+  for (const f of formats) {
+    const group = valid.filter((it) => it.format === f)
+    const meanConf = group.reduce((a, it) => a + clamp01(it.confidence), 0) / group.length
+    const acc = group.reduce((a, it) => a + (it.correct ? 1 : 0), 0) / group.length
+    out[f] = { n: group.length, brier: brierScore(group), overconfidence: meanConf - acc }
+  }
+  return out
+}
+
 /** Full calibration result (Brier + the predicted-vs-measured signals). */
 export function scoreCalibration(items: CalibrationItem[]): CalibrationResult {
   const valid = items.filter((it) => Number.isFinite(it.confidence))
   const n = valid.length
-  if (n === 0) return { n: 0, brier: null, meanConfidence: null, accuracy: null, overconfidence: null }
+  if (n === 0) {
+    return { n: 0, brier: null, meanConfidence: null, accuracy: null, overconfidence: null, reliable: false }
+  }
   const meanConfidence = valid.reduce((a, it) => a + clamp01(it.confidence), 0) / n
   const accuracy = valid.reduce((a, it) => a + (it.correct ? 1 : 0), 0) / n
   return {
@@ -135,6 +185,8 @@ export function scoreCalibration(items: CalibrationItem[]): CalibrationResult {
     meanConfidence,
     accuracy,
     overconfidence: meanConfidence - accuracy,
+    reliable: n >= MIN_CALIBRATION_N,
+    byFormat: byFormatSummaries(valid),
   }
 }
 
@@ -153,24 +205,43 @@ export function hardItemCalibrationBonus(items: CalibrationItem[]): number | nul
   return sum / hard.length
 }
 
-/** Combine a prior aggregate with a new attempt's items into an updated running
- *  mean Brier + counts. Pure so the Function can call it and tests can assert it.
- *  Uses a count-weighted running mean (not re-deriving from raw history — we do
- *  not store every item). */
-export function foldAttemptIntoTrend(
-  prior: { n: number; brierSum: number; confidenceSum: number; correctSum: number },
-  items: CalibrationItem[],
-): { n: number; brierSum: number; confidenceSum: number; correctSum: number } {
+/** Count-weighted running sums for one format (or the pooled total). O(1) update;
+ *  exact for the mean Brier; never stores raw per-answer history (server-only writer). */
+export interface TrendSums {
+  n: number
+  brierSum: number // Σ (confidence - correct)^2
+  confidenceSum: number // Σ confidence
+  correctSum: number // Σ correct (0/1)
+}
+
+const EMPTY_SUMS: TrendSums = { n: 0, brierSum: 0, confidenceSum: 0, correctSum: 0 }
+
+function addItemsToSums(prior: TrendSums, items: CalibrationItem[]): TrendSums {
   const valid = items.filter((it) => Number.isFinite(it.confidence))
-  const addBrier = valid.reduce((a, it) => a + (clamp01(it.confidence) - (it.correct ? 1 : 0)) ** 2, 0)
-  const addConf = valid.reduce((a, it) => a + clamp01(it.confidence), 0)
-  const addCorrect = valid.reduce((a, it) => a + (it.correct ? 1 : 0), 0)
   return {
     n: prior.n + valid.length,
-    brierSum: prior.brierSum + addBrier,
-    confidenceSum: prior.confidenceSum + addConf,
-    correctSum: prior.correctSum + addCorrect,
+    brierSum: prior.brierSum + valid.reduce((a, it) => a + (clamp01(it.confidence) - (it.correct ? 1 : 0)) ** 2, 0),
+    confidenceSum: prior.confidenceSum + valid.reduce((a, it) => a + clamp01(it.confidence), 0),
+    correctSum: prior.correctSum + valid.reduce((a, it) => a + (it.correct ? 1 : 0), 0),
   }
+}
+
+/** Combine a prior aggregate with a new attempt's items into an updated running
+ *  mean Brier + counts, keeping BOTH the pooled total AND per-format sub-totals so
+ *  the interview (voice) calibration delta can be read without `typein` contamination.
+ *  Pure so the Function can call it and tests can assert it. Count-weighted running
+ *  mean — not re-deriving from raw history (we do not store every item). */
+export function foldAttemptIntoTrend(
+  prior: { n: number; brierSum: number; confidenceSum: number; correctSum: number; byFormat?: Partial<Record<CalibrationFormat, TrendSums>> },
+  items: CalibrationItem[],
+): { n: number; brierSum: number; confidenceSum: number; correctSum: number; byFormat: Partial<Record<CalibrationFormat, TrendSums>> } {
+  const valid = items.filter((it) => Number.isFinite(it.confidence))
+  const pooled = addItemsToSums(prior, valid)
+  const byFormat: Partial<Record<CalibrationFormat, TrendSums>> = { ...(prior.byFormat ?? {}) }
+  for (const f of new Set(valid.map((it) => it.format).filter((x): x is CalibrationFormat => !!x))) {
+    byFormat[f] = addItemsToSums(byFormat[f] ?? EMPTY_SUMS, valid.filter((it) => it.format === f))
+  }
+  return { ...pooled, byFormat }
 }
 ```
 
@@ -181,9 +252,9 @@ export function foldAttemptIntoTrend(
 A **byte-identical mirror** of the pure module is needed in `functions/` because the Functions package compiles
 separately and does not import from `src/` (same split the interview functions use — `functions/src/interviewPack.ts`
 mirrors `src/content/interviewPack.ts`). Per README §5 the two files are a **byte-mirror src↔functions**: create
-**`functions/src/calibration.ts`** as a byte-for-byte copy of everything in §3.1 — `CalibrationItem`,
-`CalibrationResult`, `CORRECTNESS_PASS_THRESHOLD`, `isCorrect`, `brierScore`, `scoreCalibration`,
-`hardItemCalibrationBonus`, `foldAttemptIntoTrend` (no React/Firestore imports). `CalibrationResult` from the
+**`functions/src/calibration.ts`** as a byte-for-byte copy of everything in §3.1 — `CalibrationFormat`,
+`CalibrationItem`, `CalibrationResult`, `TrendSums`, `MIN_CALIBRATION_N`, `CORRECTNESS_PASS_THRESHOLD`, `isCorrect`,
+`brierScore`, `scoreCalibration`, `hardItemCalibrationBonus`, `foldAttemptIntoTrend` (no React/Firestore imports). `CalibrationResult` from the
 functions copy is the type imported by `gradeInterview`'s `GradeInterviewOutput`, which **spec-23 consumes** (README
 §5). A **parity test** (§7) asserts both copies produce identical numbers on a fixed vector, guarding drift. (If the
 repo already shares a path alias from functions→src, prefer importing; verify in step 2 — but the README mandates the
@@ -215,10 +286,12 @@ export const isCorrect = (correctnessScore: number): boolean => correctnessScore
 
 `correct := isCorrect(report.dimensions.correctness.score)` (i.e. `score >= 4`).
 
-Compute `const cal = scoreCalibration([{confidence, correct, hard}])` over the attempt's rated answers (main
-question + confidence-rated follow-ups, if spec-02 captured any), and write a **`calibration: cal` block onto the
-attempt doc** in the same finalize transaction (`interview.ts:475-522`). Also fold the attempt into the learner trend
-doc in the same transaction.
+Compute `const cal = scoreCalibration([{confidence, correct, hard, format: 'voice'}])` over the attempt's rated
+answers (main question + confidence-rated follow-ups, if spec-02 captured any), and write a **`calibration: cal` block
+onto the attempt doc** in the same finalize transaction (`interview.ts:475-522`). **Every interview item is
+`format: 'voice'`** (spoken free-response) — this is what keeps the interview calibration delta spec-23 surfaces
+separable from the `typein`/`binary` in-lesson captures (§3.2a). Also fold the attempt into the learner trend doc in
+the same transaction.
 
 **`cal` is RETURNED, not only written (gate Issue #10).** `gradeInterview`'s return is currently
 `{ report, attemptId }` (`functions/src/interview.ts:524`); add `calibration: cal` to it so the type becomes
@@ -229,6 +302,34 @@ from the **function return**, not by re-reading the attempt doc, so `cal` must b
 `hard` = the drawn question's tier is `harder` or `brutal`, i.e. `question.tier !== 'hard'` (`Question.tier` is
 `'hard'|'harder'|'brutal'` — `functions/src/interviewPack.ts:33`; `question` is loaded at grade time —
 `interview.ts:434-436`).
+
+### 3.2a Format dimension (gate #7 — interview Brier must not be polluted by type-ins)
+
+Calibration signal arrives from three differently-reliable capture formats, and a 0.5-floored in-lesson type-in
+confidence must not contaminate the interview free-response calibration delta spec-23 surfaces. Every
+`CalibrationItem` therefore carries `format?: CalibrationFormat` (`'binary' | 'typein' | 'voice'`), and both the
+per-attempt result and the trend doc keep **per-format** sub-summaries alongside the pooled total.
+
+| Capture source | `format` | Set by |
+|---|---|---|
+| Interview spoken answer (`transcript[i].confidence`, §3.2) | `'voice'` | this spec, in `gradeInterview` |
+| Which-method gate / forced-choice checkpoint | `'binary'` | the fold call site (spec-10 / spec-13 surface) |
+| In-lesson numeric/type-in checkpoint, Daily-Review reps (§3.2b) | `'typein'` | the fold call site (spec-10) |
+
+- **Pooling is NOT acceptable for the interview delta.** spec-23 must read the **`voice`** sub-summary
+  (`summary.byFormat.voice` / `attempt.calibration.byFormat.voice`) for the predicted-vs-measured interview delta, so a
+  large pool of 0.5-floored type-ins cannot drag it toward chance. The pooled top-level number remains for the overall
+  "your calibration over time" context where mixing formats is acceptable.
+- The per-format buckets are exact (own `n`/`brierSum`/…); `MIN_CALIBRATION_N` (§3.5) is applied **per bucket** when
+  surfacing the voice delta — a learner with 2 interview answers has an unreliable voice delta even if their pooled n is
+  large.
+
+### 3.2b Daily-Review reps fold as `typein` (format note for §3.3a)
+
+The Daily-Review fold (full spec in §3.3a) builds its item with `format: 'typein'` (review reps are in-lesson type-in/binary
+recall, never spoken free-response), so review confidence accumulates into the `typein` bucket and the pooled total,
+**never** the `voice` bucket. (A which-method-gate review rep may instead set `format: 'binary'`; the fold call site —
+spec-10 — picks per rep card type. Either way it stays out of `voice`.)
 
 ### 3.3 Learner trend — storage decision (`users/{uid}/calibration/summary`)
 
@@ -245,7 +346,7 @@ The `summary` doc shape (NEW shared field — flag for the consistency gate, §8
 ```
 users/{uid}/calibration/summary          // Function-written; owner read-only
 {
-  n:             number     // count of graded answers folded in (all sources)
+  n:             number     // count of graded answers folded in (all sources, pooled)
   brierSum:      number     // Σ (confidence - correct)^2  — divide by n for mean Brier
   confidenceSum: number     // Σ confidence
   correctSum:    number     // Σ correct (0/1)
@@ -253,10 +354,22 @@ users/{uid}/calibration/summary          // Function-written; owner read-only
   brier:         number     // brierSum / n
   meanConfidence:number     // confidenceSum / n
   accuracy:      number     // correctSum / n
-  overconfidence:number     // meanConfidence - accuracy  ← predicted-vs-measured delta (spec-23)
+  overconfidence:number     // meanConfidence - accuracy  ← pooled predicted-vs-measured delta
+  reliable:      boolean    // n >= MIN_CALIBRATION_N — spec-23 hides/labels when false (§3.5)
+  // per-format sub-totals (gate #7): the interview delta is read from byFormat.voice,
+  // NOT the pooled overconfidence, so 0.5-floored type-ins can't contaminate it.
+  byFormat: {              // each present format only; absent formats omitted
+    voice?:  { n, brierSum, confidenceSum, correctSum, brier, overconfidence, reliable }
+    typein?: { n, brierSum, confidenceSum, correctSum, brier, overconfidence, reliable }
+    binary?: { n, brierSum, confidenceSum, correctSum, brier, overconfidence, reliable }
+  }
   updatedAt:     Timestamp
 }
 ```
+
+Each `byFormat.<format>.reliable` is that bucket's own `n >= MIN_CALIBRATION_N` (the voice delta can be unreliable
+while the pool is reliable, and vice-versa). The denormals (`brier`, `overconfidence`, `reliable`) are recomputed from
+the sums on every write, both pooled and per-format.
 
 ### 3.3a Daily-Review reps fold into the trend (gate Issue #8)
 
@@ -267,7 +380,8 @@ spec-10 fills the SM-2 advance body — `functions/src/review.ts`) must, **in th
 card**, fold that rep into `users/{uid}/calibration/summary` so review reps count toward Brier:
 
 - Build one `CalibrationItem` from the rep: `{ confidence: card.lastConfidence (the value just written), correct:
-  result === 'pass' }`. Skip the fold when `confidence` is `null`/absent (Track A passes none — null-safe, same as the
+  result === 'pass', format: 'typein' }` (a which-method-gate rep card sets `format: 'binary'` instead — never
+  `'voice'`; §3.2b). Skip the fold when `confidence` is `null`/absent (Track A passes none — null-safe, same as the
   interview path), so a confidence-less rep never poisons the trend.
 - `mark hard` from the card's tier is not available on the review card shape; review reps fold with `hard` unset (the
   hard-item bonus is interview-surfacing copy only — §6 — and does not affect Brier).
@@ -283,14 +397,41 @@ there is no client-write race (R4/D14).
 ### 3.4 Exposing the predicted-vs-measured delta to spec-23
 
 spec-23's report renders a calibration delta. Two read paths, both provided:
-- **Per-attempt:** `attempt.calibration.overconfidence` (+ `brier`, `n`, `meanConfidence`, `accuracy`) on the
-  finalized attempt doc — spec-23 reads it from the same attempt it already loads for the report.
-- **Trend:** `users/{uid}/calibration/summary.overconfidence` (+ `brier`) — spec-23 reads it for "your calibration
-  over time" context.
+- **Per-attempt (interview):** the report's predicted-vs-measured **interview** delta reads
+  `attempt.calibration.byFormat.voice.overconfidence` (+ `.brier`, `.n`, `.reliable`) — the **voice** bucket, not the
+  pooled `attempt.calibration.overconfidence`, so a 0.5-floored type-in never contaminates it (gate #7). The pooled
+  fields stay on the attempt for completeness.
+- **Trend:** `users/{uid}/calibration/summary` — spec-23 reads `byFormat.voice` for the interview-over-time delta and
+  the pooled `overconfidence`/`brier` for the general "your calibration over time" context.
+- **Reliability gate (gate #7):** every delta carries a `reliable` flag (`n >= MIN_CALIBRATION_N`, applied per bucket).
+  spec-23 **must** suppress or label-as-provisional any delta whose `reliable === false` — see the hand-off in §3.5.
 
 A tiny **client read selector** `src/progress/calibrationRead.ts` (NEW, lazy-Firestore, mirrors
 `recommend.ts:19-45`) exposes `loadCalibrationSummary(uid) → CalibrationResult | null` so spec-23 (and any surface)
 reads through one place rather than touching Firestore directly.
+
+### 3.5 Min-n suppression guard + spec-23 hand-off (gate #7)
+
+A Brier or overconfidence delta computed over a handful of answers is noise. **`MIN_CALIBRATION_N` (= 5, defined in
+`calibration.ts`, §3.1) is the floor below which a delta is provisional and must not be surfaced or celebrated.** This
+spec does the gating *math*; spec-23 does the *hiding*:
+
+- **Where the constant lives.** `export const MIN_CALIBRATION_N = 5` in `src/progress/calibration.ts` (and the
+  byte-identical `functions/src/calibration.ts`). It is the single source — spec-23 **imports** it from the `src/` copy
+  for its surfacing decision; it does not hard-code `5`.
+- **What this spec emits.** `scoreCalibration` sets `reliable = n >= MIN_CALIBRATION_N` on the pooled result, and the
+  trend write recomputes `reliable` on the pooled doc **and on each `byFormat.<format>` bucket** (so the voice delta is
+  gated on the voice n, not the pooled n).
+- **Hand-off to spec-23 (the surfacing contract).** spec-23 MUST:
+  - treat `reliable === false` as "hold" — do **not** render the number, the celebration copy, or
+    `hardItemCalibrationBonus` praise; instead show the provisional/collecting-signal state (e.g. "keep going — a few
+    more answers and we'll show your calibration");
+  - gate the **interview** delta on `byFormat.voice.reliable`, not the pooled `reliable`;
+  - import `MIN_CALIBRATION_N` from `calibration.ts` rather than re-deriving the threshold.
+- **Preserved framing (do not regress).** The **count-weighted running trend** (§3.1/§3.3) and the
+  **per-attempt-Brier-is-informational** stance (§2, §5 — Track A) are unchanged: a single attempt's Brier is still
+  computed and stored; the `reliable` flag only governs *celebrated surfacing*, never *computation or storage*. Below
+  `MIN_CALIBRATION_N` the numbers still accumulate in the trend; they are simply not surfaced as a verdict.
 
 ---
 
@@ -313,10 +454,10 @@ reads through one place rather than touching Firestore directly.
 4a. **Write `src/progress/calibration.test.ts`** (the tests in §7).
    → verify: `./node_modules/.bin/vitest run src/progress/calibration.test.ts` is green.
 
-4b. **Create `functions/src/calibration.ts`** — **byte-identical** copy of §3.1: `CalibrationItem`,
-   `CalibrationResult`, `CORRECTNESS_PASS_THRESHOLD`, `isCorrect`, `brierScore`, `scoreCalibration`,
-   `hardItemCalibrationBonus`, `foldAttemptIntoTrend` (per README §5 byte-mirror; default to copying even if an import
-   alias exists). Add a one-line header comment: `// Mirror of src/progress/calibration.ts — keep BYTE-IDENTICAL (functions
+4b. **Create `functions/src/calibration.ts`** — **byte-identical** copy of §3.1: `CalibrationFormat`,
+   `CalibrationItem`, `CalibrationResult`, `TrendSums`, `MIN_CALIBRATION_N`, `CORRECTNESS_PASS_THRESHOLD`, `isCorrect`,
+   `brierScore`, `scoreCalibration`, `hardItemCalibrationBonus`, `foldAttemptIntoTrend` (per README §5 byte-mirror;
+   default to copying even if an import alias exists). Add a one-line header comment: `// Mirror of src/progress/calibration.ts — keep BYTE-IDENTICAL (functions
    compiles separately; parity test guards drift).`
    → verify: `cd functions && ./node_modules/.bin/tsc --noEmit` (or the repo's functions build) passes; the two files
      are byte-identical below their header comment (`diff <(tail -n +2 functions/src/calibration.ts) <(tail -n +2 src/progress/calibration.ts)` empty).
@@ -325,16 +466,18 @@ reads through one place rather than touching Firestore directly.
    - Import `scoreCalibration`, `foldAttemptIntoTrend`, `isCorrect` from `./calibration` (or `../../src/...` per step 2).
    - **Before** `runTransaction` (after the grade succeeds, ~`interview.ts:473`), build the `CalibrationItem[]` from the
      transcript: walk `transcript`, keep `t.role === 'candidate' && Number.isFinite(t.confidence)`, and map each to
-     `{ confidence: t.confidence, correct: isCorrect(report.dimensions.correctness.score), hard: question.tier !== 'hard' }`.
+     `{ confidence: t.confidence, correct: isCorrect(report.dimensions.correctness.score), hard: question.tier !== 'hard', format: 'voice' }`.
      (v1 binarizes against the single per-attempt correctness dimension; the main answer plus any confidence-rated
-     follow-up turns spec-02 captured all contribute confidence.)
+     follow-up turns spec-02 captured all contribute confidence. `format: 'voice'` keeps the interview bucket clean of
+     `typein` contamination — gate #7, §3.2a.)
    - `const cal = scoreCalibration(items)` — **declared in the function body, not inside the transaction closure**, so it
      survives to the `return`.
    - In the finalize transaction (`interview.ts:475-522`): add `calibration: cal` to the attempt finalize `tx.set`
      (`:485-497`) **only when `cal.n > 0`** (Track-A null-safe — no confidence ⇒ no block, no trend fold). In the
      **same transaction**, read `users/{uid}/calibration/summary`, `foldAttemptIntoTrend(prior, items)`, recompute the
-     denormals (`brier = brierSum/n`, etc.), and `tx.set(summaryRef, {...}, {merge:true})`. Reads before writes (the
-     transaction already reads `stateRef`/`usageRef` — add `summaryRef` to the read phase).
+     denormals (`brier = brierSum/n`, `reliable = n >= MIN_CALIBRATION_N`, etc.) **on the pooled doc and on each
+     `byFormat.<format>` bucket the fold touched**, and `tx.set(summaryRef, {...}, {merge:true})`. Reads before writes
+     (the transaction already reads `stateRef`/`usageRef` — add `summaryRef` to the read phase).
    - **Extend `GradeInterviewOutput`** (`:320-323`) to `{ report: InterviewReport; attemptId: string; calibration:
      CalibrationResult }` and change the final `return { report, attemptId }` (`:524`) to
      `return { report, attemptId, calibration: cal }`. Import `CalibrationResult` from `./calibration`. spec-23 renders
@@ -355,6 +498,14 @@ reads through one place rather than touching Firestore directly.
 7. **Add the `calibration` Firestore type** to `src/content/schema.ts` (additive; near the interview/progress
    schemas) so the client read is parsed, not raw:
    ```ts
+   const FormatBucketSchema = z
+     .object({
+       n: z.number(),
+       brier: z.number().nullable().optional(),
+       overconfidence: z.number().nullable().optional(),
+       reliable: z.boolean().optional(),
+     })
+     .loose()
    export const CalibrationSummarySchema = z
      .object({
        n: z.number(),
@@ -362,6 +513,11 @@ reads through one place rather than touching Firestore directly.
        meanConfidence: z.number().nullable().optional(),
        accuracy: z.number().nullable().optional(),
        overconfidence: z.number().nullable().optional(),
+       reliable: z.boolean().optional(), // n >= MIN_CALIBRATION_N (gate #7)
+       byFormat: z
+         .object({ voice: FormatBucketSchema.optional(), typein: FormatBucketSchema.optional(), binary: FormatBucketSchema.optional() })
+         .loose()
+         .optional(),
      })
      .loose() // brierSum etc. + server Timestamp arrive loose
    ```
@@ -417,6 +573,13 @@ Only deltas; shared shapes live in README §4 Foundation C.
   `foldAttemptIntoTrend` (§3.3a; gate Issue #8). This spec owns the math + requirement; spec-10 owns the call site.
 - **NEW exported constant** `CORRECTNESS_PASS_THRESHOLD = 4` + `isCorrect()` in `calibration.ts` (both copies) — the
   correctness-binarization source owned here, imported by spec-22/23 (README §7).
+- **NEW exported constant** `MIN_CALIBRATION_N = 5` + `reliable` field on `CalibrationResult` and the trend doc (pooled
+  + per `byFormat` bucket) — the min-n surfacing floor owned here, imported by **spec-23** (gate #7, §3.5).
+- **NEW `format` dimension** `CalibrationItem.format?: 'binary'|'typein'|'voice'` + `byFormat` sub-summaries on
+  `CalibrationResult`, the per-attempt block, and the trend doc — keeps the interview (`voice`) Brier/delta separable
+  from `typein`/`binary` captures (gate #7, §3.2a). Interview items are `'voice'`; review reps `'typein'`/`'binary'`.
+- **Privacy/retention:** `users/{uid}/calibration/**` + the per-attempt `calibration` block are a self-only,
+  Function-written behavioral-inference profile; **deletion is owned by README §4.6's delete path** (gate #13, §8).
 - **NEW Zod schema** `CalibrationSummarySchema` in `src/content/schema.ts` (additive; client read parse only).
 - **NEW rules block** `match /calibration/{docId}` (owner read, client write denied).
 - **No change** to `predictionDeltaInitial`, `ProgressDerived`, `SnapshotSchema`, or `INTERVIEW_REPORT_SCHEMA`.
@@ -441,6 +604,20 @@ Only deltas; shared shapes live in README §4 Foundation C.
   into a prior interview-derived trend yields the combined mean (review reps + interview attempts share one trend).
 - `isCorrect` / `CORRECTNESS_PASS_THRESHOLD`: `isCorrect(4)`/`isCorrect(5)` true; `isCorrect(3)` and below false;
   `CORRECTNESS_PASS_THRESHOLD === 4` (locks the constant spec-22/23 import).
+- `MIN_CALIBRATION_N` / `reliable` (gate #7): `MIN_CALIBRATION_N === 5` (locks the constant spec-23 imports);
+  `scoreCalibration(items with n=4).reliable === false`; `scoreCalibration(items with n=5).reliable === true`; an
+  unreliable result still returns a finite `brier`/`overconfidence` (gating is surfacing-only, not computation —
+  asserts the preserved "Brier still computed below the floor" framing).
+- `format` / `byFormat` (gate #7): a mixed list of `voice` and `typein` items yields `byFormat.voice` and
+  `byFormat.typein` each with its own `n`/`brier`/`overconfidence`; a `typein`-only contamination case — many
+  0.5-floored `typein` items plus a few well-calibrated `voice` items — leaves `byFormat.voice.brier` near the voice
+  items' true Brier and **not** dragged toward `0.25` by the type-ins (the core anti-contamination assertion);
+  `byFormat` is `undefined` when no item carries a `format`; an item with no `format` counts toward the pooled total but
+  no bucket.
+- `foldAttemptIntoTrend` per-format (gate #7): folding `voice` then `typein` items yields `byFormat.voice` and
+  `byFormat.typein` sub-sums whose per-bucket mean Brier equals scoring each format's items alone (running == batch, per
+  format); the pooled sums still equal the all-items batch; a per-bucket `reliable` recomputed from `byFormat.voice.n`
+  is independent of the pooled `n` (assert voice unreliable while pool reliable).
 
 **Unit — `functions/src/calibration.test.ts`** (mirrored): a **parity test** asserting the functions copy gives the
 same numbers as the `src/` copy on a fixed vector, and that the two files are byte-identical below their header (guards
@@ -478,6 +655,29 @@ renders there once spec-23 lands.)
   returned in `GradeInterviewOutput.calibration`; spec-23 renders from the return, not a re-read of the attempt doc. ✔
 - **All signal counts (gate Issue #8)** — Daily-Review reps fold `lastConfidence` into the same trend doc (§3.3a), so
   Brier reflects review reps and not only interview attempts. ✔
+- **Format isolation (gate #7)** — every item carries `format`; the interview (`voice`) Brier/delta is kept in its own
+  `byFormat.voice` bucket so a 0.5-floored `typein` cannot contaminate the interview calibration delta spec-23
+  surfaces. ✔
+- **Min-n suppression (gate #7)** — `reliable = n >= MIN_CALIBRATION_N` is computed pooled and per-format; spec-23 holds
+  the number/celebration until the relevant bucket clears the floor; below it the trend still accumulates (numbers are
+  stored, not surfaced). ✔
+
+### Privacy & retention (gate #13)
+
+`users/{uid}/calibration/summary` (and the per-attempt `calibration` block) is a **behavioral-inference profile** — it
+records how a learner's stated confidence diverges from their realized correctness (overconfidence/underconfidence,
+per-format). Treat it accordingly:
+
+- **Self-only.** Owner read, **client write denied** (the `calibration` rules block, §3 step 6). It is never exposed to
+  other users, instructors, or any hire/verdict surface (D11 removed the hire signal; calibration must not become a
+  back-door judgment). ✔
+- **Function-written.** Every write — interview fold, review-rep fold, denormal recompute — is a Function-only
+  transaction. The client cannot mutate or fabricate it. ✔
+- **Deletion requires a Function.** Because the doc is client-write-denied, a learner cannot delete their own
+  calibration profile from the client; **deletion is part of the account-data delete path, which is a Function**.
+  **README §4.6 owns that delete path** (account/learning-data deletion + retention policy) — this spec does not define
+  it; it only registers `users/{uid}/calibration/**` and the per-attempt `calibration` block as data the §4.6 delete
+  path must purge. (If §4.6 does not yet exist in the README, this is the cross-ref that flags it must.) ✔
 
 ## 9. NEW shared field (now folded into README §4.5)
 
@@ -492,6 +692,12 @@ Foundation A lists `reviews/{cardId}.lastConfidence` as fed to spec-12. For the 
 - `Turn.confidence?: number` (README §4.5; added by spec-02) — **read here** as `transcript[i].confidence`.
 - `CORRECTNESS_PASS_THRESHOLD = 4` / `isCorrect()` — the binarization source owned here, imported by **spec-22/23**
   (README §7). `correct := isCorrect(report.dimensions.correctness.score)`.
+- `MIN_CALIBRATION_N = 5` + `CalibrationResult.reliable` / per-bucket `reliable` — the min-n surfacing floor owned here,
+  imported by **spec-23** (gate #7, §3.5); spec-23 holds the number/celebration until the relevant bucket is reliable.
+- `CalibrationItem.format` + `CalibrationResult.byFormat` + the trend doc's `byFormat` — the format-isolation contract
+  (gate #7, §3.2a); **spec-23** reads `byFormat.voice` for the interview delta, not the pooled `overconfidence`.
+- **Privacy:** `users/{uid}/calibration/**` + the per-attempt `calibration` block are self-only, Function-written; their
+  **deletion is owned by README §4.6's delete path** (gate #13).
 
 ## 10. Definition of Done
 
@@ -507,4 +713,13 @@ Foundation A lists `reviews/{cardId}.lastConfidence` as fed to spec-12. For the 
   `functions/src/interview.ts`, `functions/src/calibration.ts`).
 - Functions build (`cd functions && <build>`) passes.
 - `attempt.calibration` and `users/{uid}/calibration/summary` are readable by spec-23; the predicted-vs-measured delta
-  (`overconfidence`) is exposed at both granularities.
+  (`overconfidence`) is exposed at both granularities, **pooled and per-format** (`byFormat.voice` for the interview
+  delta).
+- **Gate #7 (format isolation):** every `CalibrationItem` carries `format`; interview items are `'voice'`, review reps
+  `'typein'`/`'binary'`; the trend doc and per-attempt block carry `byFormat`; the contamination test (§7) shows a pool
+  of 0.5-floored `typein` items does not move `byFormat.voice.brier`.
+- **Gate #7 (min-n):** `MIN_CALIBRATION_N = 5` exported from `calibration.ts` (both copies, parity-tested); `reliable`
+  is set pooled and per-bucket; the spec-23 hand-off (§3.5) is recorded; the running-trend + per-attempt-informational
+  framing is preserved (numbers compute/store below the floor, only surfacing is gated).
+- **Gate #13 (privacy/retention):** the calibration profile is documented as self-only, Function-written, with
+  deletion cross-referenced to README §4.6's delete path (§8).

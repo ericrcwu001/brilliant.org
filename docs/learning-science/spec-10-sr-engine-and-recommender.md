@@ -2,7 +2,7 @@
 
 **Status:** Planned
 **Phase:** Phase 1 (Logic — consumes Phase 0 foundations)
-**Depends-on:** [`spec-00`](spec-00-method-registry-and-tagging.md) (`methods.ts`, `BeatSchema.schemaId`), [`spec-01`](spec-01-time-axis-and-scheduling.md) (`reviews/{cardId}` schema, `scheduling.ts` SM-2 module, `targetInterviewDate`, rules + index, write-path seam)
+**Depends-on:** [`spec-00`](spec-00-method-registry-and-tagging.md) (`methods.ts` incl. `CONFUSABLE`, `BeatSchema.schemaId`), [`spec-01`](spec-01-time-axis-and-scheduling.md) (`reviews/{cardId}` schema, `ReviewCardSchema`/`ReviewCard` in `src/content/schema.ts`, `scheduling.ts` SM-2 module — exports `nextSchedule`/`initialSchedule`/`SchedulingState`, Firebase-free — `targetInterviewDate`, rules + index, write-path seam)
 **Implements:** brainlift app-actions **#1** (spaced problem-level retrieval) + **#10** (method-indexed weakness / which-method readiness); decisions **D3** (SR atomic unit = graded beat + method tag), **D4** (SM-2 + interview-date anchoring), **D14** (client computes "what's due", Functions own writes).
 
 > Read [`README.md`](README.md) §1 (corrected premises), §3 (D3/D4/D14), §4 (Foundations A + B shared contracts — **authoritative**), §8 (foolproofing R1/R2/R4/R5/R12) before implementing. This spec **consumes** the §4 shapes; it does not redefine them.
@@ -11,7 +11,7 @@
 
 ## 1. Goal & non-goals
 
-**Goal.** Turn the dead recommender into a live spaced-retrieval engine. Deliver (a) a pure **due-selection + interleave + foil** queue builder (`src/lesson/queue.ts`) that picks problem-level cards whose `dueAt <= now`, interleaves them by hidden **method** (`schemaId`), injects deliberate confusable-method foils, and is gated by a prerequisite/notation-order guard; (b) **method-indexed weakness** (resurface the weakest *method*, not the weakest lesson) extending `recommend.ts`; (c) the recommender's **first live call site** (R1) — wire it into the Study-Desk path; and (d) the **SM-2 advance body** inside `spec-01`'s `submitReview` callable (`functions/src/review.ts`) that advances the card via `nextSchedule` and writes the scheduling fields. (spec-01 owns the callable declaration + frozen `{cardId,result,confidence?}` signature; this spec fills the advance.)
+**Goal.** Turn the dead recommender into a live spaced-retrieval engine. Deliver (a) a pure **due-selection + interleave + foil** queue builder (`src/lesson/queue.ts`) that picks problem-level cards whose `dueAt <= now`, interleaves them by hidden **method** (`schemaId`), injects deliberate confusable-method foils, and is gated by a prerequisite/notation-order guard; (b) **method-indexed weakness** (resurface the weakest *method*, not the weakest lesson) extending `recommend.ts`; (c) the recommender's **first live call site** (R1) — wire it into the Study-Desk path; and (d) the **SM-2 advance body** inside `spec-01`'s `submitReview` callable (`functions/src/review.ts`) that advances the card via `nextSchedule` and writes the scheduling fields. (spec-01 owns the callable declaration + frozen **server-graded** `{cardId,answer,confidence?}` signature, and the grading of `answer` → `result`; this spec fills the advance, which consumes the server-derived `result`.)
 
 **Non-goals.** The Daily-Review **hero UI / queue surface** is `spec-20` (this spec produces the data the surface renders, and a minimal wiring into `recommendedAction`). The **which-method gate beat** itself is `spec-13` (this spec only *interleaves foils* and *reserves a slot* for it). **Gold-via-delayed-check** mastery mint is `spec-11` (this spec writes the card + `lastResult`; it does not mint gold). The **difficulty governor** is `spec-21`. SM-2 math + anchoring lives in `spec-01`'s `scheduling.ts`; this spec **calls** `nextSchedule`, it does not reimplement it. No scheduled Cloud Function / push (D14).
 
@@ -39,13 +39,13 @@
 
 ### 3.1 `src/lesson/queue.ts` — pure due-selection + interleave + foils (NEW)
 
-Pure, dependency-free (node-testable like `recommend.ts`). Consumes the §4 Foundation-A `reviews/{cardId}` card shape **by name** (do not redefine — import the type from `spec-01`'s module; see §7). Input is already-loaded cards + the lessons' beats (so the prerequisite guard can see notation tags); the Firestore *read* of due cards lives in a thin async loader alongside it, mirroring `loadMaxHintLevels`.
+Pure, dependency-free (node-testable like `recommend.ts`). Consumes the §4 Foundation-A `reviews/{cardId}` card shape **by name** (do not redefine — import the `ReviewCard` type from `spec-01`'s `ReviewCardSchema` in `src/content/schema.ts`; see §7). Input is already-loaded cards + the lessons' beats (so the prerequisite guard can see notation tags); the Firestore *read* of due cards lives in a thin async loader alongside it, mirroring `loadMaxHintLevels`.
 
 ```ts
 // src/lesson/queue.ts
-import type { ReviewCard } from '../progress/scheduling'  // spec-01 exports the card type
+import type { ReviewCard } from '../content/schema'  // spec-01 defines ReviewCardSchema/ReviewCard here
 import type { Beat } from '../content/schema'
-import { METHODS, type MethodId } from '../content/methods' // spec-00
+import { METHODS, CONFUSABLE, type MethodId } from '../content/methods' // spec-00
 
 export type QueueItem = {
   cardId: string          // `${lessonId}__${beatId}`
@@ -59,10 +59,11 @@ export type QueueItem = {
 // A lesson's beats + whether each notation prerequisite is satisfied, supplied by the caller.
 export type LessonOrder = { lessonId: string; beats: Beat[]; completed: boolean }
 
-/** Pure: cards whose dueAt <= now. Server `now` is passed in (R12 — never client startedAt). */
-export function dueCards(cards: ReviewCard[], now: number): ReviewCard[] {
+/** Pure: cards whose dueAt <= now. `now` is passed in as a Date (R12 — never client startedAt). */
+export function dueCards(cards: ReviewCard[], now: Date): ReviewCard[] {
+  const nowMs = now.getTime()
   return cards
-    .filter((c) => !c.suspended && c.dueAt.toMillis() <= now)
+    .filter((c) => !c.suspended && c.dueAt.toMillis() <= nowMs)
     .sort((a, b) => a.dueAt.toMillis() - b.dueAt.toMillis())
 }
 
@@ -76,10 +77,14 @@ export function isNotationReady(card: ReviewCard, order: Map<string, LessonOrder
 
 /**
  * Interleave by method so no two adjacent items share a schemaId where avoidable
- * (deliberate interleaving, D3), and inject foils: for the dominant method in the
- * batch, insert a confusable sibling (a due card whose schemaId shares a `domains`
- * entry in METHODS) so the learner must discriminate. Foils are existing due cards
- * re-ordered, never synthesised. Deterministic given input order (stable for tests).
+ * (deliberate interleaving, D3), and inject foils: for the dominant method `a` in the
+ * batch, insert a confusable sibling (a due card whose schemaId `b` is confusable with
+ * `a`) so the learner must discriminate. Confusable is decided by `areConfusable(a,b)`:
+ *   b ∈ CONFUSABLE[a] (curated map in methods.ts, spec-00) — the primary signal;
+ *   FALLBACK only when CONFUSABLE[a] is undefined/empty: domain overlap
+ *   (METHODS[a].domains ∩ METHODS[b].domains ≠ ∅).
+ * Foils are existing due cards re-ordered, never synthesised. Deterministic given input
+ * order (stable for tests).
  *
  * R5 / gate Issue #6: FILTER OUT cards with a falsy/empty `schemaId` BEFORE bucketing
  * and foil-grouping — `METHODS[''] === undefined`, so reading `.domains` on an
@@ -90,14 +95,14 @@ export function isNotationReady(card: ReviewCard, order: Map<string, LessonOrder
 export function buildQueue(
   cards: ReviewCard[],
   order: Map<string, LessonOrder>,
-  now: number,
+  now: Date,
   opts: { maxItems: number; foils: boolean },
 ): QueueItem[] { ... }
 ```
 
 - **schemaId filter (gate Issue #6, R5)** = first, drop every card whose `schemaId` is falsy/empty (an un-backfilled card). `METHODS['']` is `undefined`, so bucketing or foil-grouping such a card would throw on `.domains`. With Foundation B incomplete this degrades the queue to plain due-order (the caller falls back to `dueCards`) instead of crashing. Only cards with a `schemaId` that keys a real `METHODS` entry are bucketed/interleaved/foiled.
 - **Interleave** = round-robin by `schemaId` buckets (group the filtered due cards by method, then draw across buckets) so adjacent items differ in method. Stable: bucket order = first-appearance order; within a bucket keep `dueAt` order.
-- **Confusable foils** = two methods are confusable iff `METHODS[a].domains ∩ METHODS[b].domains ≠ ∅`. When `opts.foils`, after placing a run of the dominant method, pull the next due card of a *confusable* method forward (mark `kind:'foil'`). No new content; just ordering. This *sets up* the `spec-13` which-method gate without implementing it. (Operates only on filtered, schemaId-bearing cards — never indexes `METHODS` with an empty id.)
+- **Confusable foils** = two methods `a`,`b` are confusable iff `b ∈ CONFUSABLE[a]`, the **curated** confusable-method map in `methods.ts` (spec-00). Domain overlap (`METHODS[a].domains ∩ METHODS[b].domains ≠ ∅`) is a **fallback only**, used when `CONFUSABLE[a]` is undefined/empty (e.g. a method spec-00 has not yet curated). Expose a small helper `areConfusable(a, b): boolean` encapsulating "curated first, domain-overlap fallback" so the rule lives in one place. When `opts.foils`, after placing a run of the dominant method, pull the next due card of a *confusable* method forward (mark `kind:'foil'`). No new content; just ordering. This *sets up* the `spec-13` which-method gate without implementing it. (Operates only on filtered, schemaId-bearing cards — never indexes `METHODS`/`CONFUSABLE` with an empty id.)
 - **Prerequisite guard** uses the existing `introducesSymbol`/`groundedBy` tags (`schema.ts`) — already in fixtures — to never surface a problem "whose notation isn't taught yet." A card is dropped if its lesson is not `completed`, or any `groundedBy` id of the target beat is not present earlier in that lesson's beat order. This is the R5 ordering guard.
 
 ### 3.2 Method-indexed weakness — extend `src/progress/recommend.ts`
@@ -129,50 +134,53 @@ export function selectWeakMethod(
 `recommendedAction` (`studyDesk.model.ts:118`) gains a **due-card-aware review source** *ahead of* the legacy `needsReview` branch, without changing the `resume > review > start > replay` contract. Because `recommendedAction` is pure and synchronous and must stay React/Firebase-free, the **due decision is computed by the caller** (`CourseJourney.tsx`, the one live caller at `:45`) and passed in. Concretely:
 
 - Add an optional param `reviewCardLessonId?: string | null` to `recommendedAction`. When non-null (a card is due now), the `review` branch returns `{ kind:'review', lessonId: reviewCardLessonId }` and takes priority over the `needsReview` node scan (keeping both coherent — R7). When null, behavior is **identical to today** (back-compat for all existing tests/callers).
-- `CourseJourney.tsx` computes the due lesson via a new async hook that calls the queue loader (`loadDueQueue`, §3.4) and passes `buildQueue(...)[0]?.lessonId ?? null`. This is the recommender's **first live call site.** Guard it so a queue/read failure degrades to the legacy path (catch → null).
+- `CourseJourney.tsx` computes the due lesson via a new async hook that calls the queue loader (`loadDueQueue(uid, new Date())`, §3.4 — which internally composes `buildQueue`) and passes `(await loadDueQueue(uid, new Date()))[0]?.lessonId ?? null`. This is the recommender's **first live call site.** Guard it so a queue/read failure degrades to the legacy path (catch → null).
 
 > This is intentionally minimal: `spec-20` replaces the side-card with the full Daily-Review hero rendering `buildQueue(...)`. This spec only proves the wire end-to-end and makes "Review" mean "a card is actually due."
 
 ### 3.4 `loadDueQueue` — thin async reader (in `queue.ts`)
 
-Mirrors `loadMaxHintLevels` (lazy `firebase/firestore` import; try/catch → empty). Reads `users/{uid}/reviews` `where('dueAt','<=', Timestamp.fromMillis(now)).orderBy('dueAt')` (single-field auto-index per §4 — confirm with `spec-01`'s index decision), parses each via `spec-01`'s `ReviewCardSchema`, returns `ReviewCard[]`. `now` is the **server-trust-adjacent** client clock used only for *reads* (the authoritative write-time comparison is the Function's server `now` — R12); reading "what's due" from the client is exactly D14.
+Signature: `loadDueQueue(uid: string, now: Date): Promise<QueueItem[]>`. Mirrors `loadMaxHintLevels` (lazy `firebase/firestore` import; try/catch → empty). It (a) reads `users/{uid}/reviews` `where('dueAt','<=', Timestamp.fromDate(now)).orderBy('dueAt')` (single-field auto-index per §4 — confirm with `spec-01`'s index decision), (b) parses each row via `spec-01`'s `ReviewCardSchema` (from `src/content/schema.ts`) into `ReviewCard[]`, and (c) returns the built queue — internally it still composes the pure `buildQueue(cards, order, now, opts)` (loading each due card's source-lesson beats into the `order` map and reading `{ maxItems, foils }` from the gate). The async reader is the one place that touches Firestore; the pure pieces (`dueCards`/`isNotationReady`/`buildQueue`) stay node-testable. `now` is a `Date`: the **server-trust-adjacent** client clock used only for *reads* (the authoritative write-time comparison is the Function's server `now` — R12); reading "what's due" from the client is exactly D14.
 
 ### 3.5 `functions/src/review.ts` — the SM-2 advance body inside `submitReview` (spec-01 owns the callable)
 
-**Do not redefine the `submitReview` signature — `spec-01` owns it.** Per README §4, `submitReview` is declared by `spec-01` in `functions/src/review.ts` with the **frozen** shape:
+**Do not redefine the `submitReview` signature — `spec-01` owns it.** Per README §4, `submitReview` is declared by `spec-01` in `functions/src/review.ts` with the **frozen, SERVER-GRADED** shape:
 
 ```ts
-submitReview({ cardId: string; result: 'pass' | 'fail'; confidence?: number })
+submitReview({ cardId: string; answer: <beat-answer payload>; confidence?: number })
 ```
 
-There is **no `{lessonId, beatId}` variant** — the client derives `cardId = \`${lessonId}__${beatId}\`` and passes `cardId` (and, per D6, optional `confidence` from the Daily-Review surface, which lands in `lastConfidence`). `spec-01` declares the callable + the card create-on-first-review/completion + the pure `scheduling.ts`; **this spec fills the per-review SM-2 advance body only.** The snippet below is the body `spec-01`'s declaration wraps — not a second `onCall` registration.
+The client sends the learner's **raw answer**, NOT a pass/fail (R13). `spec-01`'s callable loads the card's beat (`cardId = lessonId__beatId`), grades `answer` against the fixture accept-list (reuse `loadLesson`), and **derives `result: 'pass' | 'fail'` server-side** — a client can never assert the result. There is **no `{lessonId, beatId}` variant** and **no client `result`** — the client derives `cardId = \`${lessonId}__${beatId}\`` and passes `cardId` + `answer` (and, per D6, optional `confidence` from the Daily-Review surface, which lands in `lastConfidence`). `spec-01` declares the callable + server-grading + the card create-on-first-review/completion + the pure `scheduling.ts`; **this spec fills the per-review SM-2 advance body only**, which consumes the **server-derived** `result`. The snippet below is the body `spec-01`'s declaration wraps (after grading) — not a second `onCall` registration.
 
 ```ts
 // functions/src/review.ts — SM-2 advance body (spec-01 declares the surrounding onCall)
-// req.data is the frozen { cardId, result, confidence? } (README §4); validation + uid live in spec-01's wrapper.
+// req.data is the frozen, SERVER-GRADED { cardId, answer, confidence? } (README §4, R13); validation + uid live in spec-01's wrapper.
+// `result` below is NOT from the client — spec-01's wrapper has already loaded the card's beat,
+// graded `answer` against the fixture accept-list (reuse loadLesson), and derived `result: 'pass'|'fail'`.
+// This advance body consumes that SERVER-DERIVED `result` (the client never asserts pass/fail).
 const ref = db.doc(`users/${uid}/reviews/${cardId}`)
-const now = Timestamp.now() // server now — R12
+const now = new Date() // server now (a Date; Timestamp.fromDate at the write boundary only — spec-01 §4) — R12
 await db.runTransaction(async (tx) => {
   const snap = await tx.get(ref)
   if (!snap.exists) throw new HttpsError('failed-precondition', 'No review card; finish the lesson first.')
   const card = snap.data() as ReviewCard
   const targetDate = await loadTargetInterviewDate(tx, uid) // userDoc.targetInterviewDate (spec-01/D13)
-  const next = nextSchedule(card, result, targetDate) // {dueAt,intervalDays,easeFactor,reps,lapses}
+  const next = nextSchedule(card, result, { now, targetDate }) // opts per spec-01 §4 (NextScheduleOpts requires `now`); `result` is server-derived (graded above), not client-supplied → {dueAt,intervalDays,easeFactor,reps,lapses}
   tx.set(ref, {
     ...next,
     lastResult: result,
-    lastReviewedAt: now,
+    lastReviewedAt: FieldValue.serverTimestamp(), // server-set commit time — R12 (spec-01 §5a step 7)
     lapses: result === 'fail' ? (card.lapses ?? 0) + 1 : card.lapses ?? 0,
     reps: result === 'pass' ? (card.reps ?? 0) + 1 : 0,
     ...(confidence !== undefined ? { lastConfidence: confidence } : {}), // D6 third capture site → feeds spec-12
-    updatedAt: now,
+    updatedAt: FieldValue.serverTimestamp(), // server-set commit time — R12 (spec-01 §5a step 7)
   }, { merge: true })
 })
 ```
 
 > The advance writes **only** scheduling fields + `lastResult` (+ `lastConfidence` when supplied). It does **not** mint gold (that is `spec-11`, which reads `lastResult`/`reps` to decide the delayed-success gold mint). R2: the medallion tier (`derived.mastered`) is untouched here; the live `maxHintLevelByBeat` source is untouched. Both mastery reads survive.
 
-Client wrapper in `src/progress/functions.ts` (mirror `recordQualifyingAction`): the Daily-Review surface (`spec-20`) calls `submitReview({ cardId, result, confidence? })` with the frozen shape. The client computes `cardId` from `lessonId__beatId`.
+Client wrapper in `src/progress/functions.ts` (mirror `recordQualifyingAction`): the Daily-Review surface (`spec-20`) calls `submitReview({ cardId, answer, confidence? })` with the frozen, server-graded shape — it sends the learner's **raw answer**, NOT `result` (R13). The client computes `cardId` from `lessonId__beatId`; the server grades `answer` → `result`. The client may grade locally for instant UX only, never authoritatively.
 
 ---
 
@@ -183,19 +191,19 @@ Client wrapper in `src/progress/functions.ts` (mirror `recordQualifyingAction`):
 1. **Add `selectWeakMethod` to `src/progress/recommend.ts`** (§3.2), importing `METHODS`/`MethodId` from `src/content/methods.ts`. Read `schemaId` defensively. Do not modify the existing exports.
    → verify: `./node_modules/.bin/vitest run src/progress/recommend.test.ts` still green; new unit added (step 7) passes.
 
-2. **Create `src/lesson/queue.ts`** (§3.1, §3.4): `dueCards`, `isNotationReady`, `buildQueue` (pure) + `loadDueQueue` (async, lazy Firestore, try/catch → `[]`). Import `ReviewCard`/`ReviewCardSchema` from `spec-01`'s `scheduling.ts`; `METHODS` from `methods.ts`; `Beat` from `schema.ts`.
+2. **Create `src/lesson/queue.ts`** (§3.1, §3.4): `dueCards`, `isNotationReady`, `buildQueue` (pure) + `loadDueQueue` (async, lazy Firestore, try/catch → `[]`). Import `ReviewCard`/`ReviewCardSchema` from `src/content/schema.ts` (spec-01's `ReviewCardSchema`); `METHODS`/`CONFUSABLE` from `methods.ts`; `Beat` from `schema.ts`. The SM-2 module `src/progress/scheduling.ts` is Firebase-free and exports only `nextSchedule`/`initialSchedule`/`SchedulingState` — it does **not** export the card type.
    → verify: `./node_modules/.bin/eslint src/lesson/queue.ts` clean; file imports compile (`./node_modules/.bin/tsc --noEmit` if available, else build).
 
 3. **Wire the first call site (R1)** — edit `src/pages/studyDesk.model.ts`: add optional `reviewCardLessonId?: string | null` param to `recommendedAction`; when non-null, the `review` branch returns it ahead of the `needsReview` scan. Default omitted → identical behavior.
    → verify: existing `src/pages/studyDesk.model.test.ts` passes unchanged; new test (step 7) for the due-card branch passes.
 
-4. **Edit `src/pages/CourseJourney.tsx`** (`:45`): compute the due lesson via `loadDueQueue` + `buildQueue` in an effect/hook (state `dueLessonId`, init `null`, catch → `null`), pass it to `recommendedAction(nodes, progressById, dueLessonId)`. Keep the existing side-card behavior; this only changes which lesson "Review" points at when a card is due.
+4. **Edit `src/pages/CourseJourney.tsx`** (`:45`): compute the due lesson via `loadDueQueue(uid, new Date())` (which composes `buildQueue` internally — §3.4) in an effect/hook (state `dueLessonId`, init `null`, catch → `null`), pass it to `recommendedAction(nodes, progressById, dueLessonId)`. Keep the existing side-card behavior; this only changes which lesson "Review" points at when a card is due.
    → verify: `/dev/home` (`./node_modules/.bin/vite` → `http://localhost:5173/dev/home`) renders all scenarios with no console error (dev route has no Firebase → `loadDueQueue` catches → `null` → legacy behavior intact). R1 satisfied: `recommend.ts`/`queue.ts` now have a live caller.
 
-5. **Fill the SM-2 advance body in `functions/src/review.ts`** (§3.5) — `spec-01` owns the `submitReview` callable declaration (frozen `{cardId,result,confidence?}`), its uid/validation, the card create-on-completion, and the `export { submitReview } from './review'` re-export from `functions/src/index.ts`. This step adds the transaction that loads the card, calls `nextSchedule`, and writes scheduling fields + `lastResult` (+ `lastConfidence` when supplied). If `spec-01` has stubbed the body, fill it here; do **not** add a second `onCall` or a second re-export.
+5. **Fill the SM-2 advance body in `functions/src/review.ts`** (§3.5) — `spec-01` owns the `submitReview` callable declaration (frozen, server-graded `{cardId,answer,confidence?}`), its uid/validation, the **server-grading of `answer` → `result`** (R13), the card create-on-completion, and the `export { submitReview } from './review'` re-export from `functions/src/index.ts`. This step adds the transaction that loads the card, calls `nextSchedule` with the **server-derived** `result`, and writes scheduling fields + `lastResult` (+ `lastConfidence` when supplied). If `spec-01` has stubbed the body, fill it here; do **not** add a second `onCall`, a second re-export, or any client-trusted `result`.
    → verify: `npm run build --prefix functions` compiles; `submitReview` (spec-01's export) reflects the advance.
 
-6. **Add/confirm the client wrapper** `submitReview({ cardId, result, confidence? })` in `src/progress/functions.ts` (mirror `recordQualifyingAction`, no timezone needed) — frozen shape, client derives `cardId` from `lessonId__beatId`. If `spec-01` already added the wrapper, this spec consumes it unchanged.
+6. **Add/confirm the client wrapper** `submitReview({ cardId, answer, confidence? })` in `src/progress/functions.ts` (mirror `recordQualifyingAction`, no timezone needed) — frozen, server-graded shape: the client sends the learner's **raw answer**, NOT `result` (R13), and derives `cardId` from `lessonId__beatId`. If `spec-01` already added the wrapper, this spec consumes it unchanged.
    → verify: `./node_modules/.bin/eslint src/progress/functions.ts` clean.
 
 7. **Tests** (§7) — write `src/lesson/queue.test.ts`, extend `src/progress/recommend.test.ts`, extend `src/pages/studyDesk.model.test.ts`, add a `reviews` block to `tests/firestore.rules.test.ts` (coordinate with `spec-01`; if `spec-01` already added it, extend, don't duplicate).
@@ -222,8 +230,9 @@ The **quant-intensity gate** = Track B `OR` `userDoc.learningGoal === 'interview
 
 ## 6. Data / schema changes (deltas only — see README §4 for shared shapes)
 
-- **No new shared fields.** This spec **consumes** Foundation-A `reviews/{cardId}` (`schemaId`, `track`, `dueAt`, `intervalDays`, `easeFactor`, `reps`, `lapses`, `lastResult`, `lastReviewedAt`, `suspended`) and Foundation-B `methods.ts`/`BeatSchema.schemaId` exactly as defined — all introduced by `spec-00`/`spec-01`.
-- **New code modules (not schema):** `src/lesson/queue.ts`; the **SM-2 advance body** filled into `spec-01`'s `functions/src/review.ts` (not a new file/callable — spec-01 owns `submitReview` + its frozen `{cardId,result,confidence?}` signature); appended `selectWeakMethod` in `recommend.ts`; new optional param on `recommendedAction`. The `submitReview` client wrapper is spec-01's; consumed unchanged.
+- **No new shared fields.** This spec **consumes** Foundation-A `reviews/{cardId}` (`schemaId`, `track`, `dueAt`, `intervalDays`, `easeFactor`, `reps`, `lapses`, `lastResult`, `lastReviewedAt`, `suspended`) and Foundation-B `methods.ts`/`BeatSchema.schemaId` exactly as defined — all introduced by `spec-00`/`spec-01`. `ReviewCardSchema`/`ReviewCard` are imported from `src/content/schema.ts` (spec-01); the Firebase-free `scheduling.ts` exports only `nextSchedule`/`initialSchedule`/`SchedulingState`.
+- **Flag for the consistency gate — `CONFUSABLE` is a `spec-00` deliverable:** this spec's foil rule keys off a curated `CONFUSABLE: Partial<Record<MethodId, MethodId[]>>` map exported from `src/content/methods.ts`. `spec-00` does not yet define it; `spec-00`'s `methods.ts` must add `CONFUSABLE` (curated confusable-method pairs) alongside `METHODS`. Until it lands, `areConfusable` falls back to domain overlap for every pair (so the queue still builds), but the curated map is the intended primary signal — confirm `spec-00` adds it.
+- **New code modules (not schema):** `src/lesson/queue.ts`; the **SM-2 advance body** filled into `spec-01`'s `functions/src/review.ts` (not a new file/callable — spec-01 owns `submitReview` + its frozen, server-graded `{cardId,answer,confidence?}` signature and the grading of `answer` → `result`); appended `selectWeakMethod` in `recommend.ts`; new optional param on `recommendedAction`. The `submitReview` client wrapper is spec-01's; consumed unchanged.
 - **Firestore rules:** the `reviews` block (owner read; client write **denied**; Functions write) is `spec-01`'s deliverable. This spec only adds the **rules test** for it if missing (step 7). Flag for the consistency gate: confirm `spec-01` lands the `reviews` match block before this spec's `submitReview` is exercised against the emulator.
 - **Index:** `loadDueQueue` uses `where('dueAt','<=',now).orderBy('dueAt')` → single-field auto-index (no `firestore.indexes.json` entry needed). If a future method-scoped read adds `where('schemaId','==',…)`, that composite is `spec-01`'s to pre-create.
 
@@ -237,12 +246,12 @@ The **quant-intensity gate** = Track B `OR` `userDoc.learningGoal === 'interview
   - `dueCards` returns only `dueAt<=now` and excludes `suspended`, sorted by `dueAt`.
   - `isNotationReady` drops a card whose lesson is incomplete; drops a card whose target beat has a `groundedBy` id not preceding it; accepts when all prerequisites precede.
   - `buildQueue` interleaves so adjacent items differ in `schemaId` when ≥2 methods are due; `maxItems` caps; deterministic given fixed input.
-  - `buildQueue({foils:true})` inserts a `kind:'foil'` item of a **confusable** method (shared `domains`); `{foils:false}` emits no foils.
+  - `buildQueue({foils:true})` inserts a `kind:'foil'` item of a method `b` that is **curated-confusable** with the dominant method `a` (`b ∈ CONFUSABLE[a]`), preferring a curated match over a merely domain-overlapping one when both are due; `{foils:false}` emits no foils. Plus a **fallback** case: when `CONFUSABLE[a]` is undefined/empty, the foil is chosen by domain overlap (`METHODS[a].domains ∩ METHODS[b].domains ≠ ∅`). Assert `areConfusable(a,b)` directly: `true` for a curated pair, `true` for an uncurated-but-domain-overlapping pair, `false` for a non-overlapping uncurated pair.
   - `buildQueue` with cards carrying a falsy/empty `schemaId` does **not** throw (gate Issue #6, `METHODS['']===undefined`): un-tagged cards are filtered out before bucketing/foiling; a corpus where every due card lacks a `schemaId` degrades to plain due-order rather than crashing.
 - `src/progress/recommend.test.ts` (EXTEND): `selectWeakMethod` aggregates by `schemaId` (highest total wins, tie → highest mean → alphabetical); returns `null` when no beat carries a `schemaId` (backfill-incomplete fallback). Existing tests stay green (no edits to existing exports).
 - `src/pages/studyDesk.model.test.ts` (EXTEND): `recommendedAction(nodes, progress, dueLessonId)` returns `{kind:'review', lessonId:dueLessonId}` ahead of a `needsReview` node; with `dueLessonId` omitted/null, behavior is byte-identical to current (R7 coherence).
 
-**Function unit / integration:** `submitReview` advances the card (pass → `reps+1`, `easeFactor` per `nextSchedule`; fail → `reps:0`, `lapses+1`); throws `failed-precondition` when no card exists; uses server `Timestamp.now()` not client input (R12). Place per `functions/src` test convention (mirror `streaks.test.ts`).
+**Function unit / integration:** `submitReview` advances the card (pass → `reps+1`, `easeFactor` per `nextSchedule`; fail → `reps:0`, `lapses+1`); throws `failed-precondition` when no card exists; derives all time from server `new Date()` (the `nextSchedule` `now`) / `FieldValue.serverTimestamp()` (the `lastReviewedAt`/`updatedAt` writes), not client input (R12). Place per `functions/src` test convention (mirror `streaks.test.ts`).
 
 **Rules (`tests/firestore.rules.test.ts`, run via `npm run test:rules` — Java/emulator):** add a `reviews` describe mirroring the milestones/interviews pattern (`:183-230`): owner can **read** a seeded `users/alice/reviews/L__b`; client write/update is **denied**; non-owner read denied.
 
@@ -259,7 +268,7 @@ The **quant-intensity gate** = Track B `OR` `userDoc.learningGoal === 'interview
 - **R4 — migrations permanent / index empty.** No new progression field (consumes `spec-01`'s). The only query (`dueAt<=now`) uses the auto single-field index; documented in §6 so it can't throw at runtime.
 - **R5 — missing foundations silently degrade.** `selectWeakMethod`/`buildQueue` return `null`/fall back when `schemaId` is absent (backfill incomplete) instead of throwing. Specifically (gate Issue #6), `buildQueue` **filters out cards with a falsy/empty `schemaId` before bucketing/foil-grouping** — `METHODS['']` is `undefined`, so an un-backfilled corpus degrades to plain due-order rather than throwing on `.domains`. The prerequisite/notation guard (`isNotationReady`) uses existing `introducesSymbol`/`groundedBy` so a problem "whose notation isn't taught yet" is never surfaced.
 - **R7 — `needsReview` permanent + asymmetric.** The new `dueAt`-driven review source sits **ahead of** the `needsReview` scan but does not remove it; when no card is due the legacy flag still drives "Review", keeping both coherent.
-- **R12 — client timestamps spoofable.** `submitReview` keys SM-2 off server `Timestamp.now()`. The client `now` in `loadDueQueue` is used **only** to render what to *show*, never to write scheduling state.
+- **R12 — client timestamps spoofable.** `submitReview` keys SM-2 off server `new Date()` (passed as `nextSchedule`'s `now`) and stamps `lastReviewedAt`/`updatedAt` with `FieldValue.serverTimestamp()`. The client `now` in `loadDueQueue` is used **only** to render what to *show*, never to write scheduling state.
 
 ---
 
@@ -271,4 +280,4 @@ The **quant-intensity gate** = Track B `OR` `userDoc.learningGoal === 'interview
 - `./node_modules/.bin/eslint src/lesson/queue.ts src/progress/recommend.ts src/progress/functions.ts src/pages/studyDesk.model.ts src/pages/CourseJourney.tsx functions/src/review.ts functions/src/index.ts` clean (touched files only; pre-existing `interviews/_build/*` lint errors are out of scope per AGENTS/README).
 - `npm run build --prefix functions` compiles; `spec-01`'s `submitReview` export reflects this spec's SM-2 advance body.
 - Manual: `/dev/home` renders all scenarios with no console errors; the recommender + queue have a live caller (R1 closed).
-- A different fresh session can implement this from the file alone: every file is named, every step has a `→ verify`, the SM-2 math is delegated to `spec-01`'s `nextSchedule`, and the only cross-spec couplings (`reviews` rules block, `scheduling.ts`, `methods.ts`, `BeatSchema.schemaId`) are flagged for the consistency gate.
+- A different fresh session can implement this from the file alone: every file is named, every step has a `→ verify`, the SM-2 math is delegated to `spec-01`'s `nextSchedule`, and the only cross-spec couplings (`reviews` rules block, `scheduling.ts` exporting `nextSchedule`/`initialSchedule`/`SchedulingState`, `ReviewCardSchema` in `src/content/schema.ts`, `methods.ts` exporting both `METHODS` and the curated `CONFUSABLE` map, `BeatSchema.schemaId`) are flagged for the consistency gate.
