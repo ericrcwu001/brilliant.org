@@ -2,6 +2,18 @@
 
 <!-- Orientation doc for a fresh context. Session-by-session narration lives in git history; this file keeps only what's needed going forward. -->
 
+## Game Theory concept — BUILT on branch `cursor/game-theory-lessons-c79f` (PR #1, 2026-06-27)
+
+A full 6-lesson **Game Theory** concept built end-to-end via the lesson-factory pipeline (as a Cloud Agent → delivered as a PR, not an autonomous prod ship). All local gates green: `validate-fixtures` (6 inclusivity + 6 mastery + 15 headline cross-checks + chapters), `tsc -b`, `vitest` (1210), `vite build`; all 38 new files `eslint`-clean.
+
+- **Engine** `src/engine/gameTheory.ts` (+`.test.ts`, 19 goldens): pure/exact, no floats — `pureNashEquilibria`, `iesdsSolution`/dominance, `saddlePoint`, `mixedValue2x2`, `mixedNash2x2`, `backwardInduction`, `pirateGame` (`(5,100)=[98,0,1,0,1]`), `tigerSheepEaten`, `nimSum`/`subtraction*`.
+- **3 interaction types** (`payoffMatrix`, `gameTree`, `nimBoard`) — schema variants + renderers `src/lesson/beats/{PayoffMatrix,GameTree,NimBoard}Beat.tsx` (+ tests + `src/styles/surfaces/game-theory-{payoff,tree,nim}.css`). Ungraded explores (chainBoard precedent): NOT in GRADED_TYPES/HERO_TYPES/mastery.ts; carry an engine-reproducible `headline` cross-checked in `validate-fixtures.ts` (§3d) + a gameTheory self-check (§2d).
+- **6 lessons** `fixtures/lesson-game-theory-{1..6}.json` (Dominance/PD · Nash · Mixed · Zero-Sum/Minimax · Backward Induction/pirates · Nim) + `src/content/lesson-game-theory-*.factcheck.test.ts`. Course `fixtures/course-game-theory.json` now `status:live`, 3 chapters covering all 6, accent ch2. `src/lesson/chapters.ts`: lessons → ch2.
+- **Interview pack** `interviews/course-game-theory.json` (+`.md`, build+render scripts): 51 engine-verified questions, dormant (committed, NOT seeded/deployed). `scripts/validate-interview-packs.ts` gained `recomputeGameTheory`.
+- **Sourcing:** Green Book Ch.2 anchors (Screwy pirates p.3, Tiger&sheep p.4, chocolate bar) + the quant canon; full dossier + briefs + scorecards in `concepts/game-theory/`. Green Book text wasn't in the VM, so problems are web-sourced with EVERY number engine-reproduced (Stage-2).
+- **Pre-existing, out of scope (untouched):** `eslint .` has 22 errors in `interviews/_build/*verify*.ts`; `validate:interviews` halts on the older-format bayes/combinatorics/markov packs (don't match the current strict `InterviewPackSchema`). Both predate this branch.
+- **Credential-gated remainder (Cloud VM had no firebase/gcloud):** dev smoke-test on `brilliant-org-dev`, prod seed+deploy to `brilliant-org`, and the Slack FYI — run from an env with credentials after merge; nested subagent spawning was unavailable so the run used flat Manager-orchestrated delegation.
+
 ## Goal & Constraints
 
 - Brilliant-style learn-by-doing web app. Flagship lesson teaches **pattern hitting times** for coin flips (why `E[HH]=6` but `E[HT]=4`). Sequenced by `docs/mvp_prd.md` (Groups A–D).
