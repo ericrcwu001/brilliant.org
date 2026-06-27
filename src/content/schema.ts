@@ -502,6 +502,40 @@ export const InteractionSchema = z.discriminatedUnion('type', [
     // comma-joined kind list for `classify` ("transient,recurrent,…"). Validation anchor.
     headline: z.string().optional(),
   }),
+  // Optimal Stopping board (concept-optimal-stopping, Wave 0). ONE new type, three
+  // presentation displays (the codebase convention where `raceSim` folds
+  // lanes/oddsDial/heatmap, `walkBoard` folds single/swarm/…, `chainBoard` folds
+  // diagram/matrix/…):
+  //   'sequence'    — watch one irrevocable run resolve: candidates arrive with relative
+  //                   ranks, the look-then-leap rule rejects the first cutoff−1, then takes the
+  //                   first record; ends win/miss.
+  //   'cutoff'      — the success-probability-vs-cutoff curve for n candidates; drag the
+  //                   threshold r and watch pₙ(r) rise then fall, peaking at the optimal r*.
+  //   'convergence' — optimal cutoff fraction r*/n and success pₙ(r*) across many n, both
+  //                   approaching 1/e ≈ 0.368 (the "37% rule").
+  // The renderer computes every displayed value via src/engine/optimalStopping.ts;
+  // `headline` is the engine-reproducible anchor cross-checked by scripts/validate-fixtures.ts.
+  // NOT graded (graded reads use answerEntry/masteryChallenge) and NOT a HERO_TYPE.
+  z.object({
+    type: z.literal('stoppingBoard'),
+    display: z.enum(['sequence', 'cutoff', 'convergence']),
+    // Number of candidates in the run / the curve.
+    n: z.number().int().positive(),
+    // Cutoff r: reject the first r−1, then take the first record. sequence/cutoff.
+    cutoff: z.number().int().positive().optional(),
+    // sequence: the TRUE rank (1 = best) of the candidate at each arrival position;
+    // a permutation of 1..n. Drives the deterministic replay + the win/miss anchor.
+    order: z.array(z.number().int().positive()).optional(),
+    // convergence: the set of n values charted toward 1/e (e.g. [3,5,10,20,50,100]).
+    nValues: z.array(z.number().int().positive()).optional(),
+    // The learner manipulates (drag the cutoff / replay) vs a passive watch.
+    interactive: z.boolean().optional(),
+    // Engine-reproducible headline anchor:
+    //   sequence    → 'win' | 'miss' (or the selected candidate's rank as a string)
+    //   cutoff      → success prob "n/d" at `cutoff` (or at the optimal r if `cutoff` omitted)
+    //   convergence → the optimal cutoff r* at the largest nValues (an integer string)
+    headline: z.string().optional(),
+  }),
   // ── Game Theory concept (Wave-0 contract freeze). Three new interaction types
   // for lesson-game-theory-1..6; each maps 1:1 to a beat view in beats/index.tsx
   // (stub-routed in Wave 0). Engine dep: src/engine/gameTheory.ts (pure/exact).

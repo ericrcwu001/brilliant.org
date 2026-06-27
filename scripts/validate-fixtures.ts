@@ -49,6 +49,10 @@ import {
   stationaryDistribution, kacReturnTime, detailedBalance, pagerank, formatVector,
 } from '../src/engine/markov'
 import {
+  secretarySuccess, naiveSuccess, successCurve, optimalCutoff, runStrategy,
+  formatRational as formatRationalOS,
+} from '../src/engine/optimalStopping'
+import {
   pureNashEquilibria as gtPureNash,
   iesdsSolution as gtIesds,
   strictlyDominatedRows as gtDomRows,
@@ -395,7 +399,51 @@ for (const lesson of lessons) {
 }
 console.log(`✓ chainBoard headlines match markov.ts (${chainChecked} beats)`)
 
-// ── 3d. Game-theory headline cross-check — recompute each declared `headline`
+// ── 3d. stoppingBoard engine cross-check — recompute each declared `headline`
+// via optimalStopping.ts (switch on display) and assert equality. stoppingBoard
+// is NOT in HERO_TYPES/GRADED_TYPES; this cross-check carries the math anchor
+// (mirrors the chainBoard §3c cross-check). Graded reads live in answerEntry /
+// masteryChallenge beats and are checked in the per-lesson factcheck tests.
+let stopChecked = 0
+for (const lesson of lessons) {
+  for (const beat of lesson.beats) {
+    const it = beat.interaction
+    if (it.type !== 'stoppingBoard' || !it.headline) continue
+    const where = `${lesson.lessonId}/${beat.beatId}`
+    let got: string
+    switch (it.display) {
+      case 'sequence': {
+        if (!it.order || it.cutoff == null) {
+          fail(`${where}: stoppingBoard sequence needs order + cutoff for its headline`)
+        }
+        const res = runStrategy(it.order, it.cutoff)
+        got = it.headline === 'win' || it.headline === 'miss'
+          ? (res.win ? 'win' : 'miss')
+          : String(res.selectedRank)
+        break
+      }
+      case 'cutoff': {
+        got = it.cutoff != null
+          ? formatRationalOS(secretarySuccess(it.n, it.cutoff))
+          : formatRationalOS(optimalCutoff(it.n).p)
+        break
+      }
+      case 'convergence': {
+        const maxN = Math.max(...(it.nValues ?? [it.n]))
+        got = String(optimalCutoff(maxN).r)
+        break
+      }
+      default:
+        continue
+    }
+    if (got !== it.headline) {
+      fail(`${where}: declared headline ${it.headline} ≠ engine ${got}`)
+    }
+    stopChecked++
+  }
+}
+console.log(`✓ stoppingBoard headlines match optimalStopping.ts (${stopChecked} beats)`)
+// ── 3e. Game-theory headline cross-check — recompute each declared `headline`
 // via gameTheory.ts (switch on type/task) and assert equality (mirrors §3c). The
 // payoffMatrix/gameTree/nimBoard types are NOT graded/hero; this cross-check is
 // their Stage-2 anchor (per-lesson factcheck tests cover answerEntry/mastery accepts).
@@ -490,6 +538,9 @@ const GATED = new Set([
   'lesson-markov-chains-1','lesson-markov-chains-2','lesson-markov-chains-3','lesson-markov-chains-4',
   'lesson-markov-chains-5','lesson-markov-chains-6','lesson-markov-chains-7','lesson-markov-chains-8',
   'lesson-markov-chains-9','lesson-markov-chains-10',
+  // concept-optimal-stopping
+  'lesson-optimal-stopping-1','lesson-optimal-stopping-2','lesson-optimal-stopping-3',
+  'lesson-optimal-stopping-4','lesson-optimal-stopping-5',
   // concept-game-theory
   'lesson-game-theory-1','lesson-game-theory-2','lesson-game-theory-3',
   'lesson-game-theory-4','lesson-game-theory-5','lesson-game-theory-6',
@@ -660,6 +711,9 @@ const MASTERY_LESSONS = new Set([
   'lesson-markov-chains-1','lesson-markov-chains-2','lesson-markov-chains-3','lesson-markov-chains-4',
   'lesson-markov-chains-5','lesson-markov-chains-6','lesson-markov-chains-7','lesson-markov-chains-8',
   'lesson-markov-chains-9','lesson-markov-chains-10',
+  // concept-optimal-stopping
+  'lesson-optimal-stopping-1','lesson-optimal-stopping-2','lesson-optimal-stopping-3',
+  'lesson-optimal-stopping-4','lesson-optimal-stopping-5',
   // concept-game-theory
   'lesson-game-theory-1','lesson-game-theory-2','lesson-game-theory-3',
   'lesson-game-theory-4','lesson-game-theory-5','lesson-game-theory-6',
@@ -758,6 +812,29 @@ for (const lesson of lessons) {
   ok('orderStatUniform(2).min=1/3', eq(orderStatUniform(2).min, R(1, 3)))
   ok('noodleLoops(3)=23/15', eq(noodleLoops(3), R(23, 15)))
   console.log('✓ expectation engine self-check (Stage-2 anchor)')
+}
+
+// ── 6c. Optimal-stopping engine self-check (Stage-2 math anchor for
+// course-optimal-stopping). Asserts the frozen engine reproduces the famous
+// secretary-problem table (LibreTexts §12.9) so the interface can't silently
+// drift; per-fixture accept/headline cross-checks land with the lessons.
+{
+  const ok = (label: string, cond: boolean) => {
+    if (!cond) fail(`optimal-stopping engine self-check failed: ${label}`)
+  }
+  ok('naiveSuccess(10)=1/10', formatRationalOS(naiveSuccess(10)) === '1/10')
+  ok('secretarySuccess(3,2)=1/2', formatRationalOS(secretarySuccess(3, 2)) === '1/2')
+  ok('secretarySuccess(4,2)=11/24', formatRationalOS(secretarySuccess(4, 2)) === '11/24')
+  ok('secretarySuccess(5,3)=13/30', formatRationalOS(secretarySuccess(5, 3)) === '13/30')
+  ok('secretarySuccess(10,4)=3349/8400', formatRationalOS(secretarySuccess(10, 4)) === '3349/8400')
+  ok('successCurve(4)=1/4,11/24,5/12,1/4', successCurve(4).map(formatRationalOS).join(',') === '1/4,11/24,5/12,1/4')
+  const o4 = optimalCutoff(4)
+  ok('optimalCutoff(4)={2,11/24}', o4.r === 2 && formatRationalOS(o4.p) === '11/24')
+  ok('optimalCutoff(7).r=3', optimalCutoff(7).r === 3)
+  ok('optimalCutoff(100).r=38', optimalCutoff(100).r === 38)
+  ok('runStrategy([2,1,3],2).win', runStrategy([2, 1, 3], 2).win === true)
+  ok('runStrategy([2,1,3],1) miss rank2', runStrategy([2, 1, 3], 1).win === false && runStrategy([2, 1, 3], 1).selectedRank === 2)
+  console.log('✓ optimal-stopping engine self-check (Stage-2 anchor)')
 }
 
 // ── 7. Chapters-coverage gate (live-concept hard requirement, ADR-0004). The

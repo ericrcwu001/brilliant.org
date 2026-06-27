@@ -2,16 +2,80 @@
   "courseId": "course-optimal-stopping",
   "title": "Optimal Stopping",
   "description": "Solve the secretary problem and its relatives: when to stop searching and commit. The 37% rule, marriage problem, house-hunting, and parking — all instances of one clean threshold strategy derived from first principles.",
-  "persona": "For curious decision-makers. No prerequisites beyond arithmetic; we derive the threshold through simulation and simple algebra.",
+  "persona": "For curious decision-makers. No prerequisites beyond arithmetic; we build the threshold rule by watching candidates arrive and counting outcomes.",
   "completionMilestoneId": "optimal-stopping-complete",
   "schemaVersion": 1,
   "domain": "Combinatorics & Games",
   "domainOrder": 1,
   "order": 1,
-  "status": "coming_soon",
+  "status": "live",
   "tagline": "Know when to commit for the best outcome.",
   "accent": "ch3",
   "vizKey": "raceLanes",
-  "lessons": [],
+  "chapters": [
+    {
+      "id": "ch-optimal-stopping-1",
+      "label": "The Best-Choice Problem",
+      "accent": "ch3",
+      "lessonIds": ["lesson-optimal-stopping-1", "lesson-optimal-stopping-2"]
+    },
+    {
+      "id": "ch-optimal-stopping-2",
+      "label": "The 37% Rule",
+      "accent": "ch4",
+      "lessonIds": [
+        "lesson-optimal-stopping-3",
+        "lesson-optimal-stopping-4",
+        "lesson-optimal-stopping-5"
+      ]
+    }
+  ],
+  "lessons": [
+    {
+      "lessonId": "lesson-optimal-stopping-1",
+      "title": "No Going Back",
+      "summary": "Irrevocable choice: every blind rule caps at 1/n.",
+      "milestoneId": "optimal-stopping-no-going-back",
+      "built": true,
+      "glyphKey": "1/n",
+      "vizKey": "raceLanes"
+    },
+    {
+      "lessonId": "lesson-optimal-stopping-2",
+      "title": "Look, Then Leap",
+      "summary": "Reject a few as scouts, then pounce — and beat 1/n.",
+      "milestoneId": "optimal-stopping-look-then-leap",
+      "built": true,
+      "glyphKey": "r−1",
+      "vizKey": "twoNode"
+    },
+    {
+      "lessonId": "lesson-optimal-stopping-3",
+      "title": "The 37% Rule",
+      "summary": "Cutoff fraction and success both converge to 1/e.",
+      "milestoneId": "optimal-stopping-37-percent",
+      "built": true,
+      "glyphKey": "1/e",
+      "vizKey": "sum"
+    },
+    {
+      "lessonId": "lesson-optimal-stopping-4",
+      "title": "Why 37% Works",
+      "summary": "Derive the success formula from the position decomposition.",
+      "milestoneId": "optimal-stopping-why",
+      "built": true,
+      "glyphKey": "Σ",
+      "vizKey": "dice"
+    },
+    {
+      "lessonId": "lesson-optimal-stopping-5",
+      "title": "Stopping in the Wild",
+      "summary": "One rule for hiring, apartments, dating, and parking.",
+      "milestoneId": "optimal-stopping-wild",
+      "built": true,
+      "glyphKey": "e",
+      "vizKey": "stateMachine"
+    }
+  ],
   "roadmap": []
 }

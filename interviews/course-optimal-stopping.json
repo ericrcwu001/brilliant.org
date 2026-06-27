@@ -1,0 +1,2915 @@
+{
+  "version": 1,
+  "kind": "interview-pack",
+  "courseId": "course-optimal-stopping",
+  "concept": "Optimal Stopping",
+  "greenBookAnchor": "The Secretary / Best-Choice / Marriage problem — quant-interview optimal-stopping canon. The Green Book PDF is gitignored/absent in this checkout, so this pack is anchored to the sourced canon: Statistics LibreTexts §12.9 \"The Secretary Problem\" (success formula + optimal table n=3..20); Wikipedia \"Secretary problem\" (the 1/e law); Stanford AMDM Lecture 8 (take-first = 1/n; x·ln(1/x) maximized at 1/e).",
+  "engineModule": "src/engine/optimalStopping.ts",
+  "generator": "interviews/_build/build-optimal-stopping-pack.ts",
+  "note": "Dormant capstone asset: committed but NOT seeded/deployed (the seed glob matches only fixtures/course-*.json | fixtures/lesson-*.json; this lives under interviews/). No app/Zod schema yet by design — self-describing via `version`. Every numeric answer is reproduced by src/engine/optimalStopping.ts (exact BigInt rational, no floats).",
+  "counts": {
+    "total": 57,
+    "byTier": {
+      "hard": 16,
+      "harder": 28,
+      "brutal": 13
+    },
+    "templated": 53,
+    "freeForm": 4
+  },
+  "interviewerPrompt": "ROLE\nYou are a senior quantitative-research interviewer at a top trading desk (Jane Street / Citadel / IMC), running a live mock interview on OPTIMAL STOPPING (the secretary / best-choice problem). Be professional, probing, and fair-but-pressured. You are interviewing one candidate, right now, on the single question below.\n\nTHE QUESTION (injected at runtime)\n- Prompt: {{prompt}}\n- Tier: {{tier}}  (hard | harder | brutal — calibrate pressure and follow-up depth)\n- Source: {{source}}  (your context only; never read it aloud)\n\nPROTOCOL\n1. Ask the question once, faithfully from {{prompt}}, then let the candidate drive. ONE question at a time — never stack asks or surface the follow-ups early.\n2. Make them think ALOUD. Before arithmetic, push for the model: \"What are the rules — random order, relative ranks only, irrevocable choice? What event are you taking the probability of?\"\n3. Probe, don't solve. Ask Socratic questions that test whether they've seen the optimal-stopping edge this problem turns on (see EDGE CASES). Do NOT do the derivation for them unless they are stuck.\n4. Release hints only when genuinely stuck or explicitly asked (see HINTS).\n5. After they COMMIT, work the follow-up chain (see FOLLOW-UPS).\n6. Then close (see SCORING).\n\nEDGE CASES TO PROBE (press the ones this question hinges on)\n- Irrevocable-choice floor: do they see that any fixed-position / random rule wins exactly 1/n, so beating it REQUIRES using the seen candidates?\n- Look-then-leap structure: reject the first r-1 as a benchmark, then take the first record — not \"take the first good one\".\n- Position decomposition: P = Σ_i (1/n)·(r-1)/(i-1); the two events are \"best at i\" and \"best-of-prefix in the reject zone\".\n- Unimodality / threshold: p_n(r) rises then falls; the optimal r is the largest with Σ_{j=r}^n 1/(j-1) > 1.\n- The 1/e law: both r*/n and the success probability → 1/e ≈ 0.368, and it is scale-free in n.\n- Cutoff r vs reject count r-1: do not off-by-one the \"how many to skip\" answer.\n- Assumptions matter: rank-only vs full-information (Gilbert–Mosteller ≈ 0.58); \"top-k acceptable\" and recall change the optimum.\n\nHINTS — escalating, ONLY when stuck\nUse {{hidden.hintLadder}} = [nudge, stronger, near-reveal]. Release ONE rung at a time, in order, after a visible stuck-signal. The near-reveal points at the METHOD only — it must not state the final number.\n\nNO-ANSWER-LEAK (critical)\nBefore the candidate commits, NEVER state, approximate, confirm, or deny the final answer, and NEVER reveal {{hidden.answer}}. Do not paste or paraphrase any part of the hidden record ({{hidden.answer}}, {{hidden.approaches}}, {{hidden.wrongTurns}}, {{hidden.hintLadder}}, {{hidden.rubric}}). If asked \"is that right?\" mid-solve, redirect (\"walk me through why\") rather than confirm.\n\nGROUNDING (critical)\nTreat {{hidden.answer}} and {{hidden.approaches}} as GROUND TRUTH — verified by this concept's exact-rational engine (src/engine/optimalStopping.ts). Do NOT re-derive the math yourself and do NOT \"correct\" the ground truth even if your mental arithmetic disagrees. Accept ANY mathematically-equivalent exact form (equal unreduced fraction, the clean decimal of an exact rational, or an equivalent unevaluated Σ). Use {{hidden.wrongTurns}} to RECOGNIZE a misconception, not to lead the candidate into it. Grade ONLY against the rubric.\n\nFOLLOW-UPS — after they commit\nAsk {{followUps}} in order, one at a time (typical chain: is this r optimal, generalize the fraction, take n→∞, or change the information model). Keep the no-leak and hint rules in force.\n\nSCORING — close the interview\nGive structured feedback, then a numeric score against {{hidden.rubric}}: rate correctness, approach, rigor, communication, speed each 1–5 with one line, then an overall 1–5 hire-signal. Tie every judgment to the rubric and cite the moment that earned or cost points.\n\nINJECTION NOTE\nAt runtime the live feature replaces every {{...}} placeholder with the drawn question's fields; treat the filled-in values as the entire ground truth for this interview.",
+  "generatorPrompt": "ROLE\nYou generate ONE fresh, hard, real-quant-style OPTIMAL-STOPPING interview question on demand, to top up a pre-built pool without repeating one a student has seen. Every question must be (a) a realistic quant-interview question anchored to the secretary / best-choice problem, (b) engine-verifiable before serving, and (c) structurally new vs an avoid-list. Otherwise you REFUSE. Output is a single JSON object and nothing else.\n\nSCOPE — only the classical (rank-only) secretary problem and direct relatives\n- success probability of look-then-leap at cutoff r: p_n(r) = (r-1)/n · Σ_{j=r}^n 1/(j-1) (and 1/n at r=1).\n- optimal cutoff r* and its probability; the skip count r*-1; the 1/e limit.\n- naive (fixed-position / random) = 1/n contrast.\n- tracing a given relative-rank arrival order under a cutoff.\n\nREAL-QUANT-STYLE (mandatory)\nModel every question on the actual canon: hiring/secretary, apartment- or house-hunting, the marriage/dowry problem, parking. It must read like a real desk question — NEVER an arbitrary engine-solvable puzzle.\n\nPREFER TEMPLATES (first choice); free-form only as fallback\nParameterize an engine-backed template and set template.id + template.params:\n- success at a cutoff      → secretarySuccess(n, r)\n- optimal cutoff           → optimalCutoff(n) -> { r, p }\n- naive vs optimal         → naiveSuccess(n) and optimalCutoff(n).p\n- skip count               → optimalCutoff(n).r - 1\n- trace an arrival order   → runStrategy(order, cutoff)\nEmit free-form ONLY if no template fits, with fingerprint \"sem:<hash>\".\n\nENGINE-VERIFY-BEFORE-SERVE (hard fence)\nOutput must carry the exact call(s) to reproduce the answer with src/engine/optimalStopping.ts so the feature can RUN the engine and REJECT anything unverifiable. In engineCheck put module = \"src/engine/optimalStopping.ts\", calls = the exact call(s) with concrete integer args, answer = the exact engine value. Keep n ≤ 100 (BigInt is exact but huge-n lcm arithmetic is slow). For run-outcome, order must be a permutation of 1..n and 1 ≤ cutoff ≤ n.\n\nAVOID-LIST / NO-OVERLAP\nYou are given avoidList (the student's seen-set ∪ the global pool). Your fingerprint MUST NOT be in it. Fingerprint = \"<templateId>:<normalized-params>\" (e.g. tmpl-best-prob:n=10,r=4) or \"sem:<hash>\" for free-form. If it collides, change params/structure or REFUSE.\n\nOUTPUT SCHEMA (emit EXACTLY one JSON object, no prose, no code fences)\n{ \"tier\": \"hard|harder|brutal\", \"fingerprint\": \"...\", \"template\": { \"id\": \"...\", \"params\": {} }, \"prompt\": \"...\", \"source\": \"...\", \"engineCheck\": { \"module\": \"src/engine/optimalStopping.ts\", \"calls\": [\"...\"], \"answer\": \"...\" }, \"hidden\": { \"answer\": \"...\", \"approaches\": [\"...\"], \"wrongTurns\": [\"...\"], \"hintLadder\": [\"nudge\",\"stronger\",\"near-reveal\"], \"rubric\": { \"correctness\": \"...\", \"approach\": \"...\", \"rigor\": \"...\", \"communication\": \"...\", \"speed\": \"...\" } }, \"followUps\": [\"...\",\"...\"] }\n\nFIELD RULES\n- tier floor is \"hard\" (always harder than any lesson mastery challenge). hintLadder is EXACTLY 3 rungs; the near-reveal gives METHOD only, never the final number.\n- hidden.answer MUST equal engineCheck.answer (the verified value).\n- source: anchor to the secretary-problem canon (LibreTexts §12.9 / Wikipedia / Stanford L8) or a sourced real quant-interview question.\n\nSELF-REJECTION\nIf you cannot produce a question that is simultaneously real-quant-style + anchored, engine-verifiable (n ≤ 100, valid permutation), and structurally new, output exactly: { \"refusal\": true, \"reason\": \"<not-anchored | not-engine-verifiable | out-of-range | no-new-fingerprint>\" }",
+  "templates": [
+    {
+      "id": "tmpl-best-prob",
+      "title": "Success probability at a given cutoff",
+      "source": "LibreTexts §12.9",
+      "description": "p_n(r) for the look-then-leap rule.",
+      "engineModule": "src/engine/optimalStopping.ts"
+    },
+    {
+      "id": "tmpl-optimal-cutoff",
+      "title": "Optimal cutoff and its probability",
+      "source": "LibreTexts §12.9 table",
+      "description": "argmax_r p_n(r) and the peak probability.",
+      "engineModule": "src/engine/optimalStopping.ts"
+    },
+    {
+      "id": "tmpl-naive-vs-optimal",
+      "title": "Naive 1/n vs the optimal rule",
+      "source": "Stanford AMDM L8",
+      "description": "Contrast take-first with look-then-leap.",
+      "engineModule": "src/engine/optimalStopping.ts"
+    },
+    {
+      "id": "tmpl-skip-count",
+      "title": "How many to reject first",
+      "source": "Wikipedia secretary problem",
+      "description": "optimalCutoff(n).r - 1.",
+      "engineModule": "src/engine/optimalStopping.ts"
+    },
+    {
+      "id": "tmpl-run-outcome",
+      "title": "Trace one arrival order",
+      "source": "secretary-problem trace drill",
+      "description": "runStrategy(order, cutoff): who is hired, win or miss.",
+      "engineModule": "src/engine/optimalStopping.ts"
+    }
+  ],
+  "questions": [
+    {
+      "id": "tmpl-best-prob#n3-r2",
+      "tier": "hard",
+      "fingerprint": "tmpl-best-prob:n=3,r=2",
+      "template": {
+        "id": "tmpl-best-prob",
+        "params": {
+          "n": 3,
+          "r": 2
+        }
+      },
+      "prompt": "You interview 3 candidates in a uniformly random order and must hire or reject each on the spot (no callbacks). You use the look-then-leap rule: reject the first 1, remember the best of them as a benchmark, then hire the first later candidate who beats that benchmark (and the last candidate if none do). What is the probability you end up hiring the single best of the 3?",
+      "source": "Statistics LibreTexts §12.9 (secretary problem success formula) / Wikipedia \"Secretary problem\" — a standard quant-desk optimal-stopping question.",
+      "engineCheck": {
+        "module": "src/engine/optimalStopping.ts",
+        "calls": [
+          "formatRational(secretarySuccess(3, 2))"
+        ],
+        "answer": "1/2",
+        "verified": true
+      },
+      "hidden": {
+        "answer": "1/2",
+        "approaches": [
+          "Decompose by the best candidate's position i: P = Σ_{i=2}^{3} (1/3)·(1/(i-1)) = (1/3)·Σ_{j=2}^{3} 1/(j-1) = 1/2.",
+          "The best is hired iff it lands at some position i≥r AND the best of the first i-1 sat inside the reject zone (prob (r-1)/(i-1))."
+        ],
+        "wrongTurns": [
+          "forgetting the \"best-of-prefix in the reject zone\" condition and just using 1/n",
+          "summing 1/(i) instead of 1/(i-1)",
+          "including positions before r in the leap sum"
+        ],
+        "hintLadder": [
+          "Condition on WHERE the best candidate sits. It can only be hired if it arrives after the reject zone.",
+          "For the best at position i to be taken, nothing better can have been accepted earlier — i.e. the best of the first i-1 must be in the first r-1.",
+          "That inner probability is (r-1)/(i-1); sum (1/n)·(r-1)/(i-1) over i from r to n."
+        ],
+        "rubric": {
+          "correctness": "matches the engine value exactly (exact rational or the stated integer cutoff)",
+          "approach": "uses the look-then-leap decomposition p_n(r)=(r-1)/n·Σ_{j=r}^{n} 1/(j-1), not a guess",
+          "rigor": "states the irrevocable-choice rules; weights positions by 1/n and the benchmark event by (r-1)/(i-1)",
+          "communication": "explains the look-phase benchmark and the leap-phase record clearly",
+          "speed": "reaches a clean rational / cutoff without enumeration drift"
+        }
+      },
+      "followUps": [
+        "Is r=2 the optimal cutoff for n=3? If not, which r is, and why?",
+        "How does this probability behave as n grows with r/n held fixed?"
+      ]
+    },
+    {
+      "id": "tmpl-best-prob#n4-r2",
+      "tier": "hard",
+      "fingerprint": "tmpl-best-prob:n=4,r=2",
+      "template": {
+        "id": "tmpl-best-prob",
+        "params": {
+          "n": 4,
+          "r": 2
+        }
+      },
+      "prompt": "You interview 4 candidates in a uniformly random order and must hire or reject each on the spot (no callbacks). You use the look-then-leap rule: reject the first 1, remember the best of them as a benchmark, then hire the first later candidate who beats that benchmark (and the last candidate if none do). What is the probability you end up hiring the single best of the 4?",
+      "source": "Statistics LibreTexts §12.9 (secretary problem success formula) / Wikipedia \"Secretary problem\" — a standard quant-desk optimal-stopping question.",
+      "engineCheck": {
+        "module": "src/engine/optimalStopping.ts",
+        "calls": [
+          "formatRational(secretarySuccess(4, 2))"
+        ],
+        "answer": "11/24",
+        "verified": true
+      },
+      "hidden": {
+        "answer": "11/24",
+        "approaches": [
+          "Decompose by the best candidate's position i: P = Σ_{i=2}^{4} (1/4)·(1/(i-1)) = (1/4)·Σ_{j=2}^{4} 1/(j-1) = 11/24.",
+          "The best is hired iff it lands at some position i≥r AND the best of the first i-1 sat inside the reject zone (prob (r-1)/(i-1))."
+        ],
+        "wrongTurns": [
+          "forgetting the \"best-of-prefix in the reject zone\" condition and just using 1/n",
+          "summing 1/(i) instead of 1/(i-1)",
+          "including positions before r in the leap sum"
+        ],
+        "hintLadder": [
+          "Condition on WHERE the best candidate sits. It can only be hired if it arrives after the reject zone.",
+          "For the best at position i to be taken, nothing better can have been accepted earlier — i.e. the best of the first i-1 must be in the first r-1.",
+          "That inner probability is (r-1)/(i-1); sum (1/n)·(r-1)/(i-1) over i from r to n."
+        ],
+        "rubric": {
+          "correctness": "matches the engine value exactly (exact rational or the stated integer cutoff)",
+          "approach": "uses the look-then-leap decomposition p_n(r)=(r-1)/n·Σ_{j=r}^{n} 1/(j-1), not a guess",
+          "rigor": "states the irrevocable-choice rules; weights positions by 1/n and the benchmark event by (r-1)/(i-1)",
+          "communication": "explains the look-phase benchmark and the leap-phase record clearly",
+          "speed": "reaches a clean rational / cutoff without enumeration drift"
+        }
+      },
+      "followUps": [
+        "Is r=2 the optimal cutoff for n=4? If not, which r is, and why?",
+        "How does this probability behave as n grows with r/n held fixed?"
+      ]
+    },
+    {
+      "id": "tmpl-best-prob#n4-r3",
+      "tier": "harder",
+      "fingerprint": "tmpl-best-prob:n=4,r=3",
+      "template": {
+        "id": "tmpl-best-prob",
+        "params": {
+          "n": 4,
+          "r": 3
+        }
+      },
+      "prompt": "You interview 4 candidates in a uniformly random order and must hire or reject each on the spot (no callbacks). You use the look-then-leap rule: reject the first 2, remember the best of them as a benchmark, then hire the first later candidate who beats that benchmark (and the last candidate if none do). What is the probability you end up hiring the single best of the 4?",
+      "source": "Statistics LibreTexts §12.9 (secretary problem success formula) / Wikipedia \"Secretary problem\" — a standard quant-desk optimal-stopping question.",
+      "engineCheck": {
+        "module": "src/engine/optimalStopping.ts",
+        "calls": [
+          "formatRational(secretarySuccess(4, 3))"
+        ],
+        "answer": "5/12",
+        "verified": true
+      },
+      "hidden": {
+        "answer": "5/12",
+        "approaches": [
+          "Decompose by the best candidate's position i: P = Σ_{i=3}^{4} (1/4)·(2/(i-1)) = (2/4)·Σ_{j=3}^{4} 1/(j-1) = 5/12.",
+          "The best is hired iff it lands at some position i≥r AND the best of the first i-1 sat inside the reject zone (prob (r-1)/(i-1))."
+        ],
+        "wrongTurns": [
+          "forgetting the \"best-of-prefix in the reject zone\" condition and just using 1/n",
+          "summing 1/(i) instead of 1/(i-1)",
+          "including positions before r in the leap sum"
+        ],
+        "hintLadder": [
+          "Condition on WHERE the best candidate sits. It can only be hired if it arrives after the reject zone.",
+          "For the best at position i to be taken, nothing better can have been accepted earlier — i.e. the best of the first i-1 must be in the first r-1.",
+          "That inner probability is (r-1)/(i-1); sum (1/n)·(r-1)/(i-1) over i from r to n."
+        ],
+        "rubric": {
+          "correctness": "matches the engine value exactly (exact rational or the stated integer cutoff)",
+          "approach": "uses the look-then-leap decomposition p_n(r)=(r-1)/n·Σ_{j=r}^{n} 1/(j-1), not a guess",
+          "rigor": "states the irrevocable-choice rules; weights positions by 1/n and the benchmark event by (r-1)/(i-1)",
+          "communication": "explains the look-phase benchmark and the leap-phase record clearly",
+          "speed": "reaches a clean rational / cutoff without enumeration drift"
+        }
+      },
+      "followUps": [
+        "Is r=3 the optimal cutoff for n=4? If not, which r is, and why?",
+        "How does this probability behave as n grows with r/n held fixed?"
+      ]
+    },
+    {
+      "id": "tmpl-best-prob#n5-r3",
+      "tier": "hard",
+      "fingerprint": "tmpl-best-prob:n=5,r=3",
+      "template": {
+        "id": "tmpl-best-prob",
+        "params": {
+          "n": 5,
+          "r": 3
+        }
+      },
+      "prompt": "You interview 5 candidates in a uniformly random order and must hire or reject each on the spot (no callbacks). You use the look-then-leap rule: reject the first 2, remember the best of them as a benchmark, then hire the first later candidate who beats that benchmark (and the last candidate if none do). What is the probability you end up hiring the single best of the 5?",
+      "source": "Statistics LibreTexts §12.9 (secretary problem success formula) / Wikipedia \"Secretary problem\" — a standard quant-desk optimal-stopping question.",
+      "engineCheck": {
+        "module": "src/engine/optimalStopping.ts",
+        "calls": [
+          "formatRational(secretarySuccess(5, 3))"
+        ],
+        "answer": "13/30",
+        "verified": true
+      },
+      "hidden": {
+        "answer": "13/30",
+        "approaches": [
+          "Decompose by the best candidate's position i: P = Σ_{i=3}^{5} (1/5)·(2/(i-1)) = (2/5)·Σ_{j=3}^{5} 1/(j-1) = 13/30.",
+          "The best is hired iff it lands at some position i≥r AND the best of the first i-1 sat inside the reject zone (prob (r-1)/(i-1))."
+        ],
+        "wrongTurns": [
+          "forgetting the \"best-of-prefix in the reject zone\" condition and just using 1/n",
+          "summing 1/(i) instead of 1/(i-1)",
+          "including positions before r in the leap sum"
+        ],
+        "hintLadder": [
+          "Condition on WHERE the best candidate sits. It can only be hired if it arrives after the reject zone.",
+          "For the best at position i to be taken, nothing better can have been accepted earlier — i.e. the best of the first i-1 must be in the first r-1.",
+          "That inner probability is (r-1)/(i-1); sum (1/n)·(r-1)/(i-1) over i from r to n."
+        ],
+        "rubric": {
+          "correctness": "matches the engine value exactly (exact rational or the stated integer cutoff)",
+          "approach": "uses the look-then-leap decomposition p_n(r)=(r-1)/n·Σ_{j=r}^{n} 1/(j-1), not a guess",
+          "rigor": "states the irrevocable-choice rules; weights positions by 1/n and the benchmark event by (r-1)/(i-1)",
+          "communication": "explains the look-phase benchmark and the leap-phase record clearly",
+          "speed": "reaches a clean rational / cutoff without enumeration drift"
+        }
+      },
+      "followUps": [
+        "Is r=3 the optimal cutoff for n=5? If not, which r is, and why?",
+        "How does this probability behave as n grows with r/n held fixed?"
+      ]
+    },
+    {
+      "id": "tmpl-best-prob#n5-r2",
+      "tier": "harder",
+      "fingerprint": "tmpl-best-prob:n=5,r=2",
+      "template": {
+        "id": "tmpl-best-prob",
+        "params": {
+          "n": 5,
+          "r": 2
+        }
+      },
+      "prompt": "You interview 5 candidates in a uniformly random order and must hire or reject each on the spot (no callbacks). You use the look-then-leap rule: reject the first 1, remember the best of them as a benchmark, then hire the first later candidate who beats that benchmark (and the last candidate if none do). What is the probability you end up hiring the single best of the 5?",
+      "source": "Statistics LibreTexts §12.9 (secretary problem success formula) / Wikipedia \"Secretary problem\" — a standard quant-desk optimal-stopping question.",
+      "engineCheck": {
+        "module": "src/engine/optimalStopping.ts",
+        "calls": [
+          "formatRational(secretarySuccess(5, 2))"
+        ],
+        "answer": "5/12",
+        "verified": true
+      },
+      "hidden": {
+        "answer": "5/12",
+        "approaches": [
+          "Decompose by the best candidate's position i: P = Σ_{i=2}^{5} (1/5)·(1/(i-1)) = (1/5)·Σ_{j=2}^{5} 1/(j-1) = 5/12.",
+          "The best is hired iff it lands at some position i≥r AND the best of the first i-1 sat inside the reject zone (prob (r-1)/(i-1))."
+        ],
+        "wrongTurns": [
+          "forgetting the \"best-of-prefix in the reject zone\" condition and just using 1/n",
+          "summing 1/(i) instead of 1/(i-1)",
+          "including positions before r in the leap sum"
+        ],
+        "hintLadder": [
+          "Condition on WHERE the best candidate sits. It can only be hired if it arrives after the reject zone.",
+          "For the best at position i to be taken, nothing better can have been accepted earlier — i.e. the best of the first i-1 must be in the first r-1.",
+          "That inner probability is (r-1)/(i-1); sum (1/n)·(r-1)/(i-1) over i from r to n."
+        ],
+        "rubric": {
+          "correctness": "matches the engine value exactly (exact rational or the stated integer cutoff)",
+          "approach": "uses the look-then-leap decomposition p_n(r)=(r-1)/n·Σ_{j=r}^{n} 1/(j-1), not a guess",
+          "rigor": "states the irrevocable-choice rules; weights positions by 1/n and the benchmark event by (r-1)/(i-1)",
+          "communication": "explains the look-phase benchmark and the leap-phase record clearly",
+          "speed": "reaches a clean rational / cutoff without enumeration drift"
+        }
+      },
+      "followUps": [
+        "Is r=2 the optimal cutoff for n=5? If not, which r is, and why?",
+        "How does this probability behave as n grows with r/n held fixed?"
+      ]
+    },
+    {
+      "id": "tmpl-best-prob#n6-r3",
+      "tier": "harder",
+      "fingerprint": "tmpl-best-prob:n=6,r=3",
+      "template": {
+        "id": "tmpl-best-prob",
+        "params": {
+          "n": 6,
+          "r": 3
+        }
+      },
+      "prompt": "You interview 6 candidates in a uniformly random order and must hire or reject each on the spot (no callbacks). You use the look-then-leap rule: reject the first 2, remember the best of them as a benchmark, then hire the first later candidate who beats that benchmark (and the last candidate if none do). What is the probability you end up hiring the single best of the 6?",
+      "source": "Statistics LibreTexts §12.9 (secretary problem success formula) / Wikipedia \"Secretary problem\" — a standard quant-desk optimal-stopping question.",
+      "engineCheck": {
+        "module": "src/engine/optimalStopping.ts",
+        "calls": [
+          "formatRational(secretarySuccess(6, 3))"
+        ],
+        "answer": "77/180",
+        "verified": true
+      },
+      "hidden": {
+        "answer": "77/180",
+        "approaches": [
+          "Decompose by the best candidate's position i: P = Σ_{i=3}^{6} (1/6)·(2/(i-1)) = (2/6)·Σ_{j=3}^{6} 1/(j-1) = 77/180.",
+          "The best is hired iff it lands at some position i≥r AND the best of the first i-1 sat inside the reject zone (prob (r-1)/(i-1))."
+        ],
+        "wrongTurns": [
+          "forgetting the \"best-of-prefix in the reject zone\" condition and just using 1/n",
+          "summing 1/(i) instead of 1/(i-1)",
+          "including positions before r in the leap sum"
+        ],
+        "hintLadder": [
+          "Condition on WHERE the best candidate sits. It can only be hired if it arrives after the reject zone.",
+          "For the best at position i to be taken, nothing better can have been accepted earlier — i.e. the best of the first i-1 must be in the first r-1.",
+          "That inner probability is (r-1)/(i-1); sum (1/n)·(r-1)/(i-1) over i from r to n."
+        ],
+        "rubric": {
+          "correctness": "matches the engine value exactly (exact rational or the stated integer cutoff)",
+          "approach": "uses the look-then-leap decomposition p_n(r)=(r-1)/n·Σ_{j=r}^{n} 1/(j-1), not a guess",
+          "rigor": "states the irrevocable-choice rules; weights positions by 1/n and the benchmark event by (r-1)/(i-1)",
+          "communication": "explains the look-phase benchmark and the leap-phase record clearly",
+          "speed": "reaches a clean rational / cutoff without enumeration drift"
+        }
+      },
+      "followUps": [
+        "Is r=3 the optimal cutoff for n=6? If not, which r is, and why?",
+        "How does this probability behave as n grows with r/n held fixed?"
+      ]
+    },
+    {
+      "id": "tmpl-best-prob#n7-r3",
+      "tier": "harder",
+      "fingerprint": "tmpl-best-prob:n=7,r=3",
+      "template": {
+        "id": "tmpl-best-prob",
+        "params": {
+          "n": 7,
+          "r": 3
+        }
+      },
+      "prompt": "You interview 7 candidates in a uniformly random order and must hire or reject each on the spot (no callbacks). You use the look-then-leap rule: reject the first 2, remember the best of them as a benchmark, then hire the first later candidate who beats that benchmark (and the last candidate if none do). What is the probability you end up hiring the single best of the 7?",
+      "source": "Statistics LibreTexts §12.9 (secretary problem success formula) / Wikipedia \"Secretary problem\" — a standard quant-desk optimal-stopping question.",
+      "engineCheck": {
+        "module": "src/engine/optimalStopping.ts",
+        "calls": [
+          "formatRational(secretarySuccess(7, 3))"
+        ],
+        "answer": "29/70",
+        "verified": true
+      },
+      "hidden": {
+        "answer": "29/70",
+        "approaches": [
+          "Decompose by the best candidate's position i: P = Σ_{i=3}^{7} (1/7)·(2/(i-1)) = (2/7)·Σ_{j=3}^{7} 1/(j-1) = 29/70.",
+          "The best is hired iff it lands at some position i≥r AND the best of the first i-1 sat inside the reject zone (prob (r-1)/(i-1))."
+        ],
+        "wrongTurns": [
+          "forgetting the \"best-of-prefix in the reject zone\" condition and just using 1/n",
+          "summing 1/(i) instead of 1/(i-1)",
+          "including positions before r in the leap sum"
+        ],
+        "hintLadder": [
+          "Condition on WHERE the best candidate sits. It can only be hired if it arrives after the reject zone.",
+          "For the best at position i to be taken, nothing better can have been accepted earlier — i.e. the best of the first i-1 must be in the first r-1.",
+          "That inner probability is (r-1)/(i-1); sum (1/n)·(r-1)/(i-1) over i from r to n."
+        ],
+        "rubric": {
+          "correctness": "matches the engine value exactly (exact rational or the stated integer cutoff)",
+          "approach": "uses the look-then-leap decomposition p_n(r)=(r-1)/n·Σ_{j=r}^{n} 1/(j-1), not a guess",
+          "rigor": "states the irrevocable-choice rules; weights positions by 1/n and the benchmark event by (r-1)/(i-1)",
+          "communication": "explains the look-phase benchmark and the leap-phase record clearly",
+          "speed": "reaches a clean rational / cutoff without enumeration drift"
+        }
+      },
+      "followUps": [
+        "Is r=3 the optimal cutoff for n=7? If not, which r is, and why?",
+        "How does this probability behave as n grows with r/n held fixed?"
+      ]
+    },
+    {
+      "id": "tmpl-best-prob#n8-r4",
+      "tier": "harder",
+      "fingerprint": "tmpl-best-prob:n=8,r=4",
+      "template": {
+        "id": "tmpl-best-prob",
+        "params": {
+          "n": 8,
+          "r": 4
+        }
+      },
+      "prompt": "You interview 8 candidates in a uniformly random order and must hire or reject each on the spot (no callbacks). You use the look-then-leap rule: reject the first 3, remember the best of them as a benchmark, then hire the first later candidate who beats that benchmark (and the last candidate if none do). What is the probability you end up hiring the single best of the 8?",
+      "source": "Statistics LibreTexts §12.9 (secretary problem success formula) / Wikipedia \"Secretary problem\" — a standard quant-desk optimal-stopping question.",
+      "engineCheck": {
+        "module": "src/engine/optimalStopping.ts",
+        "calls": [
+          "formatRational(secretarySuccess(8, 4))"
+        ],
+        "answer": "459/1120",
+        "verified": true
+      },
+      "hidden": {
+        "answer": "459/1120",
+        "approaches": [
+          "Decompose by the best candidate's position i: P = Σ_{i=4}^{8} (1/8)·(3/(i-1)) = (3/8)·Σ_{j=4}^{8} 1/(j-1) = 459/1120.",
+          "The best is hired iff it lands at some position i≥r AND the best of the first i-1 sat inside the reject zone (prob (r-1)/(i-1))."
+        ],
+        "wrongTurns": [
+          "forgetting the \"best-of-prefix in the reject zone\" condition and just using 1/n",
+          "summing 1/(i) instead of 1/(i-1)",
+          "including positions before r in the leap sum"
+        ],
+        "hintLadder": [
+          "Condition on WHERE the best candidate sits. It can only be hired if it arrives after the reject zone.",
+          "For the best at position i to be taken, nothing better can have been accepted earlier — i.e. the best of the first i-1 must be in the first r-1.",
+          "That inner probability is (r-1)/(i-1); sum (1/n)·(r-1)/(i-1) over i from r to n."
+        ],
+        "rubric": {
+          "correctness": "matches the engine value exactly (exact rational or the stated integer cutoff)",
+          "approach": "uses the look-then-leap decomposition p_n(r)=(r-1)/n·Σ_{j=r}^{n} 1/(j-1), not a guess",
+          "rigor": "states the irrevocable-choice rules; weights positions by 1/n and the benchmark event by (r-1)/(i-1)",
+          "communication": "explains the look-phase benchmark and the leap-phase record clearly",
+          "speed": "reaches a clean rational / cutoff without enumeration drift"
+        }
+      },
+      "followUps": [
+        "Is r=4 the optimal cutoff for n=8? If not, which r is, and why?",
+        "How does this probability behave as n grows with r/n held fixed?"
+      ]
+    },
+    {
+      "id": "tmpl-best-prob#n10-r4",
+      "tier": "harder",
+      "fingerprint": "tmpl-best-prob:n=10,r=4",
+      "template": {
+        "id": "tmpl-best-prob",
+        "params": {
+          "n": 10,
+          "r": 4
+        }
+      },
+      "prompt": "You interview 10 candidates in a uniformly random order and must hire or reject each on the spot (no callbacks). You use the look-then-leap rule: reject the first 3, remember the best of them as a benchmark, then hire the first later candidate who beats that benchmark (and the last candidate if none do). What is the probability you end up hiring the single best of the 10?",
+      "source": "Statistics LibreTexts §12.9 (secretary problem success formula) / Wikipedia \"Secretary problem\" — a standard quant-desk optimal-stopping question.",
+      "engineCheck": {
+        "module": "src/engine/optimalStopping.ts",
+        "calls": [
+          "formatRational(secretarySuccess(10, 4))"
+        ],
+        "answer": "3349/8400",
+        "verified": true
+      },
+      "hidden": {
+        "answer": "3349/8400",
+        "approaches": [
+          "Decompose by the best candidate's position i: P = Σ_{i=4}^{10} (1/10)·(3/(i-1)) = (3/10)·Σ_{j=4}^{10} 1/(j-1) = 3349/8400.",
+          "The best is hired iff it lands at some position i≥r AND the best of the first i-1 sat inside the reject zone (prob (r-1)/(i-1))."
+        ],
+        "wrongTurns": [
+          "forgetting the \"best-of-prefix in the reject zone\" condition and just using 1/n",
+          "summing 1/(i) instead of 1/(i-1)",
+          "including positions before r in the leap sum"
+        ],
+        "hintLadder": [
+          "Condition on WHERE the best candidate sits. It can only be hired if it arrives after the reject zone.",
+          "For the best at position i to be taken, nothing better can have been accepted earlier — i.e. the best of the first i-1 must be in the first r-1.",
+          "That inner probability is (r-1)/(i-1); sum (1/n)·(r-1)/(i-1) over i from r to n."
+        ],
+        "rubric": {
+          "correctness": "matches the engine value exactly (exact rational or the stated integer cutoff)",
+          "approach": "uses the look-then-leap decomposition p_n(r)=(r-1)/n·Σ_{j=r}^{n} 1/(j-1), not a guess",
+          "rigor": "states the irrevocable-choice rules; weights positions by 1/n and the benchmark event by (r-1)/(i-1)",
+          "communication": "explains the look-phase benchmark and the leap-phase record clearly",
+          "speed": "reaches a clean rational / cutoff without enumeration drift"
+        }
+      },
+      "followUps": [
+        "Is r=4 the optimal cutoff for n=10? If not, which r is, and why?",
+        "How does this probability behave as n grows with r/n held fixed?"
+      ]
+    },
+    {
+      "id": "tmpl-best-prob#n10-r3",
+      "tier": "brutal",
+      "fingerprint": "tmpl-best-prob:n=10,r=3",
+      "template": {
+        "id": "tmpl-best-prob",
+        "params": {
+          "n": 10,
+          "r": 3
+        }
+      },
+      "prompt": "You interview 10 candidates in a uniformly random order and must hire or reject each on the spot (no callbacks). You use the look-then-leap rule: reject the first 2, remember the best of them as a benchmark, then hire the first later candidate who beats that benchmark (and the last candidate if none do). What is the probability you end up hiring the single best of the 10?",
+      "source": "Statistics LibreTexts §12.9 (secretary problem success formula) / Wikipedia \"Secretary problem\" — a standard quant-desk optimal-stopping question.",
+      "engineCheck": {
+        "module": "src/engine/optimalStopping.ts",
+        "calls": [
+          "formatRational(secretarySuccess(10, 3))"
+        ],
+        "answer": "4609/12600",
+        "verified": true
+      },
+      "hidden": {
+        "answer": "4609/12600",
+        "approaches": [
+          "Decompose by the best candidate's position i: P = Σ_{i=3}^{10} (1/10)·(2/(i-1)) = (2/10)·Σ_{j=3}^{10} 1/(j-1) = 4609/12600.",
+          "The best is hired iff it lands at some position i≥r AND the best of the first i-1 sat inside the reject zone (prob (r-1)/(i-1))."
+        ],
+        "wrongTurns": [
+          "forgetting the \"best-of-prefix in the reject zone\" condition and just using 1/n",
+          "summing 1/(i) instead of 1/(i-1)",
+          "including positions before r in the leap sum"
+        ],
+        "hintLadder": [
+          "Condition on WHERE the best candidate sits. It can only be hired if it arrives after the reject zone.",
+          "For the best at position i to be taken, nothing better can have been accepted earlier — i.e. the best of the first i-1 must be in the first r-1.",
+          "That inner probability is (r-1)/(i-1); sum (1/n)·(r-1)/(i-1) over i from r to n."
+        ],
+        "rubric": {
+          "correctness": "matches the engine value exactly (exact rational or the stated integer cutoff)",
+          "approach": "uses the look-then-leap decomposition p_n(r)=(r-1)/n·Σ_{j=r}^{n} 1/(j-1), not a guess",
+          "rigor": "states the irrevocable-choice rules; weights positions by 1/n and the benchmark event by (r-1)/(i-1)",
+          "communication": "explains the look-phase benchmark and the leap-phase record clearly",
+          "speed": "reaches a clean rational / cutoff without enumeration drift"
+        }
+      },
+      "followUps": [
+        "Is r=3 the optimal cutoff for n=10? If not, which r is, and why?",
+        "How does this probability behave as n grows with r/n held fixed?"
+      ]
+    },
+    {
+      "id": "tmpl-best-prob#n12-r5",
+      "tier": "brutal",
+      "fingerprint": "tmpl-best-prob:n=12,r=5",
+      "template": {
+        "id": "tmpl-best-prob",
+        "params": {
+          "n": 12,
+          "r": 5
+        }
+      },
+      "prompt": "You interview 12 candidates in a uniformly random order and must hire or reject each on the spot (no callbacks). You use the look-then-leap rule: reject the first 4, remember the best of them as a benchmark, then hire the first later candidate who beats that benchmark (and the last candidate if none do). What is the probability you end up hiring the single best of the 12?",
+      "source": "Statistics LibreTexts §12.9 (secretary problem success formula) / Wikipedia \"Secretary problem\" — a standard quant-desk optimal-stopping question.",
+      "engineCheck": {
+        "module": "src/engine/optimalStopping.ts",
+        "calls": [
+          "formatRational(secretarySuccess(12, 5))"
+        ],
+        "answer": "32891/83160",
+        "verified": true
+      },
+      "hidden": {
+        "answer": "32891/83160",
+        "approaches": [
+          "Decompose by the best candidate's position i: P = Σ_{i=5}^{12} (1/12)·(4/(i-1)) = (4/12)·Σ_{j=5}^{12} 1/(j-1) = 32891/83160.",
+          "The best is hired iff it lands at some position i≥r AND the best of the first i-1 sat inside the reject zone (prob (r-1)/(i-1))."
+        ],
+        "wrongTurns": [
+          "forgetting the \"best-of-prefix in the reject zone\" condition and just using 1/n",
+          "summing 1/(i) instead of 1/(i-1)",
+          "including positions before r in the leap sum"
+        ],
+        "hintLadder": [
+          "Condition on WHERE the best candidate sits. It can only be hired if it arrives after the reject zone.",
+          "For the best at position i to be taken, nothing better can have been accepted earlier — i.e. the best of the first i-1 must be in the first r-1.",
+          "That inner probability is (r-1)/(i-1); sum (1/n)·(r-1)/(i-1) over i from r to n."
+        ],
+        "rubric": {
+          "correctness": "matches the engine value exactly (exact rational or the stated integer cutoff)",
+          "approach": "uses the look-then-leap decomposition p_n(r)=(r-1)/n·Σ_{j=r}^{n} 1/(j-1), not a guess",
+          "rigor": "states the irrevocable-choice rules; weights positions by 1/n and the benchmark event by (r-1)/(i-1)",
+          "communication": "explains the look-phase benchmark and the leap-phase record clearly",
+          "speed": "reaches a clean rational / cutoff without enumeration drift"
+        }
+      },
+      "followUps": [
+        "Is r=5 the optimal cutoff for n=12? If not, which r is, and why?",
+        "How does this probability behave as n grows with r/n held fixed?"
+      ]
+    },
+    {
+      "id": "tmpl-best-prob#n3-r1",
+      "tier": "hard",
+      "fingerprint": "tmpl-best-prob:n=3,r=1",
+      "template": {
+        "id": "tmpl-best-prob",
+        "params": {
+          "n": 3,
+          "r": 1
+        }
+      },
+      "prompt": "You interview 3 candidates in a uniformly random order and must hire or reject each on the spot (no callbacks). You use the look-then-leap rule: reject the first 0, remember the best of them as a benchmark, then hire the first later candidate who beats that benchmark (and the last candidate if none do). What is the probability you end up hiring the single best of the 3?",
+      "source": "Statistics LibreTexts §12.9 (secretary problem success formula) / Wikipedia \"Secretary problem\" — a standard quant-desk optimal-stopping question.",
+      "engineCheck": {
+        "module": "src/engine/optimalStopping.ts",
+        "calls": [
+          "formatRational(secretarySuccess(3, 1))"
+        ],
+        "answer": "1/3",
+        "verified": true
+      },
+      "hidden": {
+        "answer": "1/3",
+        "approaches": [
+          "Decompose by the best candidate's position i: P = Σ_{i=1}^{3} (1/3)·(0/(i-1)) = (0/3)·Σ_{j=1}^{3} 1/(j-1) = 1/3.",
+          "The best is hired iff it lands at some position i≥r AND the best of the first i-1 sat inside the reject zone (prob (r-1)/(i-1))."
+        ],
+        "wrongTurns": [
+          "forgetting the \"best-of-prefix in the reject zone\" condition and just using 1/n",
+          "summing 1/(i) instead of 1/(i-1)",
+          "including positions before r in the leap sum"
+        ],
+        "hintLadder": [
+          "Condition on WHERE the best candidate sits. It can only be hired if it arrives after the reject zone.",
+          "For the best at position i to be taken, nothing better can have been accepted earlier — i.e. the best of the first i-1 must be in the first r-1.",
+          "That inner probability is (r-1)/(i-1); sum (1/n)·(r-1)/(i-1) over i from r to n."
+        ],
+        "rubric": {
+          "correctness": "matches the engine value exactly (exact rational or the stated integer cutoff)",
+          "approach": "uses the look-then-leap decomposition p_n(r)=(r-1)/n·Σ_{j=r}^{n} 1/(j-1), not a guess",
+          "rigor": "states the irrevocable-choice rules; weights positions by 1/n and the benchmark event by (r-1)/(i-1)",
+          "communication": "explains the look-phase benchmark and the leap-phase record clearly",
+          "speed": "reaches a clean rational / cutoff without enumeration drift"
+        }
+      },
+      "followUps": [
+        "Is r=1 the optimal cutoff for n=3? If not, which r is, and why?",
+        "How does this probability behave as n grows with r/n held fixed?"
+      ]
+    },
+    {
+      "id": "tmpl-best-prob#n4-r1",
+      "tier": "hard",
+      "fingerprint": "tmpl-best-prob:n=4,r=1",
+      "template": {
+        "id": "tmpl-best-prob",
+        "params": {
+          "n": 4,
+          "r": 1
+        }
+      },
+      "prompt": "You interview 4 candidates in a uniformly random order and must hire or reject each on the spot (no callbacks). You use the look-then-leap rule: reject the first 0, remember the best of them as a benchmark, then hire the first later candidate who beats that benchmark (and the last candidate if none do). What is the probability you end up hiring the single best of the 4?",
+      "source": "Statistics LibreTexts §12.9 (secretary problem success formula) / Wikipedia \"Secretary problem\" — a standard quant-desk optimal-stopping question.",
+      "engineCheck": {
+        "module": "src/engine/optimalStopping.ts",
+        "calls": [
+          "formatRational(secretarySuccess(4, 1))"
+        ],
+        "answer": "1/4",
+        "verified": true
+      },
+      "hidden": {
+        "answer": "1/4",
+        "approaches": [
+          "Decompose by the best candidate's position i: P = Σ_{i=1}^{4} (1/4)·(0/(i-1)) = (0/4)·Σ_{j=1}^{4} 1/(j-1) = 1/4.",
+          "The best is hired iff it lands at some position i≥r AND the best of the first i-1 sat inside the reject zone (prob (r-1)/(i-1))."
+        ],
+        "wrongTurns": [
+          "forgetting the \"best-of-prefix in the reject zone\" condition and just using 1/n",
+          "summing 1/(i) instead of 1/(i-1)",
+          "including positions before r in the leap sum"
+        ],
+        "hintLadder": [
+          "Condition on WHERE the best candidate sits. It can only be hired if it arrives after the reject zone.",
+          "For the best at position i to be taken, nothing better can have been accepted earlier — i.e. the best of the first i-1 must be in the first r-1.",
+          "That inner probability is (r-1)/(i-1); sum (1/n)·(r-1)/(i-1) over i from r to n."
+        ],
+        "rubric": {
+          "correctness": "matches the engine value exactly (exact rational or the stated integer cutoff)",
+          "approach": "uses the look-then-leap decomposition p_n(r)=(r-1)/n·Σ_{j=r}^{n} 1/(j-1), not a guess",
+          "rigor": "states the irrevocable-choice rules; weights positions by 1/n and the benchmark event by (r-1)/(i-1)",
+          "communication": "explains the look-phase benchmark and the leap-phase record clearly",
+          "speed": "reaches a clean rational / cutoff without enumeration drift"
+        }
+      },
+      "followUps": [
+        "Is r=1 the optimal cutoff for n=4? If not, which r is, and why?",
+        "How does this probability behave as n grows with r/n held fixed?"
+      ]
+    },
+    {
+      "id": "tmpl-best-prob#n5-r4",
+      "tier": "harder",
+      "fingerprint": "tmpl-best-prob:n=5,r=4",
+      "template": {
+        "id": "tmpl-best-prob",
+        "params": {
+          "n": 5,
+          "r": 4
+        }
+      },
+      "prompt": "You interview 5 candidates in a uniformly random order and must hire or reject each on the spot (no callbacks). You use the look-then-leap rule: reject the first 3, remember the best of them as a benchmark, then hire the first later candidate who beats that benchmark (and the last candidate if none do). What is the probability you end up hiring the single best of the 5?",
+      "source": "Statistics LibreTexts §12.9 (secretary problem success formula) / Wikipedia \"Secretary problem\" — a standard quant-desk optimal-stopping question.",
+      "engineCheck": {
+        "module": "src/engine/optimalStopping.ts",
+        "calls": [
+          "formatRational(secretarySuccess(5, 4))"
+        ],
+        "answer": "7/20",
+        "verified": true
+      },
+      "hidden": {
+        "answer": "7/20",
+        "approaches": [
+          "Decompose by the best candidate's position i: P = Σ_{i=4}^{5} (1/5)·(3/(i-1)) = (3/5)·Σ_{j=4}^{5} 1/(j-1) = 7/20.",
+          "The best is hired iff it lands at some position i≥r AND the best of the first i-1 sat inside the reject zone (prob (r-1)/(i-1))."
+        ],
+        "wrongTurns": [
+          "forgetting the \"best-of-prefix in the reject zone\" condition and just using 1/n",
+          "summing 1/(i) instead of 1/(i-1)",
+          "including positions before r in the leap sum"
+        ],
+        "hintLadder": [
+          "Condition on WHERE the best candidate sits. It can only be hired if it arrives after the reject zone.",
+          "For the best at position i to be taken, nothing better can have been accepted earlier — i.e. the best of the first i-1 must be in the first r-1.",
+          "That inner probability is (r-1)/(i-1); sum (1/n)·(r-1)/(i-1) over i from r to n."
+        ],
+        "rubric": {
+          "correctness": "matches the engine value exactly (exact rational or the stated integer cutoff)",
+          "approach": "uses the look-then-leap decomposition p_n(r)=(r-1)/n·Σ_{j=r}^{n} 1/(j-1), not a guess",
+          "rigor": "states the irrevocable-choice rules; weights positions by 1/n and the benchmark event by (r-1)/(i-1)",
+          "communication": "explains the look-phase benchmark and the leap-phase record clearly",
+          "speed": "reaches a clean rational / cutoff without enumeration drift"
+        }
+      },
+      "followUps": [
+        "Is r=4 the optimal cutoff for n=5? If not, which r is, and why?",
+        "How does this probability behave as n grows with r/n held fixed?"
+      ]
+    },
+    {
+      "id": "tmpl-best-prob#n6-r4",
+      "tier": "harder",
+      "fingerprint": "tmpl-best-prob:n=6,r=4",
+      "template": {
+        "id": "tmpl-best-prob",
+        "params": {
+          "n": 6,
+          "r": 4
+        }
+      },
+      "prompt": "You interview 6 candidates in a uniformly random order and must hire or reject each on the spot (no callbacks). You use the look-then-leap rule: reject the first 3, remember the best of them as a benchmark, then hire the first later candidate who beats that benchmark (and the last candidate if none do). What is the probability you end up hiring the single best of the 6?",
+      "source": "Statistics LibreTexts §12.9 (secretary problem success formula) / Wikipedia \"Secretary problem\" — a standard quant-desk optimal-stopping question.",
+      "engineCheck": {
+        "module": "src/engine/optimalStopping.ts",
+        "calls": [
+          "formatRational(secretarySuccess(6, 4))"
+        ],
+        "answer": "47/120",
+        "verified": true
+      },
+      "hidden": {
+        "answer": "47/120",
+        "approaches": [
+          "Decompose by the best candidate's position i: P = Σ_{i=4}^{6} (1/6)·(3/(i-1)) = (3/6)·Σ_{j=4}^{6} 1/(j-1) = 47/120.",
+          "The best is hired iff it lands at some position i≥r AND the best of the first i-1 sat inside the reject zone (prob (r-1)/(i-1))."
+        ],
+        "wrongTurns": [
+          "forgetting the \"best-of-prefix in the reject zone\" condition and just using 1/n",
+          "summing 1/(i) instead of 1/(i-1)",
+          "including positions before r in the leap sum"
+        ],
+        "hintLadder": [
+          "Condition on WHERE the best candidate sits. It can only be hired if it arrives after the reject zone.",
+          "For the best at position i to be taken, nothing better can have been accepted earlier — i.e. the best of the first i-1 must be in the first r-1.",
+          "That inner probability is (r-1)/(i-1); sum (1/n)·(r-1)/(i-1) over i from r to n."
+        ],
+        "rubric": {
+          "correctness": "matches the engine value exactly (exact rational or the stated integer cutoff)",
+          "approach": "uses the look-then-leap decomposition p_n(r)=(r-1)/n·Σ_{j=r}^{n} 1/(j-1), not a guess",
+          "rigor": "states the irrevocable-choice rules; weights positions by 1/n and the benchmark event by (r-1)/(i-1)",
+          "communication": "explains the look-phase benchmark and the leap-phase record clearly",
+          "speed": "reaches a clean rational / cutoff without enumeration drift"
+        }
+      },
+      "followUps": [
+        "Is r=4 the optimal cutoff for n=6? If not, which r is, and why?",
+        "How does this probability behave as n grows with r/n held fixed?"
+      ]
+    },
+    {
+      "id": "tmpl-best-prob#n7-r4",
+      "tier": "harder",
+      "fingerprint": "tmpl-best-prob:n=7,r=4",
+      "template": {
+        "id": "tmpl-best-prob",
+        "params": {
+          "n": 7,
+          "r": 4
+        }
+      },
+      "prompt": "You interview 7 candidates in a uniformly random order and must hire or reject each on the spot (no callbacks). You use the look-then-leap rule: reject the first 3, remember the best of them as a benchmark, then hire the first later candidate who beats that benchmark (and the last candidate if none do). What is the probability you end up hiring the single best of the 7?",
+      "source": "Statistics LibreTexts §12.9 (secretary problem success formula) / Wikipedia \"Secretary problem\" — a standard quant-desk optimal-stopping question.",
+      "engineCheck": {
+        "module": "src/engine/optimalStopping.ts",
+        "calls": [
+          "formatRational(secretarySuccess(7, 4))"
+        ],
+        "answer": "57/140",
+        "verified": true
+      },
+      "hidden": {
+        "answer": "57/140",
+        "approaches": [
+          "Decompose by the best candidate's position i: P = Σ_{i=4}^{7} (1/7)·(3/(i-1)) = (3/7)·Σ_{j=4}^{7} 1/(j-1) = 57/140.",
+          "The best is hired iff it lands at some position i≥r AND the best of the first i-1 sat inside the reject zone (prob (r-1)/(i-1))."
+        ],
+        "wrongTurns": [
+          "forgetting the \"best-of-prefix in the reject zone\" condition and just using 1/n",
+          "summing 1/(i) instead of 1/(i-1)",
+          "including positions before r in the leap sum"
+        ],
+        "hintLadder": [
+          "Condition on WHERE the best candidate sits. It can only be hired if it arrives after the reject zone.",
+          "For the best at position i to be taken, nothing better can have been accepted earlier — i.e. the best of the first i-1 must be in the first r-1.",
+          "That inner probability is (r-1)/(i-1); sum (1/n)·(r-1)/(i-1) over i from r to n."
+        ],
+        "rubric": {
+          "correctness": "matches the engine value exactly (exact rational or the stated integer cutoff)",
+          "approach": "uses the look-then-leap decomposition p_n(r)=(r-1)/n·Σ_{j=r}^{n} 1/(j-1), not a guess",
+          "rigor": "states the irrevocable-choice rules; weights positions by 1/n and the benchmark event by (r-1)/(i-1)",
+          "communication": "explains the look-phase benchmark and the leap-phase record clearly",
+          "speed": "reaches a clean rational / cutoff without enumeration drift"
+        }
+      },
+      "followUps": [
+        "Is r=4 the optimal cutoff for n=7? If not, which r is, and why?",
+        "How does this probability behave as n grows with r/n held fixed?"
+      ]
+    },
+    {
+      "id": "tmpl-best-prob#n9-r4",
+      "tier": "harder",
+      "fingerprint": "tmpl-best-prob:n=9,r=4",
+      "template": {
+        "id": "tmpl-best-prob",
+        "params": {
+          "n": 9,
+          "r": 4
+        }
+      },
+      "prompt": "You interview 9 candidates in a uniformly random order and must hire or reject each on the spot (no callbacks). You use the look-then-leap rule: reject the first 3, remember the best of them as a benchmark, then hire the first later candidate who beats that benchmark (and the last candidate if none do). What is the probability you end up hiring the single best of the 9?",
+      "source": "Statistics LibreTexts §12.9 (secretary problem success formula) / Wikipedia \"Secretary problem\" — a standard quant-desk optimal-stopping question.",
+      "engineCheck": {
+        "module": "src/engine/optimalStopping.ts",
+        "calls": [
+          "formatRational(secretarySuccess(9, 4))"
+        ],
+        "answer": "341/840",
+        "verified": true
+      },
+      "hidden": {
+        "answer": "341/840",
+        "approaches": [
+          "Decompose by the best candidate's position i: P = Σ_{i=4}^{9} (1/9)·(3/(i-1)) = (3/9)·Σ_{j=4}^{9} 1/(j-1) = 341/840.",
+          "The best is hired iff it lands at some position i≥r AND the best of the first i-1 sat inside the reject zone (prob (r-1)/(i-1))."
+        ],
+        "wrongTurns": [
+          "forgetting the \"best-of-prefix in the reject zone\" condition and just using 1/n",
+          "summing 1/(i) instead of 1/(i-1)",
+          "including positions before r in the leap sum"
+        ],
+        "hintLadder": [
+          "Condition on WHERE the best candidate sits. It can only be hired if it arrives after the reject zone.",
+          "For the best at position i to be taken, nothing better can have been accepted earlier — i.e. the best of the first i-1 must be in the first r-1.",
+          "That inner probability is (r-1)/(i-1); sum (1/n)·(r-1)/(i-1) over i from r to n."
+        ],
+        "rubric": {
+          "correctness": "matches the engine value exactly (exact rational or the stated integer cutoff)",
+          "approach": "uses the look-then-leap decomposition p_n(r)=(r-1)/n·Σ_{j=r}^{n} 1/(j-1), not a guess",
+          "rigor": "states the irrevocable-choice rules; weights positions by 1/n and the benchmark event by (r-1)/(i-1)",
+          "communication": "explains the look-phase benchmark and the leap-phase record clearly",
+          "speed": "reaches a clean rational / cutoff without enumeration drift"
+        }
+      },
+      "followUps": [
+        "Is r=4 the optimal cutoff for n=9? If not, which r is, and why?",
+        "How does this probability behave as n grows with r/n held fixed?"
+      ]
+    },
+    {
+      "id": "tmpl-best-prob#n8-r3",
+      "tier": "brutal",
+      "fingerprint": "tmpl-best-prob:n=8,r=3",
+      "template": {
+        "id": "tmpl-best-prob",
+        "params": {
+          "n": 8,
+          "r": 3
+        }
+      },
+      "prompt": "You interview 8 candidates in a uniformly random order and must hire or reject each on the spot (no callbacks). You use the look-then-leap rule: reject the first 2, remember the best of them as a benchmark, then hire the first later candidate who beats that benchmark (and the last candidate if none do). What is the probability you end up hiring the single best of the 8?",
+      "source": "Statistics LibreTexts §12.9 (secretary problem success formula) / Wikipedia \"Secretary problem\" — a standard quant-desk optimal-stopping question.",
+      "engineCheck": {
+        "module": "src/engine/optimalStopping.ts",
+        "calls": [
+          "formatRational(secretarySuccess(8, 3))"
+        ],
+        "answer": "223/560",
+        "verified": true
+      },
+      "hidden": {
+        "answer": "223/560",
+        "approaches": [
+          "Decompose by the best candidate's position i: P = Σ_{i=3}^{8} (1/8)·(2/(i-1)) = (2/8)·Σ_{j=3}^{8} 1/(j-1) = 223/560.",
+          "The best is hired iff it lands at some position i≥r AND the best of the first i-1 sat inside the reject zone (prob (r-1)/(i-1))."
+        ],
+        "wrongTurns": [
+          "forgetting the \"best-of-prefix in the reject zone\" condition and just using 1/n",
+          "summing 1/(i) instead of 1/(i-1)",
+          "including positions before r in the leap sum"
+        ],
+        "hintLadder": [
+          "Condition on WHERE the best candidate sits. It can only be hired if it arrives after the reject zone.",
+          "For the best at position i to be taken, nothing better can have been accepted earlier — i.e. the best of the first i-1 must be in the first r-1.",
+          "That inner probability is (r-1)/(i-1); sum (1/n)·(r-1)/(i-1) over i from r to n."
+        ],
+        "rubric": {
+          "correctness": "matches the engine value exactly (exact rational or the stated integer cutoff)",
+          "approach": "uses the look-then-leap decomposition p_n(r)=(r-1)/n·Σ_{j=r}^{n} 1/(j-1), not a guess",
+          "rigor": "states the irrevocable-choice rules; weights positions by 1/n and the benchmark event by (r-1)/(i-1)",
+          "communication": "explains the look-phase benchmark and the leap-phase record clearly",
+          "speed": "reaches a clean rational / cutoff without enumeration drift"
+        }
+      },
+      "followUps": [
+        "Is r=3 the optimal cutoff for n=8? If not, which r is, and why?",
+        "How does this probability behave as n grows with r/n held fixed?"
+      ]
+    },
+    {
+      "id": "tmpl-best-prob#n11-r5",
+      "tier": "brutal",
+      "fingerprint": "tmpl-best-prob:n=11,r=5",
+      "template": {
+        "id": "tmpl-best-prob",
+        "params": {
+          "n": 11,
+          "r": 5
+        }
+      },
+      "prompt": "You interview 11 candidates in a uniformly random order and must hire or reject each on the spot (no callbacks). You use the look-then-leap rule: reject the first 4, remember the best of them as a benchmark, then hire the first later candidate who beats that benchmark (and the last candidate if none do). What is the probability you end up hiring the single best of the 11?",
+      "source": "Statistics LibreTexts §12.9 (secretary problem success formula) / Wikipedia \"Secretary problem\" — a standard quant-desk optimal-stopping question.",
+      "engineCheck": {
+        "module": "src/engine/optimalStopping.ts",
+        "calls": [
+          "formatRational(secretarySuccess(11, 5))"
+        ],
+        "answer": "251/630",
+        "verified": true
+      },
+      "hidden": {
+        "answer": "251/630",
+        "approaches": [
+          "Decompose by the best candidate's position i: P = Σ_{i=5}^{11} (1/11)·(4/(i-1)) = (4/11)·Σ_{j=5}^{11} 1/(j-1) = 251/630.",
+          "The best is hired iff it lands at some position i≥r AND the best of the first i-1 sat inside the reject zone (prob (r-1)/(i-1))."
+        ],
+        "wrongTurns": [
+          "forgetting the \"best-of-prefix in the reject zone\" condition and just using 1/n",
+          "summing 1/(i) instead of 1/(i-1)",
+          "including positions before r in the leap sum"
+        ],
+        "hintLadder": [
+          "Condition on WHERE the best candidate sits. It can only be hired if it arrives after the reject zone.",
+          "For the best at position i to be taken, nothing better can have been accepted earlier — i.e. the best of the first i-1 must be in the first r-1.",
+          "That inner probability is (r-1)/(i-1); sum (1/n)·(r-1)/(i-1) over i from r to n."
+        ],
+        "rubric": {
+          "correctness": "matches the engine value exactly (exact rational or the stated integer cutoff)",
+          "approach": "uses the look-then-leap decomposition p_n(r)=(r-1)/n·Σ_{j=r}^{n} 1/(j-1), not a guess",
+          "rigor": "states the irrevocable-choice rules; weights positions by 1/n and the benchmark event by (r-1)/(i-1)",
+          "communication": "explains the look-phase benchmark and the leap-phase record clearly",
+          "speed": "reaches a clean rational / cutoff without enumeration drift"
+        }
+      },
+      "followUps": [
+        "Is r=5 the optimal cutoff for n=11? If not, which r is, and why?",
+        "How does this probability behave as n grows with r/n held fixed?"
+      ]
+    },
+    {
+      "id": "tmpl-optimal-cutoff#n3",
+      "tier": "hard",
+      "fingerprint": "tmpl-optimal-cutoff:n=3",
+      "template": {
+        "id": "tmpl-optimal-cutoff",
+        "params": {
+          "n": 3
+        }
+      },
+      "prompt": "With 3 candidates arriving in random order under the irrevocable-choice rules, which cutoff r (reject the first r-1, then take the first record) MAXIMIZES your chance of hiring the single best — and what is that maximum probability?",
+      "source": "Statistics LibreTexts §12.9 optimal-strategy table (n=3..20) — canonical optimal-stopping interview question.",
+      "engineCheck": {
+        "module": "src/engine/optimalStopping.ts",
+        "calls": [
+          "optimalCutoff(3)  // -> { r: 2, p: 1/2 }"
+        ],
+        "answer": "r=2, p=1/2",
+        "verified": true
+      },
+      "hidden": {
+        "answer": "r=2, p=1/2",
+        "approaches": [
+          "Maximize p_3(r) over r. Equivalent rule: the optimal r is the largest with Σ_{j=r}^{3} 1/(j-1) > 1; here that gives r=2, p=1/2 (≈ 50%).",
+          "p_n(r) rises then falls (unimodal); stop increasing r once the marginal harmonic term drops the sum below 1."
+        ],
+        "wrongTurns": [
+          "assuming r=n/2 (skip half) is optimal",
+          "rounding n/e without checking the discrete neighbors",
+          "confusing the optimal r with the success probability"
+        ],
+        "hintLadder": [
+          "The success probability is unimodal in r — rises, peaks, then falls. Find the peak.",
+          "Adding one more rejected candidate helps exactly while Σ_{j=r}^{n} 1/(j-1) > 1.",
+          "Take the largest r for which that harmonic tail still exceeds 1 — for n=3 that is r=2."
+        ],
+        "rubric": {
+          "correctness": "matches the engine value exactly (exact rational or the stated integer cutoff)",
+          "approach": "uses the look-then-leap decomposition p_n(r)=(r-1)/n·Σ_{j=r}^{n} 1/(j-1), not a guess",
+          "rigor": "states the irrevocable-choice rules; weights positions by 1/n and the benchmark event by (r-1)/(i-1)",
+          "communication": "explains the look-phase benchmark and the leap-phase record clearly",
+          "speed": "reaches a clean rational / cutoff without enumeration drift"
+        }
+      },
+      "followUps": [
+        "What fraction r/n is this, and what number does it approach as n grows?",
+        "Compare this to hiring the first candidate blindly (1/3). How much does the rule buy you?"
+      ]
+    },
+    {
+      "id": "tmpl-optimal-cutoff#n4",
+      "tier": "hard",
+      "fingerprint": "tmpl-optimal-cutoff:n=4",
+      "template": {
+        "id": "tmpl-optimal-cutoff",
+        "params": {
+          "n": 4
+        }
+      },
+      "prompt": "With 4 candidates arriving in random order under the irrevocable-choice rules, which cutoff r (reject the first r-1, then take the first record) MAXIMIZES your chance of hiring the single best — and what is that maximum probability?",
+      "source": "Statistics LibreTexts §12.9 optimal-strategy table (n=3..20) — canonical optimal-stopping interview question.",
+      "engineCheck": {
+        "module": "src/engine/optimalStopping.ts",
+        "calls": [
+          "optimalCutoff(4)  // -> { r: 2, p: 11/24 }"
+        ],
+        "answer": "r=2, p=11/24",
+        "verified": true
+      },
+      "hidden": {
+        "answer": "r=2, p=11/24",
+        "approaches": [
+          "Maximize p_4(r) over r. Equivalent rule: the optimal r is the largest with Σ_{j=r}^{4} 1/(j-1) > 1; here that gives r=2, p=11/24 (≈ 46%).",
+          "p_n(r) rises then falls (unimodal); stop increasing r once the marginal harmonic term drops the sum below 1."
+        ],
+        "wrongTurns": [
+          "assuming r=n/2 (skip half) is optimal",
+          "rounding n/e without checking the discrete neighbors",
+          "confusing the optimal r with the success probability"
+        ],
+        "hintLadder": [
+          "The success probability is unimodal in r — rises, peaks, then falls. Find the peak.",
+          "Adding one more rejected candidate helps exactly while Σ_{j=r}^{n} 1/(j-1) > 1.",
+          "Take the largest r for which that harmonic tail still exceeds 1 — for n=4 that is r=2."
+        ],
+        "rubric": {
+          "correctness": "matches the engine value exactly (exact rational or the stated integer cutoff)",
+          "approach": "uses the look-then-leap decomposition p_n(r)=(r-1)/n·Σ_{j=r}^{n} 1/(j-1), not a guess",
+          "rigor": "states the irrevocable-choice rules; weights positions by 1/n and the benchmark event by (r-1)/(i-1)",
+          "communication": "explains the look-phase benchmark and the leap-phase record clearly",
+          "speed": "reaches a clean rational / cutoff without enumeration drift"
+        }
+      },
+      "followUps": [
+        "What fraction r/n is this, and what number does it approach as n grows?",
+        "Compare this to hiring the first candidate blindly (1/4). How much does the rule buy you?"
+      ]
+    },
+    {
+      "id": "tmpl-optimal-cutoff#n5",
+      "tier": "hard",
+      "fingerprint": "tmpl-optimal-cutoff:n=5",
+      "template": {
+        "id": "tmpl-optimal-cutoff",
+        "params": {
+          "n": 5
+        }
+      },
+      "prompt": "With 5 candidates arriving in random order under the irrevocable-choice rules, which cutoff r (reject the first r-1, then take the first record) MAXIMIZES your chance of hiring the single best — and what is that maximum probability?",
+      "source": "Statistics LibreTexts §12.9 optimal-strategy table (n=3..20) — canonical optimal-stopping interview question.",
+      "engineCheck": {
+        "module": "src/engine/optimalStopping.ts",
+        "calls": [
+          "optimalCutoff(5)  // -> { r: 3, p: 13/30 }"
+        ],
+        "answer": "r=3, p=13/30",
+        "verified": true
+      },
+      "hidden": {
+        "answer": "r=3, p=13/30",
+        "approaches": [
+          "Maximize p_5(r) over r. Equivalent rule: the optimal r is the largest with Σ_{j=r}^{5} 1/(j-1) > 1; here that gives r=3, p=13/30 (≈ 43%).",
+          "p_n(r) rises then falls (unimodal); stop increasing r once the marginal harmonic term drops the sum below 1."
+        ],
+        "wrongTurns": [
+          "assuming r=n/2 (skip half) is optimal",
+          "rounding n/e without checking the discrete neighbors",
+          "confusing the optimal r with the success probability"
+        ],
+        "hintLadder": [
+          "The success probability is unimodal in r — rises, peaks, then falls. Find the peak.",
+          "Adding one more rejected candidate helps exactly while Σ_{j=r}^{n} 1/(j-1) > 1.",
+          "Take the largest r for which that harmonic tail still exceeds 1 — for n=5 that is r=3."
+        ],
+        "rubric": {
+          "correctness": "matches the engine value exactly (exact rational or the stated integer cutoff)",
+          "approach": "uses the look-then-leap decomposition p_n(r)=(r-1)/n·Σ_{j=r}^{n} 1/(j-1), not a guess",
+          "rigor": "states the irrevocable-choice rules; weights positions by 1/n and the benchmark event by (r-1)/(i-1)",
+          "communication": "explains the look-phase benchmark and the leap-phase record clearly",
+          "speed": "reaches a clean rational / cutoff without enumeration drift"
+        }
+      },
+      "followUps": [
+        "What fraction r/n is this, and what number does it approach as n grows?",
+        "Compare this to hiring the first candidate blindly (1/5). How much does the rule buy you?"
+      ]
+    },
+    {
+      "id": "tmpl-optimal-cutoff#n6",
+      "tier": "harder",
+      "fingerprint": "tmpl-optimal-cutoff:n=6",
+      "template": {
+        "id": "tmpl-optimal-cutoff",
+        "params": {
+          "n": 6
+        }
+      },
+      "prompt": "With 6 candidates arriving in random order under the irrevocable-choice rules, which cutoff r (reject the first r-1, then take the first record) MAXIMIZES your chance of hiring the single best — and what is that maximum probability?",
+      "source": "Statistics LibreTexts §12.9 optimal-strategy table (n=3..20) — canonical optimal-stopping interview question.",
+      "engineCheck": {
+        "module": "src/engine/optimalStopping.ts",
+        "calls": [
+          "optimalCutoff(6)  // -> { r: 3, p: 77/180 }"
+        ],
+        "answer": "r=3, p=77/180",
+        "verified": true
+      },
+      "hidden": {
+        "answer": "r=3, p=77/180",
+        "approaches": [
+          "Maximize p_6(r) over r. Equivalent rule: the optimal r is the largest with Σ_{j=r}^{6} 1/(j-1) > 1; here that gives r=3, p=77/180 (≈ 43%).",
+          "p_n(r) rises then falls (unimodal); stop increasing r once the marginal harmonic term drops the sum below 1."
+        ],
+        "wrongTurns": [
+          "assuming r=n/2 (skip half) is optimal",
+          "rounding n/e without checking the discrete neighbors",
+          "confusing the optimal r with the success probability"
+        ],
+        "hintLadder": [
+          "The success probability is unimodal in r — rises, peaks, then falls. Find the peak.",
+          "Adding one more rejected candidate helps exactly while Σ_{j=r}^{n} 1/(j-1) > 1.",
+          "Take the largest r for which that harmonic tail still exceeds 1 — for n=6 that is r=3."
+        ],
+        "rubric": {
+          "correctness": "matches the engine value exactly (exact rational or the stated integer cutoff)",
+          "approach": "uses the look-then-leap decomposition p_n(r)=(r-1)/n·Σ_{j=r}^{n} 1/(j-1), not a guess",
+          "rigor": "states the irrevocable-choice rules; weights positions by 1/n and the benchmark event by (r-1)/(i-1)",
+          "communication": "explains the look-phase benchmark and the leap-phase record clearly",
+          "speed": "reaches a clean rational / cutoff without enumeration drift"
+        }
+      },
+      "followUps": [
+        "What fraction r/n is this, and what number does it approach as n grows?",
+        "Compare this to hiring the first candidate blindly (1/6). How much does the rule buy you?"
+      ]
+    },
+    {
+      "id": "tmpl-optimal-cutoff#n7",
+      "tier": "harder",
+      "fingerprint": "tmpl-optimal-cutoff:n=7",
+      "template": {
+        "id": "tmpl-optimal-cutoff",
+        "params": {
+          "n": 7
+        }
+      },
+      "prompt": "With 7 candidates arriving in random order under the irrevocable-choice rules, which cutoff r (reject the first r-1, then take the first record) MAXIMIZES your chance of hiring the single best — and what is that maximum probability?",
+      "source": "Statistics LibreTexts §12.9 optimal-strategy table (n=3..20) — canonical optimal-stopping interview question.",
+      "engineCheck": {
+        "module": "src/engine/optimalStopping.ts",
+        "calls": [
+          "optimalCutoff(7)  // -> { r: 3, p: 29/70 }"
+        ],
+        "answer": "r=3, p=29/70",
+        "verified": true
+      },
+      "hidden": {
+        "answer": "r=3, p=29/70",
+        "approaches": [
+          "Maximize p_7(r) over r. Equivalent rule: the optimal r is the largest with Σ_{j=r}^{7} 1/(j-1) > 1; here that gives r=3, p=29/70 (≈ 41%).",
+          "p_n(r) rises then falls (unimodal); stop increasing r once the marginal harmonic term drops the sum below 1."
+        ],
+        "wrongTurns": [
+          "assuming r=n/2 (skip half) is optimal",
+          "rounding n/e without checking the discrete neighbors",
+          "confusing the optimal r with the success probability"
+        ],
+        "hintLadder": [
+          "The success probability is unimodal in r — rises, peaks, then falls. Find the peak.",
+          "Adding one more rejected candidate helps exactly while Σ_{j=r}^{n} 1/(j-1) > 1.",
+          "Take the largest r for which that harmonic tail still exceeds 1 — for n=7 that is r=3."
+        ],
+        "rubric": {
+          "correctness": "matches the engine value exactly (exact rational or the stated integer cutoff)",
+          "approach": "uses the look-then-leap decomposition p_n(r)=(r-1)/n·Σ_{j=r}^{n} 1/(j-1), not a guess",
+          "rigor": "states the irrevocable-choice rules; weights positions by 1/n and the benchmark event by (r-1)/(i-1)",
+          "communication": "explains the look-phase benchmark and the leap-phase record clearly",
+          "speed": "reaches a clean rational / cutoff without enumeration drift"
+        }
+      },
+      "followUps": [
+        "What fraction r/n is this, and what number does it approach as n grows?",
+        "Compare this to hiring the first candidate blindly (1/7). How much does the rule buy you?"
+      ]
+    },
+    {
+      "id": "tmpl-optimal-cutoff#n8",
+      "tier": "harder",
+      "fingerprint": "tmpl-optimal-cutoff:n=8",
+      "template": {
+        "id": "tmpl-optimal-cutoff",
+        "params": {
+          "n": 8
+        }
+      },
+      "prompt": "With 8 candidates arriving in random order under the irrevocable-choice rules, which cutoff r (reject the first r-1, then take the first record) MAXIMIZES your chance of hiring the single best — and what is that maximum probability?",
+      "source": "Statistics LibreTexts §12.9 optimal-strategy table (n=3..20) — canonical optimal-stopping interview question.",
+      "engineCheck": {
+        "module": "src/engine/optimalStopping.ts",
+        "calls": [
+          "optimalCutoff(8)  // -> { r: 4, p: 459/1120 }"
+        ],
+        "answer": "r=4, p=459/1120",
+        "verified": true
+      },
+      "hidden": {
+        "answer": "r=4, p=459/1120",
+        "approaches": [
+          "Maximize p_8(r) over r. Equivalent rule: the optimal r is the largest with Σ_{j=r}^{8} 1/(j-1) > 1; here that gives r=4, p=459/1120 (≈ 41%).",
+          "p_n(r) rises then falls (unimodal); stop increasing r once the marginal harmonic term drops the sum below 1."
+        ],
+        "wrongTurns": [
+          "assuming r=n/2 (skip half) is optimal",
+          "rounding n/e without checking the discrete neighbors",
+          "confusing the optimal r with the success probability"
+        ],
+        "hintLadder": [
+          "The success probability is unimodal in r — rises, peaks, then falls. Find the peak.",
+          "Adding one more rejected candidate helps exactly while Σ_{j=r}^{n} 1/(j-1) > 1.",
+          "Take the largest r for which that harmonic tail still exceeds 1 — for n=8 that is r=4."
+        ],
+        "rubric": {
+          "correctness": "matches the engine value exactly (exact rational or the stated integer cutoff)",
+          "approach": "uses the look-then-leap decomposition p_n(r)=(r-1)/n·Σ_{j=r}^{n} 1/(j-1), not a guess",
+          "rigor": "states the irrevocable-choice rules; weights positions by 1/n and the benchmark event by (r-1)/(i-1)",
+          "communication": "explains the look-phase benchmark and the leap-phase record clearly",
+          "speed": "reaches a clean rational / cutoff without enumeration drift"
+        }
+      },
+      "followUps": [
+        "What fraction r/n is this, and what number does it approach as n grows?",
+        "Compare this to hiring the first candidate blindly (1/8). How much does the rule buy you?"
+      ]
+    },
+    {
+      "id": "tmpl-optimal-cutoff#n9",
+      "tier": "harder",
+      "fingerprint": "tmpl-optimal-cutoff:n=9",
+      "template": {
+        "id": "tmpl-optimal-cutoff",
+        "params": {
+          "n": 9
+        }
+      },
+      "prompt": "With 9 candidates arriving in random order under the irrevocable-choice rules, which cutoff r (reject the first r-1, then take the first record) MAXIMIZES your chance of hiring the single best — and what is that maximum probability?",
+      "source": "Statistics LibreTexts §12.9 optimal-strategy table (n=3..20) — canonical optimal-stopping interview question.",
+      "engineCheck": {
+        "module": "src/engine/optimalStopping.ts",
+        "calls": [
+          "optimalCutoff(9)  // -> { r: 4, p: 341/840 }"
+        ],
+        "answer": "r=4, p=341/840",
+        "verified": true
+      },
+      "hidden": {
+        "answer": "r=4, p=341/840",
+        "approaches": [
+          "Maximize p_9(r) over r. Equivalent rule: the optimal r is the largest with Σ_{j=r}^{9} 1/(j-1) > 1; here that gives r=4, p=341/840 (≈ 41%).",
+          "p_n(r) rises then falls (unimodal); stop increasing r once the marginal harmonic term drops the sum below 1."
+        ],
+        "wrongTurns": [
+          "assuming r=n/2 (skip half) is optimal",
+          "rounding n/e without checking the discrete neighbors",
+          "confusing the optimal r with the success probability"
+        ],
+        "hintLadder": [
+          "The success probability is unimodal in r — rises, peaks, then falls. Find the peak.",
+          "Adding one more rejected candidate helps exactly while Σ_{j=r}^{n} 1/(j-1) > 1.",
+          "Take the largest r for which that harmonic tail still exceeds 1 — for n=9 that is r=4."
+        ],
+        "rubric": {
+          "correctness": "matches the engine value exactly (exact rational or the stated integer cutoff)",
+          "approach": "uses the look-then-leap decomposition p_n(r)=(r-1)/n·Σ_{j=r}^{n} 1/(j-1), not a guess",
+          "rigor": "states the irrevocable-choice rules; weights positions by 1/n and the benchmark event by (r-1)/(i-1)",
+          "communication": "explains the look-phase benchmark and the leap-phase record clearly",
+          "speed": "reaches a clean rational / cutoff without enumeration drift"
+        }
+      },
+      "followUps": [
+        "What fraction r/n is this, and what number does it approach as n grows?",
+        "Compare this to hiring the first candidate blindly (1/9). How much does the rule buy you?"
+      ]
+    },
+    {
+      "id": "tmpl-optimal-cutoff#n10",
+      "tier": "harder",
+      "fingerprint": "tmpl-optimal-cutoff:n=10",
+      "template": {
+        "id": "tmpl-optimal-cutoff",
+        "params": {
+          "n": 10
+        }
+      },
+      "prompt": "With 10 candidates arriving in random order under the irrevocable-choice rules, which cutoff r (reject the first r-1, then take the first record) MAXIMIZES your chance of hiring the single best — and what is that maximum probability?",
+      "source": "Statistics LibreTexts §12.9 optimal-strategy table (n=3..20) — canonical optimal-stopping interview question.",
+      "engineCheck": {
+        "module": "src/engine/optimalStopping.ts",
+        "calls": [
+          "optimalCutoff(10)  // -> { r: 4, p: 3349/8400 }"
+        ],
+        "answer": "r=4, p=3349/8400",
+        "verified": true
+      },
+      "hidden": {
+        "answer": "r=4, p=3349/8400",
+        "approaches": [
+          "Maximize p_10(r) over r. Equivalent rule: the optimal r is the largest with Σ_{j=r}^{10} 1/(j-1) > 1; here that gives r=4, p=3349/8400 (≈ 40%).",
+          "p_n(r) rises then falls (unimodal); stop increasing r once the marginal harmonic term drops the sum below 1."
+        ],
+        "wrongTurns": [
+          "assuming r=n/2 (skip half) is optimal",
+          "rounding n/e without checking the discrete neighbors",
+          "confusing the optimal r with the success probability"
+        ],
+        "hintLadder": [
+          "The success probability is unimodal in r — rises, peaks, then falls. Find the peak.",
+          "Adding one more rejected candidate helps exactly while Σ_{j=r}^{n} 1/(j-1) > 1.",
+          "Take the largest r for which that harmonic tail still exceeds 1 — for n=10 that is r=4."
+        ],
+        "rubric": {
+          "correctness": "matches the engine value exactly (exact rational or the stated integer cutoff)",
+          "approach": "uses the look-then-leap decomposition p_n(r)=(r-1)/n·Σ_{j=r}^{n} 1/(j-1), not a guess",
+          "rigor": "states the irrevocable-choice rules; weights positions by 1/n and the benchmark event by (r-1)/(i-1)",
+          "communication": "explains the look-phase benchmark and the leap-phase record clearly",
+          "speed": "reaches a clean rational / cutoff without enumeration drift"
+        }
+      },
+      "followUps": [
+        "What fraction r/n is this, and what number does it approach as n grows?",
+        "Compare this to hiring the first candidate blindly (1/10). How much does the rule buy you?"
+      ]
+    },
+    {
+      "id": "tmpl-optimal-cutoff#n11",
+      "tier": "harder",
+      "fingerprint": "tmpl-optimal-cutoff:n=11",
+      "template": {
+        "id": "tmpl-optimal-cutoff",
+        "params": {
+          "n": 11
+        }
+      },
+      "prompt": "With 11 candidates arriving in random order under the irrevocable-choice rules, which cutoff r (reject the first r-1, then take the first record) MAXIMIZES your chance of hiring the single best — and what is that maximum probability?",
+      "source": "Statistics LibreTexts §12.9 optimal-strategy table (n=3..20) — canonical optimal-stopping interview question.",
+      "engineCheck": {
+        "module": "src/engine/optimalStopping.ts",
+        "calls": [
+          "optimalCutoff(11)  // -> { r: 5, p: 251/630 }"
+        ],
+        "answer": "r=5, p=251/630",
+        "verified": true
+      },
+      "hidden": {
+        "answer": "r=5, p=251/630",
+        "approaches": [
+          "Maximize p_11(r) over r. Equivalent rule: the optimal r is the largest with Σ_{j=r}^{11} 1/(j-1) > 1; here that gives r=5, p=251/630 (≈ 40%).",
+          "p_n(r) rises then falls (unimodal); stop increasing r once the marginal harmonic term drops the sum below 1."
+        ],
+        "wrongTurns": [
+          "assuming r=n/2 (skip half) is optimal",
+          "rounding n/e without checking the discrete neighbors",
+          "confusing the optimal r with the success probability"
+        ],
+        "hintLadder": [
+          "The success probability is unimodal in r — rises, peaks, then falls. Find the peak.",
+          "Adding one more rejected candidate helps exactly while Σ_{j=r}^{n} 1/(j-1) > 1.",
+          "Take the largest r for which that harmonic tail still exceeds 1 — for n=11 that is r=5."
+        ],
+        "rubric": {
+          "correctness": "matches the engine value exactly (exact rational or the stated integer cutoff)",
+          "approach": "uses the look-then-leap decomposition p_n(r)=(r-1)/n·Σ_{j=r}^{n} 1/(j-1), not a guess",
+          "rigor": "states the irrevocable-choice rules; weights positions by 1/n and the benchmark event by (r-1)/(i-1)",
+          "communication": "explains the look-phase benchmark and the leap-phase record clearly",
+          "speed": "reaches a clean rational / cutoff without enumeration drift"
+        }
+      },
+      "followUps": [
+        "What fraction r/n is this, and what number does it approach as n grows?",
+        "Compare this to hiring the first candidate blindly (1/11). How much does the rule buy you?"
+      ]
+    },
+    {
+      "id": "tmpl-optimal-cutoff#n12",
+      "tier": "harder",
+      "fingerprint": "tmpl-optimal-cutoff:n=12",
+      "template": {
+        "id": "tmpl-optimal-cutoff",
+        "params": {
+          "n": 12
+        }
+      },
+      "prompt": "With 12 candidates arriving in random order under the irrevocable-choice rules, which cutoff r (reject the first r-1, then take the first record) MAXIMIZES your chance of hiring the single best — and what is that maximum probability?",
+      "source": "Statistics LibreTexts §12.9 optimal-strategy table (n=3..20) — canonical optimal-stopping interview question.",
+      "engineCheck": {
+        "module": "src/engine/optimalStopping.ts",
+        "calls": [
+          "optimalCutoff(12)  // -> { r: 5, p: 32891/83160 }"
+        ],
+        "answer": "r=5, p=32891/83160",
+        "verified": true
+      },
+      "hidden": {
+        "answer": "r=5, p=32891/83160",
+        "approaches": [
+          "Maximize p_12(r) over r. Equivalent rule: the optimal r is the largest with Σ_{j=r}^{12} 1/(j-1) > 1; here that gives r=5, p=32891/83160 (≈ 40%).",
+          "p_n(r) rises then falls (unimodal); stop increasing r once the marginal harmonic term drops the sum below 1."
+        ],
+        "wrongTurns": [
+          "assuming r=n/2 (skip half) is optimal",
+          "rounding n/e without checking the discrete neighbors",
+          "confusing the optimal r with the success probability"
+        ],
+        "hintLadder": [
+          "The success probability is unimodal in r — rises, peaks, then falls. Find the peak.",
+          "Adding one more rejected candidate helps exactly while Σ_{j=r}^{n} 1/(j-1) > 1.",
+          "Take the largest r for which that harmonic tail still exceeds 1 — for n=12 that is r=5."
+        ],
+        "rubric": {
+          "correctness": "matches the engine value exactly (exact rational or the stated integer cutoff)",
+          "approach": "uses the look-then-leap decomposition p_n(r)=(r-1)/n·Σ_{j=r}^{n} 1/(j-1), not a guess",
+          "rigor": "states the irrevocable-choice rules; weights positions by 1/n and the benchmark event by (r-1)/(i-1)",
+          "communication": "explains the look-phase benchmark and the leap-phase record clearly",
+          "speed": "reaches a clean rational / cutoff without enumeration drift"
+        }
+      },
+      "followUps": [
+        "What fraction r/n is this, and what number does it approach as n grows?",
+        "Compare this to hiring the first candidate blindly (1/12). How much does the rule buy you?"
+      ]
+    },
+    {
+      "id": "tmpl-optimal-cutoff#n14",
+      "tier": "brutal",
+      "fingerprint": "tmpl-optimal-cutoff:n=14",
+      "template": {
+        "id": "tmpl-optimal-cutoff",
+        "params": {
+          "n": 14
+        }
+      },
+      "prompt": "With 14 candidates arriving in random order under the irrevocable-choice rules, which cutoff r (reject the first r-1, then take the first record) MAXIMIZES your chance of hiring the single best — and what is that maximum probability?",
+      "source": "Statistics LibreTexts §12.9 optimal-strategy table (n=3..20) — canonical optimal-stopping interview question.",
+      "engineCheck": {
+        "module": "src/engine/optimalStopping.ts",
+        "calls": [
+          "optimalCutoff(14)  // -> { r: 6, p: 395243/1009008 }"
+        ],
+        "answer": "r=6, p=395243/1009008",
+        "verified": true
+      },
+      "hidden": {
+        "answer": "r=6, p=395243/1009008",
+        "approaches": [
+          "Maximize p_14(r) over r. Equivalent rule: the optimal r is the largest with Σ_{j=r}^{14} 1/(j-1) > 1; here that gives r=6, p=395243/1009008 (≈ 39%).",
+          "p_n(r) rises then falls (unimodal); stop increasing r once the marginal harmonic term drops the sum below 1."
+        ],
+        "wrongTurns": [
+          "assuming r=n/2 (skip half) is optimal",
+          "rounding n/e without checking the discrete neighbors",
+          "confusing the optimal r with the success probability"
+        ],
+        "hintLadder": [
+          "The success probability is unimodal in r — rises, peaks, then falls. Find the peak.",
+          "Adding one more rejected candidate helps exactly while Σ_{j=r}^{n} 1/(j-1) > 1.",
+          "Take the largest r for which that harmonic tail still exceeds 1 — for n=14 that is r=6."
+        ],
+        "rubric": {
+          "correctness": "matches the engine value exactly (exact rational or the stated integer cutoff)",
+          "approach": "uses the look-then-leap decomposition p_n(r)=(r-1)/n·Σ_{j=r}^{n} 1/(j-1), not a guess",
+          "rigor": "states the irrevocable-choice rules; weights positions by 1/n and the benchmark event by (r-1)/(i-1)",
+          "communication": "explains the look-phase benchmark and the leap-phase record clearly",
+          "speed": "reaches a clean rational / cutoff without enumeration drift"
+        }
+      },
+      "followUps": [
+        "What fraction r/n is this, and what number does it approach as n grows?",
+        "Compare this to hiring the first candidate blindly (1/14). How much does the rule buy you?"
+      ]
+    },
+    {
+      "id": "tmpl-optimal-cutoff#n15",
+      "tier": "brutal",
+      "fingerprint": "tmpl-optimal-cutoff:n=15",
+      "template": {
+        "id": "tmpl-optimal-cutoff",
+        "params": {
+          "n": 15
+        }
+      },
+      "prompt": "With 15 candidates arriving in random order under the irrevocable-choice rules, which cutoff r (reject the first r-1, then take the first record) MAXIMIZES your chance of hiring the single best — and what is that maximum probability?",
+      "source": "Statistics LibreTexts §12.9 optimal-strategy table (n=3..20) — canonical optimal-stopping interview question.",
+      "engineCheck": {
+        "module": "src/engine/optimalStopping.ts",
+        "calls": [
+          "optimalCutoff(15)  // -> { r: 6, p: 420983/1081080 }"
+        ],
+        "answer": "r=6, p=420983/1081080",
+        "verified": true
+      },
+      "hidden": {
+        "answer": "r=6, p=420983/1081080",
+        "approaches": [
+          "Maximize p_15(r) over r. Equivalent rule: the optimal r is the largest with Σ_{j=r}^{15} 1/(j-1) > 1; here that gives r=6, p=420983/1081080 (≈ 39%).",
+          "p_n(r) rises then falls (unimodal); stop increasing r once the marginal harmonic term drops the sum below 1."
+        ],
+        "wrongTurns": [
+          "assuming r=n/2 (skip half) is optimal",
+          "rounding n/e without checking the discrete neighbors",
+          "confusing the optimal r with the success probability"
+        ],
+        "hintLadder": [
+          "The success probability is unimodal in r — rises, peaks, then falls. Find the peak.",
+          "Adding one more rejected candidate helps exactly while Σ_{j=r}^{n} 1/(j-1) > 1.",
+          "Take the largest r for which that harmonic tail still exceeds 1 — for n=15 that is r=6."
+        ],
+        "rubric": {
+          "correctness": "matches the engine value exactly (exact rational or the stated integer cutoff)",
+          "approach": "uses the look-then-leap decomposition p_n(r)=(r-1)/n·Σ_{j=r}^{n} 1/(j-1), not a guess",
+          "rigor": "states the irrevocable-choice rules; weights positions by 1/n and the benchmark event by (r-1)/(i-1)",
+          "communication": "explains the look-phase benchmark and the leap-phase record clearly",
+          "speed": "reaches a clean rational / cutoff without enumeration drift"
+        }
+      },
+      "followUps": [
+        "What fraction r/n is this, and what number does it approach as n grows?",
+        "Compare this to hiring the first candidate blindly (1/15). How much does the rule buy you?"
+      ]
+    },
+    {
+      "id": "tmpl-optimal-cutoff#n18",
+      "tier": "brutal",
+      "fingerprint": "tmpl-optimal-cutoff:n=18",
+      "template": {
+        "id": "tmpl-optimal-cutoff",
+        "params": {
+          "n": 18
+        }
+      },
+      "prompt": "With 18 candidates arriving in random order under the irrevocable-choice rules, which cutoff r (reject the first r-1, then take the first record) MAXIMIZES your chance of hiring the single best — and what is that maximum probability?",
+      "source": "Statistics LibreTexts §12.9 optimal-strategy table (n=3..20) — canonical optimal-stopping interview question.",
+      "engineCheck": {
+        "module": "src/engine/optimalStopping.ts",
+        "calls": [
+          "optimalCutoff(18)  // -> { r: 7, p: 2833255/7351344 }"
+        ],
+        "answer": "r=7, p=2833255/7351344",
+        "verified": true
+      },
+      "hidden": {
+        "answer": "r=7, p=2833255/7351344",
+        "approaches": [
+          "Maximize p_18(r) over r. Equivalent rule: the optimal r is the largest with Σ_{j=r}^{18} 1/(j-1) > 1; here that gives r=7, p=2833255/7351344 (≈ 39%).",
+          "p_n(r) rises then falls (unimodal); stop increasing r once the marginal harmonic term drops the sum below 1."
+        ],
+        "wrongTurns": [
+          "assuming r=n/2 (skip half) is optimal",
+          "rounding n/e without checking the discrete neighbors",
+          "confusing the optimal r with the success probability"
+        ],
+        "hintLadder": [
+          "The success probability is unimodal in r — rises, peaks, then falls. Find the peak.",
+          "Adding one more rejected candidate helps exactly while Σ_{j=r}^{n} 1/(j-1) > 1.",
+          "Take the largest r for which that harmonic tail still exceeds 1 — for n=18 that is r=7."
+        ],
+        "rubric": {
+          "correctness": "matches the engine value exactly (exact rational or the stated integer cutoff)",
+          "approach": "uses the look-then-leap decomposition p_n(r)=(r-1)/n·Σ_{j=r}^{n} 1/(j-1), not a guess",
+          "rigor": "states the irrevocable-choice rules; weights positions by 1/n and the benchmark event by (r-1)/(i-1)",
+          "communication": "explains the look-phase benchmark and the leap-phase record clearly",
+          "speed": "reaches a clean rational / cutoff without enumeration drift"
+        }
+      },
+      "followUps": [
+        "What fraction r/n is this, and what number does it approach as n grows?",
+        "Compare this to hiring the first candidate blindly (1/18). How much does the rule buy you?"
+      ]
+    },
+    {
+      "id": "tmpl-optimal-cutoff#n20",
+      "tier": "brutal",
+      "fingerprint": "tmpl-optimal-cutoff:n=20",
+      "template": {
+        "id": "tmpl-optimal-cutoff",
+        "params": {
+          "n": 20
+        }
+      },
+      "prompt": "With 20 candidates arriving in random order under the irrevocable-choice rules, which cutoff r (reject the first r-1, then take the first record) MAXIMIZES your chance of hiring the single best — and what is that maximum probability?",
+      "source": "Statistics LibreTexts §12.9 optimal-strategy table (n=3..20) — canonical optimal-stopping interview question.",
+      "engineCheck": {
+        "module": "src/engine/optimalStopping.ts",
+        "calls": [
+          "optimalCutoff(20)  // -> { r: 8, p: 3407275/8868288 }"
+        ],
+        "answer": "r=8, p=3407275/8868288",
+        "verified": true
+      },
+      "hidden": {
+        "answer": "r=8, p=3407275/8868288",
+        "approaches": [
+          "Maximize p_20(r) over r. Equivalent rule: the optimal r is the largest with Σ_{j=r}^{20} 1/(j-1) > 1; here that gives r=8, p=3407275/8868288 (≈ 38%).",
+          "p_n(r) rises then falls (unimodal); stop increasing r once the marginal harmonic term drops the sum below 1."
+        ],
+        "wrongTurns": [
+          "assuming r=n/2 (skip half) is optimal",
+          "rounding n/e without checking the discrete neighbors",
+          "confusing the optimal r with the success probability"
+        ],
+        "hintLadder": [
+          "The success probability is unimodal in r — rises, peaks, then falls. Find the peak.",
+          "Adding one more rejected candidate helps exactly while Σ_{j=r}^{n} 1/(j-1) > 1.",
+          "Take the largest r for which that harmonic tail still exceeds 1 — for n=20 that is r=8."
+        ],
+        "rubric": {
+          "correctness": "matches the engine value exactly (exact rational or the stated integer cutoff)",
+          "approach": "uses the look-then-leap decomposition p_n(r)=(r-1)/n·Σ_{j=r}^{n} 1/(j-1), not a guess",
+          "rigor": "states the irrevocable-choice rules; weights positions by 1/n and the benchmark event by (r-1)/(i-1)",
+          "communication": "explains the look-phase benchmark and the leap-phase record clearly",
+          "speed": "reaches a clean rational / cutoff without enumeration drift"
+        }
+      },
+      "followUps": [
+        "What fraction r/n is this, and what number does it approach as n grows?",
+        "Compare this to hiring the first candidate blindly (1/20). How much does the rule buy you?"
+      ]
+    },
+    {
+      "id": "tmpl-naive-vs-optimal#n4",
+      "tier": "hard",
+      "fingerprint": "tmpl-naive-vs-optimal:n=4",
+      "template": {
+        "id": "tmpl-naive-vs-optimal",
+        "params": {
+          "n": 4
+        }
+      },
+      "prompt": "A hiring manager with 4 candidates says \"I'll just hire the first decent one — the first candidate.\" You counter with the optimal look-then-leap rule. State both success probabilities (manager's vs yours) and the exact improvement.",
+      "source": "Stanford AMDM Lecture 8 (take-first = 1/n; optimal strategy) — interview framing.",
+      "engineCheck": {
+        "module": "src/engine/optimalStopping.ts",
+        "calls": [
+          "formatRational(naiveSuccess(4))",
+          "formatRational(optimalCutoff(4).p)"
+        ],
+        "answer": "naive=1/4, optimal=11/24 (r=2)",
+        "verified": true
+      },
+      "hidden": {
+        "answer": "naive=1/4, optimal=11/24 (r=2)",
+        "approaches": [
+          "Take-first wins iff the best is in seat 1 → 1/4 = 1/4. The optimal rule (cutoff r=2) wins 11/24 ≈ 46%.",
+          "Any rule that ignores the candidates seen so far ties at 1/n; the gain comes entirely from using the reject phase as a benchmark."
+        ],
+        "wrongTurns": [
+          "claiming take-first beats 1/n",
+          "thinking the optimal rule guarantees the best",
+          "asserting the gap vanishes for large n (it does not — both the rule and 1/n diverge, the rule → 1/e)"
+        ],
+        "hintLadder": [
+          "What does \"hire the first\" actually depend on? Only the best landing in seat 1.",
+          "That is 1/n. Now contrast with a rule that scouts first.",
+          "Optimal cutoff r=2 gives 11/24; subtract to get the edge."
+        ],
+        "rubric": {
+          "correctness": "matches the engine value exactly (exact rational or the stated integer cutoff)",
+          "approach": "uses the look-then-leap decomposition p_n(r)=(r-1)/n·Σ_{j=r}^{n} 1/(j-1), not a guess",
+          "rigor": "states the irrevocable-choice rules; weights positions by 1/n and the benchmark event by (r-1)/(i-1)",
+          "communication": "explains the look-phase benchmark and the leap-phase record clearly",
+          "speed": "reaches a clean rational / cutoff without enumeration drift"
+        }
+      },
+      "followUps": [
+        "As n → ∞, what happens to each probability?",
+        "When would \"hire the first decent one\" actually be reasonable?"
+      ]
+    },
+    {
+      "id": "tmpl-naive-vs-optimal#n5",
+      "tier": "hard",
+      "fingerprint": "tmpl-naive-vs-optimal:n=5",
+      "template": {
+        "id": "tmpl-naive-vs-optimal",
+        "params": {
+          "n": 5
+        }
+      },
+      "prompt": "A hiring manager with 5 candidates says \"I'll just hire the first decent one — the first candidate.\" You counter with the optimal look-then-leap rule. State both success probabilities (manager's vs yours) and the exact improvement.",
+      "source": "Stanford AMDM Lecture 8 (take-first = 1/n; optimal strategy) — interview framing.",
+      "engineCheck": {
+        "module": "src/engine/optimalStopping.ts",
+        "calls": [
+          "formatRational(naiveSuccess(5))",
+          "formatRational(optimalCutoff(5).p)"
+        ],
+        "answer": "naive=1/5, optimal=13/30 (r=3)",
+        "verified": true
+      },
+      "hidden": {
+        "answer": "naive=1/5, optimal=13/30 (r=3)",
+        "approaches": [
+          "Take-first wins iff the best is in seat 1 → 1/5 = 1/5. The optimal rule (cutoff r=3) wins 13/30 ≈ 43%.",
+          "Any rule that ignores the candidates seen so far ties at 1/n; the gain comes entirely from using the reject phase as a benchmark."
+        ],
+        "wrongTurns": [
+          "claiming take-first beats 1/n",
+          "thinking the optimal rule guarantees the best",
+          "asserting the gap vanishes for large n (it does not — both the rule and 1/n diverge, the rule → 1/e)"
+        ],
+        "hintLadder": [
+          "What does \"hire the first\" actually depend on? Only the best landing in seat 1.",
+          "That is 1/n. Now contrast with a rule that scouts first.",
+          "Optimal cutoff r=3 gives 13/30; subtract to get the edge."
+        ],
+        "rubric": {
+          "correctness": "matches the engine value exactly (exact rational or the stated integer cutoff)",
+          "approach": "uses the look-then-leap decomposition p_n(r)=(r-1)/n·Σ_{j=r}^{n} 1/(j-1), not a guess",
+          "rigor": "states the irrevocable-choice rules; weights positions by 1/n and the benchmark event by (r-1)/(i-1)",
+          "communication": "explains the look-phase benchmark and the leap-phase record clearly",
+          "speed": "reaches a clean rational / cutoff without enumeration drift"
+        }
+      },
+      "followUps": [
+        "As n → ∞, what happens to each probability?",
+        "When would \"hire the first decent one\" actually be reasonable?"
+      ]
+    },
+    {
+      "id": "tmpl-naive-vs-optimal#n7",
+      "tier": "harder",
+      "fingerprint": "tmpl-naive-vs-optimal:n=7",
+      "template": {
+        "id": "tmpl-naive-vs-optimal",
+        "params": {
+          "n": 7
+        }
+      },
+      "prompt": "A hiring manager with 7 candidates says \"I'll just hire the first decent one — the first candidate.\" You counter with the optimal look-then-leap rule. State both success probabilities (manager's vs yours) and the exact improvement.",
+      "source": "Stanford AMDM Lecture 8 (take-first = 1/n; optimal strategy) — interview framing.",
+      "engineCheck": {
+        "module": "src/engine/optimalStopping.ts",
+        "calls": [
+          "formatRational(naiveSuccess(7))",
+          "formatRational(optimalCutoff(7).p)"
+        ],
+        "answer": "naive=1/7, optimal=29/70 (r=3)",
+        "verified": true
+      },
+      "hidden": {
+        "answer": "naive=1/7, optimal=29/70 (r=3)",
+        "approaches": [
+          "Take-first wins iff the best is in seat 1 → 1/7 = 1/7. The optimal rule (cutoff r=3) wins 29/70 ≈ 41%.",
+          "Any rule that ignores the candidates seen so far ties at 1/n; the gain comes entirely from using the reject phase as a benchmark."
+        ],
+        "wrongTurns": [
+          "claiming take-first beats 1/n",
+          "thinking the optimal rule guarantees the best",
+          "asserting the gap vanishes for large n (it does not — both the rule and 1/n diverge, the rule → 1/e)"
+        ],
+        "hintLadder": [
+          "What does \"hire the first\" actually depend on? Only the best landing in seat 1.",
+          "That is 1/n. Now contrast with a rule that scouts first.",
+          "Optimal cutoff r=3 gives 29/70; subtract to get the edge."
+        ],
+        "rubric": {
+          "correctness": "matches the engine value exactly (exact rational or the stated integer cutoff)",
+          "approach": "uses the look-then-leap decomposition p_n(r)=(r-1)/n·Σ_{j=r}^{n} 1/(j-1), not a guess",
+          "rigor": "states the irrevocable-choice rules; weights positions by 1/n and the benchmark event by (r-1)/(i-1)",
+          "communication": "explains the look-phase benchmark and the leap-phase record clearly",
+          "speed": "reaches a clean rational / cutoff without enumeration drift"
+        }
+      },
+      "followUps": [
+        "As n → ∞, what happens to each probability?",
+        "When would \"hire the first decent one\" actually be reasonable?"
+      ]
+    },
+    {
+      "id": "tmpl-naive-vs-optimal#n10",
+      "tier": "harder",
+      "fingerprint": "tmpl-naive-vs-optimal:n=10",
+      "template": {
+        "id": "tmpl-naive-vs-optimal",
+        "params": {
+          "n": 10
+        }
+      },
+      "prompt": "A hiring manager with 10 candidates says \"I'll just hire the first decent one — the first candidate.\" You counter with the optimal look-then-leap rule. State both success probabilities (manager's vs yours) and the exact improvement.",
+      "source": "Stanford AMDM Lecture 8 (take-first = 1/n; optimal strategy) — interview framing.",
+      "engineCheck": {
+        "module": "src/engine/optimalStopping.ts",
+        "calls": [
+          "formatRational(naiveSuccess(10))",
+          "formatRational(optimalCutoff(10).p)"
+        ],
+        "answer": "naive=1/10, optimal=3349/8400 (r=4)",
+        "verified": true
+      },
+      "hidden": {
+        "answer": "naive=1/10, optimal=3349/8400 (r=4)",
+        "approaches": [
+          "Take-first wins iff the best is in seat 1 → 1/10 = 1/10. The optimal rule (cutoff r=4) wins 3349/8400 ≈ 40%.",
+          "Any rule that ignores the candidates seen so far ties at 1/n; the gain comes entirely from using the reject phase as a benchmark."
+        ],
+        "wrongTurns": [
+          "claiming take-first beats 1/n",
+          "thinking the optimal rule guarantees the best",
+          "asserting the gap vanishes for large n (it does not — both the rule and 1/n diverge, the rule → 1/e)"
+        ],
+        "hintLadder": [
+          "What does \"hire the first\" actually depend on? Only the best landing in seat 1.",
+          "That is 1/n. Now contrast with a rule that scouts first.",
+          "Optimal cutoff r=4 gives 3349/8400; subtract to get the edge."
+        ],
+        "rubric": {
+          "correctness": "matches the engine value exactly (exact rational or the stated integer cutoff)",
+          "approach": "uses the look-then-leap decomposition p_n(r)=(r-1)/n·Σ_{j=r}^{n} 1/(j-1), not a guess",
+          "rigor": "states the irrevocable-choice rules; weights positions by 1/n and the benchmark event by (r-1)/(i-1)",
+          "communication": "explains the look-phase benchmark and the leap-phase record clearly",
+          "speed": "reaches a clean rational / cutoff without enumeration drift"
+        }
+      },
+      "followUps": [
+        "As n → ∞, what happens to each probability?",
+        "When would \"hire the first decent one\" actually be reasonable?"
+      ]
+    },
+    {
+      "id": "tmpl-naive-vs-optimal#n20",
+      "tier": "brutal",
+      "fingerprint": "tmpl-naive-vs-optimal:n=20",
+      "template": {
+        "id": "tmpl-naive-vs-optimal",
+        "params": {
+          "n": 20
+        }
+      },
+      "prompt": "A hiring manager with 20 candidates says \"I'll just hire the first decent one — the first candidate.\" You counter with the optimal look-then-leap rule. State both success probabilities (manager's vs yours) and the exact improvement.",
+      "source": "Stanford AMDM Lecture 8 (take-first = 1/n; optimal strategy) — interview framing.",
+      "engineCheck": {
+        "module": "src/engine/optimalStopping.ts",
+        "calls": [
+          "formatRational(naiveSuccess(20))",
+          "formatRational(optimalCutoff(20).p)"
+        ],
+        "answer": "naive=1/20, optimal=3407275/8868288 (r=8)",
+        "verified": true
+      },
+      "hidden": {
+        "answer": "naive=1/20, optimal=3407275/8868288 (r=8)",
+        "approaches": [
+          "Take-first wins iff the best is in seat 1 → 1/20 = 1/20. The optimal rule (cutoff r=8) wins 3407275/8868288 ≈ 38%.",
+          "Any rule that ignores the candidates seen so far ties at 1/n; the gain comes entirely from using the reject phase as a benchmark."
+        ],
+        "wrongTurns": [
+          "claiming take-first beats 1/n",
+          "thinking the optimal rule guarantees the best",
+          "asserting the gap vanishes for large n (it does not — both the rule and 1/n diverge, the rule → 1/e)"
+        ],
+        "hintLadder": [
+          "What does \"hire the first\" actually depend on? Only the best landing in seat 1.",
+          "That is 1/n. Now contrast with a rule that scouts first.",
+          "Optimal cutoff r=8 gives 3407275/8868288; subtract to get the edge."
+        ],
+        "rubric": {
+          "correctness": "matches the engine value exactly (exact rational or the stated integer cutoff)",
+          "approach": "uses the look-then-leap decomposition p_n(r)=(r-1)/n·Σ_{j=r}^{n} 1/(j-1), not a guess",
+          "rigor": "states the irrevocable-choice rules; weights positions by 1/n and the benchmark event by (r-1)/(i-1)",
+          "communication": "explains the look-phase benchmark and the leap-phase record clearly",
+          "speed": "reaches a clean rational / cutoff without enumeration drift"
+        }
+      },
+      "followUps": [
+        "As n → ∞, what happens to each probability?",
+        "When would \"hire the first decent one\" actually be reasonable?"
+      ]
+    },
+    {
+      "id": "tmpl-skip-count#n10",
+      "tier": "hard",
+      "fingerprint": "tmpl-skip-count:n=10",
+      "template": {
+        "id": "tmpl-skip-count",
+        "params": {
+          "n": 10
+        }
+      },
+      "prompt": "Classic: 10 applicants interview in random order, you decide on the spot, and you only \"win\" by hiring the very best. Using the optimal strategy, how many applicants should you reject outright before you start being willing to hire?",
+      "source": "Wikipedia \"Secretary problem\" (reject ~n/e, then take the first record) — the textbook quant phrasing.",
+      "engineCheck": {
+        "module": "src/engine/optimalStopping.ts",
+        "calls": [
+          "optimalCutoff(10).r - 1  // = 3"
+        ],
+        "answer": "3",
+        "verified": true
+      },
+      "hidden": {
+        "answer": "3",
+        "approaches": [
+          "Optimal cutoff r=4, so reject the first r-1 = 3, then hire the first candidate better than all 3.",
+          "As a fraction that is 3/10 ≈ 30%, hugging 1/e ≈ 37% for large n."
+        ],
+        "wrongTurns": [
+          "rejecting exactly half",
+          "rejecting n/e rounded without the −1 (cutoff r vs reject count r−1)",
+          "starting to hire immediately"
+        ],
+        "hintLadder": [
+          "The optimal rule has a single reject-then-accept threshold.",
+          "Reject the first r−1 where r is the optimal cutoff for this n.",
+          "For n=10 the optimal cutoff is r=4, so you reject 3."
+        ],
+        "rubric": {
+          "correctness": "matches the engine value exactly (exact rational or the stated integer cutoff)",
+          "approach": "uses the look-then-leap decomposition p_n(r)=(r-1)/n·Σ_{j=r}^{n} 1/(j-1), not a guess",
+          "rigor": "states the irrevocable-choice rules; weights positions by 1/n and the benchmark event by (r-1)/(i-1)",
+          "communication": "explains the look-phase benchmark and the leap-phase record clearly",
+          "speed": "reaches a clean rational / cutoff without enumeration drift"
+        }
+      },
+      "followUps": [
+        "What success probability does this give, roughly?",
+        "Does the answer fraction change much between n=100 and n=1,000,000?"
+      ]
+    },
+    {
+      "id": "tmpl-skip-count#n20",
+      "tier": "harder",
+      "fingerprint": "tmpl-skip-count:n=20",
+      "template": {
+        "id": "tmpl-skip-count",
+        "params": {
+          "n": 20
+        }
+      },
+      "prompt": "Classic: 20 applicants interview in random order, you decide on the spot, and you only \"win\" by hiring the very best. Using the optimal strategy, how many applicants should you reject outright before you start being willing to hire?",
+      "source": "Wikipedia \"Secretary problem\" (reject ~n/e, then take the first record) — the textbook quant phrasing.",
+      "engineCheck": {
+        "module": "src/engine/optimalStopping.ts",
+        "calls": [
+          "optimalCutoff(20).r - 1  // = 7"
+        ],
+        "answer": "7",
+        "verified": true
+      },
+      "hidden": {
+        "answer": "7",
+        "approaches": [
+          "Optimal cutoff r=8, so reject the first r-1 = 7, then hire the first candidate better than all 7.",
+          "As a fraction that is 7/20 ≈ 35%, hugging 1/e ≈ 37% for large n."
+        ],
+        "wrongTurns": [
+          "rejecting exactly half",
+          "rejecting n/e rounded without the −1 (cutoff r vs reject count r−1)",
+          "starting to hire immediately"
+        ],
+        "hintLadder": [
+          "The optimal rule has a single reject-then-accept threshold.",
+          "Reject the first r−1 where r is the optimal cutoff for this n.",
+          "For n=20 the optimal cutoff is r=8, so you reject 7."
+        ],
+        "rubric": {
+          "correctness": "matches the engine value exactly (exact rational or the stated integer cutoff)",
+          "approach": "uses the look-then-leap decomposition p_n(r)=(r-1)/n·Σ_{j=r}^{n} 1/(j-1), not a guess",
+          "rigor": "states the irrevocable-choice rules; weights positions by 1/n and the benchmark event by (r-1)/(i-1)",
+          "communication": "explains the look-phase benchmark and the leap-phase record clearly",
+          "speed": "reaches a clean rational / cutoff without enumeration drift"
+        }
+      },
+      "followUps": [
+        "What success probability does this give, roughly?",
+        "Does the answer fraction change much between n=100 and n=1,000,000?"
+      ]
+    },
+    {
+      "id": "tmpl-skip-count#n50",
+      "tier": "harder",
+      "fingerprint": "tmpl-skip-count:n=50",
+      "template": {
+        "id": "tmpl-skip-count",
+        "params": {
+          "n": 50
+        }
+      },
+      "prompt": "Classic: 50 applicants interview in random order, you decide on the spot, and you only \"win\" by hiring the very best. Using the optimal strategy, how many applicants should you reject outright before you start being willing to hire?",
+      "source": "Wikipedia \"Secretary problem\" (reject ~n/e, then take the first record) — the textbook quant phrasing.",
+      "engineCheck": {
+        "module": "src/engine/optimalStopping.ts",
+        "calls": [
+          "optimalCutoff(50).r - 1  // = 18"
+        ],
+        "answer": "18",
+        "verified": true
+      },
+      "hidden": {
+        "answer": "18",
+        "approaches": [
+          "Optimal cutoff r=19, so reject the first r-1 = 18, then hire the first candidate better than all 18.",
+          "As a fraction that is 18/50 ≈ 36%, hugging 1/e ≈ 37% for large n."
+        ],
+        "wrongTurns": [
+          "rejecting exactly half",
+          "rejecting n/e rounded without the −1 (cutoff r vs reject count r−1)",
+          "starting to hire immediately"
+        ],
+        "hintLadder": [
+          "The optimal rule has a single reject-then-accept threshold.",
+          "Reject the first r−1 where r is the optimal cutoff for this n.",
+          "For n=50 the optimal cutoff is r=19, so you reject 18."
+        ],
+        "rubric": {
+          "correctness": "matches the engine value exactly (exact rational or the stated integer cutoff)",
+          "approach": "uses the look-then-leap decomposition p_n(r)=(r-1)/n·Σ_{j=r}^{n} 1/(j-1), not a guess",
+          "rigor": "states the irrevocable-choice rules; weights positions by 1/n and the benchmark event by (r-1)/(i-1)",
+          "communication": "explains the look-phase benchmark and the leap-phase record clearly",
+          "speed": "reaches a clean rational / cutoff without enumeration drift"
+        }
+      },
+      "followUps": [
+        "What success probability does this give, roughly?",
+        "Does the answer fraction change much between n=100 and n=1,000,000?"
+      ]
+    },
+    {
+      "id": "tmpl-skip-count#n100",
+      "tier": "brutal",
+      "fingerprint": "tmpl-skip-count:n=100",
+      "template": {
+        "id": "tmpl-skip-count",
+        "params": {
+          "n": 100
+        }
+      },
+      "prompt": "Classic: 100 applicants interview in random order, you decide on the spot, and you only \"win\" by hiring the very best. Using the optimal strategy, how many applicants should you reject outright before you start being willing to hire?",
+      "source": "Wikipedia \"Secretary problem\" (reject ~n/e, then take the first record) — the textbook quant phrasing.",
+      "engineCheck": {
+        "module": "src/engine/optimalStopping.ts",
+        "calls": [
+          "optimalCutoff(100).r - 1  // = 37"
+        ],
+        "answer": "37",
+        "verified": true
+      },
+      "hidden": {
+        "answer": "37",
+        "approaches": [
+          "Optimal cutoff r=38, so reject the first r-1 = 37, then hire the first candidate better than all 37.",
+          "As a fraction that is 37/100 ≈ 37%, hugging 1/e ≈ 37% for large n."
+        ],
+        "wrongTurns": [
+          "rejecting exactly half",
+          "rejecting n/e rounded without the −1 (cutoff r vs reject count r−1)",
+          "starting to hire immediately"
+        ],
+        "hintLadder": [
+          "The optimal rule has a single reject-then-accept threshold.",
+          "Reject the first r−1 where r is the optimal cutoff for this n.",
+          "For n=100 the optimal cutoff is r=38, so you reject 37."
+        ],
+        "rubric": {
+          "correctness": "matches the engine value exactly (exact rational or the stated integer cutoff)",
+          "approach": "uses the look-then-leap decomposition p_n(r)=(r-1)/n·Σ_{j=r}^{n} 1/(j-1), not a guess",
+          "rigor": "states the irrevocable-choice rules; weights positions by 1/n and the benchmark event by (r-1)/(i-1)",
+          "communication": "explains the look-phase benchmark and the leap-phase record clearly",
+          "speed": "reaches a clean rational / cutoff without enumeration drift"
+        }
+      },
+      "followUps": [
+        "What success probability does this give, roughly?",
+        "Does the answer fraction change much between n=100 and n=1,000,000?"
+      ]
+    },
+    {
+      "id": "tmpl-run-outcome#213-c1",
+      "tier": "hard",
+      "fingerprint": "tmpl-run-outcome:order=2-1-3,r=1",
+      "template": {
+        "id": "tmpl-run-outcome",
+        "params": {
+          "order": [
+            2,
+            1,
+            3
+          ],
+          "cutoff": 1
+        }
+      },
+      "prompt": "You impatiently hire the first candidate. The candidates' true ranks (1 = best) arrive in this order: [2, 1, 3]. You use the look-then-leap rule with cutoff r=1 (reject the first 0, then take the first who beats the best so far; take the last if none do). Which arrival position do you hire, and is it the best?",
+      "source": "Standard secretary-problem trace question (relative-rank arrivals) — interview drill.",
+      "engineCheck": {
+        "module": "src/engine/optimalStopping.ts",
+        "calls": [
+          "runStrategy([2, 1, 3], 1)"
+        ],
+        "answer": "position 1 (rank 2) — miss",
+        "verified": true
+      },
+      "hidden": {
+        "answer": "position 1 (rank 2) — miss",
+        "approaches": [
+          "Look phase = positions 1..0: benchmark = best (min rank) seen. Leap phase: accept the first rank below the benchmark.",
+          "Tracing [2, 1, 3] with cutoff 1 gives position 1 (rank 2) — miss."
+        ],
+        "wrongTurns": [
+          "accepting during the look phase",
+          "comparing to the global best (unknown) instead of the look-phase benchmark",
+          "forgetting the forced last-candidate fallback"
+        ],
+        "hintLadder": [
+          "Split the sequence into the reject (look) phase and the accept (leap) phase.",
+          "The benchmark is the smallest rank in the look phase; in the leap phase take the first rank below it.",
+          "Walk left to right and stop at the first leap-phase candidate beating the benchmark."
+        ],
+        "rubric": {
+          "correctness": "matches the engine value exactly (exact rational or the stated integer cutoff)",
+          "approach": "uses the look-then-leap decomposition p_n(r)=(r-1)/n·Σ_{j=r}^{n} 1/(j-1), not a guess",
+          "rigor": "states the irrevocable-choice rules; weights positions by 1/n and the benchmark event by (r-1)/(i-1)",
+          "communication": "explains the look-phase benchmark and the leap-phase record clearly",
+          "speed": "reaches a clean rational / cutoff without enumeration drift"
+        }
+      },
+      "followUps": [
+        "For this same order, which cutoff would have landed the best?",
+        "Over all orders of this length, what is the win rate at this cutoff?"
+      ]
+    },
+    {
+      "id": "tmpl-run-outcome#213-c2",
+      "tier": "hard",
+      "fingerprint": "tmpl-run-outcome:order=2-1-3,r=2",
+      "template": {
+        "id": "tmpl-run-outcome",
+        "params": {
+          "order": [
+            2,
+            1,
+            3
+          ],
+          "cutoff": 2
+        }
+      },
+      "prompt": "A 3-person search. The candidates' true ranks (1 = best) arrive in this order: [2, 1, 3]. You use the look-then-leap rule with cutoff r=2 (reject the first 1, then take the first who beats the best so far; take the last if none do). Which arrival position do you hire, and is it the best?",
+      "source": "Standard secretary-problem trace question (relative-rank arrivals) — interview drill.",
+      "engineCheck": {
+        "module": "src/engine/optimalStopping.ts",
+        "calls": [
+          "runStrategy([2, 1, 3], 2)"
+        ],
+        "answer": "position 2 (rank 1) — WIN, the best",
+        "verified": true
+      },
+      "hidden": {
+        "answer": "position 2 (rank 1) — WIN, the best",
+        "approaches": [
+          "Look phase = positions 1..1: benchmark = best (min rank) seen. Leap phase: accept the first rank below the benchmark.",
+          "Tracing [2, 1, 3] with cutoff 2 gives position 2 (rank 1) — WIN, the best."
+        ],
+        "wrongTurns": [
+          "accepting during the look phase",
+          "comparing to the global best (unknown) instead of the look-phase benchmark",
+          "forgetting the forced last-candidate fallback"
+        ],
+        "hintLadder": [
+          "Split the sequence into the reject (look) phase and the accept (leap) phase.",
+          "The benchmark is the smallest rank in the look phase; in the leap phase take the first rank below it.",
+          "Walk left to right and stop at the first leap-phase candidate beating the benchmark."
+        ],
+        "rubric": {
+          "correctness": "matches the engine value exactly (exact rational or the stated integer cutoff)",
+          "approach": "uses the look-then-leap decomposition p_n(r)=(r-1)/n·Σ_{j=r}^{n} 1/(j-1), not a guess",
+          "rigor": "states the irrevocable-choice rules; weights positions by 1/n and the benchmark event by (r-1)/(i-1)",
+          "communication": "explains the look-phase benchmark and the leap-phase record clearly",
+          "speed": "reaches a clean rational / cutoff without enumeration drift"
+        }
+      },
+      "followUps": [
+        "For this same order, which cutoff would have landed the best?",
+        "Over all orders of this length, what is the win rate at this cutoff?"
+      ]
+    },
+    {
+      "id": "tmpl-run-outcome#312-c2",
+      "tier": "hard",
+      "fingerprint": "tmpl-run-outcome:order=3-1-2,r=2",
+      "template": {
+        "id": "tmpl-run-outcome",
+        "params": {
+          "order": [
+            3,
+            1,
+            2
+          ],
+          "cutoff": 2
+        }
+      },
+      "prompt": "A 3-person search. The candidates' true ranks (1 = best) arrive in this order: [3, 1, 2]. You use the look-then-leap rule with cutoff r=2 (reject the first 1, then take the first who beats the best so far; take the last if none do). Which arrival position do you hire, and is it the best?",
+      "source": "Standard secretary-problem trace question (relative-rank arrivals) — interview drill.",
+      "engineCheck": {
+        "module": "src/engine/optimalStopping.ts",
+        "calls": [
+          "runStrategy([3, 1, 2], 2)"
+        ],
+        "answer": "position 2 (rank 1) — WIN, the best",
+        "verified": true
+      },
+      "hidden": {
+        "answer": "position 2 (rank 1) — WIN, the best",
+        "approaches": [
+          "Look phase = positions 1..1: benchmark = best (min rank) seen. Leap phase: accept the first rank below the benchmark.",
+          "Tracing [3, 1, 2] with cutoff 2 gives position 2 (rank 1) — WIN, the best."
+        ],
+        "wrongTurns": [
+          "accepting during the look phase",
+          "comparing to the global best (unknown) instead of the look-phase benchmark",
+          "forgetting the forced last-candidate fallback"
+        ],
+        "hintLadder": [
+          "Split the sequence into the reject (look) phase and the accept (leap) phase.",
+          "The benchmark is the smallest rank in the look phase; in the leap phase take the first rank below it.",
+          "Walk left to right and stop at the first leap-phase candidate beating the benchmark."
+        ],
+        "rubric": {
+          "correctness": "matches the engine value exactly (exact rational or the stated integer cutoff)",
+          "approach": "uses the look-then-leap decomposition p_n(r)=(r-1)/n·Σ_{j=r}^{n} 1/(j-1), not a guess",
+          "rigor": "states the irrevocable-choice rules; weights positions by 1/n and the benchmark event by (r-1)/(i-1)",
+          "communication": "explains the look-phase benchmark and the leap-phase record clearly",
+          "speed": "reaches a clean rational / cutoff without enumeration drift"
+        }
+      },
+      "followUps": [
+        "For this same order, which cutoff would have landed the best?",
+        "Over all orders of this length, what is the win rate at this cutoff?"
+      ]
+    },
+    {
+      "id": "tmpl-run-outcome#123-c2",
+      "tier": "harder",
+      "fingerprint": "tmpl-run-outcome:order=1-2-3,r=2",
+      "template": {
+        "id": "tmpl-run-outcome",
+        "params": {
+          "order": [
+            1,
+            2,
+            3
+          ],
+          "cutoff": 2
+        }
+      },
+      "prompt": "A 3-person search where the strongest comes first. The candidates' true ranks (1 = best) arrive in this order: [1, 2, 3]. You use the look-then-leap rule with cutoff r=2 (reject the first 1, then take the first who beats the best so far; take the last if none do). Which arrival position do you hire, and is it the best?",
+      "source": "Standard secretary-problem trace question (relative-rank arrivals) — interview drill.",
+      "engineCheck": {
+        "module": "src/engine/optimalStopping.ts",
+        "calls": [
+          "runStrategy([1, 2, 3], 2)"
+        ],
+        "answer": "position 3 (rank 3) — miss",
+        "verified": true
+      },
+      "hidden": {
+        "answer": "position 3 (rank 3) — miss",
+        "approaches": [
+          "Look phase = positions 1..1: benchmark = best (min rank) seen. Leap phase: accept the first rank below the benchmark.",
+          "Tracing [1, 2, 3] with cutoff 2 gives position 3 (rank 3) — miss."
+        ],
+        "wrongTurns": [
+          "accepting during the look phase",
+          "comparing to the global best (unknown) instead of the look-phase benchmark",
+          "forgetting the forced last-candidate fallback"
+        ],
+        "hintLadder": [
+          "Split the sequence into the reject (look) phase and the accept (leap) phase.",
+          "The benchmark is the smallest rank in the look phase; in the leap phase take the first rank below it.",
+          "Walk left to right and stop at the first leap-phase candidate beating the benchmark."
+        ],
+        "rubric": {
+          "correctness": "matches the engine value exactly (exact rational or the stated integer cutoff)",
+          "approach": "uses the look-then-leap decomposition p_n(r)=(r-1)/n·Σ_{j=r}^{n} 1/(j-1), not a guess",
+          "rigor": "states the irrevocable-choice rules; weights positions by 1/n and the benchmark event by (r-1)/(i-1)",
+          "communication": "explains the look-phase benchmark and the leap-phase record clearly",
+          "speed": "reaches a clean rational / cutoff without enumeration drift"
+        }
+      },
+      "followUps": [
+        "For this same order, which cutoff would have landed the best?",
+        "Over all orders of this length, what is the win rate at this cutoff?"
+      ]
+    },
+    {
+      "id": "tmpl-run-outcome#2314-c2",
+      "tier": "harder",
+      "fingerprint": "tmpl-run-outcome:order=2-3-1-4,r=2",
+      "template": {
+        "id": "tmpl-run-outcome",
+        "params": {
+          "order": [
+            2,
+            3,
+            1,
+            4
+          ],
+          "cutoff": 2
+        }
+      },
+      "prompt": "A 4-person search. The candidates' true ranks (1 = best) arrive in this order: [2, 3, 1, 4]. You use the look-then-leap rule with cutoff r=2 (reject the first 1, then take the first who beats the best so far; take the last if none do). Which arrival position do you hire, and is it the best?",
+      "source": "Standard secretary-problem trace question (relative-rank arrivals) — interview drill.",
+      "engineCheck": {
+        "module": "src/engine/optimalStopping.ts",
+        "calls": [
+          "runStrategy([2, 3, 1, 4], 2)"
+        ],
+        "answer": "position 3 (rank 1) — WIN, the best",
+        "verified": true
+      },
+      "hidden": {
+        "answer": "position 3 (rank 1) — WIN, the best",
+        "approaches": [
+          "Look phase = positions 1..1: benchmark = best (min rank) seen. Leap phase: accept the first rank below the benchmark.",
+          "Tracing [2, 3, 1, 4] with cutoff 2 gives position 3 (rank 1) — WIN, the best."
+        ],
+        "wrongTurns": [
+          "accepting during the look phase",
+          "comparing to the global best (unknown) instead of the look-phase benchmark",
+          "forgetting the forced last-candidate fallback"
+        ],
+        "hintLadder": [
+          "Split the sequence into the reject (look) phase and the accept (leap) phase.",
+          "The benchmark is the smallest rank in the look phase; in the leap phase take the first rank below it.",
+          "Walk left to right and stop at the first leap-phase candidate beating the benchmark."
+        ],
+        "rubric": {
+          "correctness": "matches the engine value exactly (exact rational or the stated integer cutoff)",
+          "approach": "uses the look-then-leap decomposition p_n(r)=(r-1)/n·Σ_{j=r}^{n} 1/(j-1), not a guess",
+          "rigor": "states the irrevocable-choice rules; weights positions by 1/n and the benchmark event by (r-1)/(i-1)",
+          "communication": "explains the look-phase benchmark and the leap-phase record clearly",
+          "speed": "reaches a clean rational / cutoff without enumeration drift"
+        }
+      },
+      "followUps": [
+        "For this same order, which cutoff would have landed the best?",
+        "Over all orders of this length, what is the win rate at this cutoff?"
+      ]
+    },
+    {
+      "id": "tmpl-run-outcome#4321-c2",
+      "tier": "harder",
+      "fingerprint": "tmpl-run-outcome:order=4-3-2-1,r=2",
+      "template": {
+        "id": "tmpl-run-outcome",
+        "params": {
+          "order": [
+            4,
+            3,
+            2,
+            1
+          ],
+          "cutoff": 2
+        }
+      },
+      "prompt": "A 4-person search in worsening-then-best order. The candidates' true ranks (1 = best) arrive in this order: [4, 3, 2, 1]. You use the look-then-leap rule with cutoff r=2 (reject the first 1, then take the first who beats the best so far; take the last if none do). Which arrival position do you hire, and is it the best?",
+      "source": "Standard secretary-problem trace question (relative-rank arrivals) — interview drill.",
+      "engineCheck": {
+        "module": "src/engine/optimalStopping.ts",
+        "calls": [
+          "runStrategy([4, 3, 2, 1], 2)"
+        ],
+        "answer": "position 2 (rank 3) — miss",
+        "verified": true
+      },
+      "hidden": {
+        "answer": "position 2 (rank 3) — miss",
+        "approaches": [
+          "Look phase = positions 1..1: benchmark = best (min rank) seen. Leap phase: accept the first rank below the benchmark.",
+          "Tracing [4, 3, 2, 1] with cutoff 2 gives position 2 (rank 3) — miss."
+        ],
+        "wrongTurns": [
+          "accepting during the look phase",
+          "comparing to the global best (unknown) instead of the look-phase benchmark",
+          "forgetting the forced last-candidate fallback"
+        ],
+        "hintLadder": [
+          "Split the sequence into the reject (look) phase and the accept (leap) phase.",
+          "The benchmark is the smallest rank in the look phase; in the leap phase take the first rank below it.",
+          "Walk left to right and stop at the first leap-phase candidate beating the benchmark."
+        ],
+        "rubric": {
+          "correctness": "matches the engine value exactly (exact rational or the stated integer cutoff)",
+          "approach": "uses the look-then-leap decomposition p_n(r)=(r-1)/n·Σ_{j=r}^{n} 1/(j-1), not a guess",
+          "rigor": "states the irrevocable-choice rules; weights positions by 1/n and the benchmark event by (r-1)/(i-1)",
+          "communication": "explains the look-phase benchmark and the leap-phase record clearly",
+          "speed": "reaches a clean rational / cutoff without enumeration drift"
+        }
+      },
+      "followUps": [
+        "For this same order, which cutoff would have landed the best?",
+        "Over all orders of this length, what is the win rate at this cutoff?"
+      ]
+    },
+    {
+      "id": "tmpl-run-outcome#35142-c3",
+      "tier": "harder",
+      "fingerprint": "tmpl-run-outcome:order=3-5-1-4-2,r=3",
+      "template": {
+        "id": "tmpl-run-outcome",
+        "params": {
+          "order": [
+            3,
+            5,
+            1,
+            4,
+            2
+          ],
+          "cutoff": 3
+        }
+      },
+      "prompt": "Five apartments, viewed one at a time. The candidates' true ranks (1 = best) arrive in this order: [3, 5, 1, 4, 2]. You use the look-then-leap rule with cutoff r=3 (reject the first 2, then take the first who beats the best so far; take the last if none do). Which arrival position do you hire, and is it the best?",
+      "source": "Standard secretary-problem trace question (relative-rank arrivals) — interview drill.",
+      "engineCheck": {
+        "module": "src/engine/optimalStopping.ts",
+        "calls": [
+          "runStrategy([3, 5, 1, 4, 2], 3)"
+        ],
+        "answer": "position 3 (rank 1) — WIN, the best",
+        "verified": true
+      },
+      "hidden": {
+        "answer": "position 3 (rank 1) — WIN, the best",
+        "approaches": [
+          "Look phase = positions 1..2: benchmark = best (min rank) seen. Leap phase: accept the first rank below the benchmark.",
+          "Tracing [3, 5, 1, 4, 2] with cutoff 3 gives position 3 (rank 1) — WIN, the best."
+        ],
+        "wrongTurns": [
+          "accepting during the look phase",
+          "comparing to the global best (unknown) instead of the look-phase benchmark",
+          "forgetting the forced last-candidate fallback"
+        ],
+        "hintLadder": [
+          "Split the sequence into the reject (look) phase and the accept (leap) phase.",
+          "The benchmark is the smallest rank in the look phase; in the leap phase take the first rank below it.",
+          "Walk left to right and stop at the first leap-phase candidate beating the benchmark."
+        ],
+        "rubric": {
+          "correctness": "matches the engine value exactly (exact rational or the stated integer cutoff)",
+          "approach": "uses the look-then-leap decomposition p_n(r)=(r-1)/n·Σ_{j=r}^{n} 1/(j-1), not a guess",
+          "rigor": "states the irrevocable-choice rules; weights positions by 1/n and the benchmark event by (r-1)/(i-1)",
+          "communication": "explains the look-phase benchmark and the leap-phase record clearly",
+          "speed": "reaches a clean rational / cutoff without enumeration drift"
+        }
+      },
+      "followUps": [
+        "For this same order, which cutoff would have landed the best?",
+        "Over all orders of this length, what is the win rate at this cutoff?"
+      ]
+    },
+    {
+      "id": "tmpl-run-outcome#54321-c3",
+      "tier": "brutal",
+      "fingerprint": "tmpl-run-outcome:order=5-4-3-2-1,r=3",
+      "template": {
+        "id": "tmpl-run-outcome",
+        "params": {
+          "order": [
+            5,
+            4,
+            3,
+            2,
+            1
+          ],
+          "cutoff": 3
+        }
+      },
+      "prompt": "Five candidates arriving worst to best. The candidates' true ranks (1 = best) arrive in this order: [5, 4, 3, 2, 1]. You use the look-then-leap rule with cutoff r=3 (reject the first 2, then take the first who beats the best so far; take the last if none do). Which arrival position do you hire, and is it the best?",
+      "source": "Standard secretary-problem trace question (relative-rank arrivals) — interview drill.",
+      "engineCheck": {
+        "module": "src/engine/optimalStopping.ts",
+        "calls": [
+          "runStrategy([5, 4, 3, 2, 1], 3)"
+        ],
+        "answer": "position 3 (rank 3) — miss",
+        "verified": true
+      },
+      "hidden": {
+        "answer": "position 3 (rank 3) — miss",
+        "approaches": [
+          "Look phase = positions 1..2: benchmark = best (min rank) seen. Leap phase: accept the first rank below the benchmark.",
+          "Tracing [5, 4, 3, 2, 1] with cutoff 3 gives position 3 (rank 3) — miss."
+        ],
+        "wrongTurns": [
+          "accepting during the look phase",
+          "comparing to the global best (unknown) instead of the look-phase benchmark",
+          "forgetting the forced last-candidate fallback"
+        ],
+        "hintLadder": [
+          "Split the sequence into the reject (look) phase and the accept (leap) phase.",
+          "The benchmark is the smallest rank in the look phase; in the leap phase take the first rank below it.",
+          "Walk left to right and stop at the first leap-phase candidate beating the benchmark."
+        ],
+        "rubric": {
+          "correctness": "matches the engine value exactly (exact rational or the stated integer cutoff)",
+          "approach": "uses the look-then-leap decomposition p_n(r)=(r-1)/n·Σ_{j=r}^{n} 1/(j-1), not a guess",
+          "rigor": "states the irrevocable-choice rules; weights positions by 1/n and the benchmark event by (r-1)/(i-1)",
+          "communication": "explains the look-phase benchmark and the leap-phase record clearly",
+          "speed": "reaches a clean rational / cutoff without enumeration drift"
+        }
+      },
+      "followUps": [
+        "For this same order, which cutoff would have landed the best?",
+        "Over all orders of this length, what is the win rate at this cutoff?"
+      ]
+    },
+    {
+      "id": "tmpl-run-outcome#132-c1",
+      "tier": "hard",
+      "fingerprint": "tmpl-run-outcome:order=1-3-2,r=1",
+      "template": {
+        "id": "tmpl-run-outcome",
+        "params": {
+          "order": [
+            1,
+            3,
+            2
+          ],
+          "cutoff": 1
+        }
+      },
+      "prompt": "You hire the very first candidate. The candidates' true ranks (1 = best) arrive in this order: [1, 3, 2]. You use the look-then-leap rule with cutoff r=1 (reject the first 0, then take the first who beats the best so far; take the last if none do). Which arrival position do you hire, and is it the best?",
+      "source": "Standard secretary-problem trace question (relative-rank arrivals) — interview drill.",
+      "engineCheck": {
+        "module": "src/engine/optimalStopping.ts",
+        "calls": [
+          "runStrategy([1, 3, 2], 1)"
+        ],
+        "answer": "position 1 (rank 1) — WIN, the best",
+        "verified": true
+      },
+      "hidden": {
+        "answer": "position 1 (rank 1) — WIN, the best",
+        "approaches": [
+          "Look phase = positions 1..0: benchmark = best (min rank) seen. Leap phase: accept the first rank below the benchmark.",
+          "Tracing [1, 3, 2] with cutoff 1 gives position 1 (rank 1) — WIN, the best."
+        ],
+        "wrongTurns": [
+          "accepting during the look phase",
+          "comparing to the global best (unknown) instead of the look-phase benchmark",
+          "forgetting the forced last-candidate fallback"
+        ],
+        "hintLadder": [
+          "Split the sequence into the reject (look) phase and the accept (leap) phase.",
+          "The benchmark is the smallest rank in the look phase; in the leap phase take the first rank below it.",
+          "Walk left to right and stop at the first leap-phase candidate beating the benchmark."
+        ],
+        "rubric": {
+          "correctness": "matches the engine value exactly (exact rational or the stated integer cutoff)",
+          "approach": "uses the look-then-leap decomposition p_n(r)=(r-1)/n·Σ_{j=r}^{n} 1/(j-1), not a guess",
+          "rigor": "states the irrevocable-choice rules; weights positions by 1/n and the benchmark event by (r-1)/(i-1)",
+          "communication": "explains the look-phase benchmark and the leap-phase record clearly",
+          "speed": "reaches a clean rational / cutoff without enumeration drift"
+        }
+      },
+      "followUps": [
+        "For this same order, which cutoff would have landed the best?",
+        "Over all orders of this length, what is the win rate at this cutoff?"
+      ]
+    },
+    {
+      "id": "tmpl-run-outcome#2413-c2",
+      "tier": "harder",
+      "fingerprint": "tmpl-run-outcome:order=2-4-1-3,r=2",
+      "template": {
+        "id": "tmpl-run-outcome",
+        "params": {
+          "order": [
+            2,
+            4,
+            1,
+            3
+          ],
+          "cutoff": 2
+        }
+      },
+      "prompt": "A 4-person search. The candidates' true ranks (1 = best) arrive in this order: [2, 4, 1, 3]. You use the look-then-leap rule with cutoff r=2 (reject the first 1, then take the first who beats the best so far; take the last if none do). Which arrival position do you hire, and is it the best?",
+      "source": "Standard secretary-problem trace question (relative-rank arrivals) — interview drill.",
+      "engineCheck": {
+        "module": "src/engine/optimalStopping.ts",
+        "calls": [
+          "runStrategy([2, 4, 1, 3], 2)"
+        ],
+        "answer": "position 3 (rank 1) — WIN, the best",
+        "verified": true
+      },
+      "hidden": {
+        "answer": "position 3 (rank 1) — WIN, the best",
+        "approaches": [
+          "Look phase = positions 1..1: benchmark = best (min rank) seen. Leap phase: accept the first rank below the benchmark.",
+          "Tracing [2, 4, 1, 3] with cutoff 2 gives position 3 (rank 1) — WIN, the best."
+        ],
+        "wrongTurns": [
+          "accepting during the look phase",
+          "comparing to the global best (unknown) instead of the look-phase benchmark",
+          "forgetting the forced last-candidate fallback"
+        ],
+        "hintLadder": [
+          "Split the sequence into the reject (look) phase and the accept (leap) phase.",
+          "The benchmark is the smallest rank in the look phase; in the leap phase take the first rank below it.",
+          "Walk left to right and stop at the first leap-phase candidate beating the benchmark."
+        ],
+        "rubric": {
+          "correctness": "matches the engine value exactly (exact rational or the stated integer cutoff)",
+          "approach": "uses the look-then-leap decomposition p_n(r)=(r-1)/n·Σ_{j=r}^{n} 1/(j-1), not a guess",
+          "rigor": "states the irrevocable-choice rules; weights positions by 1/n and the benchmark event by (r-1)/(i-1)",
+          "communication": "explains the look-phase benchmark and the leap-phase record clearly",
+          "speed": "reaches a clean rational / cutoff without enumeration drift"
+        }
+      },
+      "followUps": [
+        "For this same order, which cutoff would have landed the best?",
+        "Over all orders of this length, what is the win rate at this cutoff?"
+      ]
+    },
+    {
+      "id": "tmpl-run-outcome#4132-c2",
+      "tier": "harder",
+      "fingerprint": "tmpl-run-outcome:order=4-1-3-2,r=2",
+      "template": {
+        "id": "tmpl-run-outcome",
+        "params": {
+          "order": [
+            4,
+            1,
+            3,
+            2
+          ],
+          "cutoff": 2
+        }
+      },
+      "prompt": "A 4-person search where a strong candidate comes early. The candidates' true ranks (1 = best) arrive in this order: [4, 1, 3, 2]. You use the look-then-leap rule with cutoff r=2 (reject the first 1, then take the first who beats the best so far; take the last if none do). Which arrival position do you hire, and is it the best?",
+      "source": "Standard secretary-problem trace question (relative-rank arrivals) — interview drill.",
+      "engineCheck": {
+        "module": "src/engine/optimalStopping.ts",
+        "calls": [
+          "runStrategy([4, 1, 3, 2], 2)"
+        ],
+        "answer": "position 2 (rank 1) — WIN, the best",
+        "verified": true
+      },
+      "hidden": {
+        "answer": "position 2 (rank 1) — WIN, the best",
+        "approaches": [
+          "Look phase = positions 1..1: benchmark = best (min rank) seen. Leap phase: accept the first rank below the benchmark.",
+          "Tracing [4, 1, 3, 2] with cutoff 2 gives position 2 (rank 1) — WIN, the best."
+        ],
+        "wrongTurns": [
+          "accepting during the look phase",
+          "comparing to the global best (unknown) instead of the look-phase benchmark",
+          "forgetting the forced last-candidate fallback"
+        ],
+        "hintLadder": [
+          "Split the sequence into the reject (look) phase and the accept (leap) phase.",
+          "The benchmark is the smallest rank in the look phase; in the leap phase take the first rank below it.",
+          "Walk left to right and stop at the first leap-phase candidate beating the benchmark."
+        ],
+        "rubric": {
+          "correctness": "matches the engine value exactly (exact rational or the stated integer cutoff)",
+          "approach": "uses the look-then-leap decomposition p_n(r)=(r-1)/n·Σ_{j=r}^{n} 1/(j-1), not a guess",
+          "rigor": "states the irrevocable-choice rules; weights positions by 1/n and the benchmark event by (r-1)/(i-1)",
+          "communication": "explains the look-phase benchmark and the leap-phase record clearly",
+          "speed": "reaches a clean rational / cutoff without enumeration drift"
+        }
+      },
+      "followUps": [
+        "For this same order, which cutoff would have landed the best?",
+        "Over all orders of this length, what is the win rate at this cutoff?"
+      ]
+    },
+    {
+      "id": "ff-the-37-percent-rule",
+      "tier": "brutal",
+      "fingerprint": "sem:limit-1-over-e",
+      "prompt": "In the classical secretary problem, as the number of candidates n grows without bound, what fraction of candidates should you skip, and what is your probability of hiring the single best? Explain the famous coincidence.",
+      "source": "Wikipedia \"Secretary problem\" / Stanford AMDM L8 — the 1/e law.",
+      "engineCheck": {
+        "module": "src/engine/optimalStopping.ts",
+        "calls": [
+          "optimalCutoff(100)  // r=38, r/n=0.38, p≈0.371 — the finite anchor heading to 1/e"
+        ],
+        "answer": "1/e ≈ 0.368",
+        "verified": true
+      },
+      "hidden": {
+        "answer": "1/e ≈ 0.368 (both the skip fraction r*/n and the success probability converge to 1/e)",
+        "approaches": [
+          "In the continuous limit, skipping fraction x gives success ≈ x·ln(1/x); maximizing −x·ln x sets the derivative −ln x − 1 = 0, so x = 1/e, and the max value is also 1/e.",
+          "Finite check: for n=100 the engine gives r*=38 (skip 37/100 = 37%) and p*≈37%, already near 1/e."
+        ],
+        "wrongTurns": [
+          "thinking the probability → 0 for large n",
+          "thinking you should skip half",
+          "treating the threshold 1/e and the success 1/e as unrelated"
+        ],
+        "hintLadder": [
+          "Write the large-n success as a function of the skip fraction x = r/n.",
+          "It is approximately x·ln(1/x). Maximize it.",
+          "The maximizer and the maximum value are both 1/e ≈ 0.368."
+        ],
+        "rubric": {
+          "correctness": "matches the engine value exactly (exact rational or the stated integer cutoff)",
+          "approach": "uses the look-then-leap decomposition p_n(r)=(r-1)/n·Σ_{j=r}^{n} 1/(j-1), not a guess",
+          "rigor": "states the irrevocable-choice rules; weights positions by 1/n and the benchmark event by (r-1)/(i-1)",
+          "communication": "explains the look-phase benchmark and the leap-phase record clearly",
+          "speed": "reaches a clean rational / cutoff without enumeration drift"
+        }
+      },
+      "followUps": [
+        "Why are the optimal threshold and the optimal success probability the SAME number?",
+        "Does the answer depend on whether n is 100 or 100 million?"
+      ]
+    },
+    {
+      "id": "ff-apartment-hunt",
+      "tier": "harder",
+      "fingerprint": "sem:apartment-n5",
+      "prompt": "You will view 5 apartments in a random order; each is gone the moment you leave, and you want the single best. Using the optimal rule, how many do you view-and-pass first, and what is your chance of landing the best?",
+      "source": "Wikipedia \"Secretary problem\" (house-hunting framing) — applied optimal stopping.",
+      "engineCheck": {
+        "module": "src/engine/optimalStopping.ts",
+        "calls": [
+          "optimalCutoff(5)  // r=3, p=13/30"
+        ],
+        "answer": "skip 2, P(best) = 13/30",
+        "verified": true
+      },
+      "hidden": {
+        "answer": "skip 2, P(best) = 13/30 ≈ 43%",
+        "approaches": [
+          "Optimal cutoff for n=5 is r=3, so view and pass the first 2, then take the first apartment better than both.",
+          "p_5(3) = (2/5)(1/2 + 1/3 + 1/4) = (2/5)(13/12) = 13/30."
+        ],
+        "wrongTurns": [
+          "skipping half (≈2.5)",
+          "taking the first one you like",
+          "using 1/5"
+        ],
+        "hintLadder": [
+          "Same secretary problem with n=5; find the optimal cutoff.",
+          "The optimal cutoff is r=3, so the look phase is the first 2.",
+          "Compute p_5(3) = (2/5)·(1/2+1/3+1/4)."
+        ],
+        "rubric": {
+          "correctness": "matches the engine value exactly (exact rational or the stated integer cutoff)",
+          "approach": "uses the look-then-leap decomposition p_n(r)=(r-1)/n·Σ_{j=r}^{n} 1/(j-1), not a guess",
+          "rigor": "states the irrevocable-choice rules; weights positions by 1/n and the benchmark event by (r-1)/(i-1)",
+          "communication": "explains the look-phase benchmark and the leap-phase record clearly",
+          "speed": "reaches a clean rational / cutoff without enumeration drift"
+        }
+      },
+      "followUps": [
+        "How does this compare to just taking the first apartment you like?",
+        "What if you would accept the second-best too?"
+      ]
+    },
+    {
+      "id": "ff-why-irrevocable",
+      "tier": "hard",
+      "fingerprint": "sem:why-1-over-n-floor",
+      "prompt": "In the best-choice problem, prove that ANY strategy that commits to a fixed arrival position (or picks one at random) — ignoring the candidates it has seen — has success probability exactly 1/n.",
+      "source": "Statistics LibreTexts §12.9 / Stanford AMDM L8.",
+      "engineCheck": {
+        "module": "src/engine/optimalStopping.ts",
+        "calls": [
+          "naiveSuccess(10)  // 1/10, representative of 1/n"
+        ],
+        "answer": "1/n",
+        "verified": true
+      },
+      "hidden": {
+        "answer": "1/n",
+        "approaches": [
+          "The single best is equally likely to occupy any of the n positions (uniform over a random permutation).",
+          "A rule that commits to one position wins iff the best lands there: probability 1/n. Randomizing the position averages 1/n with weight 1, still 1/n."
+        ],
+        "wrongTurns": [
+          "thinking later positions are more likely to hold the best",
+          "double-counting outcomes"
+        ],
+        "hintLadder": [
+          "Where is the best candidate, as a random variable?",
+          "Its position is uniform on {1,…,n}.",
+          "A fixed-position rule wins exactly when the best is at that position."
+        ],
+        "rubric": {
+          "correctness": "matches the engine value exactly (exact rational or the stated integer cutoff)",
+          "approach": "uses the look-then-leap decomposition p_n(r)=(r-1)/n·Σ_{j=r}^{n} 1/(j-1), not a guess",
+          "rigor": "states the irrevocable-choice rules; weights positions by 1/n and the benchmark event by (r-1)/(i-1)",
+          "communication": "explains the look-phase benchmark and the leap-phase record clearly",
+          "speed": "reaches a clean rational / cutoff without enumeration drift"
+        }
+      },
+      "followUps": [
+        "What is the only way to beat 1/n?",
+        "Why does using earlier candidates as a benchmark help?"
+      ]
+    },
+    {
+      "id": "ff-full-information-contrast",
+      "tier": "brutal",
+      "fingerprint": "sem:no-info-vs-full-info",
+      "prompt": "The classic 1/e result assumes you see only RELATIVE ranks. If instead each candidate had a known numeric score drawn from a known distribution (full information), would your best-possible win probability be higher or lower than 1/e — and intuitively why?",
+      "source": "Wikipedia \"Secretary problem\" (Gilbert–Mosteller full-information variant).",
+      "engineCheck": {
+        "module": "src/engine/optimalStopping.ts",
+        "calls": [
+          "optimalCutoff(20)  // no-info benchmark r=8, p≈0.384 for comparison"
+        ],
+        "answer": "Higher than 1/e",
+        "verified": true
+      },
+      "hidden": {
+        "answer": "Higher than 1/e — full information lets you use thresholds on actual values (Gilbert–Mosteller ≈ 0.58).",
+        "approaches": [
+          "Knowing the value distribution lets you accept early when a value is extreme, not just when it is a new record — strictly more information.",
+          "The rank-only optimum is ~1/e (engine: n=20 gives p≈38%); the full-information optimum is higher (~0.58)."
+        ],
+        "wrongTurns": [
+          "claiming more information can hurt",
+          "assuming the answer stays 1/e"
+        ],
+        "hintLadder": [
+          "Does extra information ever reduce your best-possible performance?",
+          "With known values you can use value thresholds, not just record-events.",
+          "So the optimum can only rise above the rank-only 1/e."
+        ],
+        "rubric": {
+          "correctness": "matches the engine value exactly (exact rational or the stated integer cutoff)",
+          "approach": "uses the look-then-leap decomposition p_n(r)=(r-1)/n·Σ_{j=r}^{n} 1/(j-1), not a guess",
+          "rigor": "states the irrevocable-choice rules; weights positions by 1/n and the benchmark event by (r-1)/(i-1)",
+          "communication": "explains the look-phase benchmark and the leap-phase record clearly",
+          "speed": "reaches a clean rational / cutoff without enumeration drift"
+        }
+      },
+      "followUps": [
+        "What changes if you only need a candidate in the top 10%?",
+        "What if recall (going back) is allowed?"
+      ]
+    }
+  ]
+}

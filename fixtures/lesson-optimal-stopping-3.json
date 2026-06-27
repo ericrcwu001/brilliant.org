@@ -1,0 +1,243 @@
+{
+  "lessonId": "lesson-optimal-stopping-3",
+  "courseId": "course-optimal-stopping",
+  "title": "The 37% Rule",
+  "patternOptions": ["H"],
+  "milestoneId": "optimal-stopping-37-percent",
+  "unlocks": "lesson-optimal-stopping-4",
+  "schemaVersion": 1,
+  "beats": [
+    {
+      "beatId": "l3-recall",
+      "required": true,
+      "prompt": "Quick recall. From the last lesson, match each pool size to the BEST chance any look-then-leap strategy can achieve.",
+      "interaction": {
+        "type": "retrievalGrid",
+        "pairs": [
+          { "left": "Best chance, 3 candidates", "right": "1/2" },
+          { "left": "Best chance, 4 candidates", "right": "11/24" },
+          { "left": "Best chance, 5 candidates", "right": "13/30" }
+        ]
+      },
+      "feedback": {
+        "correct": "Right — 1/2, 11/24, 13/30. These are the peak probabilities from Lesson 2, each found by scanning the success curve and picking the cutoff r* that maximises p_n(r).",
+        "hints": [
+          "Each answer is the probability p_n(r*) at the optimal skip cutoff for that n.",
+          "For 3 candidates r*=2 gives p=1/2. For 4, r*=2 gives 11/24. For 5, r*=3 gives 13/30.",
+          "Match: 3 → 1/2, 4 → 11/24, 5 → 13/30."
+        ]
+      }
+    },
+    {
+      "beatId": "l3-bet",
+      "required": true,
+      "prompt": "A recruitment firm screens 1,000,000 applicants in random order. Decisions are irrevocable. Running the very best look-then-leap strategy, what is the highest chance of hiring the single best applicant?",
+      "interaction": {
+        "type": "prediction",
+        "options": ["basically 0%", "about 37%", "about 50%"]
+      },
+      "feedback": {
+        "byOption": {
+          "basically 0%": {
+            "note": "Not so. Even with a million candidates the optimal strategy keeps a fighting chance — it does not collapse to zero. The answer is surprisingly large."
+          },
+          "about 37%": {
+            "note": "Exactly right. The best possible win probability for 1,000,000 candidates is approximately 1/e ≈ 36.8% — barely distinguishable from the result for just 10 candidates.",
+            "correct": true
+          },
+          "about 50%": {
+            "note": "Too high. The best the strategy can ever do approaches 1/e ≈ 37% as n grows — not 50%. More candidates makes the problem harder, not easier."
+          }
+        }
+      }
+    },
+    {
+      "beatId": "l3-primer",
+      "required": false,
+      "track": "A",
+      "prompt": "One constant to know before we go further.",
+      "interaction": {
+        "type": "primer",
+        "variant": "custom",
+        "title": "Meet 1/e",
+        "body": "e ≈ 2.718; 1/e ≈ 0.368 ≈ 37%. This one number is the limit both the skip fraction and the win chance settle on.",
+        "collapsible": true
+      },
+      "feedback": {
+        "correct": "Keep 1/e ≈ 0.368 in mind — it will show up in both the optimal cutoff fraction AND the best-case win probability.",
+        "hints": [
+          "e is Euler's number, approximately 2.718.",
+          "1/e ≈ 0.368, which rounds to 37%.",
+          "Read it, then tap Continue."
+        ]
+      }
+    },
+    {
+      "beatId": "l3-watch",
+      "required": true,
+      "prompt": "Watch both quantities settle. As n grows, the optimal skip fraction r*/n and the best-case win probability P(best) both drift toward the same limit. Can you see where they are heading?",
+      "interaction": {
+        "type": "stoppingBoard",
+        "display": "convergence",
+        "n": 10,
+        "nValues": [3, 5, 10, 20, 50],
+        "interactive": false,
+        "headline": "19"
+      },
+      "feedback": {
+        "correct": "Both r*/n and P(best) converge to 1/e ≈ 0.368. At n=50 the optimal cutoff is already r*=19 — 38% of 50, almost exactly 37%.",
+        "hints": [
+          "The skip fraction is r*/n; the win probability is p_n(r*). Both are plotted here.",
+          "As n grows, both curves drift toward a horizontal line.",
+          "That limit is 1/e ≈ 0.368 ≈ 37%."
+        ]
+      }
+    },
+    {
+      "beatId": "l3-explore",
+      "required": true,
+      "prompt": "Explore the win-probability curve for 10 candidates. Drag the cutoff slider and watch the curve rise then fall — the peak marks the optimal r*.",
+      "interaction": {
+        "type": "stoppingBoard",
+        "display": "cutoff",
+        "n": 10,
+        "interactive": true,
+        "headline": "3349/8400"
+      },
+      "feedback": {
+        "correct": "The peak sits at r*=4, giving p_10(4) = 3349/8400 ≈ 39.9%. That 40% is already dipping toward 37% — and it only gets closer as n grows.",
+        "hints": [
+          "Sliding too far right means you might already have passed the best candidate during the look phase.",
+          "Sliding too far left means you accept someone before you have learned the field.",
+          "The sweet spot for n=10 is r*=4, giving about 39.9% — on its way to 37%."
+        ]
+      }
+    },
+    {
+      "beatId": "l3-cutoff10",
+      "required": true,
+      "prompt": "Pin down the exact numbers for n = 10.",
+      "interaction": {
+        "type": "answerEntry",
+        "fields": [
+          {
+            "id": "r",
+            "label": "Optimal cutoff r* for 10 candidates",
+            "accept": ["4"],
+            "placeholder": "r"
+          },
+          {
+            "id": "pctn",
+            "label": "r*/n as a whole percent",
+            "accept": ["40"],
+            "placeholder": "%"
+          }
+        ]
+      },
+      "feedback": {
+        "correct": "r* = 4 for n = 10. That is 4/10 = 40% — already close to 37%, and the ratio only tightens as n grows.",
+        "hints": [
+          "The success curve for n=10 peaks at the smallest r giving the highest p_10(r).",
+          "That peak is at r=4; 4 out of 10 is 40%.",
+          "Answers: r* = 4, percent = 40."
+        ]
+      }
+    },
+    {
+      "beatId": "l3-model",
+      "required": true,
+      "comparison": true,
+      "introducesSymbol": "1/e",
+      "groundedBy": ["l3-watch"],
+      "interviewNote": "The exam punchline: both r*/n and P_n(r*) converge to 1/e as n → ∞. Prove it by maximising f(x) = x · ln(1/x) over x ∈ (0,1] — the continuous limit of the secretary-problem success formula. Setting f'(x) = ln(1/x) − 1 = 0 gives x = 1/e. The same constant governs both the optimal skip fraction and the optimal win chance, and it is entirely scale-free: whether n is 100 or 100 million, skip the first ~37% and your win chance is ~37%.",
+      "prompt": "One limit rules both quantities. Three lenses, one constant.",
+      "interaction": {
+        "type": "tripletReveal",
+        "value": "1/e",
+        "display": "cards",
+        "lenses": [
+          { "label": "Skip fraction", "body": "r*/n → 1/e." },
+          { "label": "Win chance", "body": "P(best) → 1/e." },
+          { "label": "Scale-free", "body": "Same ~37% for 100 or 100 million." }
+        ]
+      },
+      "feedback": {
+        "correct": "1/e governs both the optimal threshold and the optimal win probability. No matter how large the pool, the strategy is always the same: skip the first ~37%, then take the next record-setter.",
+        "hints": [
+          "The skip fraction r*/n and the win probability p_n(r*) are two different quantities.",
+          "Yet both converge to the same constant 1/e ≈ 0.368 as n grows.",
+          "Three lenses: skip fraction → 1/e; win chance → 1/e; scale-free."
+        ]
+      }
+    },
+    {
+      "beatId": "l3-bignote",
+      "required": true,
+      "prompt": "State it in one number. As n grows without bound, both the optimal skip fraction and the best-case win probability approach 1/e. What is 1/e as a whole percent?",
+      "interaction": {
+        "type": "answerEntry",
+        "fields": [
+          {
+            "id": "pct",
+            "label": "As n → infinity, both fractions approach 1/e ≈ what whole percent?",
+            "accept": ["37"],
+            "placeholder": "%"
+          }
+        ]
+      },
+      "feedback": {
+        "correct": "37%. For n=100 the optimal cutoff is r*=38 (38%, almost exactly 37%); for 1,000,000 it is r*≈368,000 (exactly 36.8%). The ratio locks in at 1/e ≈ 37%.",
+        "hints": [
+          "1/e ≈ 0.3679…",
+          "As a percentage: 0.3679 × 100 ≈ 36.79%, which rounds to 37%.",
+          "The answer is 37."
+        ]
+      }
+    },
+    {
+      "beatId": "l3-prove",
+      "required": true,
+      "prompt": "Prove you've got it.",
+      "interaction": {
+        "type": "masteryChallenge",
+        "scenario": "A firm screens \\(n = 100\\) candidates in random order, irrevocable decisions. Their analyst finds the optimal cutoff is \\(r^* = 38\\). (a) The look phase automatically rejects the first \\(r^* - 1\\) candidates — what percent of the 100 is that? (b) Approximately what percent chance does the look-then-leap rule give of landing the single best candidate from any large pool?",
+        "fields": [
+          {
+            "id": "skip",
+            "label": "Percent rejected first (r*-1 of 100)",
+            "accept": ["37"],
+            "placeholder": "%"
+          },
+          {
+            "id": "win",
+            "label": "Approx win percent for any large pool",
+            "accept": ["37"],
+            "placeholder": "%"
+          }
+        ]
+      },
+      "feedback": {
+        "correct": "\\[ r^* - 1 = 38 - 1 = 37 \\quad \\Rightarrow \\quad \\frac{37}{100} = 37\\% \\] The look phase rejects exactly 37 of the 100 candidates — 37%. The win probability also converges to \\(1/e \\approx 37\\%\\). Both faces of the 37% rule are present: skip 37% to earn a ~37% shot at the best.",
+        "hints": [
+          "The look phase rejects the first r*−1 candidates automatically. With r*=38, that is 37 candidates.",
+          "37 out of 100 is 37%. The win probability for large n also converges to 1/e ≈ 37%.",
+          "Both answers are 37."
+        ]
+      }
+    },
+    {
+      "beatId": "l3-recap",
+      "required": true,
+      "prompt": "Close the loop.",
+      "interaction": { "type": "recap" },
+      "feedback": {
+        "correct": "The 37% rule: skip the first 1/e ≈ 37% of candidates and your chance of landing the very best is also ~37% — regardless of pool size. Next: Why 37% Works — the calculus that pins 1/e as the exact limit.",
+        "hints": [
+          "Both r*/n and P(best) converge to 1/e ≈ 0.368 ≈ 37%.",
+          "This limit is scale-free: same fraction whether n is 100 or 100 million.",
+          "Next lesson: the derivation that proves why 1/e is the exact answer."
+        ]
+      }
+    }
+  ]
+}

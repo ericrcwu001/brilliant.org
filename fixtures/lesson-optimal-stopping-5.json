@@ -1,0 +1,241 @@
+{
+  "lessonId": "lesson-optimal-stopping-5",
+  "courseId": "course-optimal-stopping",
+  "title": "Stopping in the Wild",
+  "patternOptions": ["H"],
+  "milestoneId": "optimal-stopping-wild",
+  "unlocks": null,
+  "schemaVersion": 1,
+  "beats": [
+    {
+      "beatId": "l5-recall",
+      "required": true,
+      "prompt": "How good is the optimal look-then-leap rule? Match each scenario to its best success probability.",
+      "interaction": {
+        "type": "retrievalGrid",
+        "pairs": [
+          { "left": "Best chance, 7 candidates", "right": "29/70" },
+          { "left": "Best chance, 4 candidates", "right": "11/24" },
+          { "left": "Optimal skip fraction, huge n", "right": "1/e" }
+        ]
+      },
+      "feedback": {
+        "correct": "Right — optimalCutoff(7).p = 29/70, optimalCutoff(4).p = 11/24, and as n → ∞ both the skip fraction r*/n and the success probability converge to 1/e ≈ 37%.",
+        "hints": [
+          "For small n, use the look-then-leap formula p_n(r*); for huge n, both the threshold fraction and the win rate approach 1/e.",
+          "optimalCutoff(4) → r*=2, p=11/24; optimalCutoff(7) → r*=3, p=29/70.",
+          "Match: 7 candidates → 29/70, 4 candidates → 11/24, huge n → 1/e."
+        ]
+      }
+    },
+    {
+      "beatId": "l5-bet",
+      "required": true,
+      "prompt": "Apartment hunting: there are 5 great places available, each gone forever if you don't commit on the spot. Which strategy gives you the best shot at landing the single best apartment?",
+      "interaction": {
+        "type": "prediction",
+        "options": [
+          "take the first place you like",
+          "view a few, commit to none, then take the next place better than all of them",
+          "wait and take the very last place"
+        ]
+      },
+      "feedback": {
+        "byOption": {
+          "take the first place you like": {
+            "note": "That's 'take the first' — it wins only when the best happens to arrive first, which is 1 in 5 times. No better than a blind pick."
+          },
+          "view a few, commit to none, then take the next place better than all of them": {
+            "note": "Exactly — look-then-leap. Scout the first ~37% (here: 2 apartments) as a benchmark, then commit to the next one that beats them all. This wins ≈ 43% of the time versus 20% blind.",
+            "correct": true
+          },
+          "wait and take the very last place": {
+            "note": "That's 'take the last' — wins only when the best is in the final spot: 1 in 5. Same as a blind guess."
+          }
+        }
+      }
+    },
+    {
+      "beatId": "l5-primer",
+      "required": false,
+      "track": "A",
+      "prompt": "The same pattern, everywhere.",
+      "interaction": {
+        "type": "primer",
+        "variant": "custom",
+        "title": "One rule, many names",
+        "body": "The secretary problem, the marriage problem, the sultan's-dowry problem, house-hunting, even where to park: all the same optimal-stopping rule — spend the first ~37% as scouts, then take the first thing better than everything you scouted.",
+        "collapsible": true
+      },
+      "feedback": {
+        "correct": "Different names, same math: spend ≈ 37% scouting, then commit to the first record. The constraint structure — sequential, irrevocable, want the single best — is identical.",
+        "hints": [
+          "Secretary problem = hiring. Marriage problem = dating. House-hunting = apartments. All reduce to the same irrevocable-choice structure.",
+          "The only difference is how the items are labeled — the threshold formula is unchanged.",
+          "Read the card, then tap Continue."
+        ]
+      }
+    },
+    {
+      "beatId": "l5-apply",
+      "required": true,
+      "prompt": "Five apartments arrive in a random order. The optimal rule: scout the first 2, then take the next one that beats them both. Watch it play out — drag the cutoff to explore.",
+      "interaction": {
+        "type": "stoppingBoard",
+        "display": "sequence",
+        "n": 5,
+        "order": [3, 5, 1, 4, 2],
+        "cutoff": 3,
+        "interactive": true,
+        "headline": "win"
+      },
+      "feedback": {
+        "correct": "The look phase (positions 1–2, ranks 3 and 5) sets the benchmark at rank 3. Apartment #3 arrives at position 3 with rank 1 — it beats the benchmark immediately. That's the best apartment: a win.",
+        "hints": [
+          "With cutoff 3, the look phase is positions 1–2 (no commitment); the leap phase starts at position 3.",
+          "Ranks seen in the look phase: 3 and 5 — the benchmark is rank 3. Position 3 has rank 1, which beats it.",
+          "Rank 1 is the best apartment, so committing here is a win."
+        ]
+      }
+    },
+    {
+      "beatId": "l5-hiring",
+      "required": true,
+      "prompt": "Confirm the optimal probability for a small hiring run.",
+      "interaction": {
+        "type": "answerEntry",
+        "fields": [
+          {
+            "id": "p73",
+            "label": "7 candidates, reject first 2 (cutoff 3): P(best)",
+            "accept": ["29/70"],
+            "placeholder": "a/b"
+          }
+        ]
+      },
+      "feedback": {
+        "correct": "P(best) = (2/7) × (1/2 + 1/3 + 1/4 + 1/5 + 1/6) = 29/70 ≈ 41.4% — more than double the blind 1/7 ≈ 14.3%.",
+        "hints": [
+          "Formula: p_7(3) = (r−1)/n × Σ_{j=r}^{n} 1/(j−1) = (2/7) × (1/2 + 1/3 + 1/4 + 1/5 + 1/6).",
+          "Sum in parentheses: 30/60 + 20/60 + 15/60 + 12/60 + 10/60 = 87/60 = 29/20.",
+          "(2/7) × (29/20) = 58/140 = 29/70."
+        ]
+      }
+    },
+    {
+      "beatId": "l5-model",
+      "required": true,
+      "comparison": true,
+      "interviewNote": "Caveats for the interview: (1) if 'good enough' beats 'the single best', the threshold shrinks; (2) if you can RECALL passed candidates, you can do better; (3) with a KNOWN value distribution (full-information / Cayley's problem) the optimal win rate is higher (~58%). The 1/e result is specifically the no-information, must-get-the-best case.",
+      "prompt": "One threshold, three domains. Each is the secretary problem in disguise — reveal the shared 1/e rule.",
+      "interaction": {
+        "type": "tripletReveal",
+        "value": "1/e",
+        "display": "cards",
+        "lenses": [
+          { "label": "Hiring", "body": "Scout ~37% of applicants, then hire the next best-so-far." },
+          { "label": "Apartments", "body": "View ~37%, then take the next place that beats them all." },
+          { "label": "Dating", "body": "The 'marriage problem' — same threshold." }
+        ]
+      },
+      "feedback": {
+        "correct": "All three share the 1/e threshold. The names change; the math doesn't — unless you relax 'must get the single best', allow recall, or know the value distribution.",
+        "hints": [
+          "The shared structure: items arrive one at a time, decisions are irrevocable, you want the unique best.",
+          "Any problem matching that structure obeys the same 1/e threshold as n grows large.",
+          "The caveats (good-enough, recall, known distribution) each break one of those three constraints."
+        ]
+      }
+    },
+    {
+      "beatId": "l5-converge",
+      "required": true,
+      "prompt": "As n grows, the optimal cutoff fraction r*/n and the success probability both converge to 1/e. Watch the convergence across group sizes.",
+      "interaction": {
+        "type": "stoppingBoard",
+        "display": "convergence",
+        "n": 50,
+        "nValues": [4, 7, 20, 50],
+        "interactive": false,
+        "headline": "19"
+      },
+      "feedback": {
+        "correct": "At n = 50, the optimal cutoff is r* = 19 (reject the first 18). The fraction 19/50 = 0.38 is already close to 1/e ≈ 0.368, and both curves keep tightening toward that limit.",
+        "hints": [
+          "optimalCutoff(n) maximizes p_n(r); as n grows, r*/n → 1/e and p_n(r*) → 1/e.",
+          "n=4: r*=2 (50%); n=7: r*=3 (43%); n=20: r*=8 (40%); n=50: r*=19 (38%).",
+          "The headline is the optimal r* for the largest listed n — here n=50 gives r*=19."
+        ]
+      }
+    },
+    {
+      "beatId": "l5-interview",
+      "required": true,
+      "prompt": "Classic interview framing: 100 applicants seen one at a time in random order, decide on the spot, want only the single best. Optimal strategy: reject the first batch as scouts, then hire the next record. How many do you reject?",
+      "interaction": {
+        "type": "answerEntry",
+        "fields": [
+          {
+            "id": "reject",
+            "label": "Classic: 100 applicants, hire on the spot, want the best — how many to reject first?",
+            "accept": ["37"],
+            "placeholder": "count"
+          }
+        ]
+      },
+      "feedback": {
+        "correct": "Reject the first 37 (r* = 38, so the look phase covers positions 1–37), then hire the next applicant who beats every scout. Success probability ≈ 1/e ≈ 36.8%.",
+        "hints": [
+          "optimalCutoff(100).r = 38, so the look phase is r*−1 = 37 candidates observed but never hired.",
+          "Starting at position 38, you commit to the first candidate who beats the best of the 37 scouts.",
+          "The answer interviewers want: reject the first 37, then take the next record."
+        ]
+      }
+    },
+    {
+      "beatId": "l5-prove",
+      "required": true,
+      "prompt": "Prove you own it.",
+      "interaction": {
+        "type": "masteryChallenge",
+        "scenario": "You will view 5 apartments in random order, deciding on the spot whether to take each one — a passed apartment is gone forever. You use the optimal look-then-leap rule. \\(\\text{(a)}\\) How many apartments should you view-and-pass in the look phase \\((r^*{-}1)\\)? \\(\\text{(b)}\\) What is your probability of landing the single best apartment?",
+        "fields": [
+          {
+            "id": "skip",
+            "label": "How many to view-and-pass first (look phase, r*-1)",
+            "accept": ["2"],
+            "placeholder": "count"
+          },
+          {
+            "id": "prob",
+            "label": "Chance of landing the single best apartment",
+            "accept": ["13/30"],
+            "placeholder": "a/b"
+          }
+        ]
+      },
+      "feedback": {
+        "correct": "Optimal \\(r^* = 3\\): view and pass the first 2 apartments, then take the next one that beats both. Success probability \\(p_5(3) = \\frac{13}{30} \\approx 43\\%\\) — more than double the blind \\(\\frac{1}{5}\\).",
+        "hints": [
+          "optimalCutoff(5) gives r*=3, so the look phase is positions 1–2 (skip 2 apartments).",
+          "\\(p_5(3) = \\frac{2}{5}\\!\\left(\\frac{1}{2}+\\frac{1}{3}+\\frac{1}{4}\\right) = \\frac{2}{5}\\cdot\\frac{13}{12} = \\frac{13}{30}\\).",
+          "skip = r*−1 = 3−1 = 2; prob = 13/30."
+        ]
+      }
+    },
+    {
+      "beatId": "l5-recap",
+      "required": true,
+      "prompt": "Close the concept.",
+      "interaction": { "type": "recap" },
+      "feedback": {
+        "correct": "One rule spans hiring, apartments, dating, and parking: scout ~37%, then commit to the first record. Caveats — good-enough threshold, recall, known distributions — each change the optimum but not the core insight. You've completed Optimal Stopping; the capstone interview beat is next.",
+        "hints": [
+          "The 1/e threshold applies when: items arrive sequentially, decisions are irrevocable, and you want the single best.",
+          "Relax any of those three constraints and the math changes — but the look-then-leap intuition survives.",
+          "You've covered the full arc: blind 1/n → look-then-leap → 1/e → real-world applications."
+        ]
+      }
+    }
+  ]
+}
