@@ -2,6 +2,16 @@
 
 <!-- Orientation doc for a fresh context. Session-by-session narration lives in git history; this file keeps only what's needed going forward. -->
 
+## Interview Caption Audio-Sync + Barge-in Trim (2026-06-26, NOT COMMITTED)
+
+Fixed the interviewer live caption racing ahead of the spoken voice, and made barge-in drop the not-yet-spoken text. Root cause: the word-by-word reveal in `src/interview/useRealtimeInterview.ts` was paced by a fixed 170-WPM `setInterval` fully decoupled from audio (OpenAI Realtime exposes no per-word timestamps; transcript deltas arrive far faster than the WebRTC audio plays, so a constant WPM always drifts ahead).
+
+- **Audio-gated reveal** — reveal now advances only while the interviewer's live audio is voicing sound, measured by a real-time `AnalyserNode` RMS envelope (same technique as `Orb.tsx`). New pure, exported helper `advanceReveal(state, {dtMs, rawLevel, hasAnalyser, totalWords})` + `RevealState`/`initialRevealState` hold the gate logic: smooth envelope (attack 0.6 / decay 0.2), `voiced = level > VOICE_THRESHOLD(0.015)`, `gateOpen = !hasAnalyser || voiced || !sawVoice`, accumulate `dt*170wpm` while open, clamp to words received. `tickReveal` now samples every `REVEAL_SAMPLE_MS=50` and feeds analyser RMS in. New refs `revealStateRef/lastTickRef/audioCtxRef/analyserRef`; `ensureAnalyser()` (lazy AudioContext, guarded for `typeof AudioContext==='undefined'`, resume-if-suspended) + `readVoiceLevel()`; `cleanup()` disconnects/closes the ctx. Event handlers unchanged (same start/finalize call sites).
+- **Fallback preserved** — when no real energy is ever seen this turn (silent `/dev` stub via `stubRealtimeTransport`, or node tests w/o AudioContext), the gate stays open → old time-based 170-WPM pacing, so the stub harness + existing tests are unaffected.
+- **Barge-in (keep heard, drop unsaid — confirmed w/ user)** — unchanged `finalizeRevealPartial()` keeps only `revealedText(buffer, revealedCount)`; now that `revealedCount` tracks heard words it keeps the spoken part and drops the unsaid remainder. After it runs `resetReveal()` (empties buffer), the following `output_audio_buffer.stopped`→`finalizeReveal()` is a no-op (the `if (text)` guard), so no unsaid text is dumped.
+- **Tunable**: `VOICE_THRESHOLD` / `REVEAL_WORDS_PER_MIN` / attack / decay are empirical for the `marin` voice — may need light tuning on a real device.
+- **Tests/gates**: new `src/interview/reveal.test.ts` (5 pure-helper tests: time-based fallback, voiced advance, startup-before-voice, plateau-during-silence, clamp-to-received). `tsc -b` ✓, `eslint` (both files) ✓, `vitest run src/interview` ✓ (34 tests / 5 files). Implemented via a Sonnet coding subagent per the model-routing rule; orchestrator independently verified all 5 edits landed. NOT committed.
+
 ## Cursor Cloud env setup (2026-06-27, COMMITTED on branch)
 
 Set up the Cloud Agent dev environment for **manual browser testing**. Update script: `npm ci` (root). Documented two run paths in `AGENTS.md` → `## Cursor Cloud specific instructions`:

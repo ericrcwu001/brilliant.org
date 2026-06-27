@@ -70,12 +70,23 @@ export function buildTranscript(turns: Turn[]): Turn[] {
   return turns.filter((t) => t.final)
 }
 
-// Word-by-word interviewer caption reveal. OpenAI doesn't expose per-word audio
-// timestamps, so we pace the reveal at a natural speaking rate and flush the
-// remainder when audio playback ends — keeping captions in step with speech
-// instead of dumping the whole turn ahead of the voice.
+// Word-by-word interviewer caption reveal. OpenAI exposes no per-word audio
+// timestamps, and transcript deltas arrive far faster than the WebRTC audio
+// plays — so a fixed words-per-minute timer always races ahead of the voice.
+// Instead we pace the reveal by the interviewer's *actual* live audio: advance
+// only while the stream is voicing sound (real-time RMS), holding during pauses.
+// Because pauses are excluded, the caption self-matches the spoken cadence. When
+// no real audio energy is ever observed (the silent /dev stub, or a Node test
+// env without AudioContext) the gate stays open and the reveal falls back to a
+// plain time-based pace.
 const REVEAL_WORDS_PER_MIN = 170
-const REVEAL_TICK_MS = Math.round(60_000 / REVEAL_WORDS_PER_MIN)
+const REVEAL_SAMPLE_MS = 50
+// Smoothed-RMS voice gate (empirical for the OpenAI "marin" voice; may need
+// light tuning). Decay gives a short hangover that bridges inter-word gaps
+// without bridging real pauses.
+const VOICE_THRESHOLD = 0.015
+const VOICE_ATTACK = 0.6
+const VOICE_DECAY = 0.2
 
 function countWords(text: string): number {
   const m = text.match(/\S+/g)
@@ -90,6 +101,53 @@ function revealedText(text: string, wordCount: number): string {
   if (wordCount >= matches.length) return text
   const last = matches[wordCount - 1]
   return text.slice(0, (last.index ?? 0) + last[0].length)
+}
+
+// Reveal-pacing state, kept tiny and pure so it can be unit-tested without a
+// real AudioContext.
+export interface RevealState {
+  wordProgress: number  // fractional words unlocked so far
+  voiceLevel:   number  // smoothed RMS envelope
+  sawVoice:     boolean // any above-threshold sample seen this turn
+}
+
+export function initialRevealState(): RevealState {
+  return { wordProgress: 0, voiceLevel: 0, sawVoice: false }
+}
+
+export interface AdvanceRevealOpts {
+  dtMs:        number
+  rawLevel:    number   // instantaneous RMS (0 when no analyser)
+  hasAnalyser: boolean  // false → pure time-based fallback
+  totalWords:  number
+}
+
+// Pure reveal step: smooth the envelope, decide whether the voice gate is open,
+// accumulate word progress while open, and clamp so the caption never runs ahead
+// of the words actually received. Returns the next state and the integer word
+// count to display.
+export function advanceReveal(
+  state: RevealState,
+  opts: AdvanceRevealOpts,
+): { state: RevealState; revealCount: number } {
+  const k = opts.rawLevel > state.voiceLevel ? VOICE_ATTACK : VOICE_DECAY
+  const voiceLevel = state.voiceLevel + (opts.rawLevel - state.voiceLevel) * k
+
+  const voiced   = opts.hasAnalyser && voiceLevel > VOICE_THRESHOLD
+  const sawVoice = state.sawVoice || voiced
+  // Open the gate while voicing sound. Before the first voiced sample (or with
+  // no analyser at all) fall back to time-based pacing so the caption advances
+  // instead of stalling.
+  const gateOpen = !opts.hasAnalyser || voiced || !sawVoice
+
+  let wordProgress = state.wordProgress
+  if (gateOpen) wordProgress += (opts.dtMs / 60_000) * REVEAL_WORDS_PER_MIN
+  if (wordProgress > opts.totalWords) wordProgress = opts.totalWords
+
+  return {
+    state: { wordProgress, voiceLevel, sawVoice },
+    revealCount: Math.floor(wordProgress),
+  }
 }
 
 // ── Hook ─────────────────────────────────────────────────────────────────────
@@ -128,11 +186,16 @@ export function useRealtimeInterview(
   // so we can tell the model how much the user actually heard on interruption.
   const assistantItemIdRef   = useRef<string | null>(null)
   const audioStartedAtRef    = useRef<number>(0)
-  // Paced word-by-word reveal of the interviewer caption.
+  // Paced word-by-word reveal of the interviewer caption, gated to live audio.
   const revealBufferRef  = useRef<string>('')    // full interviewer text received so far
   const revealedCountRef = useRef<number>(0)      // number of words shown
   const revealDoneRef    = useRef<boolean>(false) // transcript fully received
   const revealTimerRef   = useRef<ReturnType<typeof setInterval> | null>(null)
+  const revealStateRef   = useRef<RevealState>(initialRevealState())
+  const lastTickRef      = useRef<number>(0)
+  // Live-audio analyser, used only to pace the caption to the spoken cadence.
+  const audioCtxRef      = useRef<AudioContext | null>(null)
+  const analyserRef      = useRef<AnalyserNode | null>(null)
 
   function setStatusSafe(s: InterviewStatus) {
     statusRef.current = s
@@ -199,10 +262,44 @@ export function useRealtimeInterview(
     setTranscript([...next])
   }
 
+  function ensureAnalyser() {
+    if (analyserRef.current) return
+    if (typeof AudioContext === 'undefined') return
+    const stream = remoteStreamRef.current
+    if (!stream) return
+    try {
+      const ctx = new AudioContext()
+      const analyser = ctx.createAnalyser()
+      analyser.fftSize = 256
+      ctx.createMediaStreamSource(stream).connect(analyser)
+      if (ctx.state === 'suspended') void ctx.resume()
+      audioCtxRef.current = ctx
+      analyserRef.current = analyser
+    } catch {
+      // No analyser → the reveal falls back to time-based pacing.
+    }
+  }
+
+  function readVoiceLevel(): number {
+    const analyser = analyserRef.current
+    if (!analyser) return 0
+    if (audioCtxRef.current?.state === 'suspended') void audioCtxRef.current.resume()
+    const buf = new Uint8Array(analyser.frequencyBinCount)
+    analyser.getByteTimeDomainData(buf)
+    let sum = 0
+    for (let i = 0; i < buf.length; i++) {
+      const v = (buf[i] - 128) / 128
+      sum += v * v
+    }
+    return Math.sqrt(sum / buf.length)
+  }
+
   function resetReveal() {
     revealBufferRef.current  = ''
     revealedCountRef.current = 0
     revealDoneRef.current    = false
+    revealStateRef.current   = initialRevealState()
+    lastTickRef.current      = 0
   }
 
   function stopReveal() {
@@ -214,15 +311,28 @@ export function useRealtimeInterview(
 
   function startReveal() {
     if (revealTimerRef.current) return
-    revealTimerRef.current = setInterval(tickReveal, REVEAL_TICK_MS)
+    ensureAnalyser()
+    lastTickRef.current = 0
+    revealTimerRef.current = setInterval(tickReveal, REVEAL_SAMPLE_MS)
   }
 
   function tickReveal() {
-    const buffer = revealBufferRef.current
-    const total  = countWords(buffer)
-    if (revealedCountRef.current < total) {
-      revealedCountRef.current += 1
-      renderInterviewerPending(revealedText(buffer, revealedCountRef.current))
+    const now  = performance.now()
+    const dtMs = lastTickRef.current ? now - lastTickRef.current : REVEAL_SAMPLE_MS
+    lastTickRef.current = now
+
+    const total = countWords(revealBufferRef.current)
+    const { state, revealCount } = advanceReveal(revealStateRef.current, {
+      dtMs,
+      rawLevel:    readVoiceLevel(),
+      hasAnalyser: analyserRef.current != null,
+      totalWords:  total,
+    })
+    revealStateRef.current = state
+
+    if (revealCount > revealedCountRef.current) {
+      revealedCountRef.current = revealCount
+      renderInterviewerPending(revealedText(revealBufferRef.current, revealCount))
     }
     // Caught up to a completed turn → finalize and stop pacing.
     if (revealDoneRef.current && revealedCountRef.current >= total) {
@@ -572,6 +682,12 @@ export function useRealtimeInterview(
 
   function cleanup() {
     stopReveal()
+    analyserRef.current?.disconnect()
+    analyserRef.current = null
+    if (audioCtxRef.current) {
+      void audioCtxRef.current.close()
+      audioCtxRef.current = null
+    }
     transportCloseRef.current?.()
     transportCloseRef.current = null
     sendRawRef.current = null
