@@ -40,6 +40,9 @@ import { ExpectationScaleBeat } from './ExpectationScaleBeat'
 import { ConditionalTreeBeat } from './ConditionalTreeBeat'
 import { CouponCollectorSimBeat } from './CouponCollectorSimBeat'
 import { ChainBoardBeat } from './ChainBoardBeat'
+import { PayoffMatrixBeat } from './PayoffMatrixBeat'
+import { GameTreeBeat } from './GameTreeBeat'
+import { NimBoardBeat } from './NimBoardBeat'
 
 function ContinueStub({ beat, isLast, onAdvance }: BeatProps) {
   return (
@@ -137,6 +140,13 @@ export function BeatView(props: BeatProps) {
       return <ConditionalTreeBeat {...props} />
     case 'couponCollectorSim':
       return <CouponCollectorSimBeat {...props} />
+    // Game Theory concept (build wave — real renderers replace Wave-0 stubs).
+    case 'payoffMatrix':
+      return <PayoffMatrixBeat {...props} />
+    case 'gameTree':
+      return <GameTreeBeat {...props} />
+    case 'nimBoard':
+      return <NimBoardBeat {...props} />
     default:
       return <ContinueStub {...props} />
   }
