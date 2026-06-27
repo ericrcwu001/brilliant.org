@@ -1,7 +1,18 @@
 // Per-lesson mastery signal (L1 §9). Pure + dependency-free so it is unit-tested
 // in the node Vitest env; the LessonPlayer wires it to the persisted hint
-// high-water mark. `mastered` is true iff the required graded beats were
-// first-try-correct with no hint ever shown (the high-water mark stayed 0).
+// high-water mark.
+//
+// spec-11 / D7 — HINTS ARE FORGIVEN. `computeMastered` no longer means "zero
+// hints ever". It now means GOLD CANDIDACY: the required graded beats were
+// completed during the lesson (hint level no longer matters). Gold is NOT
+// granted here — passing this at completion only marks the lesson a gold
+// *candidate*; gold is minted later by a delayed SR re-retrieval / transfer
+// pass (functions/src/review.ts qualifiesForGoldMint, spec-11 §3.3).
+//
+// R2 — this is the FROZEN/medallion side. The recommender keeps a SEPARATE
+// zero-hint struggle predicate (src/progress/recommend.ts masteredFromLive) to
+// decide what to re-surface; the two intents (earned-gold vs needs-review) are
+// deliberately different code and must never be merged.
 // Non-blocking: it never gates unlock — it only sets derived.mastered + the UI.
 
 import type { Beat } from '../content/schema'
@@ -50,12 +61,18 @@ export function gradedRequiredBeatIds(beats: Beat[]): string[] {
   return beats.filter((b) => b.required && isGradedBeat(b)).map((b) => b.beatId)
 }
 
+// Gold candidacy at completion: the required graded beats were completed.
+// Hints used WHILE LEARNING are forgiven (D7) — gold is earned later via a
+// delayed SR check (spec-11 §3.3), not by a zero-hint first sit. Returns
+// false only when there are no graded beats to retrieve. The
+// `maxHintLevelByBeat` param is kept (prefixed `_`) so the LessonPlayer call
+// site + tests need no churn; the predicate no longer reads it.
 export function computeMastered(
   beats: Beat[],
-  maxHintLevelByBeat: Record<string, number>,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  _maxHintLevelByBeat: Record<string, number>,
 ): boolean {
-  const ids = gradedRequiredBeatIds(beats)
-  return ids.length > 0 && ids.every((id) => (maxHintLevelByBeat[id] ?? 0) === 0)
+  return gradedRequiredBeatIds(beats).length > 0
 }
 
 // Update the hint high-water mark for a beat, keeping the max ever reached.

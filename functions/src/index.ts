@@ -133,7 +133,11 @@ function buildDerived(input: DerivedInput | undefined): Record<string, unknown> 
     theoreticalValue,
     simRuns,
     predictionDeltaInitial,
-    mastered: input?.mastered === true,
+    // spec-11 / D7: gold is no longer earned at completion. `mastered` is minted
+    // later by submitReview on a delayed qualifying SR pass (§3.3); at completion
+    // it is always false (the lesson is only a gold *candidate*). The client-sent
+    // `data.derived.mastered` (computeMastered, hints forgiven) is ignored here.
+    mastered: false,
   }
 }
 
@@ -187,24 +191,22 @@ export const completeLesson = onCall(
         // advances focus to the next lesson (recommendedAction stops returning
         // 'review'). Cleared even if this pass struggled, per product intent.
         //
-        // The badge (derived.mastered → gold tier) may only IMPROVE on a review:
-        // a clean pass upgrades silver→gold, but a struggling pass NEVER demotes
-        // an already-earned gold. We therefore only ever write mastered: true.
-        const wasMastered =
-          (progressSnap.get('derived') as { mastered?: boolean } | undefined)
-            ?.mastered === true
-        const nowMastered = data.derived?.mastered === true
-        const improveMastered = nowMastered && !wasMastered
+        // spec-11 / D7: a lesson replay NO LONGER upgrades silver→gold. The
+        // honest gold path is now a delayed SR pass via submitReview (§3.3) —
+        // replaying the lesson the same day must not mint gold. We only clear
+        // the per-lesson review flag here; gold (`derived.mastered`) is never
+        // written on this path.
         const clearReview = progressSnap.get('needsReview') === true
-        if (improveMastered || clearReview) {
-          const patch: Record<string, unknown> = {
-            updatedAt: FieldValue.serverTimestamp(),
-            schemaVersion: PROGRESS_SCHEMA_VERSION,
-          }
-          if (clearReview) patch.needsReview = false
-          // merge:true deep-merges the derived map, preserving the other fields.
-          if (improveMastered) patch.derived = { mastered: true }
-          tx.set(progressRef, patch, { merge: true })
+        if (clearReview) {
+          tx.set(
+            progressRef,
+            {
+              needsReview: false,
+              updatedAt: FieldValue.serverTimestamp(),
+              schemaVersion: PROGRESS_SCHEMA_VERSION,
+            },
+            { merge: true },
+          )
         }
         // spec-01 §5d: per-card existence guard is also the existing-user
         // backfill. A replay creates exactly the ABSENT cards (e.g. a user who

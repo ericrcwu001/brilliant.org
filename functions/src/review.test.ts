@@ -384,6 +384,155 @@ describe('per-interval outcome analytics event', () => {
   })
 })
 
+// ── spec-11: gold mint on a delayed qualifying pass (+ suspend + calibration) ──
+
+// A card whose createdAt exposes .toDate() (the gold-mint delay check needs it;
+// the mock Timestamp.fromDate does not). Seeds lessons/lesson-x too.
+const cardTs = (iso: string) => ({ toDate: () => new Date(iso) })
+
+function seedForGold(
+  cardOverrides: Record<string, unknown> = {},
+  progress?: Record<string, unknown>,
+) {
+  docStore.set('lessons/lesson-x', transferLesson as unknown as Record<string, unknown>)
+  docStore.set('users/u1/reviews/lesson-x__g1', {
+    lessonId: 'lesson-x',
+    beatId: 'g1', // answerEntry, accept ['1']
+    conceptId: 'course-x',
+    schemaId: 'symmetry',
+    track: 'A',
+    intervalDays: 10,
+    easeFactor: 2.5,
+    reps: 4,
+    lapses: 0,
+    lastResult: 'pass',
+    lastConfidence: null,
+    isTransfer: false,
+    suspended: false,
+    createdAt: cardTs('2026-06-26T12:00:00.000Z'), // an EARLIER UTC day than NOW
+    ...cardOverrides,
+  })
+  if (progress) docStore.set('users/u1/progress/lesson-x', progress)
+}
+
+const progressGold = () =>
+  docStore.get('users/u1/progress/lesson-x') as Record<string, unknown> | undefined
+
+describe('spec-11 gold mint (Track A — delayed same-checkpoint pass)', () => {
+  it('a DELAYED correct pass mints derived.mastered:true (upgrade-only)', async () => {
+    seedForGold()
+    const tx = fakeTx()
+    await submitReviewTx(tx, 'u1', 'lesson-x__g1', { a: '1' }, null, NOW)
+    expect((progressGold()?.derived as { mastered?: boolean })?.mastered).toBe(true)
+  })
+
+  it('a SAME-day pass does NOT mint (not delayed)', async () => {
+    seedForGold({ createdAt: cardTs('2026-06-27T08:00:00.000Z') })
+    const tx = fakeTx()
+    await submitReviewTx(tx, 'u1', 'lesson-x__g1', { a: '1' }, null, NOW)
+    expect(progressGold()?.derived).toBeUndefined()
+  })
+
+  it('a wrong (fail) answer never mints — even submitted as if it were a pass (R13)', async () => {
+    seedForGold()
+    const tx = fakeTx()
+    // The client cannot fake gold: a wrong answer is graded fail server-side.
+    const out = await submitReviewTx(tx, 'u1', 'lesson-x__g1', { a: '9' }, null, NOW)
+    expect(out.graded).toBe('fail')
+    expect(progressGold()?.derived).toBeUndefined()
+  })
+
+  it('is idempotent: an already-gold lesson is never re-written or demoted', async () => {
+    seedForGold({}, { derived: { mastered: true } })
+    const tx = fakeTx()
+    writes.length = 0
+    await submitReviewTx(tx, 'u1', 'lesson-x__g1', { a: '1' }, null, NOW)
+    // No write to the progress doc on the idempotent pass (only the card SM-2 write).
+    expect(writes.some((w) => w.path === 'users/u1/progress/lesson-x')).toBe(false)
+    expect((progressGold()?.derived as { mastered?: boolean })?.mastered).toBe(true)
+  })
+
+  it('a Track-A checkpoint-card mint leaves suspended FALSE (only transfer cards suspend)', async () => {
+    seedForGold()
+    const tx = fakeTx()
+    await submitReviewTx(tx, 'u1', 'lesson-x__g1', { a: '1' }, null, NOW)
+    expect(
+      (docStore.get('users/u1/reviews/lesson-x__g1') as Record<string, unknown>).suspended,
+    ).toBe(false)
+  })
+})
+
+describe('spec-11 gold mint (Track B — transfer gate)', () => {
+  it('a delayed pass on a CHECKPOINT (non-transfer) Track-B card does NOT mint', async () => {
+    seedForGold({ track: 'B', isTransfer: false })
+    const tx = fakeTx()
+    await submitReviewTx(tx, 'u1', 'lesson-x__g1', { a: '1' }, null, NOW)
+    expect(progressGold()?.derived).toBeUndefined()
+  })
+
+  it('a delayed pass on a TRANSFER Track-B card mints gold AND suspends the card', async () => {
+    // Seed the xfer card (heldOut → accept ['3']) as a Track-B transfer card.
+    docStore.set('lessons/lesson-x', transferLesson as unknown as Record<string, unknown>)
+    docStore.set('users/u1/reviews/lesson-x__xfer', {
+      lessonId: 'lesson-x',
+      beatId: 'xfer', // answerEntry, accept ['3']
+      conceptId: 'course-x',
+      schemaId: 'symmetry',
+      track: 'B',
+      intervalDays: 10,
+      easeFactor: 2.5,
+      reps: 1,
+      lapses: 0,
+      lastResult: 'pass',
+      lastConfidence: null,
+      isTransfer: true,
+      suspended: false,
+      createdAt: cardTs('2026-06-26T12:00:00.000Z'),
+    })
+    const tx = fakeTx()
+    await submitReviewTx(tx, 'u1', 'lesson-x__xfer', { c: '3' }, null, NOW)
+    expect((progressGold()?.derived as { mastered?: boolean })?.mastered).toBe(true)
+    expect(
+      (docStore.get('users/u1/reviews/lesson-x__xfer') as Record<string, unknown>).suspended,
+    ).toBe(true)
+  })
+})
+
+describe('spec-11/12 review-rep calibration fold', () => {
+  it('a confidence-carrying review folds into calibration/summary (pooled + byFormat.typein)', async () => {
+    seedForGold()
+    const tx = fakeTx()
+    await submitReviewTx(tx, 'u1', 'lesson-x__g1', { a: '1' }, 0.9, NOW)
+    const summary = docStore.get('users/u1/calibration/summary') as Record<string, unknown>
+    expect(summary).toBeDefined()
+    expect(summary.n).toBe(1)
+    // brier = (0.9 - 1)^2 = 0.01 (a correct pass at confidence 0.9)
+    expect(summary.brier).toBeCloseTo(0.01, 6)
+    const byFormat = summary.byFormat as Record<string, { n: number }>
+    expect(byFormat.typein.n).toBe(1)
+  })
+
+  it('a review WITHOUT confidence does not touch calibration/summary', async () => {
+    seedForGold()
+    const tx = fakeTx()
+    await submitReviewTx(tx, 'u1', 'lesson-x__g1', { a: '1' }, null, NOW)
+    expect(docStore.get('users/u1/calibration/summary')).toBeUndefined()
+  })
+
+  it('a second review accumulates into the running trend (count-weighted)', async () => {
+    seedForGold()
+    let tx = fakeTx()
+    await submitReviewTx(tx, 'u1', 'lesson-x__g1', { a: '1' }, 0.9, NOW) // correct
+    seedForGold() // reset the card; summary persists in docStore
+    tx = fakeTx()
+    await submitReviewTx(tx, 'u1', 'lesson-x__g1', { a: '9' }, 0.9, NOW) // wrong
+    const summary = docStore.get('users/u1/calibration/summary') as Record<string, unknown>
+    expect(summary.n).toBe(2)
+    // brierSum = 0.01 (correct@0.9) + 0.81 (wrong@0.9) = 0.82 over n=2 ⇒ 0.41
+    expect(summary.brier).toBeCloseTo(0.41, 6)
+  })
+})
+
 describe('backfill / per-card existence guard (§5d, #4)', () => {
   it('replay when no cards exist creates them all (existing-user backfill)', async () => {
     await createCards() // first pass

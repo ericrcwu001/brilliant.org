@@ -7,11 +7,12 @@
 import type { MilestoneMeta } from './milestones'
 import { MilestoneIcon } from './MilestoneIcon'
 
-// Hover tooltip + screen-reader copy per tier (gallery medallions). Gold = aced
-// (derived.mastered); silver = earned but not aced; locked = not yet earned.
+// Hover tooltip + screen-reader copy per tier (gallery medallions). spec-11 / D7:
+// gold now means a DELAYED retrieval pass (honest mastery), not a zero-hint first
+// sit; silver is instant on completion and unlocks gold after a spaced review.
 const TIER_DESCRIPTION: Record<'gold' | 'silver' | 'locked', string> = {
-  gold: 'Gold: perfect mastery',
-  silver: 'Silver: completed with hints',
+  gold: 'Gold: mastered — passed a delayed retrieval',
+  silver: 'Silver: completed; gold unlocks after a spaced review',
   locked: 'Locked: not yet earned',
 }
 

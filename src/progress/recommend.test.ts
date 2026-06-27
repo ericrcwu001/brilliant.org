@@ -35,6 +35,14 @@ describe('masteredFromLive', () => {
   it('is false when there are no graded-required beats', () => {
     expect(masteredFromLive([gradedBeat('opt', false)], {})).toBe(false)
   })
+
+  // spec-11 R2: masteredFromLive is the RECOMMENDER's struggle signal and must
+  // STAY the zero-hint predicate (decoupled from the new gold semantics). The
+  // full two-source assertion (this vs the medallion's derived.mastered) lives in
+  // src/habit/milestones.test.ts, which already mocks firebase.
+  it('R2: STILL false on a hinted-but-completed lesson (struggle drives re-surfacing)', () => {
+    expect(masteredFromLive([gradedBeat('g1'), gradedBeat('g2')], { g1: 2 })).toBe(false)
+  })
 })
 
 describe('selectWeakNode', () => {

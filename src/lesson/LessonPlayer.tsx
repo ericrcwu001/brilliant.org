@@ -85,10 +85,20 @@ export function LessonPlayer({
   // the active track. Track-exclusive beats are authored `required: false`, so
   // the Cloud Function's required-beat check (which sees the full fixture)
   // always passes regardless of which track a learner took.
+  //
+  // spec-11 (README §5, §8 R6, gate Issue #10): held-out transfer beats
+  // (`beat.heldOut === true`, authored by spec-24) are SR-queue-only — they are
+  // the Track-B gold gate and must NEVER render inline in the normal lesson flow
+  // (else a learner sees the transfer problem the same day and the gold gate is
+  // defeated). Dropping them here also keeps them out of `completedBeats`,
+  // `isLast`, and the `computeMastered(visibleBeats, …)` gold-candidate signal
+  // with no other change. Optional field ⇒ a safe no-op before spec-24 lands.
   const visibleBeats = useMemo(
     () =>
       lesson.beats.filter(
-        (b) => !b.track || b.track === 'both' || b.track === track,
+        (b) =>
+          !b.heldOut &&
+          (!b.track || b.track === 'both' || b.track === track),
       ),
     [lesson, track],
   )
@@ -173,10 +183,12 @@ export function LessonPlayer({
     beat.interaction.type === 'prediction' && !!beat.interaction.gate
   const stripped = labelStripped || isGate
 
-  // Per-lesson mastery signal (L1 §9): the required graded beats first-try-
-  // correct with no hint ever shown (the hint high-water mark stays 0).
-  // Non-blocking — surfaced on the done note + persisted via derived.mastered;
-  // never gates unlock. A future L4 mixed review re-surfaces beats when false.
+  // Per-lesson GOLD-CANDIDATE signal (spec-11 / D7): the required graded beats
+  // were completed — hints are now FORGIVEN (computeMastered no longer reads the
+  // hint high-water mark). It is sent in `data.derived.mastered` but the server
+  // IGNORES it for gold (completeLesson writes mastered:false unconditionally;
+  // §3.2). Gold is minted later by a delayed SR pass (submitReview). Still
+  // surfaced on the done note + non-blocking (never gates unlock).
   const mastered = computeMastered(visibleBeats, maxHintLevelByBeat)
 
   // Stable beat-navigation callbacks for withViewTransition. These are defined

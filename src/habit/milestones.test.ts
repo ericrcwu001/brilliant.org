@@ -19,6 +19,10 @@ import {
   conceptBadges,
   lessonBadge,
 } from './milestones'
+// spec-11 R2: the two decoupled predicates asserted side-by-side below.
+import { computeMastered } from '../lesson/mastery'
+import { masteredFromLive } from '../progress/recommend'
+import type { Beat } from '../content/schema'
 
 const flagship = CourseSchema.parse(flagshipFixture)
 
@@ -203,5 +207,53 @@ describe('lessonBadge', () => {
 
   it('returns undefined for an unknown lesson id', () => {
     expect(lessonBadge(bayes, 'does-not-exist')).toBeUndefined()
+  })
+})
+
+// spec-11 R2 (CRITICAL — two sources of truth). After this spec "earned gold"
+// (frozen derived.mastered → medallion tier) and "needs review" (live hint
+// struggle → recommender) are GENUINELY DIFFERENT questions with DIFFERENT code.
+// This asserts BOTH ends for the SAME hinted-but-completed lesson so the two
+// predicates can never be silently merged.
+describe('spec-11 R2 two-source reconciliation (medallion vs recommender)', () => {
+  const gradedBeat = (beatId: string): Beat =>
+    ({
+      beatId,
+      required: true,
+      prompt: 'x',
+      interaction: { type: 'retrievalGrid', pairs: [{ left: 'a', right: 'b' }] },
+      feedback: { correct: 'ok', hints: ['1', '2', '3'] },
+    }) as Beat
+  const hintedBeats = [gradedBeat('g1'), gradedBeat('g2')]
+  const hintedStruggle = { g1: 2 } // a hint was used while learning
+
+  it('MEDALLION path (frozen derived.mastered): silver at completion, gold once minted', () => {
+    // computeMastered now FORGIVES hints ⇒ the lesson is a gold CANDIDATE at
+    // completion (true). But completeLesson writes derived.mastered:false, so the
+    // medallion is SILVER until the delayed submitReview pass flips it to gold.
+    expect(computeMastered(hintedBeats, hintedStruggle)).toBe(true) // candidate
+    expect(
+      isMilestoneMastered('hh-ht-mastered', {
+        'lesson-pattern-hitting-times': {
+          completionStatus: 'completed',
+          derived: { mastered: false },
+        },
+      }),
+    ).toBe(false) // silver at completion (gold not earned yet)
+    expect(
+      isMilestoneMastered('hh-ht-mastered', {
+        'lesson-pattern-hitting-times': aced, // derived.mastered:true (delayed mint)
+      }),
+    ).toBe(true) // gold after the delayed check passes
+  })
+
+  it('RECOMMENDER path (live struggle): masteredFromLive keeps the zero-hint signal', () => {
+    // The SAME hinted lesson is STILL flagged for review — the recommender's
+    // struggle predicate is unchanged and decoupled from the new gold semantics.
+    expect(masteredFromLive(hintedBeats, hintedStruggle)).toBe(false)
+    // The two predicates genuinely diverge on this input (never the same function):
+    expect(computeMastered(hintedBeats, hintedStruggle)).not.toBe(
+      masteredFromLive(hintedBeats, hintedStruggle),
+    )
   })
 })

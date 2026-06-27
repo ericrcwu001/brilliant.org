@@ -54,7 +54,11 @@ describe('masteryChallenge grading signal', () => {
     expect(computeMastered([mockBeat], {})).toBe(true)
   })
 
-  it('computeMastered is false when masteryChallenge needed any hint', () => {
-    expect(computeMastered([mockBeat], { 'mastery-challenge': 1 })).toBe(false)
+  // spec-11 (D7): hints used WHILE LEARNING are now FORGIVEN. computeMastered is
+  // the in-lesson "gold candidate" eligibility (>=1 required graded beat completed);
+  // hint level no longer bars it. Gold is earned later via a delayed SR pass.
+  it('computeMastered is true even when masteryChallenge needed hints (hints forgiven, spec-11)', () => {
+    expect(computeMastered([mockBeat], { 'mastery-challenge': 1 })).toBe(true)
+    expect(computeMastered([mockBeat], { 'mastery-challenge': 3 })).toBe(true)
   })
 })

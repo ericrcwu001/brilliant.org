@@ -27,24 +27,28 @@ describe('gradedRequiredBeatIds', () => {
   })
 })
 
-describe('computeMastered (L1 §9)', () => {
-  it('is true when every graded beat was first-try-correct (high-water mark 0)', () => {
+describe('computeMastered (spec-11 / D7 — gold candidacy, hints FORGIVEN)', () => {
+  it('is true when the required graded beats were completed (no hints)', () => {
     expect(computeMastered(beats, {})).toBe(true)
     expect(
       computeMastered(beats, { 'failure-edge': 0, 'equation-tiles': 0 }),
     ).toBe(true)
   })
 
-  it('is false when any graded beat ever needed a hint', () => {
-    expect(computeMastered(beats, { 'failure-edge': 1 })).toBe(false)
-    expect(computeMastered(beats, { 'equation-tiles': 3 })).toBe(false)
+  it('is STILL true when graded beats needed hints (D7: hints forgiven, gold is delayed)', () => {
+    // Previously these were `false` (zero-hint rule). spec-11 forgives hints:
+    // gold candidacy now only requires the graded beats were completed; gold is
+    // minted later by a delayed SR pass (functions/src/review.ts), not here.
+    expect(computeMastered(beats, { 'failure-edge': 1 })).toBe(true)
+    expect(computeMastered(beats, { 'equation-tiles': 3 })).toBe(true)
+    expect(computeMastered(beats, { 'failure-edge': 3, 'mastery-challenge': 2 })).toBe(true)
   })
 
-  it('ignores non-graded beats (a hinted slider does not block mastery)', () => {
+  it('ignores non-graded beats (a hinted slider does not block candidacy)', () => {
     expect(computeMastered(beats, { 'refine-prediction': 3 })).toBe(true)
   })
 
-  it('is false when there are no graded beats', () => {
+  it('is false when there are no graded beats to retrieve', () => {
     expect(computeMastered([], {})).toBe(false)
   })
 })

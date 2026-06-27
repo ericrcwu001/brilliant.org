@@ -9,7 +9,10 @@
 //
 // Later specs build ON this single file (README §5 collision matrix, 3 specs):
 //   - spec-10 fills the SM-2 advance body (it already consumes `nextSchedule`);
-//   - spec-11 adds the gold-mint branch + sets `suspended`.
+//   - spec-11 adds the gold-mint branch (delayed honest-mastery pass →
+//     progress.derived.mastered=true, upgrade-only + idempotent) + sets
+//     `suspended` on a transfer card at gold, and folds review-rep confidence
+//     into the cross-concept calibration trend (README §5; third D6 site).
 //
 // R12/R13 (SERVER-GRADED): the client sends its RAW answer, NEVER a pass/fail.
 // `submitReview` loads the card's beat via `loadLesson`, grades `answer` against
@@ -26,8 +29,21 @@ import {
   nextSchedule,
   type SchedulingState,
 } from './scheduling'
+import { qualifiesForGoldMint } from './goldMint'
+import {
+  foldAttemptIntoTrend,
+  MIN_CALIBRATION_N,
+  type CalibrationItem,
+  type CalibrationFormat,
+  type TrendSums,
+} from './calibration'
 
 const db = getFirestore()
+
+// Mirror of index.ts's module-local PROGRESS_SCHEMA_VERSION. review.ts cannot
+// import it (index.ts re-exports submitReview from this file → circular), so the
+// value is duplicated; both must stay equal (it is a single integer bump field).
+const PROGRESS_SCHEMA_VERSION = 1
 
 // Duplicated (not imported from ./index) to avoid a circular import — index.ts
 // re-exports `submitReview` from this file (mirrors interview.ts:66).
@@ -178,6 +194,42 @@ export function setReviewOutcomeSink(
   }
 }
 
+// ── Calibration trend denormalization (mirrors interview.ts:343 denormSums) ─────
+// A review rep that carries a confidence is a third D6 capture site (README §5):
+// fold it into the SAME cross-concept calibration trend the interview folds into,
+// so review reps count toward Brier. Pure; the running mean == batch mean across
+// both sources. Format is 'typein' (an in-lesson type-in checkpoint surfaced cold
+// by the queue) — kept OUT of the interview's 'voice' bucket so the per-format
+// interview delta (spec-23) is not contaminated.
+const REVIEW_CALIBRATION_FORMAT: CalibrationFormat = 'typein'
+
+function denormSums(s: TrendSums): {
+  n: number
+  brierSum: number
+  confidenceSum: number
+  correctSum: number
+  brier: number
+  meanConfidence: number
+  accuracy: number
+  overconfidence: number
+  reliable: boolean
+} {
+  const brier = s.brierSum / s.n
+  const meanConfidence = s.confidenceSum / s.n
+  const accuracy = s.correctSum / s.n
+  return {
+    n: s.n,
+    brierSum: s.brierSum,
+    confidenceSum: s.confidenceSum,
+    correctSum: s.correctSum,
+    brier,
+    meanConfidence,
+    accuracy,
+    overconfidence: meanConfidence - accuracy,
+    reliable: s.n >= MIN_CALIBRATION_N,
+  }
+}
+
 // ── Card-creation: two-phase (reads-before-writes) ─────────────────────────────
 // Firestore forbids reads after writes in a transaction, so the helper is split:
 // the caller (completeLesson) must run the READ phase before its own progress
@@ -322,6 +374,20 @@ export async function submitReviewTx(
   // Derive {lessonId, beatId} from the card (stored fields are simplest).
   const lessonId = requireCardString(card.lessonId, 'lessonId', cardId)
   const beatId = requireCardString(card.beatId, 'beatId', cardId)
+
+  // spec-11 READ PHASE: the lesson's progress doc (gold-mint idempotency) and the
+  // calibration trend doc (review-rep fold). Both reads MUST precede every write
+  // in this transaction (Firestore forbids reads-after-writes). We read them
+  // unconditionally up front; the writes below decide whether to act.
+  const progressRef = db.doc(`users/${uid}/progress/${lessonId}`)
+  const progressSnap = await tx.get(progressRef)
+  const alreadyGold =
+    (progressSnap.get('derived') as { mastered?: boolean } | undefined)
+      ?.mastered === true
+  const summaryRef = db.doc(`users/${uid}/calibration/summary`)
+  // Only read the summary when a confidence is present to fold (no fold ⇒ no read).
+  const summarySnap = confidence != null ? await tx.get(summaryRef) : null
+
   const lesson = await loadReviewLesson(lessonId)
   const beat = (lesson.beats ?? []).find((b) => b.beatId === beatId)
   if (!beat || !hasAcceptList(beat)) {
@@ -341,8 +407,9 @@ export async function submitReviewTx(
   }
   const next = nextSchedule(prev, graded, { now, targetDate })
 
-  // `suspended` is NOT touched here — owned by spec-11. The merge-write leaves it
-  // (and the identity fields) untouched.
+  // The SM-2 merge-write leaves the identity fields untouched. `suspended` is set
+  // ONLY by the spec-11 gold-mint branch below (and only on a transfer card), so
+  // this base write deliberately omits it.
   tx.set(
     ref,
     {
@@ -358,6 +425,92 @@ export async function submitReviewTx(
     },
     { merge: true },
   )
+
+  // ── spec-11: gold mint on an honest, DELAYED, SERVER-GRADED pass (§3.3) ───────
+  // `graded` is the SERVER's verdict (gradeAgainstAccept above), NOT a client
+  // result — a wrong answer is `fail` here and mints nothing (R13). Track is read
+  // off the CARD (set at creation from progress.track / defaultTrack, README §4),
+  // never a client arg (R12). Upgrade-only + idempotent: only ever write
+  // mastered:true, never demote, and never re-write once already gold (mirrors
+  // index.ts's upgrade-only discipline).
+  const cardTrack: 'A' | 'B' = card.track === 'B' ? 'B' : 'A'
+  const cardCreatedAt = card.createdAt as Timestamp | undefined
+  const isTransfer = card.isTransfer === true
+  if (
+    graded === 'pass' &&
+    !alreadyGold &&
+    cardCreatedAt != null &&
+    typeof cardCreatedAt.toDate === 'function' &&
+    qualifiesForGoldMint({ createdAt: cardCreatedAt, isTransfer }, now, cardTrack)
+  ) {
+    tx.set(
+      progressRef,
+      {
+        derived: { mastered: true }, // merge:true deep-merges (matches index.ts)
+        updatedAt: FieldValue.serverTimestamp(),
+        schemaVersion: PROGRESS_SCHEMA_VERSION,
+      },
+      { merge: true },
+    )
+    // spec-01 §5a hands `suspended` to spec-11: a TRANSFER card that reaches gold
+    // drops to maintenance cadence. Track-A checkpoint cards stay in active
+    // rotation (NOT suspended). This is the field's only writer.
+    if (isTransfer) {
+      tx.set(
+        ref,
+        { suspended: true, updatedAt: FieldValue.serverTimestamp() },
+        { merge: true },
+      )
+    }
+  }
+
+  // ── spec-11 / spec-12 (README §5): review-rep calibration fold ────────────────
+  // A review carrying a confidence is the third D6 capture site — fold it into the
+  // cross-concept calibration trend so review reps count toward Brier. summarySnap
+  // was read in the read phase above; the fold is the same pure helper the
+  // interview uses, recomputing pooled + per-byFormat denormals.
+  if (confidence != null && summarySnap) {
+    const item: CalibrationItem = {
+      confidence,
+      correct: graded === 'pass',
+      format: REVIEW_CALIBRATION_FORMAT,
+    }
+    const prior = (summarySnap.data() ?? {}) as {
+      n?: number
+      brierSum?: number
+      confidenceSum?: number
+      correctSum?: number
+      byFormat?: Partial<Record<CalibrationFormat, TrendSums>>
+    }
+    const folded = foldAttemptIntoTrend(
+      {
+        n: prior.n ?? 0,
+        brierSum: prior.brierSum ?? 0,
+        confidenceSum: prior.confidenceSum ?? 0,
+        correctSum: prior.correctSum ?? 0,
+        byFormat: prior.byFormat,
+      },
+      [item],
+    )
+    const byFormatDenorm: Partial<Record<CalibrationFormat, ReturnType<typeof denormSums>>> = {}
+    for (const f of Object.keys(folded.byFormat) as CalibrationFormat[]) {
+      byFormatDenorm[f] = denormSums(folded.byFormat[f] as TrendSums)
+    }
+    tx.set(
+      summaryRef,
+      {
+        ...denormSums({
+          n: folded.n,
+          brierSum: folded.brierSum,
+          confidenceSum: folded.confidenceSum,
+          correctSum: folded.correctSum,
+        }),
+        byFormat: byFormatDenorm,
+        updatedAt: FieldValue.serverTimestamp(),
+      },
+      { merge: true },
+    )
+  }
 
   return {
     graded,
