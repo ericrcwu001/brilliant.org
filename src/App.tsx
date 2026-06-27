@@ -18,6 +18,7 @@ import { lazy, Suspense, useCallback, useEffect, useState } from 'react'
 import { flushSync } from 'react-dom'
 import { AuthProvider } from './auth/AuthProvider'
 import { useAuth } from './auth/authContext'
+import { isQuantIntensity } from './auth/track'
 import {
   ROUTES,
   parseLessonId,
@@ -160,7 +161,16 @@ function GuardedRoutes({
 
   const interviewConceptId = parseInterviewId(path)
   if (interviewConceptId)
-    return <InterviewPage navigate={navigate} conceptId={interviewConceptId} />
+    return (
+      <InterviewPage
+        navigate={navigate}
+        conceptId={interviewConceptId}
+        // Confidence capture (spec-02 / D6) gates on the single quant-intensity
+        // helper (README §4; fails GENTLE). No per-concept progress here, so the
+        // gate uses userDoc (defaultTrack ?? 'A') + learningGoal.
+        showConfidence={isQuantIntensity(userDoc)}
+      />
+    )
 
   // Unreachable: the guard redirects unknown paths above.
   return <BootScreen />

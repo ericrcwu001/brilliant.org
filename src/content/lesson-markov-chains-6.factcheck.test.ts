@@ -156,7 +156,7 @@ describe('lesson-markov-chains-6 fact-check', () => {
     expect((beat as { pattern?: unknown }).pattern).toBeUndefined()
   })
 
-  it('lesson has exactly 11 beats in spec order', () => {
+  it('lesson has exactly 12 beats in spec order', () => {
     const ids = lesson.beats.map((b) => b.beatId)
     expect(ids).toEqual([
       'recall-geometric',
@@ -168,6 +168,7 @@ describe('lesson-markov-chains-6 fact-check', () => {
       'kac-return',
       'triangulate-pi',
       'absorbing-vs-stationary',
+      'transfer-heldout',
       'mastery-cloudy-town',
       'recap',
     ])

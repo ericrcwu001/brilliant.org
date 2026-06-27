@@ -9,6 +9,7 @@ import type { RealtimeTransport } from '../interview/useRealtimeInterview'
 import { useRealtimeInterview } from '../interview/useRealtimeInterview'
 import { Orb } from '../interview/Orb'
 import { InterviewReportView } from '../interview/InterviewReportView'
+import { ConfidenceRating } from '../lesson/ConfidenceRating'
 import { conceptPath } from './routes'
 
 function formatMmSs(seconds: number): string {
@@ -21,10 +22,16 @@ export function InterviewPage({
   navigate,
   conceptId,
   _transport,
+  showConfidence = false,
 }: {
   navigate: NavigateFn
   conceptId: string
   _transport?: RealtimeTransport
+  // Quant-intensity gate (spec-02 / D6), computed by App.tsx via isQuantIntensity
+  // and threaded into the hook. The page itself stays gate-agnostic — it only
+  // renders the rating whenever status === 'confidence', which the hook reaches
+  // only when this is on.
+  showConfidence?: boolean
 }) {
   const {
     status,
@@ -38,7 +45,8 @@ export function InterviewPage({
     attemptId,
     start,
     stop,
-  } = useRealtimeInterview(conceptId, _transport)
+    submitConfidence,
+  } = useRealtimeInterview(conceptId, _transport, showConfidence)
 
   const audioRef = useRef<HTMLAudioElement | null>(null)
   const [audioBlocked, setAudioBlocked] = useState(false)
@@ -244,6 +252,27 @@ export function InterviewPage({
               </button>
             </>
           )}
+        </div>
+      </div>
+    )
+  }
+
+  // ── Confidence (spec-02 / D6) ─────────────────────────────────────────────
+  // Reached only when the quant-intensity gate is on; one-tap rating before
+  // grading. Selecting a bucket stamps the last candidate turn and advances.
+
+  if (status === 'confidence') {
+    return (
+      <div className="iv-page">
+        <header className="iv-topbar">
+          <span />
+          <span />
+        </header>
+        <div className="iv-grading">
+          <ConfidenceRating
+            question="How confident were you in your answer(s)?"
+            onSelect={submitConfidence}
+          />
         </div>
       </div>
     )

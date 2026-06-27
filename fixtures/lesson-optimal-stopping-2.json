@@ -11,6 +11,7 @@
       "beatId": "l2-recall",
       "required": true,
       "prompt": "Quick recall from last lesson. Match each hiring rule to the chance it lands the single best candidate.",
+      "schemaId": "threshold-rule",
       "interaction": {
         "type": "retrievalGrid",
         "pairs": [
@@ -118,6 +119,7 @@
       "beatId": "l2-pin",
       "required": true,
       "prompt": "Pin down the peak for n = 4. Enter the best success probability the look-then-leap strategy can achieve, and the cutoff r where it happens.",
+      "schemaId": "threshold-rule",
       "interaction": {
         "type": "answerEntry",
         "fields": [
@@ -182,6 +184,7 @@
       "beatId": "l2-fivecase",
       "required": true,
       "prompt": "Scale up: 5 candidates, cutoff r = 3 (reject the first 2 as scouts, then take the first who beats them). What is the probability of landing the very best?",
+      "schemaId": "threshold-rule",
       "interaction": {
         "type": "answerEntry",
         "fields": [
@@ -203,9 +206,44 @@
       }
     },
     {
+      "beatId": "transfer-heldout",
+      "required": false,
+      "track": "B",
+      "heldOut": true,
+      "schemaId": "threshold-rule",
+      "prompt": "Fresh case — same idea.",
+      "interaction": {
+        "type": "masteryChallenge",
+        "scenario": "A scout auditions \\(n = 6\\) street musicians one at a time in a uniformly random order, signing or passing on the spot. She uses the look-then-leap rule with cutoff \\(r = 3\\): pass on the first 2 (recording the best she has heard as a benchmark), then sign the first musician from position 3 onward who strictly beats that benchmark. (a) What is the probability she ends up signing the single best musician? (b) Is that better than blindly signing one at random, which wins \\(\\frac{1}{6}\\)?",
+        "fields": [
+          {
+            "id": "prob",
+            "label": "Success probability",
+            "accept": ["77/180"],
+            "placeholder": "a/b"
+          },
+          {
+            "id": "better",
+            "label": "Better than the blind 1/6? (yes/no)",
+            "accept": ["yes"],
+            "placeholder": "yes / no"
+          }
+        ]
+      },
+      "feedback": {
+        "correct": "\\[ p_6(3) = \\frac{r-1}{n}\\sum_{j=r}^{n}\\frac{1}{j-1} = \\frac{2}{6}\\left(\\frac{1}{2}+\\frac{1}{3}+\\frac{1}{4}+\\frac{1}{5}\\right) = \\frac{1}{3}\\cdot\\frac{77}{60} = \\frac{77}{180} \\] Since \\(\\frac{77}{180} \\approx 0.428 > \\frac{1}{6} \\approx 0.167\\), yes — look-then-leap more than doubles the blind baseline. The two passed-over musicians act as scouts: their ranks set a benchmark tight enough that the four remaining auditions often hold a record-breaker.",
+        "hints": [
+          "Apply the secretary formula \\(p_n(r) = \\frac{r-1}{n}\\sum_{j=r}^{n}\\frac{1}{j-1}\\) with \\(n=6,\\, r=3\\).",
+          "Compute the sum \\(\\frac{1}{2}+\\frac{1}{3}+\\frac{1}{4}+\\frac{1}{5} = \\frac{30+20+15+12}{60} = \\frac{77}{60}\\); multiply by \\(\\frac{2}{6}=\\frac{1}{3}\\) to get \\(\\frac{77}{180}\\).",
+          "\\(\\frac{77}{180} \\approx 43\\%\\) vs \\(\\frac{1}{6} \\approx 17\\%\\) — yes, look-then-leap is better."
+        ]
+      }
+    },
+    {
       "beatId": "l2-prove",
       "required": true,
       "prompt": "Prove you've got it.",
+      "schemaId": "threshold-rule",
       "interaction": {
         "type": "masteryChallenge",
         "scenario": "You are interviewing \\(n = 5\\) candidates in a uniformly random order. You use the look-then-leap rule with cutoff \\(r = 3\\): reject the first 2 candidates outright (recording the best rank seen as your benchmark), then hire the first candidate from position 3 onward who strictly beats that benchmark. (a) What is the probability you end up with the single best candidate? (b) Is that better than the take-the-first strategy's \\(\\frac{1}{5}\\)?",

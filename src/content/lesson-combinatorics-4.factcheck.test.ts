@@ -108,8 +108,8 @@ describe('lesson-combinatorics-4 fact-check', () => {
 
   // ── Structural checks ──────────────────────────────────────────────────
 
-  it('lesson has exactly 10 beats', () => {
-    expect(lesson.beats).toHaveLength(10)
+  it('lesson has exactly 11 beats', () => {
+    expect(lesson.beats).toHaveLength(11)
   })
 
   it('beat order matches the spec', () => {
@@ -123,6 +123,7 @@ describe('lesson-combinatorics-4 fact-check', () => {
       'l4-model',
       'l4-birthday-scaffold',
       'l4-birthday',
+      'transfer-heldout',
       'l4-prove',
       'l4-recap',
     ])

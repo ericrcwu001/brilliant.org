@@ -55,8 +55,15 @@ into the Lesson Brief.
    `audits/ideation/inclusive-research-2-prerequisites-misconceptions.md`.
 4. **Assessment Designer** — *Opus readonly*. Designs graded beats: retrieval opener, guaranteed
    early win, the end-of-lesson mastery challenge, spacing/interleaving, the mastery signal — and
-   **turns every Continuity-Report overlap into a concrete recall/interleaving beat**. Leans on
-   `audits/ideation/inclusive-research-5-progression-assessment.md` and the `validate-fixtures` gates.
+   **turns every Continuity-Report overlap into a concrete recall/interleaving beat**. **Also assigns
+   each graded beat its `schemaId` deep-structure method tag** (from `src/content/methods.ts`,
+   Foundation B / spec-00) at brief time — the hidden tag the which-method gate + interleaved queue
+   read; if no existing id fits, proposes a registry addition (see the Schema/Types Specialist).
+   **Also authors the held-out transfer problem** (fresh surface, **same `schemaId`** as the mastery
+   challenge, engine-verified, `heldOut:true track:'B' required:false`, placed **before** the mastery
+   challenge) for the Track-B delayed gold gate (spec-24).
+   Leans on `audits/ideation/inclusive-research-5-progression-assessment.md` and the
+   `validate-fixtures` gates.
 5. **Corpus Cartographer / Continuity Auditor** — *Opus, non-readonly (Firebase MCP + git)*. Maps the
    **entire existing lesson corpus** — shipped (`fixtures/lesson-*.json` on `main` + prod
    `brilliant-org` Firestore) and in-dev (open `concept/*` branches + dev `brilliant-org-dev` Firestore,
@@ -125,7 +132,12 @@ parallel across the assembly line.
    (template in `artifacts.md`): exact files, contracts, and the parallel work split.
 2. **Brief Reviewer** — *Opus*. Signs off the Implementation Brief before any code is written.
 3. **Schema / Types Specialist** — *Sonnet*. Owns Zod schema additions (`src/content/schema.ts`) +
-   TypeScript types + the beat dispatcher slot (`src/lesson/beats/index.tsx`). Part of Wave 0.
+   TypeScript types + the beat dispatcher slot (`src/lesson/beats/index.tsx`). **Also owns
+   `src/content/methods.ts` method-registry additions during the Wave-0 freeze** (Foundation B /
+   spec-00): when the Assessment Designer needs a `schemaId` no existing id covers, review and add the
+   new id (`id`, `name`, `domains`, plus its symmetric `CONFUSABLE` neighbours) here with the schema
+   freeze — ids are persisted on review cards, so they are permanent; never an ad-hoc string on a beat.
+   Part of Wave 0.
 4. **Coder A** — *Sonnet*. The pure verifying **engine module** (`src/engine/<topic>.ts`) — exact
    rational arithmetic, no floats — plus its golden tests.
 5. **Coder B** — *Sonnet*. The **beat renderer / widget** (`src/lesson/beats/`, `src/lesson/konva/`

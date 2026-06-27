@@ -127,7 +127,7 @@ describe('lesson-markov-chains-5 fact-check', () => {
     expect((beat as { pattern?: unknown }).pattern).toBeUndefined()
   })
 
-  it('lesson has exactly 11 beats in spec order', () => {
+  it('lesson has exactly 12 beats in spec order', () => {
     const ids = lesson.beats.map((b) => b.beatId)
     expect(ids).toEqual([
       'recall-first-step',
@@ -139,6 +139,7 @@ describe('lesson-markov-chains-5 fact-check', () => {
       'solve-matrix',
       'triplet-reveal',
       'time-vs-prob',
+      'transfer-heldout',
       'mastery-dice',
       'recap',
     ])

@@ -15,10 +15,13 @@ import {
   SnapshotSchema,
 } from '../src/content/schema'
 import type { Beat, Course, Lesson } from '../src/content/schema'
+import { isGradedBeat } from '../src/lesson/mastery'
+import { METHODS, CONFUSABLE } from '../src/content/methods'
 import { buildAutomaton, reduce as reduceRational, ratAdd, ratMul } from '../src/engine/automaton'
 import {
   nCk,
   nPk,
+  factorial,
   pascalRow,
   product,
   unionSize,
@@ -31,7 +34,7 @@ import {
 } from '../src/engine/combinatorics'
 import {
   bayesPosterior, sequentialPosterior, naturalFrequencies,
-  posteriorOdds, oddsToProb, bayesUpdate, formatRational,
+  posteriorOdds, oddsToProb, bayesUpdate, smallestKCross, formatRational,
 } from '../src/engine/bayes'
 import type { Rational } from '../src/engine/types'
 import {
@@ -144,6 +147,35 @@ function firstNestedArrayPath(v: unknown, path: string): string | null {
     if (bad) fail(`Firestore nested-array violation: ${file} ${bad}`)
   }
   console.log(`✓ Firestore-safe (no nested arrays): ${allFixtureFiles.length} fixtures`)
+}
+
+// ── 1c. Method-tag gate (Foundation B, spec-00). Every GRADED beat (the
+// src/lesson/mastery.ts predicate — the same set that drives the mastery signal)
+// must carry a valid schemaId. Flag-gated (REQUIRE_SCHEMA_ID=1) until the one-time
+// backfill lands; then this becomes unconditional (R4: foundation enforced for good).
+const VALID_METHOD_IDS = new Set(Object.keys(METHODS))
+{
+  const enforce = process.env.REQUIRE_SCHEMA_ID === '1' // ← delete this line + the `if (enforce)` guard at end of backfill
+  const offenders: string[] = []
+  for (const lesson of lessons) {
+    for (const beat of lesson.beats) {
+      if (!isGradedBeat(beat)) continue
+      const sid = (beat as { schemaId?: string }).schemaId
+      if (sid == null) offenders.push(`${lesson.lessonId}/${beat.beatId}: graded beat missing schemaId`)
+      else if (!VALID_METHOD_IDS.has(sid)) offenders.push(`${lesson.lessonId}/${beat.beatId}: schemaId "${sid}" not in registry`)
+    }
+  }
+  if (offenders.length > 0) {
+    if (enforce) {
+      console.error('\n✗ method-tag gate:')
+      for (const o of offenders) console.error(`  - ${o}`)
+      process.exit(1)
+    } else {
+      console.warn(`⚠ method-tag gate (advisory; set REQUIRE_SCHEMA_ID=1 to enforce): ${offenders.length} graded beats missing/invalid schemaId`)
+    }
+  } else {
+    console.log(`✓ method-tag gate: every graded beat carries a valid schemaId`)
+  }
 }
 
 // ── 2. L0 on-ramp golden (L1 §5.7): the single-letter "H" automaton waits 2.
@@ -824,7 +856,142 @@ for (const lesson of lessons) {
       fail(`${lesson.lessonId}: masteryChallenge pattern ${penult.pattern} -> E=${e0} not in any accept list`)
     }
   }
+  // PHT held-out transfer beats are engine-reproduced the SAME way (spec-24 §3.5):
+  // a pattern-pinned heldOut beat's `accept` must contain buildAutomaton(pattern).E0,
+  // so a transfer problem with an un-reproduced number can't ship. Only the
+  // pattern-hitting-times concept uses the automaton engine; other concepts' heldOut
+  // cross-checks extend their own per-concept §8x cross-checks.
+  for (const ho of beats) {
+    if (!(ho as { heldOut?: boolean }).heldOut || !ho.pattern) continue
+    const e0 = buildAutomaton(ho.pattern, 0.5).expectedTimes.E0
+    const hi = ho.interaction
+    if (hi.type !== 'masteryChallenge' && hi.type !== 'answerEntry') {
+      fail(`${lesson.lessonId}/${ho.beatId}: pattern-pinned heldOut beat must be masteryChallenge/answerEntry to engine-cross-check`)
+    }
+    const accepts = hi.fields.flatMap((f) => f.accept)
+    if (!accepts.includes(String(e0))) {
+      fail(`${lesson.lessonId}/${ho.beatId}: heldOut pattern ${ho.pattern} -> E=${e0} not in any accept list`)
+    }
+  }
   console.log(`✓ mastery-challenge gate: ${lesson.lessonId}`)
+}
+
+// ── 5b. Held-out transfer gate (spec-24 / D7 / D15). A held-out beat is the
+// Track-B delayed gold gate: SAME method as the lesson's masteryChallenge
+// checkpoint, fresh surface, never rendered in normal flow. Each must be
+// well-formed; per-lesson presence is advisory until REQUIRE_TRANSFER=1
+// (post-authoring), mirroring the §1c REQUIRE_SCHEMA_ID rollout pattern.
+// Reuses the §1 `isGradedBeat` import and the §1c `VALID_METHOD_IDS` registry
+// set (spec-00) — does NOT re-derive either.
+//
+// ★ Flag-ordering (gate Issue #12): do NOT flip REQUIRE_TRANSFER=1 before
+// spec-00's REQUIRE_SCHEMA_ID=1 + the 187-beat backfill have landed — check (c)
+// ("heldOut schemaId == checkpoint method") is guarded by `if (checkpointSchema)`
+// and silently no-ops until every checkpoint carries a real schemaId.
+{
+  const requireTransfer = process.env.REQUIRE_TRANSFER === '1'
+  for (const lesson of lessons) {
+    const beats = lesson.beats
+    const heldOuts = beats.filter((b) => (b as { heldOut?: boolean }).heldOut === true)
+    // a) presence (advisory until the flag flips).
+    if (heldOuts.length === 0) {
+      const msg = `${lesson.lessonId}: no held-out transfer beat (Track-B gold gate)`
+      if (requireTransfer) fail(msg)
+      else console.warn(`⚠ transfer gate (advisory; set REQUIRE_TRANSFER=1 to enforce): ${msg}`)
+    }
+    // Checkpoint method = the lesson's masteryChallenge schemaId (fallback: last
+    // graded beat's schemaId, for lesson-first-heads which has no masteryChallenge).
+    const checkpoint =
+      [...beats].reverse().find((b) => b.interaction.type === 'masteryChallenge') ??
+      [...beats].reverse().find((b) => isGradedBeat(b))
+    const checkpointSchema = (checkpoint as { schemaId?: string } | undefined)?.schemaId
+    for (const b of heldOuts) {
+      const where = `${lesson.lessonId}/${b.beatId}`
+      // b) well-formed marker.
+      if (b.track !== 'B') fail(`${where}: heldOut beat must be track:'B'`)
+      if (b.required !== false) fail(`${where}: heldOut beat must be required:false`)
+      if (!isGradedBeat(b)) fail(`${where}: heldOut beat must be a graded beat`)
+      const sid = (b as { schemaId?: string }).schemaId
+      if (sid == null || !VALID_METHOD_IDS.has(sid)) {
+        fail(`${where}: heldOut beat needs a valid schemaId (in the methods registry)`)
+      }
+      // c) SAME method as the checkpoint (guarded — no-ops until spec-00 backfill).
+      if (checkpointSchema && sid !== checkpointSchema) {
+        fail(`${where}: heldOut schemaId "${sid}" != checkpoint method "${checkpointSchema}"`)
+      }
+      // d) placed BEFORE the masteryChallenge (preserves the §5 penult/last invariant).
+      const mcIdx = beats.findIndex((x) => x.interaction.type === 'masteryChallenge')
+      const myIdx = beats.findIndex((x) => x.beatId === b.beatId)
+      if (mcIdx !== -1 && myIdx > mcIdx) {
+        fail(`${where}: heldOut beat must precede the masteryChallenge`)
+      }
+      // e) fresh surface (soft): scenario/prompt must differ from the checkpoint's.
+      const cpText = checkpoint
+        ? ((checkpoint.interaction as { scenario?: string }).scenario ?? checkpoint.prompt)
+        : ''
+      const myText = (b.interaction as { scenario?: string }).scenario ?? b.prompt
+      if (cpText && myText && cpText.trim() === myText.trim()) {
+        fail(`${where}: heldOut surface is identical to the checkpoint (must be a FRESH surface)`)
+      }
+    }
+  }
+  console.log('✓ held-out transfer gate')
+}
+
+// ── 5c. Which-method gate well-formedness (spec-13 / D12). Runs over EVERY lesson
+// beat (not just GATED lessons): a `prediction` beat carrying `interaction.gate`
+// is a graded method-discrimination checkpoint and must be coherent. No fixture
+// ships a gate yet, so this is a no-op on today's corpus but guards future gates.
+// Note: the §4 inclusivity check already requires every prediction (gate or not)
+// to carry `byOption`; this pass adds the gate-specific cross-checks. Distractors
+// come from spec-00's CONFUSABLE map (consumed, never re-derived from domain ∩).
+for (const lesson of lessons) {
+  for (const beat of lesson.beats) {
+    const it = beat.interaction
+    if (it.type !== 'prediction' || !it.gate) continue
+    const where = `${lesson.lessonId}/${beat.beatId}`
+    // a) options ↔ optionMethods positional alignment.
+    if (it.gate.optionMethods.length !== it.options.length) {
+      fail(`${where}: gate optionMethods length ${it.gate.optionMethods.length} != options ${it.options.length}`)
+    }
+    // b) correct must be one of the offered methods (no unanswerable gate).
+    if (!it.gate.optionMethods.includes(it.gate.correct)) {
+      fail(`${where}: gate.correct "${it.gate.correct}" is not among optionMethods`)
+    }
+    // c) distinct methods (a real discrimination, not a duplicate).
+    if (new Set(it.gate.optionMethods).size !== it.gate.optionMethods.length) {
+      fail(`${where}: gate optionMethods contains duplicates`)
+    }
+    // d) graded ⇒ byOption refutation present (mirrors the inclusivity rule).
+    if (!usesByOption(beat)) {
+      fail(`${where}: which-method gate lacks byOption refutation feedback`)
+    }
+    // e) byOption.correct (if present) agrees with gate.correct, by option label.
+    const correctIdx = it.gate.optionMethods.indexOf(it.gate.correct)
+    const correctLabel = it.options[correctIdx]
+    const bo = (beat.feedback as { byOption: Record<string, { note: string; correct?: boolean }> }).byOption
+    for (const [label, entry] of Object.entries(bo)) {
+      const shouldBeCorrect = label === correctLabel
+      if (entry.correct !== undefined && entry.correct !== shouldBeCorrect) {
+        fail(`${where}: byOption["${label}"].correct=${entry.correct} disagrees with gate.correct`)
+      }
+    }
+    // f) the gate's schemaId is the method it tests (Foundation B coherence).
+    const sid = (beat as { schemaId?: string }).schemaId
+    if (sid && sid !== it.gate.correct) {
+      fail(`${where}: beat.schemaId "${sid}" != gate.correct "${it.gate.correct}"`)
+    }
+    // g) every distractor is a DECLARED confusable of `correct` (no ad-hoc /
+    //    domain-overlap distractors). CONFUSABLE is owned by spec-00; consumed here.
+    const confusable = new Set(CONFUSABLE[it.gate.correct] ?? [])
+    for (const m of it.gate.optionMethods) {
+      if (m === it.gate.correct) continue
+      if (!confusable.has(m)) {
+        fail(`${where}: distractor "${m}" is not in CONFUSABLE["${it.gate.correct}"] (use a declared near-miss, not an ad-hoc/domain-overlap pick)`)
+      }
+    }
+    console.log(`✓ which-method gate: ${where}`)
+  }
 }
 
 // ── 6. Combinatorics engine self-check (Stage-2 math anchor for
@@ -1031,5 +1198,238 @@ for (const lesson of lessons) {
   }
 }
 console.log(`✓ expectation per-fixture engine cross-check (${evChecked} beats)`)
+
+// ── 9. Held-out transfer ACCEPT cross-check (spec-24 §3.5 step 4 / R9). The §5
+// loop already engine-reproduces the ACCEPT of every PATTERN-pinned heldOut beat
+// via buildAutomaton (the pattern-hitting-times concept). The other six concepts'
+// heldOut beats are masteryChallenge problems with no pattern, so this section
+// reproduces each one's graded answer from its own concept engine (src/engine/
+// <concept>.ts) — mirroring how that concept already cross-checks its other beats
+// (§3b/§3c/§8/§8b and the per-lesson *.factcheck.test.ts). The transfer problem's
+// inputs are read off the beat's stated scenario and encoded here exactly as the
+// factcheck tests encode their problem numbers (e.g. nPk(365,3)); the engine's
+// output must appear in the heldOut field's `accept`. A transfer beat whose number
+// the engine does NOT reproduce must not ship (R9: a gold gate keyed off a wrong
+// answer silently denies mastery). Membership/normalization mirrors §8's stripNum.
+//
+// DEFERRED (documented, not silently skipped): five heldOut beats are NOT covered
+// here because reproducing them would mean re-encoding the whole problem brittly
+// rather than reading a faithful engine input (per the spec's "if it genuinely
+// cannot be re-derived from the fixture, defer" clause):
+//   • lesson-markov-chains-1  — the accept (3/4) is a transition probability READ
+//     OFF the streak rule, not a chain computation; the engine would only echo an
+//     input, not derive it.
+//   • lesson-markov-chains-2  — requires constructing an ambiguous 3×3 worker-mood
+//     matrix from a multi-clause prose rule (re-encoding the problem), and most of
+//     its fields (dist-dist=0, rowsum=1) are definitional, not engine outputs.
+//   • lesson-markov-chains-4  — the `classes` field is prose, and the return prob
+//     has no direct engine fn (it needs a bespoke hand-built sub-calculation).
+//   • lesson-markov-chains-5  — requires building a bespoke 4-state race automaton
+//     from prose (re-encoding the whole problem).
+//   • lesson-optimal-stopping-3 — its accepts (36, 37) are DISPLAY-ROUNDED
+//     percentages / a stated r*, not exact engine rational outputs (37 ≈ 100/e);
+//     asserting them would require ratToNumber rounding, which the engine marks
+//     "never on a graded path." Left to the per-lesson factcheck test.
+const R3 = (n: number, d = 1): Rational => ({ n, d })
+const C3 = (rr: number, cc: number) => ({ row: R3(rr), col: R3(cc) })
+// Each entry recomputes one or more graded fields of a lesson's heldOut beat from
+// its concept engine. `want` is the engine's exact answer string; it must appear
+// in that field's `accept` (comma/space-stripped, like §8).
+const HELDOUT_RECOMPUTE: Record<string, () => { field: string; want: string }[]> = {
+  // ----- bayes-rule (src/engine/bayes.ts; same calls as §3b / the bayes goldens) -----
+  // L1 trick die: P(trick|66), priors 1/2, L(66|trick)=1, L(66|fair)=(1/6)^2.
+  'lesson-bayes-rule-1': () => [{ field: 'trick', want: formatRational(sequentialPosterior(R3(1, 2), R3(1), R3(1, 6), 2)) }],
+  // L2 airport scanner: prior 2%, sens 98%, 1−spec = 10%.
+  'lesson-bayes-rule-2': () => [{ field: 'p', want: formatRational(bayesUpdate(R3(2, 100), R3(98, 100), R3(10, 100))) }],
+  // L3 loaded-die: smallest k with sequentialPosterior(1/100, 1, 1/6, k) ≥ 1/2.
+  'lesson-bayes-rule-3': () => [{ field: 'k', want: formatRational(smallestKCross(R3(1, 100), R3(1), R3(1, 6), R3(1, 2))) }],
+  // L4 three factories: P(F3|dud), priors 50/30/20%, dud rates 2/4/6%.
+  'lesson-bayes-rule-4': () => [{ field: 'pf3', want: formatRational(bayesPosterior([R3(50, 100), R3(30, 100), R3(20, 100)], [R3(2, 100), R3(4, 100), R3(6, 100)])[2]) }],
+  // L5 unknowing-host: prize in A/B/C (priors 1/3); friend opens empty C with
+  // L(openC|A)=1/2, L(openC|B)=1/2, L(openC|C)=0 ⇒ P(B|openC).
+  'lesson-bayes-rule-5': () => [{ field: 'boxb', want: formatRational(bayesPosterior([R3(1, 3), R3(1, 3), R3(1, 3)], [R3(1, 2), R3(1, 2), R3(0)])[1]) }],
+  // L6 four girls: P(GGGG | ≥1 girl) — prior 1/16, L=1, L(¬GGGG ∧ ≥1 girl)=14/15.
+  'lesson-bayes-rule-6': () => [{ field: 'four', want: formatRational(bayesUpdate(R3(1, 16), R3(1), R3(14, 15))) }],
+  // L7 fingerprint database: 1 true source (matches w.p. 1) vs an expected single
+  // innocent match (500000 × 1/500000 = 1) ⇒ posterior odds 1:1 ⇒ 1/2.
+  'lesson-bayes-rule-7': () => [{ field: 'fingerdb', want: formatRational(bayesUpdate(R3(1, 2), R3(1), R3(1))) }],
+  // L8 spam: prior 1/200, recall(sens) 99%, false-positive 2%.
+  'lesson-bayes-rule-8': () => [{ field: 'spam', want: formatRational(bayesUpdate(R3(1, 200), R3(99, 100), R3(2, 100))) }],
+
+  // ----- combinatorics (src/engine/combinatorics.ts; same style as §8 / its factchecks) -----
+  // L1 4-letter no-repeat code over 26 letters = _26P_4.
+  'lesson-combinatorics-1': () => [{ field: 'ans', want: nPk(26, 4).toString() }],
+  // L2 arrange 5 distinct runners over 5 medals = 5!.
+  'lesson-combinatorics-2': () => [{ field: 'orders', want: factorial(5).toString() }],
+  // L3 coefficient of x^2 y^3 in (x+2y)^5 = C(5,3)·2^3.
+  'lesson-combinatorics-3': () => [{ field: 'coeff-x2y3', want: (nCk(5, 3) * 8n).toString() }],
+  // L4 full house: 13·C(4,3)·12·C(4,2) hands; prob over C(52,5).
+  'lesson-combinatorics-4': () => {
+    const count = 13n * nCk(4, 3) * 12n * nCk(4, 2)
+    const p = probabilityFromCounts(Number(count), 2_598_960)
+    return [{ field: 'fh-count', want: count.toString() }, { field: 'fh-prob', want: `${p.n}/${p.d}` }]
+  },
+  // L5 32 students into 12 months ⇒ ⌈32/12⌉.
+  'lesson-combinatorics-5': () => [{ field: 'min-per-month', want: String(pigeonholeMin(32, 12)) }],
+  // L6 three-of-a-kind: 13·C(4,3)·C(12,2)·4·4 hands; prob over C(52,5).
+  'lesson-combinatorics-6': () => {
+    const count = 13n * nCk(4, 3) * nCk(12, 2) * 4n * 4n
+    const p = probabilityFromCounts(Number(count), 2_598_960)
+    return [{ field: 'trip-count', want: count.toString() }, { field: 'trip-prob', want: `${p.n}/${p.d}` }]
+  },
+
+  // ----- expected-value (src/engine/expectation.ts; same style as §6b / §8b) -----
+  // L1 sum of two fair d4: Σ x·P(x) over the triangular pmf (weights 1..4..1)/16.
+  'lesson-expected-value-1': () => {
+    const w = [1, 2, 3, 4, 3, 2, 1]
+    const pmf = w.map((wi, i) => ({ x: R3(i + 2), p: R3(wi, 16) }))
+    return [{ field: 'ev-two-d4', want: formatRational(expectedValue(pmf)) }]
+  },
+  // L2 four noodles: E[loops] = Σ 1/(2k−1).
+  'lesson-expected-value-2': () => [{ field: 'noodles-4', want: formatRational(noodleLoops(4)) }],
+  // L3 three rolls of a d6: E[distinct] = 6·(1 − (5/6)^3) = distinctAfterDraws(6,3).
+  'lesson-expected-value-3': () => [{ field: 'e-distinct-3', want: formatRational(distinctAfterDraws(6, 3)) }],
+  // L4 self-referential coin replay: E = 1/2·1 + 1/2·(2 + E).
+  'lesson-expected-value-4': () => [{ field: 'ev-coin-replay', want: formatRational(totalExpectation([{ p: R3(1, 2), value: R3(1) }, { p: R3(1, 2), restart: { add: R3(2) } }])) }],
+  // L5 collect all N=4 colors: coupon collector N·H_N.
+  'lesson-expected-value-5': () => [{ field: 'full-set-4', want: formatRational(couponCollector(4)) }],
+  // L6 three IID Uniform(0,1): E[max]=n/(n+1), E[min]=1/(n+1) for n=3.
+  'lesson-expected-value-6': () => {
+    const os = orderStatUniform(3)
+    return [{ field: 'ev6-transfer-max', want: formatRational(os.max) }, { field: 'ev6-transfer-min', want: formatRational(os.min) }]
+  },
+
+  // ----- game-theory (src/engine/gameTheory.ts; same calls as §2d / §3e) -----
+  // L1 advertising (High dominates Low): payoff to each at the dom-strategy
+  // equilibrium, plus the (Low,Low) cooperative payoff. row0=High, row1=Low.
+  'lesson-game-theory-1': () => {
+    const adv = [[C3(2, 2), C3(6, 1)], [C3(1, 6), C3(4, 4)]]
+    const sol = gtIesds(adv)
+    if (!sol) fail('lesson-game-theory-1: advertising game has no IESDS solution')
+    return [
+      { field: 'ne', want: String(adv[sol!.row][sol!.col].row.n) },
+      { field: 'coop', want: String(adv[1][1].row.n) },
+    ]
+  },
+  // L2 format-coordination game: number of pure Nash equilibria; preferred = same.
+  'lesson-game-theory-2': () => {
+    const blu = [[C3(2, 1), C3(0, 0)], [C3(0, 0), C3(1, 2)]]
+    const n = String(gtPureNash(blu).length)
+    return [{ field: 'count', want: n }, { field: 'preferred', want: n }]
+  },
+  // L3 penalty shootout M=[[3,-1],[-2,4]]: mixed p=(d−c)/Δ, value=(ad−bc)/Δ.
+  'lesson-game-theory-3': () => {
+    const mv = gtMixedValue([[R3(3), R3(-1)], [R3(-2), R3(4)]])
+    return [{ field: 'mix', want: gtFmt(mv.p) }, { field: 'value', want: gtFmt(mv.value) }]
+  },
+  // L4 newspaper scoop M=[[-2,3],[5,-1]]: same minimax formula.
+  'lesson-game-theory-4': () => {
+    const mv = gtMixedValue([[R3(-2), R3(3)], [R3(5), R3(-1)]])
+    return [{ field: 'value', want: gtFmt(mv.value) }, { field: 'p', want: gtFmt(mv.p) }]
+  },
+  // L5 pirate 7/100 (proposer keeps, most-junior gets) + tiger&sheep parity at 7.
+  'lesson-game-theory-5': () => {
+    const split = gtPirate(7, 100)
+    return [
+      { field: 'keep7', want: String(split[0]) },
+      { field: 'junior', want: String(split[split.length - 1]) },
+      { field: 'sheep', want: gtTiger(7) ? 'yes' : 'no' },
+    ]
+  },
+  // L6 nim heaps {2,3,4}: nim-sum and win/lose (non-zero ⇒ win).
+  'lesson-game-theory-6': () => {
+    const s = gtNimSum([2, 3, 4])
+    return [{ field: 'nimsum', want: String(s) }, { field: 'win', want: s !== 0 ? 'yes' : 'no' }]
+  },
+
+  // ----- optimal-stopping (src/engine/optimalStopping.ts; same calls as §3d / §6c) -----
+  // L1 commit to the fixed 4th of 6 (any fixed position) ⇒ 1/n.
+  'lesson-optimal-stopping-1': () => [{ field: 'prob', want: formatRationalOS(naiveSuccess(6)) }],
+  // L2 look-then-leap with n=6, r=3.
+  'lesson-optimal-stopping-2': () => [{ field: 'prob', want: formatRationalOS(secretarySuccess(6, 3)) }],
+  // L4 p_6(2) with the explicit formula.
+  'lesson-optimal-stopping-4': () => [{ field: 'prob', want: formatRationalOS(secretarySuccess(6, 2)) }],
+  // L5 buy a car among 7 with the OPTIMAL cutoff: skip = r*−1, prob = p_7(r*).
+  'lesson-optimal-stopping-5': () => {
+    const o = optimalCutoff(7)
+    return [{ field: 'skip', want: String(o.r - 1) }, { field: 'prob', want: formatRationalOS(o.p) }]
+  },
+
+  // ----- markov-chains (src/engine/markov.ts; same calls as §2c / §3c) -----
+  // L3 explicit worker-mood matrix: (P^3)[Distracted][Focused].
+  'lesson-markov-chains-3': () => {
+    const P = [[R3(1, 2), R3(1, 4), R3(1, 4)], [R3(1, 4), R3(1, 2), R3(1, 4)], [R3(1, 2), R3(1, 2), R3(0)]]
+    return [{ field: 'df3', want: formatRational(matrixPower(P, 3)[2][0]) }]
+  },
+  // L6 server-load chain: stationary π (Low/Med/High) + Kac return time to Low.
+  'lesson-markov-chains-6': () => {
+    const P = [[R3(0), R3(1), R3(0)], [R3(1, 4), R3(1, 2), R3(1, 4)], [R3(0), R3(1, 2), R3(1, 2)]]
+    const pi = stationaryDistribution(P)
+    return [
+      { field: 'piLow', want: formatRational(pi[0]) },
+      { field: 'piMedium', want: formatRational(pi[1]) },
+      { field: 'piHigh', want: formatRational(pi[2]) },
+      { field: 'kacLow', want: formatRational(kacReturnTime(P, 0)) },
+    ]
+  },
+  // L7 two-state mood chain P=[[1/2,1/2],[1/3,2/3]]: long-run π (start-independent),
+  // so fromSunny == fromCloudy == π(Sunny).
+  'lesson-markov-chains-7': () => {
+    const pi = stationaryDistribution([[R3(1, 2), R3(1, 2)], [R3(1, 3), R3(2, 3)]])
+    return [{ field: 'fromSunny', want: formatRational(pi[0]) }, { field: 'fromCloudy', want: formatRational(pi[0]) }]
+  },
+  // L8 Ehrenfest urn m=4: stationary π via detailed balance.
+  'lesson-markov-chains-8': () => {
+    const P = [
+      [R3(0), R3(1), R3(0), R3(0), R3(0)],
+      [R3(1, 4), R3(0), R3(3, 4), R3(0), R3(0)],
+      [R3(0), R3(1, 2), R3(0), R3(1, 2), R3(0)],
+      [R3(0), R3(0), R3(3, 4), R3(0), R3(1, 4)],
+      [R3(0), R3(0), R3(0), R3(1), R3(0)],
+    ]
+    const pi = stationaryDistribution(P)
+    return [0, 1, 2, 3, 4].map((i) => ({ field: `pi${i}`, want: formatRational(pi[i]) }))
+  },
+  // L9 PageRank, d=1, links 1→{2,3}, 2→1, 3→{1,4}, 4→1 (0-indexed pages 0..3).
+  'lesson-markov-chains-9': () => {
+    const G = [[R3(0), R3(1, 2), R3(1, 2), R3(0)], [R3(1), R3(0), R3(0), R3(0)], [R3(1, 2), R3(0), R3(0), R3(1, 2)], [R3(1), R3(0), R3(0), R3(0)]]
+    return [{ field: 'scores', want: formatVector(pagerank(G, R3(1))) }]
+  },
+  // L10 beetle on stones 0..5, simple random walk, 0 and 5 absorbing: P(end on 5).
+  'lesson-markov-chains-10': () => {
+    const half = R3(1, 2)
+    const P = [
+      [R3(1), R3(0), R3(0), R3(0), R3(0), R3(0)],
+      [half, R3(0), half, R3(0), R3(0), R3(0)],
+      [R3(0), half, R3(0), half, R3(0), R3(0)],
+      [R3(0), R3(0), half, R3(0), half, R3(0)],
+      [R3(0), R3(0), R3(0), half, R3(0), half],
+      [R3(0), R3(0), R3(0), R3(0), R3(0), R3(1)],
+    ]
+    const B = absorptionProbabilities(P, [0, 5]) // transient 1..4; column 1 = absorb at stone 5
+    return [1, 2, 3, 4].map((s, idx) => ({ field: `from${s}`, want: formatRational(B[idx][1]) }))
+  },
+}
+let heldOutChecked = 0
+for (const lesson of lessons) {
+  const recompute = HELDOUT_RECOMPUTE[lesson.lessonId]
+  if (!recompute) continue
+  const beat = lesson.beats.find((b) => (b as { heldOut?: boolean }).heldOut === true)
+  if (!beat) fail(`${lesson.lessonId}: §9 expected a heldOut transfer beat to cross-check but found none`)
+  const it = beat!.interaction
+  if (it.type !== 'masteryChallenge' && it.type !== 'answerEntry') {
+    fail(`${lesson.lessonId}/${beat!.beatId}: heldOut accept cross-check needs masteryChallenge/answerEntry, got ${it.type}`)
+  }
+  const fieldsById = new Map(it.fields.map((f) => [f.id, f.accept]))
+  for (const { field, want } of recompute()) {
+    const accept = fieldsById.get(field)
+    if (!accept) fail(`${lesson.lessonId}/${beat!.beatId}: heldOut field "${field}" not found (fields: ${[...fieldsById.keys()].join(', ')})`)
+    if (!accept!.map(stripNum).includes(stripNum(want))) {
+      fail(`${lesson.lessonId}/${beat!.beatId}: heldOut field "${field}" accept ${JSON.stringify(accept)} does not contain engine answer "${want}"`)
+    }
+    heldOutChecked++
+  }
+}
+console.log(`✓ held-out transfer accept cross-check (${heldOutChecked} fields, 6 concepts)`)
 
 console.log('\nAll fixtures valid.')

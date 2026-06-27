@@ -12,6 +12,7 @@
       "required": true,
       "track": "both",
       "prompt": "Quick recall — match each concept to what it does.",
+      "schemaId": "conditioning",
       "interaction": {
         "type": "retrievalGrid",
         "pairs": [
@@ -104,6 +105,7 @@
       "required": true,
       "track": "both",
       "prompt": "Two-state weather: P(Clear→Clear) = 3/5, P(Clear→Rainy) = 2/5, P(Rainy→Clear) = 3/10, P(Rainy→Rainy) = 7/10. What is (P²)_{Clear,Clear} — the two-day chance of being Clear starting from Clear?",
+      "schemaId": "conditioning",
       "interaction": {
         "type": "answerEntry",
         "fields": [
@@ -163,6 +165,7 @@
       "required": true,
       "track": "both",
       "prompt": "Now compute it exactly: what is (P²)_{Rain,Snow} — the probability of being in Snow two days after Rain?",
+      "schemaId": "conditioning",
       "interaction": {
         "type": "answerEntry",
         "fields": [
@@ -247,10 +250,39 @@
       }
     },
     {
+      "beatId": "transfer-heldout",
+      "required": false,
+      "track": "B",
+      "heldOut": true,
+      "prompt": "Transfer challenge — a worker-mood chain. They are Distracted today. What is the probability they are Focused in three days?",
+      "schemaId": "conditioning",
+      "interaction": {
+        "type": "masteryChallenge",
+        "scenario": "A worker's mood follows the chain \\(P = [[\\tfrac12,\\tfrac14,\\tfrac14],[\\tfrac14,\\tfrac12,\\tfrac14],[\\tfrac12,\\tfrac12,0]]\\) (rows/cols = Focused, Tired, Distracted). They are **Distracted today**. Three days from now, what is the chance they are **Focused**? — i.e. \\((P^3)_{\\text{Distracted},\\text{Focused}}\\).",
+        "fields": [
+          {
+            "id": "df3",
+            "label": "\\(P(\\text{Focused in 3 days} \\mid \\text{Distracted}) = (P^3)_{\\text{Distracted},\\text{Focused}}\\)",
+            "accept": ["13/32"],
+            "placeholder": "e.g. 3/8"
+          }
+        ]
+      },
+      "feedback": {
+        "correct": "Condition on the intermediate days — let \\(P^n\\) do the summing. \\((P^2)_{\\text{Distracted}} = (\\tfrac38, \\tfrac38, \\tfrac14)\\), so \\[ (P^3)_{D,F} = \\tfrac38\\cdot\\tfrac12 + \\tfrac38\\cdot\\tfrac14 + \\tfrac14\\cdot\\tfrac12 = \\tfrac{3}{16} + \\tfrac{3}{32} + \\tfrac{1}{8} = \\frac{13}{32}. \\] It sums over **all** length-3 Distracted→Focused paths, not one chosen route.",
+        "hints": [
+          "Three days = one more step. First get the P² row for Distracted, then take one more \\(P \\cdot P\\) step.",
+          "Three steps isn't picking a single 3-edge path — you must sum over BOTH intermediate days. Equivalently compute one more matrix step.",
+          "(P²)_Distracted = (3/8, 3/8, 1/4); then 3/8·½ + 3/8·¼ + 1/4·½ = 13/32."
+        ]
+      }
+    },
+    {
       "beatId": "mastery-three-day-snow",
       "required": true,
       "track": "both",
       "prompt": "Mastery challenge — same Land of Oz chain. It rained today. What is the probability it is snowing in three days?",
+      "schemaId": "conditioning",
       "interaction": {
         "type": "masteryChallenge",
         "scenario": "Same Land of Oz chain. It **rained today**. Three days from now, what is the chance it is **snowing**? — i.e. \\((P^3)_{\\text{Rain},\\text{Snow}}\\).",

@@ -12,6 +12,7 @@
       "required": true,
       "track": "both",
       "prompt": "Match each concept to its role in the ranking-without-a-champion story.",
+      "schemaId": "stationary-distribution",
       "interaction": {
         "type": "retrievalGrid",
         "pairs": [
@@ -160,6 +161,7 @@
       "required": true,
       "track": "both",
       "prompt": "Enter the long-run visit shares π for the 3-cycle at each damping value.",
+      "schemaId": "stationary-distribution",
       "interaction": {
         "type": "answerEntry",
         "fields": [
@@ -246,9 +248,43 @@
       }
     },
     {
+      "beatId": "transfer-heldout",
+      "required": false,
+      "track": "B",
+      "heldOut": true,
+      "schemaId": "stationary-distribution",
+      "prompt": "Transfer challenge: compute the PageRank of all four pages, then rank them most → least important.",
+      "interaction": {
+        "type": "masteryChallenge",
+        "scenario": "Four pages link like this: **1→{2,3}; 2→1; 3→{1,4}; 4→1**. With damping \\(d = 1\\) (no teleport — the graph is strongly connected, so a unique \\(\\pi\\) exists) the surfer follows a uniformly random out-link. (i) Compute each page's PageRank. (ii) Rank the four pages, most → least important.",
+        "fields": [
+          {
+            "id": "scores",
+            "label": "PageRank of pages 1, 2, 3, 4",
+            "accept": ["4/9,2/9,2/9,1/9","4/9, 2/9, 2/9, 1/9","(4/9,2/9,2/9,1/9)"],
+            "placeholder": "e.g. 4/9,2/9,2/9,1/9"
+          },
+          {
+            "id": "rank",
+            "label": "Rank the pages (most → least important)",
+            "accept": ["1,2,3,4","1 > 2 > 3 > 4","1>2>3>4","1 2 3 4"]
+          }
+        ]
+      },
+      "feedback": {
+        "correct": "Solve \\(\\pi G = \\pi\\) at \\(d = 1\\). Build the row-stochastic \\(M\\): page 1 → \\([0, \\tfrac12, \\tfrac12, 0]\\); page 2 → \\([1, 0, 0, 0]\\); page 3 → \\([\\tfrac12, 0, 0, \\tfrac12]\\); page 4 → \\([1, 0, 0, 0]\\). Solving \\(\\pi M = \\pi\\), \\(\\sum \\pi = 1\\): \\[ \\pi = \\left(\\frac{4}{9},\\;\\frac{2}{9},\\;\\frac{2}{9},\\;\\frac{1}{9}\\right), \\quad \\text{rank}\\; 1 > 2 > 3 > 4. \\] Page 1 collects rank from pages 2, 3, and 4 (every other page links to it), so it dominates at \\(4/9\\) — the ranking is the stationary distribution, not the raw in-link count.",
+        "hints": [
+          "Build the surfer's row-stochastic matrix (each page splits 1 over its out-links) and solve πG = π with Σπ = 1.",
+          "Trace where rank flows: pages 2 and 4 send ALL their rank to page 1, and page 3 sends half — so page 1 accumulates the most, 4/9.",
+          "π = (4/9, 2/9, 2/9, 1/9); rank 1 > 2 > 3 > 4."
+        ]
+      }
+    },
+    {
       "beatId": "mastery-fourNode",
       "required": true,
       "track": "both",
+      "schemaId": "stationary-distribution",
       "prompt": "Mastery challenge: compute the PageRank of all four pages, then rank them most → least important.",
       "interaction": {
         "type": "masteryChallenge",

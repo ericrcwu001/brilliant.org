@@ -20,6 +20,13 @@ import { getFirestore, FieldValue } from 'firebase-admin/firestore'
 // Phase 17 habit-loop logic, wired into the progression functions below.
 import { incrementDailyStreak } from './streaks'
 import { awardMilestonesForCompletion } from './milestones'
+// spec-01: problem-level review-card creation at lesson completion (two-phase,
+// reads-before-writes). submitReview is re-exported at the bottom.
+import {
+  readCardsForCompletion,
+  writeCardsForCompletion,
+  type ReviewLessonDoc,
+} from './review'
 
 initializeApp()
 // us-central1 matches the client's default getFunctions() region (firebase/app.ts).
@@ -28,8 +35,28 @@ setGlobalOptions({ region: 'us-central1', maxInstances: 10 })
 const db = getFirestore()
 const PROGRESS_SCHEMA_VERSION = 1
 
-type BeatDef = { beatId: string; required: boolean }
-type LessonDoc = { beats?: BeatDef[]; unlocks?: string | null }
+// Widened (spec-01) so completion can read courseId (= conceptId), per-beat
+// schemaId/heldOut, and the graded beats' accept-lists (interaction.fields[].accept
+// for answerEntry/masteryChallenge; interaction.accept for accept-gated types) —
+// the inputs review-card creation + submitReview server-grading need. All added
+// fields are optional, so existing reads (beatId/required/unlocks) are unaffected.
+type BeatDef = {
+  beatId: string
+  required: boolean
+  heldOut?: boolean
+  schemaId?: string
+  interaction?: {
+    type?: string
+    accept?: string[]
+    fields?: Array<{ id: string; accept: string[] }>
+  }
+}
+type LessonDoc = {
+  lessonId?: string
+  courseId?: string
+  beats?: BeatDef[]
+  unlocks?: string | null
+}
 
 type DerivedInput = {
   initialPrediction?: string | number | null
@@ -138,10 +165,22 @@ export const completeLesson = onCall(
     const progressRef = db.doc(`users/${uid}/progress/${lessonId}`)
     const nextRef = unlocks ? db.doc(`users/${uid}/progress/${unlocks}`) : null
 
+    // spec-01: the lesson shape review-card creation reads. lessonId is injected
+    // (loadLesson keys by id, the fixture may omit it); courseId = conceptId.
+    const reviewLesson: ReviewLessonDoc = {
+      ...(lesson as ReviewLessonDoc),
+      lessonId,
+    }
+
     const alreadyCompleted = await db.runTransaction(async (tx) => {
       // All reads must precede all writes in a Firestore transaction.
       const progressSnap = await tx.get(progressRef)
       const nextSnap = nextRef ? await tx.get(nextRef) : null
+      // spec-01 card-existence + per-concept track reads (must be BEFORE any
+      // tx.set below). `needsReview` (per-lesson) and per-beat `dueAt` (cards)
+      // are INDEPENDENT signals: card creation never touches needsReview; spec-10/
+      // spec-20 branch UX on review-vs-first-attempt.
+      const cardPlan = await readCardsForCompletion(tx, uid, reviewLesson)
 
       if (progressSnap.get('completionStatus') === 'completed') {
         // Replay = a review. Finishing it satisfies the review so the Study Desk
@@ -167,6 +206,11 @@ export const completeLesson = onCall(
           if (improveMastered) patch.derived = { mastered: true }
           tx.set(progressRef, patch, { merge: true })
         }
+        // spec-01 §5d: per-card existence guard is also the existing-user
+        // backfill. A replay creates exactly the ABSENT cards (e.g. a user who
+        // completed this lesson before spec-01 shipped) and never resets the
+        // schedules of cards a prior submitReview already advanced.
+        writeCardsForCompletion(tx, cardPlan)
         return true
       }
 
@@ -197,6 +241,11 @@ export const completeLesson = onCall(
           { merge: true },
         )
       }
+      // spec-01: create the first review card per card-eligible beat (graded-
+      // required ∪ heldOut). WRITES only — must follow the progress writes above
+      // (all tx reads already ran in readCardsForCompletion). Independent of
+      // needsReview (R7): a per-beat due date, not the per-lesson review flag.
+      writeCardsForCompletion(tx, cardPlan)
       return false
     })
 
@@ -281,3 +330,7 @@ export const recordQualifyingAction = onCall(
 // Capstone-interview callables (ADR-0008). Re-exported at the bottom so the
 // initializeApp()/setGlobalOptions(...) above run before these register.
 export { mintInterviewToken, gradeInterview } from './interview'
+
+// spec-01: spaced-review write-path callable (server-graded). Re-exported here so
+// initializeApp()/setGlobalOptions(...) above run before it registers.
+export { submitReview } from './review'

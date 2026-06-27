@@ -11,6 +11,7 @@
       "beatId": "recall-update-rule",
       "required": true,
       "track": "both",
+      "schemaId": "prior-update",
       "prompt": "Quick warm-up from L1 — match each term to what it does in the Bayes update.",
       "interaction": {
         "type": "retrievalGrid",
@@ -117,6 +118,7 @@
       "beatId": "count-the-defects",
       "required": true,
       "track": "both",
+      "schemaId": "natural-frequencies",
       "prompt": "Per 10,000 parts: M1 runs 5,000 @ 1%, M2 runs 3,000 @ 2%, M3 runs 2,000 @ 3%. What fraction of defects came from Machine 1?",
       "interaction": {
         "type": "answerEntry",
@@ -138,6 +140,7 @@
       "beatId": "compute-twist",
       "required": true,
       "track": "both",
+      "schemaId": "natural-frequencies",
       "prompt": "Same 170 total defects. Compute P(Machine 3 | defective) and P(Machine 2 | defective). Do they tie?",
       "interaction": {
         "type": "answerEntry",
@@ -159,6 +162,7 @@
       "beatId": "share-vs-rate",
       "required": true,
       "track": "both",
+      "schemaId": "prior-update",
       "prompt": "Match each machine's headline factor to why it loses — and what actually decides.",
       "interaction": {
         "type": "retrievalGrid",
@@ -202,9 +206,33 @@
       }
     },
     {
+      "beatId": "transfer-heldout",
+      "required": false,
+      "track": "B",
+      "heldOut": true,
+      "schemaId": "natural-frequencies",
+      "prompt": "Transfer: three factories ship light bulbs — F1 ships 50% of bulbs at a 2% dud rate, F2 ships 30% at 4%, F3 ships 20% at 6%. A bulb arrives dead on arrival. What is P(Factory 3 | dud)?",
+      "interaction": {
+        "type": "masteryChallenge",
+        "scenario": "Three factories: \\(F_1\\) ships 50% of bulbs at a 2% dud rate, \\(F_2\\) ships 30% at 4%, \\(F_3\\) ships 20% at 6%. A bulb arrives dead.",
+        "fields": [
+          { "id": "pf3", "label": "\\(P(F_3\\mid\\text{dud})\\)", "accept": ["6/17"] }
+        ]
+      },
+      "feedback": {
+        "correct": "Same N-hypothesis count as the suppliers, with factories in place of suppliers: \\[ P(F_3\\mid\\text{dud}) = \\frac{P(F_3)\\,P(\\text{dud}\\mid F_3)}{\\sum_{j=1}^{3} P(F_j)\\,P(\\text{dud}\\mid F_j)} \\] Per 10,000 bulbs, take share \\(\\times\\) dud rate for each factory: \\(F_1\\colon 5000\\times 2\\%=100\\), \\(F_2\\colon 3000\\times 4\\%=120\\), \\(F_3\\colon 2000\\times 6\\%=120\\); total \\(=340\\). Substituting: \\[ P(F_3\\mid\\text{dud}) = \\frac{120}{340} = \\frac{6}{17} \\] Despite shipping the fewest bulbs, \\(F_3\\)'s high dud rate ties it with \\(F_2\\) for the most defects — share and rate multiply, so a small but sloppy factory matters.",
+        "hints": [
+          "Weight each factory's share by its dud rate, then renormalize over the total — the same N-hypothesis rule as the supplier problem.",
+          "Per 10,000 bulbs: \\(F_1 = 5000\\times 2\\%=100\\), \\(F_2 = 3000\\times 4\\%=120\\), \\(F_3 = 2000\\times 6\\%=120\\); total \\(=340\\).",
+          "\\(\\frac{120}{340} = \\frac{6}{17}\\)."
+        ]
+      }
+    },
+    {
       "beatId": "mastery-challenge",
       "required": true,
       "track": "both",
+      "schemaId": "natural-frequencies",
       "prompt": "Mastery challenge: three new suppliers — S1 makes 25% of parts at a 5% defect rate, S2 makes 20% at 3%, S3 makes 55% at 1%. A part arrives defective. What is P(Supplier 1 | defective)?",
       "interaction": {
         "type": "masteryChallenge",

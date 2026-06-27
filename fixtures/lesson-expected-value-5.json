@@ -32,6 +32,7 @@
     },
     {
       "beatId": "ev5-recall",
+      "schemaId": "linearity-indicators",
       "required": true,
       "prompt": "Before the boxes, match each random wait to its expected count.",
       "interaction": {
@@ -93,6 +94,7 @@
     },
     {
       "beatId": "ev5-win",
+      "schemaId": "linearity-indicators",
       "required": true,
       "prompt": "You've found 5 of the 6 toy types. Only one is still missing, and it appears in 1 of every 6 boxes. How many more boxes do you expect to buy?",
       "interaction": {
@@ -190,6 +192,7 @@
     },
     {
       "beatId": "ev5-stage",
+      "schemaId": "linearity-indicators",
       "required": true,
       "prompt": "You hold 2 of the 6 toy types. A box shows a new type if it holds one of the 4 types you don't have yet. What's the expected number of boxes until your next new toy?",
       "interaction": {
@@ -217,7 +220,40 @@
       }
     },
     {
+      "beatId": "transfer-heldout",
+      "schemaId": "linearity-indicators",
+      "required": false,
+      "track": "B",
+      "heldOut": true,
+      "interviewNote": "Source: coupon-collector classic (Green Book / Blitzstein & Hwang §4 — collect all N equally-likely types). Same method as the cereal-toy problem: chain N geometric waits, each costing N/(N−k), and add them by linearity → N·H_N. With N=4: 4·H₄ = 4·(25/12) = 25/3 ≈ 8.33 — the last type alone averages 4 of those draws.",
+      "prompt": "Mastery challenge (fresh): a gumball machine dispenses one of N = 4 equally-likely colors per turn. You keep buying until you have all four colors. Sum the four geometric waits. Give the expected number of gumballs as an exact fraction.",
+      "interaction": {
+        "type": "masteryChallenge",
+        "scenario": "Each new color costs \\(\\tfrac{N}{N-k}\\) gumballs on average (you hold \\(k\\) of \\(N=4\\)). Sum all four stages — the last color is the slow one, averaging 4 gumballs by itself.",
+        "fields": [
+          {
+            "id": "full-set-4",
+            "label": "\\(E[\\text{full set of 4 colors}]\\)",
+            "accept": [
+              "25/3"
+            ],
+            "placeholder": "?",
+            "suffix": ""
+          }
+        ]
+      },
+      "feedback": {
+        "correct": "The coupon-collector total is the sum of geometric waits: \\[ E = \\sum_{k=0}^{N-1} \\frac{N}{N-k} = N\\,H_N \\] With \\( N=4 \\): \\( H_4 = 1+\\tfrac{1}{2}+\\tfrac{1}{3}+\\tfrac{1}{4} = \\tfrac{25}{12} \\), so \\( E = 4\\cdot\\tfrac{25}{12} = \\tfrac{100}{12} = \\tfrac{25}{3} \\approx 8.33 \\). The four stages cost \\( \\tfrac{4}{4}, \\tfrac{4}{3}, \\tfrac{4}{2}, \\tfrac{4}{1} = 1, \\tfrac43, 2, 4 \\) — the last color dominates.",
+        "hints": [
+          "It's well above 4. Sum the four ever-longer waits: \\(4 \\cdot H_4 = 4 \\cdot \\tfrac{25}{12}\\).",
+          "Stage costs are \\( \\tfrac{4}{4}, \\tfrac{4}{3}, \\tfrac{4}{2}, \\tfrac{4}{1} = 1, \\tfrac{4}{3}, 2, 4 \\). Their sum is \\(H_4\\) scaled by 4.",
+          "\\( H_4 = 1+\\tfrac12+\\tfrac13+\\tfrac14 = \\tfrac{25}{12} \\); \\( 4 \\cdot \\tfrac{25}{12} = \\tfrac{100}{12} = \\tfrac{25}{3} \\)."
+        ]
+      }
+    },
+    {
       "beatId": "ev5-prove",
+      "schemaId": "linearity-indicators",
       "required": true,
       "prompt": "Mastery challenge: you buy boxes until you hold the full set of N = 6 toy types. Sum the six geometric waits. Give the expected total as an exact fraction.",
       "interaction": {

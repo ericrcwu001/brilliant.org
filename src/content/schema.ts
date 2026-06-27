@@ -10,6 +10,7 @@
 // generated recurrences equal the fixture's tile targets, catching drift.
 
 import { z } from 'zod'
+import { MethodIdSchema } from './methods'
 
 export const StateIdSchema = z
   .string()
@@ -118,7 +119,30 @@ export const GameTreeNodeSchema: z.ZodType<GameTreeNodeData> = z.lazy(() =>
 )
 
 export const InteractionSchema = z.discriminatedUnion('type', [
-  z.object({ type: z.literal('prediction'), options: z.array(z.string()) }),
+  z.object({
+    type: z.literal('prediction'),
+    options: z.array(z.string()),
+    // ── Which-method discrimination gate (spec-13 / D12). When `gate` is present the
+    // prediction becomes a GRADED method-discrimination checkpoint: `options` are
+    // method display names, `gate.correct` names the right MethodId, and the
+    // selection is graded (not the ungraded opening bet). Absent ⇒ today's ungraded
+    // opening-bet behavior (PredictionBeat.tsx), unchanged.
+    gate: z
+      .object({
+        kind: z.literal('which-method'),
+        // The right answer, by registry id (Foundation B). Cross-checked by the
+        // validator against `beat.schemaId` and against `options`.
+        correct: MethodIdSchema,
+        // Registry ids for each visible option, positionally aligned with `options`
+        // (options[i] is the display label for optionMethods[i]). Distractor ids are
+        // drawn from the curated CONFUSABLE[gate.correct] map in methods.ts
+        // (Foundation B, owned by spec-00 — this spec only consumes it), never from
+        // domain overlap. The validator cross-checks every distractor is a declared
+        // confusable of `correct`.
+        optionMethods: z.array(MethodIdSchema).min(2),
+      })
+      .optional(),
+  }),
   z.object({
     type: z.literal('patternPick'),
     patterns: z.array(z.string()),
@@ -686,6 +710,19 @@ export const BeatSchema = z.object({
   // Opt-in "For the interview" note (proposed §2.7). De-gatekept default copy +
   // this collapsed quant framing; validate-fixtures asserts one exists per lesson.
   interviewNote: z.string().optional(),
+  // Hidden deep-structure METHOD tag (README §4 Foundation B, Decision D5, spec-00).
+  // Names the method a solver applies, independent of the surface story. Optional
+  // during the one-time backfill; once backfill completes, scripts/validate-fixtures.ts
+  // REQUIRES a valid MethodId on every GRADED beat (mastery.ts predicate). Read by
+  // the which-method gate (spec-13), the interleaved queue + method-weakness index
+  // (spec-10/01), and transfer-problem matching (spec-24). NEVER shown to learners.
+  schemaId: MethodIdSchema.optional(),
+  // Held-out TRANSFER problem marker (README §4.5, spec-24). A heldOut beat is a
+  // fresh-surface / same-method problem that gates Track-B gold: it is excluded from
+  // the normal visible/required walk (spec-11) and surfaces only via the gold-gate
+  // draw. Convention: heldOut ⟹ track:'B' && required:false && carries a schemaId.
+  // spec-01 reads this at completion to create the transfer review card (isTransfer:true).
+  heldOut: z.literal(true).optional(),
 })
 
 export const LessonSchema = z.object({
@@ -770,6 +807,16 @@ export const SnapshotSchema = z.object({
       // `hintLevelByBeat` resets to 0 on a correct submit, so this is the only
       // signal of peak struggle — the input to the per-lesson mastery signal.
       maxHintLevelByBeat: z.record(z.string(), z.number()).optional(),
+      // Per-checkpoint-beat confidence (spec-02 / Foundation C / D6). Client-written;
+      // scale = ConfidenceRating's CONFIDENCE_SCALE midpoints in [0.5, 1.0], a
+      // SELF-REPORTED subjective probability of being correct (NOT a chance-adjusted
+      // probability). Captured only on checkpoint beats (isCheckpointBeat). spec-12
+      // scores Brier against the binary outcome but must not read 0.5 as chance.
+      confidenceByBeat: z.record(z.string(), z.number()).optional(),
+      // Difficulty-governor rolling-success window over retrieval reps (spec-21).
+      // Booleans (pass/fail per recent rep) read by governorState; quant-intensity
+      // only (stays empty + unpersisted for Track A). Never feeds mastery.
+      repWindow: z.array(z.boolean()).optional(),
     })
     .loose(),
   updatedAt: z.string(),
@@ -816,6 +863,64 @@ export const ProgressSchema = z.object({
   schemaVersion: z.number().optional(),
 })
 
+// users/{uid}/reviews/{cardId} — problem-level SM-2 review cards (README §4
+// Foundation A, spec-01). cardId = `${lessonId}__${beatId}`. Function-owned
+// (rules deny client writes; they gate gold mastery so must be trusted). This
+// schema is the client-read PARSER (the queue reads cards to compare dueAt to
+// now); the server writes them via submitReview / writeCardsForCompletion.
+// Timestamps deserialize to Timestamp objects, so they are typed `z.unknown()`
+// (matching ProgressSchema.completedAt above).
+export const ReviewCardSchema = z.object({
+  lessonId: z.string(),
+  beatId: z.string(),
+  conceptId: z.string(), // = courseId; denormalized for cross-concept queue queries
+  schemaId: z.string(), // method tag (Foundation B); '' placeholder until spec-00 backfill
+  track: z.enum(['A', 'B']), // which gold gate applies (re-retrieve vs transfer)
+  dueAt: z.unknown(), // Timestamp; client compares to now to build the queue
+  intervalDays: z.number(),
+  easeFactor: z.number(), // SM-2; init 2.5, floor 1.3
+  reps: z.number(), // consecutive passes
+  lapses: z.number(),
+  lastResult: z.enum(['pass', 'fail']).nullable(),
+  lastConfidence: z.number().nullable(), // last confidence captured (D6 third site); → calibration (spec-12)
+  isTransfer: z.boolean(), // true iff held-out transfer problem (beat.heldOut); gates Track-B gold (spec-11)
+  suspended: z.boolean(), // true once gold reached via transfer (maintenance cadence only)
+  createdAt: z.unknown(), // Timestamp
+  updatedAt: z.unknown(), // Timestamp
+  lastReviewedAt: z.unknown().nullable(), // Timestamp | null
+})
+
+// users/{uid}/calibration/summary — Function-written calibration trend (spec-12).
+// Owner read-only (rules deny client writes). This schema parses the client read;
+// `.loose()` because the doc also carries running-sum denormals (brierSum, …) and a
+// server Timestamp not needed by the client read selector.
+const FormatBucketSchema = z
+  .object({
+    n: z.number(),
+    brier: z.number().nullable().optional(),
+    overconfidence: z.number().nullable().optional(),
+    reliable: z.boolean().optional(),
+  })
+  .loose()
+export const CalibrationSummarySchema = z
+  .object({
+    n: z.number(),
+    brier: z.number().nullable().optional(),
+    meanConfidence: z.number().nullable().optional(),
+    accuracy: z.number().nullable().optional(),
+    overconfidence: z.number().nullable().optional(),
+    reliable: z.boolean().optional(), // n >= MIN_CALIBRATION_N (gate #7)
+    byFormat: z
+      .object({
+        voice: FormatBucketSchema.optional(),
+        typein: FormatBucketSchema.optional(),
+        binary: FormatBucketSchema.optional(),
+      })
+      .loose()
+      .optional(),
+  })
+  .loose() // brierSum etc. + server Timestamp arrive loose
+
 export type CanonicalRecurrence = z.infer<typeof CanonicalRecurrenceSchema>
 export type Tile = z.infer<typeof TileSchema>
 export type EquationRow = z.infer<typeof EquationRowSchema>
@@ -831,3 +936,5 @@ export type CourseLessonNode = z.infer<typeof CourseLessonNodeSchema>
 export type Snapshot = z.infer<typeof SnapshotSchema>
 export type Progress = z.infer<typeof ProgressSchema>
 export type ProgressDerived = z.infer<typeof ProgressDerivedSchema>
+export type ReviewCard = z.infer<typeof ReviewCardSchema>
+export type CalibrationSummary = z.infer<typeof CalibrationSummarySchema>

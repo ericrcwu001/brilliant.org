@@ -12,6 +12,7 @@
       "required": true,
       "track": "both",
       "prompt": "Warm-up — match each birth–death concept to its definition.",
+      "schemaId": "stationary-distribution",
       "interaction": {
         "type": "retrievalGrid",
         "pairs": [
@@ -227,10 +228,38 @@
       }
     },
     {
+      "beatId": "transfer-heldout",
+      "required": false,
+      "track": "B",
+      "heldOut": true,
+      "prompt": "Transfer challenge: Ehrenfest urn with m = 4 balls. Find π via the detailed-balance telescoping product.",
+      "schemaId": "stationary-distribution",
+      "interaction": {
+        "type": "masteryChallenge",
+        "scenario": "The Ehrenfest urn with \\(m = 4\\) balls, states \\(\\{0,1,2,3,4\\}\\), transition matrix \\(P = [[0,1,0,0,0],[\\tfrac{1}{4},0,\\tfrac{3}{4},0,0],[0,\\tfrac{1}{2},0,\\tfrac{1}{2},0],[0,0,\\tfrac{3}{4},0,\\tfrac{1}{4}],[0,0,0,1,0]]\\). Find the stationary distribution \\(\\pi\\) via detailed balance.",
+        "fields": [
+          { "id": "pi0", "label": "\\(\\pi(0)\\)", "accept": ["1/16"] },
+          { "id": "pi1", "label": "\\(\\pi(1)\\)", "accept": ["1/4"] },
+          { "id": "pi2", "label": "\\(\\pi(2)\\)", "accept": ["3/8"] },
+          { "id": "pi3", "label": "\\(\\pi(3)\\)", "accept": ["1/4"] },
+          { "id": "pi4", "label": "\\(\\pi(4)\\)", "accept": ["1/16"] }
+        ]
+      },
+      "feedback": {
+        "correct": "Telescope on \\(\\{0,1,2,3,4\\}\\): edge (0,1) gives \\(\\pi_1 = 4\\pi_0\\), edge (1,2) gives \\(\\pi_2 = \\tfrac{3}{2}\\pi_1 = 6\\pi_0\\), edge (2,3) gives \\(\\pi_3 = 4\\pi_0\\), edge (3,4) gives \\(\\pi_4 = \\pi_0\\) \\(\\Rightarrow \\pi \\propto (1,4,6,4,1)\\); normalize by \\(2^4 = 16\\) \\(\\Rightarrow \\mathbf{(1/16,\\, 1/4,\\, 3/8,\\, 1/4,\\, 1/16)} = \\binom{4}{i}/2^4\\). More states, same shortcut — no \\(\\pi P = \\pi\\) solve.",
+        "hints": [
+          "Same telescoping product, now five states: \\(\\pi_1/\\pi_0 = p_{01}/p_{10}\\), \\(\\pi_2/\\pi_1 = p_{12}/p_{21}\\), etc.",
+          "Still no linear system — π is Binomial(4,½), not uniform and not a frozen middle: (1,4,6,4,1).",
+          "(1,4,6,4,1)/16 = (1/16, 1/4, 3/8, 1/4, 1/16)."
+        ]
+      }
+    },
+    {
       "beatId": "mastery-ehrenfest-m3",
       "required": true,
       "track": "both",
       "prompt": "Mastery challenge: Ehrenfest urn with m = 3 balls. Find π via the detailed-balance telescoping product.",
+      "schemaId": "stationary-distribution",
       "interaction": {
         "type": "masteryChallenge",
         "scenario": "The Ehrenfest urn with \\(m = 3\\) balls, states \\(\\{0,1,2,3\\}\\), transition matrix \\(P = [[0,1,0,0],[\\tfrac{1}{3},0,\\tfrac{2}{3},0],[0,\\tfrac{2}{3},0,\\tfrac{1}{3}],[0,0,1,0]]\\). Find the stationary distribution \\(\\pi\\) via detailed balance.",

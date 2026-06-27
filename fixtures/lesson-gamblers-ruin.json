@@ -10,6 +10,7 @@
     {
       "beatId": "recall-overlap",
       "required": true,
+      "schemaId": "first-step-analysis",
       "prompt": "Warm-up: you're waiting for HH and have a lone H. Match each next flip to what it does to your progress.",
       "interaction": {
         "type": "retrievalGrid",
@@ -93,6 +94,7 @@
     {
       "beatId": "boundary-edge",
       "required": true,
+      "schemaId": "absorbing-states",
       "prompt": "Match each amount to what happens when the walk reaches it.",
       "interaction": {
         "type": "retrievalGrid",
@@ -126,6 +128,7 @@
     {
       "beatId": "prob-tiles",
       "required": true,
+      "schemaId": "absorbing-states",
       "density": "merged",
       "prompt": "Tap the tiles into the slots to build the chance-of-reaching-$4 rule for $2. From $2, half the time you step to $3, half to $1 \u2014 no per-flip cost for a chance.",
       "interaction": {
@@ -195,6 +198,7 @@
     {
       "beatId": "duration-tiles",
       "required": true,
+      "schemaId": "absorbing-states",
       "density": "merged",
       "maxHintLevel": 2,
       "prompt": "Tap the tiles into the slots to build the average-flips rule for $2. Same split as before \u2014 but this time every flip costs 1, so the +1 comes back.",
@@ -269,6 +273,7 @@
     {
       "beatId": "guided-solve",
       "required": true,
+      "schemaId": "absorbing-states",
       "prompt": "Solve both systems for the start at $2. Type the chance of reaching $4 and the average number of flips.",
       "interaction": {
         "type": "answerEntry",
@@ -315,8 +320,33 @@
       }
     },
     {
+      "beatId": "transfer-heldout",
+      "required": false,
+      "track": "B",
+      "heldOut": true,
+      "schemaId": "absorbing-states",
+      "prompt": "A board game has 8 squares numbered 0 through 7. Your token sits on square 2. Each turn you spin a fair spinner: heads slides the token one square right, tails one square left. You finish when the token lands on square 7 (you win) or square 0 (you lose). What is your chance of reaching square 7 first (as a fraction), and how many spins will the game last on average (a whole number)?",
+      "interaction": {
+        "type": "masteryChallenge",
+        "scenario": "A token starts on square \\(2\\) of a track \\(0,1,\\dots,7\\). Each fair spin moves it \\(+1\\) (right) or \\(-1\\) (left). It stops on square \\(7\\) (win) or square \\(0\\) (lose).",
+        "fields": [
+          { "id": "reach", "label": "Chance of reaching square \\(7\\) from square \\(2\\)", "accept": ["2/7"], "placeholder": "e.g. 3/8" },
+          { "id": "steps", "label": "Average spins until the game ends", "accept": ["10"], "placeholder": "?", "suffix": "spins" }
+        ]
+      },
+      "feedback": {
+        "correct": "\\(P_2 = \\tfrac{2}{7}\\) and the game lasts \\(10\\) spins on average. This is the same fair walk between two absorbing walls \\(0\\) and \\(N\\), just dressed up as a board: from start \\(i\\), \\[ P_i = \\tfrac{i}{N}, \\] \\[ D_i = i \\cdot (N - i). \\] Here \\(N = 7\\) (the walls are squares \\(0\\) and \\(7\\)) and \\(i = 2\\): \\(P_2 = \\tfrac{2}{7}\\), and \\(D_2 = 2 \\cdot (7 - 2) = 2 \\cdot 5 = 10\\). Squares replace dollars and spins replace flips, but the absorbing-state recurrence is identical.",
+        "hints": [
+          "Rename the pieces: the squares are the dollar amounts, the walls \\(0\\) and \\(7\\) are the absorbing states, a spin is a flip. So \\(N = 7\\), \\(i = 2\\).",
+          "Win chance is straight-line: \\(P_i = \\tfrac{i}{N}\\). Expected length is the product of the two wall-distances: \\(D_i = i \\cdot (N - i)\\).",
+          "\\(P_2 = \\tfrac{2}{7}\\). \\(D_2 = 2 \\cdot (7 - 2) = 2 \\cdot 5 = 10\\)."
+        ]
+      }
+    },
+    {
       "beatId": "mastery-challenge",
       "required": true,
+      "schemaId": "absorbing-states",
       "prompt": "Mastery challenge: starting at $3, what is your chance of reaching $10 before going broke (as a fraction), and how many flips will the game last on average (a whole number)?",
       "interaction": {
         "type": "masteryChallenge",

@@ -114,8 +114,8 @@ describe('lesson-combinatorics-2 fact-check', () => {
 
   // ── Structural checks ──────────────────────────────────────────────────
 
-  it('lesson has exactly 10 beats', () => {
-    expect(lesson.beats).toHaveLength(10)
+  it('lesson has exactly 11 beats', () => {
+    expect(lesson.beats).toHaveLength(11)
   })
 
   it('beat order matches the spec', () => {
@@ -129,6 +129,7 @@ describe('lesson-combinatorics-2 fact-check', () => {
       'l2-explore',
       'l2-model',
       'l2-fraction',
+      'transfer-heldout',
       'l2-prove',
       'l2-recap',
     ])

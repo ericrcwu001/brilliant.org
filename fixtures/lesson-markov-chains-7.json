@@ -12,6 +12,7 @@
       "required": true,
       "track": "both",
       "prompt": "Quick recall — match each concept to what it means.",
+      "schemaId": "stationary-distribution",
       "interaction": {
         "type": "retrievalGrid",
         "pairs": [
@@ -231,6 +232,7 @@
       "required": true,
       "track": "both",
       "prompt": "Sort each chain — does it **forget** its starting state, or **never forget**?",
+      "schemaId": "stationary-distribution",
       "interaction": {
         "type": "retrievalGrid",
         "pairs": [
@@ -250,10 +252,36 @@
       }
     },
     {
+      "beatId": "transfer-heldout",
+      "required": false,
+      "track": "B",
+      "heldOut": true,
+      "prompt": "Transfer challenge: same chain, two starts — and a periodicity bonus.",
+      "schemaId": "stationary-distribution",
+      "interaction": {
+        "type": "masteryChallenge",
+        "scenario": "Two analysts run the same 2-state mood chain \\(P = [[1/2,1/2],[1/3,2/3]]\\) (Sunny, Cloudy). Mia starts on a **sunny** day, Theo on a **cloudy** day. They each let it run for weeks.",
+        "fields": [
+          { "id": "fromSunny", "label": "Mia's long-run fraction of sunny days (started sunny)", "accept": ["2/5"] },
+          { "id": "fromCloudy", "label": "Theo's long-run fraction of sunny days (started cloudy)", "accept": ["2/5"] },
+          { "id": "periodic", "label": "Bonus — does the period-2 toggle chain [[0,1],[1,0]] (π = (1/2,1/2)) converge as n→∞? (yes/no)", "accept": ["no"] }
+        ]
+      },
+      "feedback": {
+        "correct": "Both starts wash out to the SAME long run: solving \\(\\pi P = \\pi\\) gives \\(\\pi = (\\tfrac25, \\tfrac35)\\), so from sunny → \\(\\mathbf{2/5}\\) and from cloudy → \\(\\mathbf{2/5}\\). But the toggle chain \\([[0,1],[1,0]]\\) does **not** converge — \\(\\pi = (1/2,1/2)\\) exists yet \\(P^n\\) oscillates (period 2). Existence of \\(\\pi \\neq\\) convergence; you need regularity (aperiodicity).",
+        "hints": [
+          "This chain is regular, so the start washes out — both rows of Pⁿ reach the same π. Solve πP=π. The toggle chain has a π but is periodic.",
+          "A higher-probability start keeps NO long-run edge: sunny-start and cloudy-start both give long-run P(sunny) = 2/5. And a stationary π alone does not force convergence — the period-2 toggle oscillates forever.",
+          "From sunny → 2/5; from cloudy → 2/5; toggle chain converges? No."
+        ]
+      }
+    },
+    {
       "beatId": "mastery-challenge",
       "required": true,
       "track": "both",
       "prompt": "Mastery challenge: same chain, two starts — and a periodic bonus.",
+      "schemaId": "stationary-distribution",
       "interaction": {
         "type": "masteryChallenge",
         "scenario": "Two forecasters run the same 2-state weather chain \\(P = [[3/5,2/5],[3/10,7/10]]\\) (Clear, Rainy). Ana starts on a **clear** day, Ben on a **rainy** day. They each let it run for weeks.",

@@ -22,6 +22,8 @@ export const ROUTES = {
   devHome: '/dev/home',
   /** Dev-only interview harness (fixture data, no Firebase/OpenAI). */
   devInterview: '/dev/interview',
+  /** Dev-only which-method gate harness (spec-13; no Firebase). */
+  devGate: '/dev/gate',
 } as const
 
 export const FLAGSHIP_LESSON_ID = 'lesson-pattern-hitting-times'

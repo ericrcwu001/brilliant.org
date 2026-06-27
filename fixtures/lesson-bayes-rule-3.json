@@ -11,6 +11,7 @@
       "beatId": "recall-base-rate",
       "required": true,
       "track": "both",
+      "schemaId": "prior-update",
       "prompt": "Quick warm-up from L2 — match each statement to what it describes.",
       "interaction": {
         "type": "retrievalGrid",
@@ -140,6 +141,7 @@
       "beatId": "two-tests",
       "required": true,
       "track": "both",
+      "schemaId": "prior-update",
       "prompt": "Same 1% disease, same 99% test. You test positive twice (independently). Compute P(disease | two positives).",
       "interaction": {
         "type": "answerEntry",
@@ -161,6 +163,7 @@
       "beatId": "coin-ladder",
       "required": true,
       "track": "both",
+      "schemaId": "prior-update",
       "prompt": "Two coins (one fair, one two-headed) — match each number of heads to its exact posterior.",
       "interaction": {
         "type": "retrievalGrid",
@@ -204,9 +207,38 @@
       }
     },
     {
+      "beatId": "transfer-heldout",
+      "required": false,
+      "track": "B",
+      "heldOut": true,
+      "schemaId": "prior-update",
+      "prompt": "Transfer: 1 die in a box of 100 is loaded to always roll a 6; the other 99 are fair. You grab one at random and it keeps rolling 6. What is the smallest number of 6s in a row that makes the loaded die more likely than not?",
+      "interaction": {
+        "type": "masteryChallenge",
+        "scenario": "1 of 100 dice always rolls a 6 (loaded); the other 99 are fair (a 6 with probability \\(\\tfrac{1}{6}\\)). A randomly chosen die keeps rolling 6.",
+        "fields": [
+          {
+            "id": "k",
+            "label": "Smallest number of consecutive 6s to make the loaded die more likely than not",
+            "accept": ["3"],
+            "placeholder": "a whole number"
+          }
+        ]
+      },
+      "feedback": {
+        "correct": "Same odds-form update as the double-headed coin, but each roll's likelihood ratio is now \\(6\\), not \\(2\\): \\[ \\frac{P(6\\mid\\text{loaded})}{P(6\\mid\\text{fair})} = \\frac{1}{1/6} = 6 \\] After \\(k\\) sixes the posterior odds are: \\[ \\text{posterior odds} = \\frac{1}{99}\\times 6^k \\] The loaded die is more likely once \\(6^k > 99\\). Checking: \\(6^2 = 36 < 99\\) (not enough); \\(6^3 = 216 > 99\\) (enough). So \\(k = 3\\). At \\(k = 3\\) the posterior is \\(\\frac{216}{216+99} = \\frac{216}{315} = \\frac{24}{35}\\) — comfortably over half. A stronger per-trial likelihood ratio (\\(6\\) vs \\(2\\)) flips belief in far fewer observations.",
+        "hints": [
+          "Each 6 multiplies the prior odds by the likelihood ratio \\(\\frac{P(6\\mid\\text{loaded})}{P(6\\mid\\text{fair})} = \\frac{1}{1/6} = 6\\).",
+          "Prior odds are \\(1:99\\); you need \\(6^k > 99\\). Checking: \\(6^2 = 36\\) (not enough), \\(6^3 = 216\\) (enough).",
+          "\\(k = 3\\); at that point the posterior is \\(\\frac{216}{315} = \\frac{24}{35}\\) — just over \\(\\tfrac{1}{2}\\)."
+        ]
+      }
+    },
+    {
       "beatId": "mastery-challenge",
       "required": true,
       "track": "both",
+      "schemaId": "prior-update",
       "prompt": "Mastery challenge: the 1-in-1000 double-headed coin keeps landing heads. What is the smallest number of heads to make the double-headed coin more likely than not?",
       "interaction": {
         "type": "masteryChallenge",

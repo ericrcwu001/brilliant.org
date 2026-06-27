@@ -10,6 +10,7 @@
     {
       "beatId": "recall-numbers",
       "required": true,
+      "schemaId": "first-step-analysis",
       "prompt": "By now you've worked these out the long way. Match each pattern to its wait.",
       "interaction": {
         "type": "retrievalGrid",
@@ -150,8 +151,33 @@
       }
     },
     {
+      "beatId": "transfer-heldout",
+      "required": false,
+      "track": "B",
+      "heldOut": true,
+      "schemaId": "recursion-self-reference",
+      "pattern": "HTHTH",
+      "prompt": "Transfer challenge: use the 2^L overlap shortcut to find E[HTHTH] - the average flips until you first see heads-tails-heads-tails-heads. Type a whole number.",
+      "interaction": {
+        "type": "masteryChallenge",
+        "scenario": "A casino dealer alternates a marker between two cups, H then T then H then T then H. You want the expected number of flips until the alternating pattern \\(\\text{HTHTH}\\) first appears. The shortcut still works — but where does an alternating word reappear inside itself?",
+        "fields": [
+          { "id": "e-hthth", "label": "Average flips until \\(\\text{HTHTH}\\)", "accept": ["42"], "placeholder": "?", "suffix": "flips" }
+        ]
+      },
+      "feedback": {
+        "correct": "\\(E[\\text{HTHTH}] = 42\\). An alternating word reappears inside itself only at the odd shifts: \\(\\text{HTHTH}\\) overlaps itself at length 1 (the leading \\(\\text{H}\\) equals the trailing \\(\\text{H}\\)), length 3 (\\(\\text{HTH}\\) is both a prefix and a suffix), and length 5 (the whole word). The even shifts fail — sliding two places lines an \\(\\text{H}\\) up against a \\(\\text{T}\\). So \\[ E[\\text{HTHTH}] = \\sum 2^L = 2^1 + 2^3 + 2^5 = 2 + 8 + 32 = 42. \\] Contrast the run \\(\\text{HHHHH}\\), which overlaps at every length \\(1\\!-\\!5\\) and waits \\(2+4+8+16+32 = 62\\): same length, but the alternating word's missing even overlaps make it the faster pattern to hit.",
+        "hints": [
+          "Don't assume every shorter length overlaps. Slide \\(\\text{HTHTH}\\) over itself one position at a time and keep only the shifts where the start reappears at the end.",
+          "Only the odd shifts survive: length 1 (\\(\\text{H}\\) vs \\(\\text{H}\\)), length 3 (\\(\\text{HTH}\\) vs \\(\\text{HTH}\\)), and length 5 (the full word). The length-2 and length-4 shifts misalign \\(\\text{H}\\) against \\(\\text{T}\\).",
+          "Add \\(2^L\\) over those overlap lengths: \\(2^1 + 2^3 + 2^5 = 2 + 8 + 32 = 42\\)."
+        ]
+      }
+    },
+    {
       "beatId": "mastery-challenge",
       "required": true,
+      "schemaId": "recursion-self-reference",
       "pattern": "HHHH",
       "prompt": "Mastery challenge: use the 2^L overlap shortcut to find E[HHHH] - the average flips until four heads in a row. Type a whole number.",
       "interaction": {

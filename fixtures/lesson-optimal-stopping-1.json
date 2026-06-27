@@ -11,6 +11,7 @@
       "beatId": "l1-recall",
       "required": true,
       "prompt": "Warm-up. Pick one item at random from a group. Match the group size to your chance of grabbing the single best one.",
+      "schemaId": "threshold-rule",
       "interaction": {
         "type": "retrievalGrid",
         "pairs": [
@@ -120,6 +121,7 @@
       "beatId": "l1-count",
       "required": true,
       "prompt": "Make it exact. List the 3 candidates in every possible arrival order. In how many of those orders does the best arrive FIRST — and so, what is 'hire the first' chance of winning?",
+      "schemaId": "threshold-rule",
       "interaction": {
         "type": "answerEntry",
         "fields": [
@@ -177,6 +179,7 @@
       "beatId": "l1-stakes",
       "required": true,
       "prompt": "Raise the stakes: 10 candidates now. What is 'hire the first' chance of landing the very best?",
+      "schemaId": "threshold-rule",
       "interaction": {
         "type": "answerEntry",
         "fields": [
@@ -198,9 +201,44 @@
       }
     },
     {
+      "beatId": "transfer-heldout",
+      "required": false,
+      "track": "B",
+      "heldOut": true,
+      "schemaId": "threshold-rule",
+      "prompt": "Fresh case — same idea.",
+      "interaction": {
+        "type": "masteryChallenge",
+        "scenario": "Six food trucks roll up to a festival in a uniformly random order, and you can only commit to buy lunch from one of them. You decide in advance — before seeing any of them — to always buy from the 4th truck that arrives, ignoring the rest. (a) What is your probability of picking the single best truck of the 6? (b) Could ANY rule that fixes one arrival position in advance do better than that?",
+        "fields": [
+          {
+            "id": "prob",
+            "label": "P(best) committing to the fixed 4th truck",
+            "accept": ["1/6"],
+            "placeholder": "a/b"
+          },
+          {
+            "id": "beats",
+            "label": "Can a fixed-position rule beat that? (yes/no)",
+            "accept": ["no"],
+            "placeholder": "yes / no"
+          }
+        ]
+      },
+      "feedback": {
+        "correct": "\\[ P(\\text{best in position 4}) = \\frac{1}{6} \\] The single best truck is equally likely to arrive in any of the 6 positions, so committing to the 4th wins exactly \\(\\frac{1}{6}\\) of the time. Position 1, 2, 3, 5, or 6 would each also win \\(\\frac{1}{n} = \\frac{1}{6}\\) — every fixed-position rule ties at \\(\\frac{1}{n}\\) because it ignores what it sees. No fixed position can beat \\(\\frac{1}{6}\\); to do better you must USE the trucks you've already watched go by.",
+        "hints": [
+          "The best truck's arrival position is uniform over the 6 slots.",
+          "A fixed-position rule wins exactly when the best lands in that slot, so it wins \\(\\frac{1}{6}\\).",
+          "Every fixed position gives \\(\\frac{1}{6}\\), so none beats it — answers: \\(\\frac{1}{6}\\), no."
+        ]
+      }
+    },
+    {
       "beatId": "l1-prove",
       "required": true,
       "prompt": "Prove you've got it.",
+      "schemaId": "threshold-rule",
       "interaction": {
         "type": "masteryChallenge",
         "scenario": "You will interview 4 candidates in random order and, stubbornly, decide in advance to hire the 2nd person you see — ignoring everyone else. (a) What is your chance of getting the best of the 4? (b) Could ANY rule that fixes a single seat in advance beat \\(\\frac{1}{4}\\)?",

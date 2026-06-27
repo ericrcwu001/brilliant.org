@@ -55,7 +55,8 @@ service cloud.firestore {
         && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
           'displayName', 'lastActiveAt',
           'learningGoal', 'comfortLevel', 'focusArea', 'pace',
-          'defaultTrack', 'recommendedConceptId', 'onboardingCompletedAt'
+          'defaultTrack', 'recommendedConceptId', 'onboardingCompletedAt',
+          'targetInterviewDate'
         ])
         && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['displayName'])
             || validDisplayName(request.resource.data.displayName));
@@ -111,6 +112,14 @@ service cloud.firestore {
         allow write: if false;
       }
       match /interviewState/{conceptId} {
+        allow read: if isOwner(uid);
+        allow write: if false;
+      }
+
+      // Spaced-review cards (spec-01) — Cloud Functions only (Admin SDK bypasses
+      // rules). They gate gold mastery so must be trusted; the client computes
+      // "what's due" by reading dueAt and comparing to now (D14).
+      match /reviews/{cardId} {
         allow read: if isOwner(uid);
         allow write: if false;
       }

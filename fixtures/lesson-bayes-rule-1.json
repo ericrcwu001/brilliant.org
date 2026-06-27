@@ -9,6 +9,7 @@
   "beats": [
     {
       "beatId": "recall-prob-split",
+      "schemaId": "prior-update",
       "required": true,
       "track": "both",
       "prompt": "Quick warm-up — match each quantity to how it behaves.",
@@ -140,6 +141,7 @@
     },
     {
       "beatId": "compute-posterior",
+      "schemaId": "prior-update",
       "required": true,
       "track": "both",
       "prompt": "Compute P(two-headed | heads) using prior × likelihood ÷ total. Give your answer as a fraction.",
@@ -160,6 +162,7 @@
     },
     {
       "beatId": "framing-flip",
+      "schemaId": "conditioning",
       "required": true,
       "track": "both",
       "prompt": "A family has two children. Compute P(both boys) under each clue.",
@@ -205,7 +208,31 @@
       }
     },
     {
+      "beatId": "transfer-heldout",
+      "required": false,
+      "track": "B",
+      "heldOut": true,
+      "schemaId": "prior-update",
+      "prompt": "Transfer challenge: a fresh prior-update story. Type the probability as a reduced fraction.",
+      "interaction": {
+        "type": "masteryChallenge",
+        "scenario": "A friend has two dice: a fair die and a trick die that ALWAYS rolls a 6. They pick one at random (50/50), roll it twice, and you see \\(6, 6\\). What is the probability they picked the trick die?",
+        "fields": [
+          { "id": "trick", "label": "P(trick die | rolled 6 then 6)", "accept": ["36/37"], "placeholder": "?" }
+        ]
+      },
+      "feedback": {
+        "correct": "\\(P(\\text{trick}\\mid 66) = \\tfrac{36}{37}\\). Prior \\(\\tfrac12\\) each. Likelihood of \\(66\\): under the trick die it is \\(1\\); under the fair die it is \\((\\tfrac16)^2 = \\tfrac1{36}\\). Posterior \\(= \\dfrac{\\tfrac12\\cdot 1}{\\tfrac12\\cdot 1 + \\tfrac12\\cdot \\tfrac1{36}} = \\dfrac{1}{1 + \\tfrac1{36}} = \\tfrac{36}{37}\\). Same prior-update method as the two-coins problem, fresh surface.",
+        "hints": [
+          "Set the prior at \\(\\tfrac12\\) for each die, then weight by how likely each die makes the evidence \\(66\\).",
+          "The trick die makes \\(66\\) with probability \\(1\\); the fair die makes it with probability \\((\\tfrac16)^2 = \\tfrac1{36}\\). Posterior odds = prior odds \\(\\times\\) likelihood ratio \\(= 1 \\times 36 = 36\\) to \\(1\\).",
+          "Odds \\(36{:}1\\) for the trick die means probability \\(\\tfrac{36}{36+1} = \\tfrac{36}{37}\\)."
+        ]
+      }
+    },
+    {
       "beatId": "mastery-challenge",
+      "schemaId": "prior-update",
       "required": true,
       "track": "both",
       "prompt": "Mastery challenge: same two coins — you flip the chosen coin and see heads twice (HH). Give the exact posterior.",

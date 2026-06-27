@@ -12,6 +12,7 @@
       "required": true,
       "track": "both",
       "prompt": "Quick warm-up — match each quantity to how it behaves.",
+      "schemaId": "first-step-analysis",
       "interaction": {
         "type": "retrievalGrid",
         "pairs": [
@@ -117,6 +118,7 @@
       "required": true,
       "track": "both",
       "prompt": "Using B = (I−Q)⁻¹R on the symmetric $0–$4 walk, fill in the three reach-probabilities.",
+      "schemaId": "absorbing-states",
       "interaction": {
         "type": "answerEntry",
         "fields": [
@@ -223,6 +225,7 @@
       "required": true,
       "track": "both",
       "prompt": "Same symmetric $0–$4 walk, two reads — match each quantity to its formula and its key feature.",
+      "schemaId": "absorbing-states",
       "interaction": {
         "type": "retrievalGrid",
         "pairs": [
@@ -242,10 +245,34 @@
       }
     },
     {
+      "beatId": "transfer-heldout",
+      "required": false,
+      "track": "B",
+      "heldOut": true,
+      "prompt": "Transfer challenge: build the 4-state absorption chain and find the exact probability.",
+      "schemaId": "absorbing-states",
+      "interaction": {
+        "type": "masteryChallenge",
+        "scenario": "You roll a **single die** over and over. Two events race to happen first: a **single 6** appears, or **two 1s in a row** appear. Per roll, \\(P(6) = 1/6\\), \\(P(1) = 1/6\\), anything else \\(= 4/6\\). What is \\(P(\\text{a single 6 comes first})\\)?",
+        "fields": [
+          { "id": "single6", "label": "P(a single 6 before two consecutive 1s)", "accept": ["7/8"], "placeholder": "e.g. 7/8" }
+        ]
+      },
+      "feedback": {
+        "correct": "Build the 4-state chain \\(\\{S,\\, 1,\\, \\text{6-wins},\\, \\text{1·1-wins}\\}\\) and solve \\(B = (I-Q)^{-1}R\\): \\(P(\\text{single 6 first}) = \\mathbf{7/8}\\). The two-consecutive-1s event is its complement, \\(\\mathbf{1/8}\\) — name the absorbing state before you compute.",
+        "hints": [
+          "Build the absorbing chain: states are {start, just-saw-a-1, 6-wins, 1·1-wins}. Which absorbing state is '6 first'?",
+          "7/8 is P(a single 6 first), NOT the two-consecutive-1s probability — that's the complement, 1/8. Read the event.",
+          "7/8."
+        ]
+      }
+    },
+    {
       "beatId": "mastery-dice",
       "required": true,
       "track": "both",
       "prompt": "Mastery challenge: build the 4-state absorption chain and find the exact probability.",
+      "schemaId": "absorbing-states",
       "interaction": {
         "type": "masteryChallenge",
         "scenario": "You roll two dice over and over. Two events race to happen first: a **single 12** appears, or **two 7s in a row** appear. Per roll, \\(P(7) = 6/36\\), \\(P(12) = 1/36\\), anything else \\(= 29/36\\). What is \\(P(\\text{a single 12 comes first})\\)?",

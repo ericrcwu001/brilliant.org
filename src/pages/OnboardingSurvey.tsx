@@ -15,6 +15,7 @@ import {
   type ComfortLevel,
   type Pace,
 } from './onboarding.model'
+import { validateInterviewDate } from '../auth/userDoc'
 import { analytics } from '../analytics/events'
 import { ROUTES, type NavigateFn } from './routes'
 
@@ -23,6 +24,7 @@ type Answers = {
   comfortLevel?: ComfortLevel
   focusArea?: string
   pace?: Pace
+  targetInterviewDate?: string
 }
 
 const LEARNING_GOAL_OPTIONS: { value: LearningGoal; label: string }[] = [
@@ -79,19 +81,27 @@ export function OnboardingSurvey({ navigate }: { navigate: NavigateFn }) {
     setStep((s) => s + 1)
   }
 
-  // Final question (pace): record it and submit immediately — no summary screen.
+  // Pace question: record it and advance to the optional interview-date step
+  // (D13) — no longer the final question.
   function choosePace(value: string) {
     const pace = value as Pace
     void analytics.onboardingStepCompleted({ step: 'pace', value: pace })
-    const final: Answers = { ...answers, pace }
-    setAnswers(final)
-    void submit(final)
+    setAnswers((prev) => ({ ...prev, pace }))
+    setStep((s) => s + 1)
+  }
+
+  // Optional final step (D13): submit with the chosen date, or Skip to submit
+  // without one. An invalid date is surfaced inline and blocks submit.
+  function submitWithDate(date: string | null) {
+    void submit({ ...answers, targetInterviewDate: date ?? undefined })
   }
 
   // Persists the profile (must succeed before leaving this gated screen) and
-  // routes to the catalog. On failure, shows an inline retry.
+  // routes to the catalog. On failure, shows an inline retry. The interview date
+  // is optional and written only when present (saveOnboardingProfile).
   async function submit(final: Answers) {
-    const { learningGoal, comfortLevel, focusArea, pace } = final
+    const { learningGoal, comfortLevel, focusArea, pace, targetInterviewDate } =
+      final
     if (!learningGoal || !comfortLevel || !focusArea || !pace || !courses) return
     const defaultTrack = comfortToDefaultTrack(comfortLevel)
     const recommendedConceptId = recommendConcept(courses, focusArea)
@@ -106,6 +116,7 @@ export function OnboardingSurvey({ navigate }: { navigate: NavigateFn }) {
         pace,
         defaultTrack,
         recommendedConceptId,
+        ...(targetInterviewDate ? { targetInterviewDate } : {}),
       })
       void analytics.onboardingCompleted({
         learningGoal,
@@ -156,7 +167,7 @@ export function OnboardingSurvey({ navigate }: { navigate: NavigateFn }) {
         <>
           {step === 0 && (
             <SurveyStep
-              kicker="Step 1 of 4"
+              kicker="Step 1 of 5"
               question="What brings you to Ergo?"
               options={LEARNING_GOAL_OPTIONS}
               onChoose={(v) => choose('learningGoal', v)}
@@ -165,7 +176,7 @@ export function OnboardingSurvey({ navigate }: { navigate: NavigateFn }) {
 
           {step === 1 && (
             <SurveyStep
-              kicker="Step 2 of 4"
+              kicker="Step 2 of 5"
               question="How comfortable are you with quant-style questions?"
               options={COMFORT_OPTIONS}
               onChoose={(v) => choose('comfortLevel', v)}
@@ -174,7 +185,7 @@ export function OnboardingSurvey({ navigate }: { navigate: NavigateFn }) {
 
           {step === 2 && (
             <SurveyStep
-              kicker="Step 3 of 4"
+              kicker="Step 3 of 5"
               question="Where do you want to start?"
               options={
                 focusOptions.length > 0
@@ -187,14 +198,82 @@ export function OnboardingSurvey({ navigate }: { navigate: NavigateFn }) {
 
           {step === 3 && (
             <SurveyStep
-              kicker="Step 4 of 4"
+              kicker="Step 4 of 5"
               question="What pace suits you?"
               options={PACE_OPTIONS}
               onChoose={choosePace}
             />
           )}
+
+          {step === 4 && <InterviewDateStep onSubmit={submitWithDate} />}
         </>
       )}
+    </div>
+  )
+}
+
+// ── Optional interview-date step (D13) ─────────────────────────────────────────
+// Capturing a target interview date drives SM-2 interview-date anchoring (spec-01).
+// Optional: Skip submits without a date; a chosen date is validated before submit.
+function InterviewDateStep({
+  onSubmit,
+}: {
+  onSubmit: (date: string | null) => void
+}) {
+  const [value, setValue] = useState('')
+  const [error, setError] = useState<string | null>(null)
+
+  function save() {
+    try {
+      const normalized = validateInterviewDate(value)
+      setError(null)
+      onSubmit(normalized) // null when empty → "no date"
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Enter a valid date.')
+    }
+  }
+
+  return (
+    <div>
+      <section className="prompt">
+        <p className="prompt__kicker">Step 5 of 5</p>
+        <p className="prompt__text">When&rsquo;s your interview? (optional)</p>
+      </section>
+
+      <main className="region">
+        <label className="field" data-error={error ? true : undefined}>
+          <span className="field__label">Target interview date</span>
+          <input
+            className="field__input"
+            type="date"
+            value={value}
+            onChange={(e) => {
+              setValue(e.target.value)
+              if (error) setError(null)
+            }}
+            aria-invalid={error ? true : undefined}
+            aria-describedby={error ? 'interview-date-hint' : undefined}
+          />
+          {error && (
+            <span className="field__hint" id="interview-date-hint">
+              {error}
+            </span>
+          )}
+        </label>
+      </main>
+
+      <footer className="actionbar">
+        <button
+          type="button"
+          className="btn btn--secondary"
+          onClick={() => onSubmit(null)}
+        >
+          Skip
+        </button>
+        <button type="button" className="btn btn--primary" onClick={save}>
+          Finish
+        </button>
+      </footer>
     </div>
   )
 }

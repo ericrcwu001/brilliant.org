@@ -12,6 +12,7 @@
       "required": true,
       "track": "both",
       "prompt": "Quick warm-up — match each starting state's exits to the forced complement.",
+      "schemaId": "states-markov",
       "interaction": {
         "type": "retrievalGrid",
         "pairs": [
@@ -90,6 +91,7 @@
       "required": true,
       "track": "both",
       "prompt": "The Clear row is [3/5, ?]. Fill in the missing entry so the row sums to 1.",
+      "schemaId": "states-markov",
       "interaction": {
         "type": "answerEntry",
         "fields": [
@@ -171,6 +173,7 @@
       "required": true,
       "track": "both",
       "prompt": "Not every grid is a transition matrix — match each row to its verdict.",
+      "schemaId": "states-markov",
       "interaction": {
         "type": "retrievalGrid",
         "pairs": [
@@ -215,10 +218,55 @@
       }
     },
     {
+      "beatId": "transfer-heldout",
+      "required": false,
+      "track": "B",
+      "heldOut": true,
+      "prompt": "Transfer challenge — build the worker-mood transition matrix and answer the two-step query.",
+      "schemaId": "states-markov",
+      "interaction": {
+        "type": "masteryChallenge",
+        "scenario": "A worker's day is **Focused**, **Tired**, or **Distracted**. They are **never Distracted two days in a row** — after a distracted day it's a coin-flip between focused and tired. After a focused or tired day there's an even chance the next day is the **same**; when it does **change**, only half those changes are to a distracted day (the other half swap focused↔tired). Build \\(P\\) (rows Focused, Tired, Distracted) and verify every row sums to 1.",
+        "fields": [
+          {
+            "id": "dist-dist",
+            "label": "From the story, \\(P(\\text{Distracted} \\to \\text{Distracted})\\)",
+            "accept": ["0", "0/1"],
+            "placeholder": "e.g. 1/2"
+          },
+          {
+            "id": "foc-foc",
+            "label": "\\(P(\\text{Focused} \\to \\text{Focused})\\)",
+            "accept": ["1/2"]
+          },
+          {
+            "id": "rowsum",
+            "label": "Each of the three rows (Focused, Tired, Distracted) sums to",
+            "accept": ["1", "1/1"]
+          },
+          {
+            "id": "seed",
+            "label": "Two steps: \\((P^2)_{\\text{Focused},\\text{Distracted}}\\)",
+            "accept": ["3/16"],
+            "placeholder": "e.g. 1/4"
+          }
+        ]
+      },
+      "feedback": {
+        "correct": "Mood chain \\(P = [[1/2,1/4,1/4],[1/4,1/2,1/4],[1/2,1/2,0]]\\) (Focused/Tired/Distracted): \\(P(\\text{Distracted} \\to \\text{Distracted}) = 0\\), every row sums to 1, and two steps out \\((P^2)_{\\text{Focused},\\text{Distracted}} = (1/2)(1/4) + (1/4)(1/4) + (1/4)(0) = \\mathbf{3/16}\\) — same build-then-power method, fresh story.",
+        "hints": [
+          "Each sentence sets one row; the diagonal is 'stays the same,' and a row's last entry is forced to total 1.",
+          "Adding a third state changes nothing about the law — every row is still one starting day's full menu, so the Focused, Tired, AND Distracted rows each sum to 1 (even the Distracted row, which is 1/2 + 1/2 + 0).",
+          "Distracted→Distracted = 0; Focused→Focused = 1/2; each row sums to 1; (P²)_Focused,Distracted = 3/16."
+        ]
+      }
+    },
+    {
       "beatId": "mastery-challenge",
       "required": true,
       "track": "both",
       "prompt": "Mastery challenge — build the Land-of-Oz transition matrix and answer the two-step query.",
+      "schemaId": "states-markov",
       "interaction": {
         "type": "masteryChallenge",
         "scenario": "In the **Land of Oz** the weather is Rain, Nice, or Snow. They **never have two nice days in a row** — after a nice day it's a coin-flip between rain and snow. After rain or snow there's an even chance the next day is the **same**; when it does **change**, only half those changes are to a nice day (the other half swap rain↔snow). Build \\(P\\) (rows Rain, Nice, Snow) and verify every row sums to 1.",

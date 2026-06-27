@@ -10,6 +10,7 @@
     {
       "beatId": "l4-recall",
       "required": true,
+      "schemaId": "mixed-strategy",
       "prompt": "Warm up: match each idea to its answer.",
       "interaction": {
         "type": "retrievalGrid",
@@ -199,6 +200,7 @@
     {
       "beatId": "l4-apply",
       "required": true,
+      "schemaId": "mixed-strategy",
       "interviewNote": "Von Neumann's minimax theorem (1928) is the bedrock of zero-sum game theory — every finite zero-sum game has a value. Interview angle: always scan for a saddle point first (O(mn)); if none, use the 2×2 formula; for larger games, set up a linear program. Two-finger Morra is a classic desk problem: the negative value means Col (the 'even-sum' player in this framing) holds a slight structural advantage.",
       "prompt": "Two-finger Morra: Row wins if the total fingers differ; Col wins if they match. Row's payoff matrix is [[2, −3], [−3, 4]] (Row shows 1 or 2 fingers; Col shows 1 or 2). What is the value of this game?",
       "interaction": {
@@ -217,8 +219,33 @@
       }
     },
     {
+      "beatId": "transfer-heldout",
+      "required": false,
+      "track": "B",
+      "heldOut": true,
+      "schemaId": "mixed-strategy",
+      "prompt": "Held-out transfer: a fresh no-saddle game, same minimax formula.",
+      "interaction": {
+        "type": "masteryChallenge",
+        "scenario": "Two competing newspapers each lead with the same scarce scoop on either Page One or the Business section; readers split, so one paper's gain is the other's loss. The lead paper's payoff matrix is \\(M=\\begin{pmatrix} -2 & 3 \\\\ 5 & -1 \\end{pmatrix}\\) (rows = lead on Page One / Business; columns = rival on Page One / Business). There is no saddle point. Use \\(v=\\dfrac{ad-bc}{a+d-b-c}\\) and \\(p=\\dfrac{d-c}{a+d-b-c}\\).",
+        "fields": [
+          { "id": "value", "label": "Value of the game (to the lead paper)", "accept": ["13/11"], "placeholder": "?" },
+          { "id": "p", "label": "Lead paper's probability on the TOP row (Page One)", "accept": ["6/11"], "placeholder": "?" }
+        ]
+      },
+      "feedback": {
+        "correct": "No saddle (row-mins \\(-2,-1\\); col-maxes \\(5,3\\) — they don't meet). \\(\\Delta = a+d-b-c = -2+(-1)-3-5 = -11\\). \\(v=(ad-bc)/\\Delta = ((-2)(-1)-3\\cdot5)/(-11) = (2-15)/(-11) = -13/-11 = 13/11\\). \\(p=(d-c)/\\Delta = (-1-5)/(-11) = -6/-11 = 6/11\\).",
+        "hints": [
+          "Confirm no saddle: row-minimums \\(-2\\) and \\(-1\\); column-maximums \\(5\\) and \\(3\\) — maximin \\(\\ne\\) minimax.",
+          "Compute \\(\\Delta = a+d-b-c = -2+(-1)-3-5 = -11\\), with \\(a=-2,\\,b=3,\\,c=5,\\,d=-1\\).",
+          "\\(v=(ad-bc)/\\Delta = (2-15)/(-11) = 13/11\\) and \\(p=(d-c)/\\Delta = (-6)/(-11) = 6/11\\)."
+        ]
+      }
+    },
+    {
       "beatId": "l4-prove",
       "required": true,
+      "schemaId": "mixed-strategy",
       "prompt": "Lock in the formula. Same no-saddle game as the explore beat: row payoffs [[1, 3], [4, 2]].",
       "interaction": {
         "type": "masteryChallenge",

@@ -32,6 +32,7 @@ import {
   fetchUserDoc,
   updateUserDisplayName,
   saveOnboardingProfile,
+  saveTargetInterviewDate,
   type UserDoc,
 } from './userDoc'
 
@@ -129,6 +130,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     [refreshUserDoc],
   )
 
+  const setTargetInterviewDate = useCallback(
+    async (date: string | null) => {
+      const current = auth.currentUser
+      if (!current) throw new Error('Not signed in.')
+      await saveTargetInterviewDate(current.uid, date)
+      await refreshUserDoc()
+    },
+    [refreshUserDoc],
+  )
+
   const value = useMemo<AuthContextValue>(
     () => ({
       user,
@@ -150,6 +161,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       createUserProfile,
       updateUserProfile,
       completeOnboarding,
+      setTargetInterviewDate,
     }),
     [
       user,
@@ -159,6 +171,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       createUserProfile,
       updateUserProfile,
       completeOnboarding,
+      setTargetInterviewDate,
     ],
   )
 

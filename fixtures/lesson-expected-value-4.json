@@ -11,6 +11,7 @@
   "beats": [
     {
       "beatId": "ev4-recall",
+      "schemaId": "conditioning",
       "required": true,
       "prompt": "By now you know PHT's answer. Match the pattern to the expected wait it produces via first-step conditioning.",
       "interaction": {
@@ -68,6 +69,7 @@
     },
     {
       "beatId": "ev4-win",
+      "schemaId": "conditioning",
       "required": true,
       "prompt": "Simpler first. Flip a fair coin: heads → roll a die and keep it; tails → get $0. What is this bet worth? (Give your answer as a fraction, e.g. 3/4.)",
       "interaction": {
@@ -170,6 +172,7 @@
     },
     {
       "beatId": "ev4-firststep",
+      "schemaId": "recursion-self-reference",
       "required": true,
       "prompt": "Set up the dice game equation. The {4,5,6} case: you bank the expected face for that set, then the game restarts. What is that case worth? (Type the full expression, e.g. 5+E[X].)",
       "interaction": {
@@ -221,7 +224,40 @@
       }
     },
     {
+      "beatId": "transfer-heldout",
+      "schemaId": "recursion-self-reference",
+      "required": false,
+      "track": "B",
+      "heldOut": true,
+      "interviewNote": "Source: 'play-again' geometric-restart expectation (Green Book, expected-value chapter — the coin/die replay family). Same method as the dice game: condition on the first outcome, let the restart branch carry E[X] on the right, then isolate. The bank-then-replay branch is worth (collected) + E[X], NOT just the collected amount.",
+      "prompt": "Mastery challenge (fresh): flip a fair coin. Heads → collect $1 and stop. Tails → collect $2 and flip again, adding to your total. Set up and solve the self-referential equation. What is a single play worth?",
+      "interaction": {
+        "type": "masteryChallenge",
+        "scenario": "Flip a fair coin. Heads (\\(p=\\tfrac12\\)): collect \\$1 and stop. Tails (\\(p=\\tfrac12\\)): collect \\$2 and replay, adding to your total. The tails branch is worth \\(2 + E[X]\\). Set up \\(E[X] = \\tfrac{1}{2}\\cdot 1 + \\tfrac{1}{2}\\cdot(2+E[X])\\) and solve.",
+        "fields": [
+          {
+            "id": "ev-coin-replay",
+            "label": "\\(E[X]\\) =",
+            "accept": [
+              "3"
+            ],
+            "placeholder": "?",
+            "suffix": "dollars"
+          }
+        ]
+      },
+      "feedback": {
+        "correct": "Condition on the flip and treat \\( E[X] \\) as the unknown: \\[ E[X] = \\tfrac{1}{2}\\cdot 1 + \\tfrac{1}{2}\\bigl(2 + E[X]\\bigr) \\] Expanding: \\( \\tfrac{1}{2} + 1 + \\tfrac{E[X]}{2} = E[X] \\), so \\( \\tfrac{E[X]}{2} = \\tfrac{3}{2} \\), giving \\( E[X] = 3 \\). The tails branch banks \\$2 AND replays, so it carries \\(E[X]\\) on the right — self-reference is just a linear equation in one unknown.",
+        "hints": [
+          "Tails isn't worth \\$2 — it's worth \\$2 plus another full play, \\(2 + E[X]\\). Treat \\(E[X]\\) as the unknown: \\(\\tfrac{1}{2}\\cdot 1 + \\tfrac{1}{2}(2+E[X]) = E[X]\\).",
+          "Expand: \\( \\tfrac{1}{2} + 1 + \\tfrac{E[X]}{2} = E[X] \\). Collect the \\(E[X]\\) terms on one side.",
+          "\\( E[X] - \\tfrac{E[X]}{2} = \\tfrac{3}{2} \\) \\(\\to\\) \\( \\tfrac{1}{2}E[X] = \\tfrac{3}{2} \\) \\(\\to\\) \\( E[X] = 3 \\)."
+        ]
+      }
+    },
+    {
       "beatId": "ev4-prove",
+      "schemaId": "recursion-self-reference",
       "required": true,
       "interviewNote": "E[X] on both sides → isolate and solve (treat E[X] as the unknown: ½·2 + ½·(5+E[X]) = E[X] → E[X] = 7); conditioning ≠ Bayes (here we average over cases, not update from evidence).",
       "prompt": "Mastery challenge: set up and solve the self-referential dice game equation. What is a single play worth?",

@@ -10,6 +10,7 @@
     {
       "beatId": "l1-recall",
       "required": true,
+      "schemaId": "counting-product-rule",
       "prompt": "Tap to match the number of coin flips to the number of distinct H/T strings.",
       "interaction": {
         "type": "retrievalGrid",
@@ -74,6 +75,7 @@
     {
       "beatId": "l1-win",
       "required": true,
+      "schemaId": "counting-product-rule",
       "prompt": "Tap each level to expand the flip tree and watch the count multiply. What's the final count for 3 flips?",
       "interaction": {
         "type": "countingTree",
@@ -145,6 +147,7 @@
     {
       "beatId": "l1-multadd",
       "required": true,
+      "schemaId": "counting-product-rule",
       "comparison": true,
       "interviewNote": "The multiply-vs-add distinction is the single most common combinatorics error in quant interviews: chain independent choices with ×; mutually-exclusive either/or cases get +. The counterfeit-coin base-3 encoding (Green Book p.12) is the canonical real-world example — 3 bags × 3 weights each = 3³ = 27 combinations, not 9.",
       "prompt": "Three bags each contain a coin that can weigh −1, 0, or +1 gram. The bags are chosen independently. How many distinct weight combinations are possible?",
@@ -192,8 +195,41 @@
       }
     },
     {
+      "beatId": "transfer-heldout",
+      "required": false,
+      "track": "B",
+      "heldOut": true,
+      "schemaId": "counting-product-rule",
+      "prompt": "A 4-letter code is stamped on each padlock using the 26-letter English alphabet, but no letter may repeat within a code. How many distinct 4-letter no-repeat codes are possible?",
+      "interaction": {
+        "type": "masteryChallenge",
+        "scenario": "Each of the \\(4\\) positions in the code is filled left to right from the \\(26\\) letters, and once a letter is used it cannot be reused. Count the ordered codes where no letter repeats.",
+        "fields": [
+          {
+            "id": "ans",
+            "label": "No-repeat 4-letter codes",
+            "accept": [
+              "358800",
+              "358,800"
+            ],
+            "placeholder": "your answer"
+          }
+        ]
+      },
+      "interviewNote": "Source: standard quant/Green-Book ordered-distinct-selection problem (a 'license plate / passcode with no repeats' variant). Engine: nPk(26,4) = 26·25·24·23 = 358,800.",
+      "feedback": {
+        "correct": "\\[ 26 \\cdot 25 \\cdot 24 \\cdot 23 = 358{,}800 \\] Position 1 takes any of \\(26\\) letters; position 2 must avoid the one already used — \\(25\\) choices; position 3 avoids both — \\(24\\); position 4 avoids all three — \\(23\\). This is the same shrinking-product rule as the birthday count, anchored at 26 instead of 365: \\(_{26}P_4 = \\tfrac{26!}{22!}\\).",
+        "hints": [
+          "Same shrinking-product rule as the birthday sequences — each next position has one fewer letter still available.",
+          "Position 1: \\(26\\) choices; position 2: \\(25\\); position 3: \\(24\\); position 4: \\(23\\). Multiply all four.",
+          "\\(26 \\times 25 \\times 24 \\times 23 = 358{,}800\\)."
+        ]
+      }
+    },
+    {
       "beatId": "l1-prove",
       "required": true,
+      "schemaId": "counting-product-rule",
       "prompt": "Three students each have a birthday drawn from 365 days. How many birthday sequences have no two students sharing a day?",
       "interaction": {
         "type": "masteryChallenge",

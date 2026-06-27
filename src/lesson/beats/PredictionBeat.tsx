@@ -2,6 +2,12 @@
 // before any algebra; the options carry the "both 4" / tie trap. Any selection
 // is accepted (it is a bet, not a graded check) and is stored as
 // initialPrediction for the recap.
+//
+// spec-13 / D12: when the prediction carries `interaction.gate` it is instead a
+// GRADED which-method discrimination gate — PredictionBeat delegates to the
+// canonical `WhichMethodGate` (the same component spec-20's queue mounts). The
+// dispatch branches to two child components, each owning its own hooks, so hook
+// order stays stable per the rules of hooks (PredictionBeat itself calls none).
 
 import { useState } from 'react'
 import type { BeatProps } from './types'
@@ -9,8 +15,38 @@ import { BeatShell } from '../BeatShell'
 import { resolveFeedback, resolveOptionFeedback } from '../feedback'
 import type { FeedbackView } from '../FeedbackStrip'
 import { analytics } from '../../analytics/events'
+import { WhichMethodGate } from '../WhichMethodGate'
 
-export function PredictionBeat({
+export function PredictionBeat(props: BeatProps) {
+  const { beat, onAdvance } = props
+  if (beat.interaction.type !== 'prediction') return null
+  // Which-method gate (spec-13): the selection is the graded act. The in-lesson
+  // host advances on a correct pick; a wrong pick keeps the learner on the gate.
+  if (beat.interaction.gate) {
+    return (
+      <WhichMethodGate
+        beat={beat}
+        schemaId={beat.interaction.gate.correct}
+        onResolved={({ correct }) => {
+          if (correct) onAdvance()
+        }}
+        lessonId={props.lessonId}
+        pattern={props.pattern}
+        isLast={props.isLast}
+        reportNeedsReview={props.reportNeedsReview}
+        initialHintLevel={props.initialHintLevel}
+        onHintLevelChange={props.onHintLevelChange}
+        showConfidence={props.showConfidence}
+        confidenceValue={props.confidenceValue}
+        onConfidence={props.onConfidence}
+      />
+    )
+  }
+  return <OpeningBetView {...props} />
+}
+
+// The ungraded opening bet (today's behavior, unchanged).
+function OpeningBetView({
   beat,
   lessonId,
   pattern,

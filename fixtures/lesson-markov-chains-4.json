@@ -12,6 +12,7 @@
       "required": true,
       "track": "both",
       "prompt": "Warm-up — tap to match each absorbing state to why it can't be left.",
+      "schemaId": "absorbing-states",
       "interaction": {
         "type": "retrievalGrid",
         "pairs": [
@@ -269,10 +270,48 @@
       }
     },
     {
+      "beatId": "transfer-heldout",
+      "required": false,
+      "track": "B",
+      "heldOut": true,
+      "prompt": "Fully classify a biased gambler's ruin and compute the return probability.",
+      "schemaId": "absorbing-states",
+      "interaction": {
+        "type": "masteryChallenge",
+        "scenario": "Gambler's ruin on \\(\\{0, 1, 2, 3\\}\\): each step you go up with probability \\(\\tfrac{3}{4}\\) and down with \\(\\tfrac{1}{4}\\); \\$0 and \\$3 are absorbing walls. (i) Classify every state and name the communicating classes. (ii) Starting from state \\(1\\), what is the probability you ever return to state \\(1\\)?",
+        "fields": [
+          {
+            "id": "classes",
+            "label": "Classify all states + name the communicating classes",
+            "accept": [
+              "{0},{3} absorbing; {1,2} transient",
+              "0 and 3 absorbing, 1 and 2 transient",
+              "{0} absorbing {3} absorbing {1,2} transient one class",
+              "0,3 absorbing; 1,2 transient communicating"
+            ]
+          },
+          {
+            "id": "return1",
+            "label": "\\(P(\\text{ever return to } 1 \\mid \\text{start } 1)\\)",
+            "accept": ["3/16"]
+          }
+        ]
+      },
+      "feedback": {
+        "correct": "\\(\\{0\\}\\) and \\(\\{3\\}\\) are **absorbing** (recurrent singletons); \\(\\{1,2\\}\\) **communicate** and are **transient**. From \\(1\\): down to \\(0\\) (\\(\\tfrac{1}{4}\\), gone) or up to \\(2\\) (\\(\\tfrac{3}{4}\\)); from \\(2\\) you only get back to \\(1\\) by stepping down (\\(\\tfrac{1}{4}\\)). So \\(f_{11} = \\tfrac{3}{4} \\cdot \\tfrac{1}{4} = \\tfrac{3}{16} < 1\\) — the interior states stay transient even with an up-drift, because the absorbing walls still leak probability.",
+        "hints": [
+          "Classify the \\$0 and \\$3 barriers first, then trace the one way back to 1 from 2.",
+          "A favorable up-drift does NOT make interior states recurrent — the absorbing walls leak probability away. From 1 you can fall to 0 and never return, so the return probability is < 1.",
+          "\\(f_{11} = \\tfrac{3}{4} \\cdot \\tfrac{1}{4} = \\tfrac{3}{16}\\); classes \\(\\{0\\}\\), \\(\\{3\\}\\) absorbing, \\(\\{1,2\\}\\) transient (one communicating class)."
+        ]
+      }
+    },
+    {
       "beatId": "mastery-challenge",
       "required": true,
       "track": "both",
       "prompt": "Fully classify gambler's ruin and compute the return probability.",
+      "schemaId": "absorbing-states",
       "interaction": {
         "type": "masteryChallenge",
         "scenario": "Gambler's ruin on \\(\\{0, 1, 2, 3\\}\\): each step you go up with probability \\(\\tfrac{2}{3}\\) and down with \\(\\tfrac{1}{3}\\); \\$0 and \\$3 are absorbing walls. (i) Classify every state and name the communicating classes. (ii) Starting from state \\(1\\), what is the probability you ever return to state \\(1\\)?",

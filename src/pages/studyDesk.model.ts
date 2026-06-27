@@ -115,14 +115,27 @@ export interface RecommendedAction {
 // Recommended-action priority (docs/home-study-desk.md §2.6 / Q9): an in-progress
 // session always wins focus; Review is offered only between lessons; otherwise
 // Start the next unlocked lesson; all mastered → Replay.
+//
+// `reviewCardLessonId` (spec-10, R1) is the lesson of the first DUE spaced-review
+// card (computed by the caller via loadDueQueue — recommend.ts/queue.ts's first
+// live call site). When non-null it drives the `review` branch AHEAD of the legacy
+// `needsReview` scan, keeping the time axis (dueAt) and the permanent flag (R7)
+// coherent. When null/omitted, behavior is byte-identical to before.
 export function recommendedAction(
   nodes: DeskNode[],
   progressById: Record<string, Progress>,
+  reviewCardLessonId?: string | null,
 ): RecommendedAction {
   const resume = nodes.find(
     (n) => progressById[n.lessonId]?.completionStatus === 'in_progress',
   )
   if (resume) return { kind: 'resume', lessonId: resume.lessonId }
+
+  // A genuinely-due review card (dueAt ≤ now) takes priority over the legacy
+  // needsReview flag — "Review" now means "a card is actually due" (R7 coherent).
+  if (reviewCardLessonId != null) {
+    return { kind: 'review', lessonId: reviewCardLessonId }
+  }
 
   const review = nodes.find((n) => n.state === 'needsReview')
   if (review) return { kind: 'review', lessonId: review.lessonId }

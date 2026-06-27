@@ -30,6 +30,7 @@
     {
       "beatId": "l4-recall",
       "required": true,
+      "schemaId": "counting-product-rule",
       "prompt": "Match each counting concept to its rule — these are the tools Inclusion–Exclusion extends.",
       "interaction": {
         "type": "retrievalGrid",
@@ -74,6 +75,7 @@
     {
       "beatId": "l4-win",
       "required": true,
+      "schemaId": "choose-vs-arrange",
       "prompt": "Five personalised letters are stuffed at random into five envelopes. Letter #1 lands in the correct envelope. In how many arrangements do the other four letters land freely?",
       "interaction": {
         "type": "answerEntry",
@@ -179,6 +181,7 @@
     {
       "beatId": "l4-birthday",
       "required": true,
+      "schemaId": "complementary-counting",
       "prompt": "Express the probability that at least two people in a group of 23 share a birthday.",
       "interaction": {
         "type": "answerEntry",
@@ -206,8 +209,50 @@
       }
     },
     {
+      "beatId": "transfer-heldout",
+      "required": false,
+      "track": "B",
+      "heldOut": true,
+      "schemaId": "counting-product-rule",
+      "prompt": "A 5-card hand is dealt from a standard 52-card deck. How many hands are a full house (three of one rank, two of another)? Then find the exact probability.",
+      "interaction": {
+        "type": "masteryChallenge",
+        "scenario": "A full house holds \\(3\\) cards of one rank and \\(2\\) of a second rank. Choose the triple's rank, then \\(3\\) of its \\(4\\) suits; choose a different rank for the pair, then \\(2\\) of its \\(4\\) suits. The triple-rank and pair-rank are distinct roles, so they are chosen in order, not as an unordered pair.",
+        "fields": [
+          {
+            "id": "fh-count",
+            "label": "Full-house hands",
+            "accept": [
+              "3744",
+              "3,744"
+            ],
+            "placeholder": "?",
+            "suffix": "hands"
+          },
+          {
+            "id": "fh-prob",
+            "label": "\\(P(\\text{full house})\\)",
+            "accept": [
+              "6/4165"
+            ],
+            "placeholder": "?"
+          }
+        ]
+      },
+      "interviewNote": "Source: standard poker-hand probability (Green-Book §4.2 hand table). Count = 13·C(4,3)·12·C(4,2) = 13·4·12·6 = 3744; C(52,5)=2,598,960; engine probabilityFromCounts(3744, 2598960) = 6/4165.",
+      "feedback": {
+        "correct": "Choose the triple, then the pair: \\[ 13 \\cdot \\binom{4}{3} \\cdot 12 \\cdot \\binom{4}{2} = 13 \\cdot 4 \\cdot 12 \\cdot 6 = 3{,}744. \\] There are \\(13\\) ranks for the triple and \\(\\binom{4}{3}=4\\) ways to pick its suits; then \\(12\\) remaining ranks for the pair and \\(\\binom{4}{2}=6\\) ways to pick its suits. The triple-rank and pair-rank play different roles, so order them (13 then 12), not \\(\\binom{13}{2}\\). The probability is \\[ P(\\text{full house}) = \\frac{3{,}744}{\\binom{52}{5}} = \\frac{3{,}744}{2{,}598{,}960} = \\frac{6}{4165}. \\]",
+        "hints": [
+          "Count the two roles separately: which rank is the triple (and 3 of its 4 suits), and which different rank is the pair (and 2 of its 4 suits)?",
+          "\\(13 \\times \\binom{4}{3} \\times 12 \\times \\binom{4}{2} = 13 \\cdot 4 \\cdot 12 \\cdot 6 = 3{,}744\\) hands.",
+          "\\(\\frac{3{,}744}{2{,}598{,}960} = \\frac{6}{4165}\\)."
+        ]
+      }
+    },
+    {
       "beatId": "l4-prove",
       "required": true,
+      "schemaId": "counting-product-rule",
       "prompt": "A 5-card hand is dealt from a standard 52-card deck. How many hands are four of a kind? Then find the exact probability.",
       "interaction": {
         "type": "masteryChallenge",

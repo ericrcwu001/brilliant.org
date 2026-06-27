@@ -11,6 +11,7 @@
       "beatId": "recall-monty",
       "required": true,
       "track": "both",
+      "schemaId": "conditioning",
       "prompt": "Quick warm-up — match each clue to what made it the evidence.",
       "interaction": {
         "type": "retrievalGrid",
@@ -117,6 +118,7 @@
       "beatId": "count-the-families",
       "required": true,
       "track": "both",
+      "schemaId": "conditioning",
       "prompt": "Same two-child family, two different clues. Compute both.",
       "interaction": {
         "type": "answerEntry",
@@ -138,6 +140,7 @@
       "beatId": "bertrand",
       "required": true,
       "track": "both",
+      "schemaId": "conditioning",
       "prompt": "Three cards: black-black (BB), white-white (WW), black-white (BW). You draw one and see a random face — it's black. What is P(the other side is also black)?",
       "interaction": {
         "type": "answerEntry",
@@ -159,6 +162,7 @@
       "beatId": "clue-match",
       "required": true,
       "track": "both",
+      "schemaId": "conditioning",
       "prompt": "Match each clue to its posterior — four costumes, one principle.",
       "interaction": {
         "type": "retrievalGrid",
@@ -203,9 +207,33 @@
       }
     },
     {
+      "beatId": "transfer-heldout",
+      "required": false,
+      "track": "B",
+      "heldOut": true,
+      "schemaId": "conditioning",
+      "prompt": "Transfer: a family has four children. I tell you at least one is a girl. What is P(all four are girls)?",
+      "interaction": {
+        "type": "masteryChallenge",
+        "scenario": "A family has four children. I tell you at least one is a girl.",
+        "fields": [
+          { "id": "four", "label": "\\(P(\\text{all four girls}\\mid\\text{at least one is a girl})\\)", "accept": ["1/15"] }
+        ]
+      },
+      "feedback": {
+        "correct": "Same restrict-the-sample-space move as the three-child case, with one more child: there are \\(2^4 = 16\\) equally-likely four-child families. The clue \\(\\geq 1\\text{ girl}\\) removes only the all-boys family \\(BBBB\\), leaving 15. Only \\(GGGG\\) is all-girls: \\[ P(\\text{all girls}\\mid\\geq 1\\text{ girl}) = \\frac{P(\\text{all girls})}{P(\\geq 1\\text{ girl})} = \\frac{1/16}{15/16} = \\frac{1}{15} \\] The clue's wording matches the three-child version, but the sample space doubled — recount over the new \\(2^4\\) outcomes rather than reuse \\(\\tfrac{1}{7}\\).",
+        "hints": [
+          "Four children means \\(2^4 = 16\\) equally-likely families — list the count, don't reuse the \\(\\tfrac{1}{7}\\) from the three-child version.",
+          "The clue \\(\\geq 1\\text{ girl}\\) removes only \\(BBBB\\), leaving 15 families; \\(GGGG\\) is one of them.",
+          "\\(P(\\text{all girls}\\mid\\geq 1\\text{ girl}) = \\frac{1/16}{15/16} = \\frac{1}{15}\\)."
+        ]
+      }
+    },
+    {
       "beatId": "mastery-challenge",
       "required": true,
       "track": "both",
+      "schemaId": "conditioning",
       "prompt": "Mastery challenge: a family has three children. I tell you at least one is a boy. What is P(all three are boys)?",
       "interaction": {
         "type": "masteryChallenge",

@@ -11,6 +11,7 @@
       "beatId": "recall-no-memory",
       "required": true,
       "prompt": "Match each streak to the principle it illustrates.",
+      "schemaId": "states-markov",
       "interaction": {
         "type": "retrievalGrid",
         "pairs": [
@@ -166,6 +167,7 @@
       "beatId": "markov-or-not",
       "required": true,
       "prompt": "Match each story to Markov or Not Markov.",
+      "schemaId": "states-markov",
       "interaction": {
         "type": "retrievalGrid",
         "pairs": [
@@ -219,9 +221,37 @@
       }
     },
     {
+      "beatId": "transfer-heldout",
+      "required": false,
+      "track": "B",
+      "heldOut": true,
+      "prompt": "Transfer challenge: a two-day momentum rule breaks the Markov property on {Up, Down} — augment the state to fix it. Compute P(up tomorrow | state = UU).",
+      "schemaId": "states-markov",
+      "interaction": {
+        "type": "masteryChallenge",
+        "scenario": "'Hot streak': a stock ticks **up** tomorrow with probability \\(3/4\\) if it rose on **both** today and yesterday, otherwise \\(1/4\\). On the raw state \\(\\{\\text{Up}, \\text{Down}\\}\\) this isn't Markov — \\(P(\\text{up tomorrow} \\mid \\text{up today})\\) is \\(3/4\\) after UU but \\(1/4\\) after DU. Redefine the state as the ordered pair **(yesterday, today)** to get a clean 4-state Markov chain.",
+        "fields": [
+          {
+            "id": "uu",
+            "label": "\\(P(\\text{up tomorrow} \\mid \\text{state} = UU)\\)",
+            "accept": ["3/4"]
+          }
+        ]
+      },
+      "feedback": {
+        "correct": "On \\(\\{\\text{Up}, \\text{Down}\\}\\) the rule is ill-defined (\\(3/4\\) after UU, \\(1/4\\) after DU) \\(\\Rightarrow\\) not Markov. Augment the state to **(yesterday, today)**: from **UU**, up tomorrow is \\(\\mathbf{3/4}\\). Same process, clean 4-state chain.",
+        "hints": [
+          "The rule needs *two* days of history, so a single day isn't enough state. What pair of days determines tomorrow?",
+          "Only on the raw \\(\\{\\text{Up}, \\text{Down}\\}\\) state is it non-Markov — \\(P(\\text{up} \\mid \\text{today up})\\) is ambiguous (\\(3/4\\) after UU, \\(1/4\\) after DU). Redefine the state as the ordered pair (yesterday, today) and the *same* process is a clean 4-state Markov chain. Augmentation is the fix.",
+          "State UU means it rose both days, so the streak rule fires at \\(3/4\\). \\(P(\\text{up} \\mid UU) = 3/4\\)."
+        ]
+      }
+    },
+    {
       "beatId": "mastery-augment",
       "required": true,
       "prompt": "Mastery challenge: a two-day rule breaks the Markov property on {Clear, Rainy} — but the right state space fixes it. Compute P(rain tomorrow | state = RR).",
+      "schemaId": "states-markov",
       "interaction": {
         "type": "masteryChallenge",
         "scenario": "'Sticky weather': it rains tomorrow with probability \\(4/5\\) if it rained **both** today and yesterday, otherwise \\(1/5\\). On the raw state \\(\\{\\text{Clear}, \\text{Rainy}\\}\\) this isn't Markov — \\(P(\\text{rain tomorrow} \\mid \\text{rainy today})\\) is \\(4/5\\) after RR but \\(1/5\\) after CR. Redefine the state as the ordered pair **(yesterday, today)** to get a clean 4-state Markov chain.",

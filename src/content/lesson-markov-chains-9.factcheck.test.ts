@@ -118,7 +118,7 @@ describe('lesson-markov-chains-9 fact-check', () => {
     expect(beat.interviewNote).toBeDefined()
   })
 
-  it('lesson has exactly 10 beats in spec order', () => {
+  it('lesson has exactly 11 beats in spec order', () => {
     const ids = lesson.beats.map((b) => b.beatId)
     expect(ids).toEqual([
       'recall-no-champion',
@@ -129,6 +129,7 @@ describe('lesson-markov-chains-9 fact-check', () => {
       'confirm-symmetry',
       'triplet-pagerank',
       'damping-saves-sink',
+      'transfer-heldout',
       'mastery-fourNode',
       'recap',
     ])

@@ -83,8 +83,8 @@ describe('lesson-combinatorics-3 fact-check', () => {
 
   // ── Structural checks ──────────────────────────────────────────────────
 
-  it('lesson has exactly 10 beats', () => {
-    expect(lesson.beats).toHaveLength(10)
+  it('lesson has exactly 11 beats', () => {
+    expect(lesson.beats).toHaveLength(11)
   })
 
   it('beat order matches the spec', () => {
@@ -98,6 +98,7 @@ describe('lesson-combinatorics-3 fact-check', () => {
       'l3-explore',
       'l3-model',
       'l3-applied',
+      'transfer-heldout',
       'l3-prove',
       'l3-recap',
     ])

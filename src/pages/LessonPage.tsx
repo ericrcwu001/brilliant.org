@@ -9,6 +9,7 @@
 
 import { useEffect, useState } from 'react'
 import { useAuth } from '../auth/authContext'
+import { isQuantIntensity } from '../auth/track'
 import { loadLessonFromFirestore, loadCourseFromFirestore, COURSE_ID } from '../content/loader'
 import { loadSnapshot } from '../lesson/snapshot'
 import { LessonPlayer } from '../lesson/LessonPlayer'
@@ -89,6 +90,9 @@ export function LessonPage({
   if (state.status === 'ready' && state.lessonId === lessonId && user) {
     // Effective track: per-concept calibrate ?? global default ?? 'B'.
     const effectiveTrack: Track = state.track ?? userDoc?.defaultTrack ?? 'B'
+    // Confidence capture (spec-02 / D6) gates on the single quant-intensity
+    // helper (README §4; fails GENTLE). The player stays userDoc-agnostic.
+    const showConfidence = isQuantIntensity(userDoc, { track: state.track ?? undefined })
     return (
       <LessonPlayer
         key={lessonId}
@@ -98,6 +102,7 @@ export function LessonPage({
         track={effectiveTrack}
         review={state.completed}
         badge={state.badge}
+        showConfidence={showConfidence}
         onExit={() => navigate(conceptPath(state.lesson.courseId))}
         onInterviewCta={() => navigate(interviewPath(state.lesson.courseId))}
       />

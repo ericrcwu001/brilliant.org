@@ -12,6 +12,7 @@
       "required": true,
       "track": "both",
       "prompt": "Quick warm-up — tap to match each famous result to the formula that made it.",
+      "schemaId": "states-markov",
       "interaction": {
         "type": "retrievalGrid",
         "pairs": [
@@ -173,6 +174,7 @@
       "beatId": "discriminate",
       "required": true,
       "track": "both",
+      "schemaId": "states-markov",
       "prompt": "Match each structural cue to the tool it triggers.",
       "interaction": {
         "type": "retrievalGrid",
@@ -194,10 +196,38 @@
       }
     },
     {
+      "beatId": "transfer-heldout",
+      "required": false,
+      "track": "B",
+      "heldOut": true,
+      "prompt": "Classify the chain and give the full absorption vector.",
+      "schemaId": "absorbing-states",
+      "interaction": {
+        "type": "masteryChallenge",
+        "scenario": "A beetle sits on stones \\(0\\text{–}5\\) and crawls left / right with equal chance. Stones **0** and **5** are drains — fall in and it stops forever. Classify the chain, then give the chance it ends on stone 5 from each interior start.",
+        "fields": [
+          { "id": "kind", "label": "Is this chain absorbing or ergodic?", "accept": ["absorbing"] },
+          { "id": "from1", "label": "P(reach stone 5 | start stone 1)", "accept": ["1/5"] },
+          { "id": "from2", "label": "P(reach stone 5 | start stone 2)", "accept": ["2/5"] },
+          { "id": "from3", "label": "P(reach stone 5 | start stone 3)", "accept": ["3/5"] },
+          { "id": "from4", "label": "P(reach stone 5 | start stone 4)", "accept": ["4/5"] }
+        ]
+      },
+      "feedback": {
+        "correct": "A beetle on stones \\(0\\text{–}5\\) with drains 0 & 5 is a **symmetric absorbing walk** — *not* ergodic, so 'long-run share' is the trap. \\[\\text{Absorption: } P(\\text{reach stone 5} \\mid \\text{start } i) = i/5 \\Rightarrow \\mathbf{(1/5,\\; 2/5,\\; 3/5,\\; 4/5)}\\]",
+        "hints": [
+          "It crawls a while — but does it ever leave stone 0 or stone 5? Classify before you compute.",
+          "'It runs a long time, so ask its long-run share' is the trap: the drain stones are absorbing, so the chain ends. Ask *which* drain and *how likely*, not a long-run fraction.",
+          "Absorbing ⇒ absorption vector i/5 = (1/5, 2/5, 3/5, 4/5): start 1 → 1/5, start 2 → 2/5, start 3 → 3/5, start 4 → 4/5."
+        ]
+      }
+    },
+    {
       "beatId": "interleave-A-vs-B",
       "required": true,
       "track": "both",
       "prompt": "Decide the tool for each problem first — then compute.",
+      "schemaId": "states-markov",
       "interaction": {
         "type": "masteryChallenge",
         "scenario": "Two unlabeled problems. **Part A:** a walker on \\(\\{0,1,2,3,4\\}\\) steps \\(\\pm 1\\) with equal chance; 0 and 4 stop it — find the chance it reaches 4 starting from 1. **Part B:** a sky flips Clear\\(\\leftrightarrow\\)Rainy forever by \\(P=[[3/5,2/5],[3/10,7/10]]\\) — find the long-run fraction of Clear days. Decide the tool for each *first*.",
@@ -220,6 +250,7 @@
       "required": true,
       "track": "both",
       "prompt": "Classify the chain and give the full absorption vector.",
+      "schemaId": "absorbing-states",
       "interaction": {
         "type": "masteryChallenge",
         "scenario": "A frog sits on lily pads \\(0\\text{–}4\\) and hops left / right with equal chance. Pads **0** and **4** are sink pads — land there and it stops forever. Classify the chain, then give the chance it ends on pad 4 from each interior start.",

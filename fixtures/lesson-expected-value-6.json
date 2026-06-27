@@ -32,6 +32,7 @@
     },
     {
       "beatId": "ev6-recall",
+      "schemaId": "counting-product-rule",
       "required": true,
       "prompt": "You've seen these before. Match each counting idea to its formula.",
       "interaction": {
@@ -85,6 +86,7 @@
     },
     {
       "beatId": "ev6-win",
+      "schemaId": "symmetry",
       "required": true,
       "prompt": "Two IID Uniform(0,1) draws. What is the expected value of the larger? The smaller?",
       "interaction": {
@@ -194,6 +196,7 @@
     },
     {
       "beatId": "ev6-min",
+      "schemaId": "symmetry",
       "required": true,
       "prompt": "Four IID Uniform(0,1) draws. What is the expected value of the minimum?",
       "interaction": {
@@ -220,7 +223,49 @@
       }
     },
     {
+      "beatId": "transfer-heldout",
+      "schemaId": "symmetry",
+      "required": false,
+      "track": "B",
+      "heldOut": true,
+      "interviewNote": "Source: order-statistics of uniform draws (Green Book / Blitzstein & Hwang §8 — E[U_(k)] = k/(n+1) for n IID Uniform(0,1)). Same method as the ants: by symmetry the n uniform draws split [0,1] into n+1 equal-expectation gaps, so E[max]=E[U_(n)]=n/(n+1) and E[min]=E[U_(1)]=1/(n+1); the two always sum to 1.",
+      "prompt": "Mastery challenge (fresh): three friends each arrive at an independent uniformly-random time during a one-hour window (model each as Uniform(0,1) of the hour). What is the expected arrival time of the LAST to arrive? Of the FIRST? Give exact fractions of the hour.",
+      "interaction": {
+        "type": "masteryChallenge",
+        "scenario": "Three IID Uniform(0,1) arrival times. The last arrival is the maximum of the three draws; the first is the minimum. For \\(n\\) uniform draws, \\(E[\\max]=\\tfrac{n}{n+1}\\) and \\(E[\\min]=\\tfrac{1}{n+1}\\) by symmetry. Compute both for \\(n=3\\).",
+        "fields": [
+          {
+            "id": "ev6-transfer-max",
+            "label": "\\(E[\\text{last arrival}]\\) (max of 3)",
+            "accept": [
+              "3/4"
+            ],
+            "placeholder": "?",
+            "suffix": ""
+          },
+          {
+            "id": "ev6-transfer-min",
+            "label": "\\(E[\\text{first arrival}]\\) (min of 3)",
+            "accept": [
+              "1/4"
+            ],
+            "placeholder": "?",
+            "suffix": ""
+          }
+        ]
+      },
+      "feedback": {
+        "correct": "By symmetry, \\(n\\) uniform draws cut \\([0,1]\\) into \\(n+1\\) gaps of equal expected length \\(\\tfrac{1}{n+1}\\). The maximum sits \\(n\\) gaps in: \\[ E[\\max] = \\frac{n}{n+1} = \\frac{3}{4}, \\qquad E[\\min] = \\frac{1}{n+1} = \\frac{1}{4}. \\] They sum to 1, mirror-images about \\(\\tfrac12\\). Equivalently \\(F_{\\max}(x)=x^3\\) gives \\(E[\\max]=\\int_0^1(1-x^3)\\,dx=\\tfrac34\\).",
+        "hints": [
+          "The last arrival beats center; the first sits below it. Use \\(E[\\max]=\\tfrac{n}{n+1}\\) and \\(E[\\min]=\\tfrac{1}{n+1}\\) with \\(n=3\\).",
+          "Three draws make four equal gaps of \\(\\tfrac14\\). The max is three gaps in (\\(\\tfrac34\\)); the min is one gap in (\\(\\tfrac14\\)).",
+          "\\(E[\\max]=\\tfrac{3}{4}\\), \\(E[\\min]=\\tfrac{1}{4}\\); they sum to 1."
+        ]
+      }
+    },
+    {
       "beatId": "ev6-prove",
+      "schemaId": "symmetry",
       "required": true,
       "interviewNote": "Ants on a string: 'n ants at random positions, bouncing on collision — expected clearing time?' Relabeling: collision ≡ pass-through → last-off ant = ant with max starting position → E[T] = E[max of n U(0,1)] = n/(n+1). For n=500: 500/501 ≈ 1 min. E[max] → 1 as n→∞ (values bounded at 1), so more ants barely changes the answer — the chaos collapses to a single-line expectation.",
       "prompt": "Mastery challenge: use the relabeling trick to find the expected time for all 500 ants to fall off. Type an exact fraction.",

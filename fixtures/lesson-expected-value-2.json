@@ -11,6 +11,7 @@
   "beats": [
     {
       "beatId": "ev2-recall",
+      "schemaId": "linearity-indicators",
       "required": true,
       "prompt": "You've seen a fair game's net gain before. Match each scenario to its expected net.",
       "interaction": {
@@ -66,6 +67,7 @@
     },
     {
       "beatId": "ev2-win",
+      "schemaId": "linearity-indicators",
       "required": true,
       "prompt": "In L1 you built the full {2…12} pmf to find E[two dice] = 7. Using linearity, get the same answer in one line. What is E[X + Y] when X and Y are fair dice?",
       "interaction": {
@@ -195,6 +197,7 @@
     },
     {
       "beatId": "ev2-noodles",
+      "schemaId": "linearity-indicators",
       "required": true,
       "prompt": "Two noodles, four loose ends. You make two random ties. What is E[loops]? (Enter a fraction like 4/3.)",
       "interaction": {
@@ -221,7 +224,40 @@
       }
     },
     {
+      "beatId": "transfer-heldout",
+      "schemaId": "linearity-indicators",
+      "required": false,
+      "track": "B",
+      "heldOut": true,
+      "interviewNote": "Source: connected-noodles / random-chord-pairing problem (Stanford CS109 linearity-of-expectation problem set; the loops-from-random-ties classic). The total wait is Σ_{k=1}^{n} 1/(2k−1); each odd-denominator term is one tie's indicator expectation, added regardless of dependence between ties.",
+      "prompt": "Mastery challenge (fresh): FOUR noodles, eight loose ends, four random ties. Use E[loops] = Σ 1/(2k−1) to find E[loops] for n = 4. Enter your answer as a fraction.",
+      "interaction": {
+        "type": "masteryChallenge",
+        "scenario": "Each tie closes a loop with probability \\(\\tfrac{1}{2(n-k+1)-1}\\). For \\(n=4\\) the four terms are \\(\\tfrac{1}{7}\\), \\(\\tfrac{1}{5}\\), \\(\\tfrac{1}{3}\\), \\(1\\). Sum them — even though every tie depends on the ones before it.",
+        "fields": [
+          {
+            "id": "noodles-4",
+            "label": "\\(E[\\text{loops}]\\), \\(n = 4\\)",
+            "accept": [
+              "176/105"
+            ],
+            "placeholder": "?/???",
+            "suffix": ""
+          }
+        ]
+      },
+      "feedback": {
+        "correct": "By linearity of expectation, each tie contributes its own loop probability independently of the others: \\[ E[\\text{loops}] = \\sum_{k=1}^{n} \\frac{1}{2k-1} \\] For \\( n = 4 \\): \\( 1 + \\tfrac{1}{3} + \\tfrac{1}{5} + \\tfrac{1}{7} = \\tfrac{105+35+21+15}{105} = \\tfrac{176}{105} \\approx 1.68 \\). Adding one more noodle barely moved the total — loop count grows like \\( \\tfrac{1}{2}\\ln(2n) \\), far slower than the number of noodles.",
+        "hints": [
+          "Dependence between ties is irrelevant. Add the odd-denominator chances: \\(1 + \\tfrac{1}{3} + \\tfrac{1}{5} + \\tfrac{1}{7}\\).",
+          "Four ties: \\( P = \\tfrac{1}{2\\cdot4-1},\\,\\tfrac{1}{2\\cdot3-1},\\,\\tfrac{1}{2\\cdot2-1},\\,\\tfrac{1}{2\\cdot1-1} = \\tfrac{1}{7},\\,\\tfrac{1}{5},\\,\\tfrac{1}{3},\\,1 \\).",
+          "Common denominator 105: \\( \\tfrac{105}{105} + \\tfrac{35}{105} + \\tfrac{21}{105} + \\tfrac{15}{105} = \\tfrac{176}{105} \\)."
+        ]
+      }
+    },
+    {
       "beatId": "ev2-prove",
+      "schemaId": "linearity-indicators",
       "required": true,
       "interviewNote": "E[loops]=Σ_{k=1}^{n}1/(2k−1)≈½ln(2n) for large n — sub-logarithmic growth. For n=100: ≈3.28. Linearity holds because each 1/(2k−1) is the expectation of one indicator, regardless of what earlier ties did. Compare: E[loops,n=100]/100≈0.033 — not even 1 loop per 30 noodles.",
       "prompt": "Mastery challenge: three noodles, six loose ends, three ties. Use E[loops] = Σ 1/(2k−1) to find E[loops] for n = 3. Enter your answer as a fraction.",

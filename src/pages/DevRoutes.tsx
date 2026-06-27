@@ -7,14 +7,19 @@ import { loadDevLesson } from '../content/devLessons'
 import { LessonPlayer } from '../lesson/LessonPlayer'
 import { DevHomePage } from './DevHomePage'
 import { DevInterviewPage } from './DevInterviewPage'
+import { DevGatePage } from './DevGatePage'
 
 export function DevRoutes({ path }: { path: string }) {
+  if (path === ROUTES.devGate) return <DevGatePage />
+
   if (path === ROUTES.devLesson) {
     const track =
       new URLSearchParams(window.location.search).get('track') === 'A'
         ? 'A'
         : 'B'
-    return <LessonPlayer track={track} />
+    // Dev harness shows the confidence rating (spec-02) so /dev/lesson can verify
+    // it without auth; pass ?track=A to simulate the Track-A gate-off case.
+    return <LessonPlayer track={track} showConfidence={track === 'B'} />
   }
 
   const devLessonId = parseDevLessonId(path)
@@ -24,7 +29,10 @@ export function DevRoutes({ path }: { path: string }) {
         ? 'A'
         : 'B'
     const lesson = loadDevLesson(devLessonId)
-    if (lesson) return <LessonPlayer lesson={lesson} track={track} />
+    if (lesson)
+      return (
+        <LessonPlayer lesson={lesson} track={track} showConfidence={track === 'B'} />
+      )
     return (
       <div className="bootscreen" aria-live="polite">
         <p className="bootscreen__brand">Lesson not found</p>

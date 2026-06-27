@@ -29,6 +29,9 @@ export interface UserDoc {
   defaultTrack?: 'A' | 'B'
   recommendedConceptId?: string
   onboardingCompletedAt?: Timestamp
+  // Optional target interview date (YYYY-MM-DD; ADR-0009/D13). Client-writable,
+  // non-progression profile field; drives SM-2 interview-date anchoring (spec-01).
+  targetInterviewDate?: string
 }
 
 // Lenient schema: every field except displayName is optional so an older doc
@@ -44,6 +47,7 @@ export const UserDocSchema = z.object({
   defaultTrack: z.enum(['A', 'B']).optional(),
   recommendedConceptId: z.string().optional(),
   onboardingCompletedAt: z.unknown().optional(),
+  targetInterviewDate: z.string().optional(),
 })
 
 // Returns the profile, or null when the user has authenticated but not yet
@@ -88,7 +92,26 @@ export async function updateUserDisplayName(
   })
 }
 
-// Onboarding survey write: saves all 6 answer/derived fields plus timestamps.
+// Profile edit path: set or clear the optional target interview date (D13,
+// spec-01). YYYY-MM-DD when present; passing `null` removes the field entirely.
+// Like updateUserDisplayName, this is the single place that shapes the write so
+// no progression field can ride along. Drives SM-2 interview-date anchoring.
+export async function saveTargetInterviewDate(
+  uid: string,
+  date: string | null,
+): Promise<void> {
+  const db = await getDb()
+  const { doc, updateDoc, serverTimestamp, deleteField } = await import(
+    'firebase/firestore'
+  )
+  await updateDoc(doc(db, USERS_COLLECTION, uid), {
+    targetInterviewDate: date === null ? deleteField() : date,
+    lastActiveAt: serverTimestamp(),
+  })
+}
+
+// Onboarding survey write: saves all 6 answer/derived fields plus timestamps,
+// and the optional target interview date (D13) when the learner provided one.
 // Called after the survey completes; must succeed before routing to the catalog.
 export async function saveOnboardingProfile(
   uid: string,
@@ -99,6 +122,9 @@ export async function saveOnboardingProfile(
     pace: UserDoc['pace']
     defaultTrack: 'A' | 'B'
     recommendedConceptId: string
+    // Optional 5th onboarding step (spec-01 §7). Written only when present so
+    // existing callers and the Skip path are unaffected.
+    targetInterviewDate?: string
   },
 ): Promise<void> {
   const db = await getDb()
@@ -118,4 +144,35 @@ export function validateDisplayName(name: string): string | null {
     return `Keep your display name under ${DISPLAY_NAME_MAX} characters.`
   }
   return null
+}
+
+// Validate + normalize the optional target interview date (D13, spec-01).
+// Empty input is OK and means "no date" (returns null). A non-empty value must be
+// a YYYY-MM-DD calendar date that is not in the past (today is allowed). Returns
+// the trimmed YYYY-MM-DD string when valid, null when empty, or throws the error
+// message string for the form to display inline (mirrors validateDisplayName's
+// caller contract but distinguishes "empty → no date" from "invalid → error").
+export function validateInterviewDate(date: string): string | null {
+  const trimmed = date.trim()
+  if (trimmed.length === 0) return null // empty ⇒ "no date"
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) {
+    throw new Error('Enter the date as YYYY-MM-DD.')
+  }
+  // Compare calendar days in local time (the <input type="date"> value is a
+  // local calendar day). A date that does not round-trip is invalid (e.g. 02-30).
+  const [y, m, d] = trimmed.split('-').map(Number)
+  const parsed = new Date(y, m - 1, d)
+  if (
+    parsed.getFullYear() !== y ||
+    parsed.getMonth() !== m - 1 ||
+    parsed.getDate() !== d
+  ) {
+    throw new Error('Enter a real calendar date.')
+  }
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+  if (parsed.getTime() < today.getTime()) {
+    throw new Error('Choose a date in the future.')
+  }
+  return trimmed
 }

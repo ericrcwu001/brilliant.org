@@ -5,18 +5,32 @@
 import { useState } from 'react'
 import { useAuth } from '../auth/authContext'
 import { authErrorMessage } from '../auth/authErrors'
-import { DISPLAY_NAME_MAX, validateDisplayName } from '../auth/userDoc'
+import {
+  DISPLAY_NAME_MAX,
+  validateDisplayName,
+  validateInterviewDate,
+} from '../auth/userDoc'
 import { ROUTES, type NavigateFn } from './routes'
 
 export function ProfilePage({ navigate }: { navigate: NavigateFn }) {
-  const { user, userDoc, updateUserProfile, signOut } = useAuth()
+  const { user, userDoc, updateUserProfile, setTargetInterviewDate, signOut } =
+    useAuth()
   const [name, setName] = useState(userDoc?.displayName ?? '')
   const [nameError, setNameError] = useState<string | null>(null)
   const [formError, setFormError] = useState<string | null>(null)
   const [status, setStatus] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
 
+  const [interviewDate, setInterviewDate] = useState(
+    userDoc?.targetInterviewDate ?? '',
+  )
+  const [dateError, setDateError] = useState<string | null>(null)
+  const [dateStatus, setDateStatus] = useState<string | null>(null)
+  const [dateBusy, setDateBusy] = useState(false)
+
   const dirty = name.trim() !== (userDoc?.displayName ?? '')
+  const dateDirty =
+    interviewDate.trim() !== (userDoc?.targetInterviewDate ?? '')
 
   async function handleSave(event: React.FormEvent) {
     event.preventDefault()
@@ -38,6 +52,30 @@ export function ProfilePage({ navigate }: { navigate: NavigateFn }) {
       setFormError(authErrorMessage(err))
     } finally {
       setBusy(false)
+    }
+  }
+
+  // Save or clear the optional target interview date (D13). An empty value
+  // clears it (deleteField); a non-empty value is validated (future YYYY-MM-DD).
+  async function handleSaveDate(event: React.FormEvent) {
+    event.preventDefault()
+    setDateStatus(null)
+    let normalized: string | null
+    try {
+      normalized = validateInterviewDate(interviewDate)
+    } catch (err) {
+      setDateError(err instanceof Error ? err.message : 'Enter a valid date.')
+      return
+    }
+    setDateError(null)
+    setDateBusy(true)
+    try {
+      await setTargetInterviewDate(normalized)
+      setDateStatus(normalized ? 'Saved.' : 'Cleared.')
+    } catch (err) {
+      setDateError(authErrorMessage(err))
+    } finally {
+      setDateBusy(false)
     }
   }
 
@@ -113,6 +151,46 @@ export function ProfilePage({ navigate }: { navigate: NavigateFn }) {
               disabled={busy || !dirty}
             >
               Save changes
+            </button>
+          </div>
+        </form>
+
+        <form className="authform" onSubmit={handleSaveDate} noValidate>
+          <label className="field" data-error={dateError ? true : undefined}>
+            <span className="field__label">Target interview date</span>
+            <input
+              className="field__input"
+              type="date"
+              name="targetInterviewDate"
+              value={interviewDate}
+              onChange={(e) => {
+                setInterviewDate(e.target.value)
+                setDateStatus(null)
+                if (dateError) setDateError(null)
+              }}
+              aria-invalid={dateError ? true : undefined}
+              aria-describedby={dateError ? 'interview-date-hint' : undefined}
+            />
+            {dateError && (
+              <span className="field__hint" id="interview-date-hint">
+                {dateError}
+              </span>
+            )}
+          </label>
+
+          {dateStatus && (
+            <p className="authform__status" role="status">
+              {dateStatus}
+            </p>
+          )}
+
+          <div className="authactions">
+            <button
+              type="submit"
+              className="btn btn--primary"
+              disabled={dateBusy || !dateDirty}
+            >
+              {interviewDate.trim() ? 'Save date' : 'Clear date'}
             </button>
           </div>
         </form>

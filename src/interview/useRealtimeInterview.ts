@@ -1,8 +1,10 @@
 // WebRTC hook for the capstone interview (Phase 3). Manages the full state
-// machine: idle → minting → awaitingMic → connecting → live → ending → grading
-// → done (or → error from any stage). Assembles a live transcript from
-// data-channel events, enforces an 8-minute countdown, and hands off to
-// gradeInterview when the session ends.
+// machine: idle → minting → awaitingMic → connecting → live → ending →
+// [confidence] → grading → done (or → error from any stage). Assembles a live
+// transcript from data-channel events, enforces an 8-minute countdown, and hands
+// off to gradeInterview when the session ends. The optional `confidence` state
+// (spec-02 / D6) pauses after `ending` — only when the quant-intensity gate is
+// on — to capture a one-tap self-reported confidence before grading.
 //
 // Transport injection: accepts an optional `_transport` param (RealtimeTransport)
 // that replaces the real RTCPeerConnection + fetch SDP exchange, enabling the
@@ -28,6 +30,9 @@ export type InterviewStatus =
   | 'connecting'
   | 'live'
   | 'ending'
+  // Paused for a one-tap confidence rating before grading (spec-02 / D6); only
+  // reached when the quant-intensity gate is on. Gate off ⇒ skipped entirely.
+  | 'confidence'
   | 'grading'
   | 'done'
   | 'error'
@@ -62,12 +67,25 @@ export interface UseRealtimeInterviewReturn {
   attemptId:       string | null
   start:           () => void
   stop:            () => void
+  // Resolve the paused 'confidence' state with the chosen self-report (spec-02 /
+  // D6): stamps it onto the last candidate turn, then proceeds to grading.
+  submitConfidence: (value: number) => void
 }
 
 // ── Transcript helpers (exported for testability) ─────────────────────────────
 
 export function buildTranscript(turns: Turn[]): Turn[] {
   return turns.filter((t) => t.final)
+}
+
+// Stamp a self-reported confidence onto the LAST candidate turn (spec-02 / D6).
+// Pure: never mutates the input; returns it unchanged when there is no candidate
+// turn. One rating per attempt (the interview draws a single question).
+export function stampConfidence(turns: Turn[], confidence: number): Turn[] {
+  const lastCandidate = [...turns].reverse().find((t) => t.role === 'candidate')
+  return lastCandidate
+    ? turns.map((t) => (t === lastCandidate ? { ...t, confidence } : t))
+    : turns
 }
 
 // Word-by-word interviewer caption reveal. OpenAI exposes no per-word audio
@@ -155,6 +173,11 @@ export function advanceReveal(
 export function useRealtimeInterview(
   conceptId: string,
   _transport?: RealtimeTransport,
+  // Quant-intensity gate (spec-02 / D6): when true, stop() pauses at the
+  // 'confidence' state before grading. Passed from the page (App.tsx computes it
+  // via isQuantIntensity); the hook never reads userDoc. Default false ⇒ today's
+  // flow (grade straight through), so the gate-off path is unchanged.
+  showConfidence = false,
 ): UseRealtimeInterviewReturn {
   const [status, setStatus] = useState<InterviewStatus>('idle')
   const [transcript, setTranscript] = useState<Turn[]>([])
@@ -180,6 +203,10 @@ export function useRealtimeInterview(
   const sendRawRef           = useRef<((json: string) => void) | null>(null)
   const responseRequestedRef = useRef(false)
   const countdownRef         = useRef<ReturnType<typeof setInterval> | null>(null)
+  // Buffered between stop() and grade() while paused at the 'confidence' state
+  // (spec-02 / D6), so the countdown-driven and user-driven stop() share one path.
+  const pendingTranscriptRef = useRef<Turn[]>([])
+  const pendingDurationRef   = useRef<number>(0)
   // In-progress (non-final) partial text per role.
   const inProgressRef        = useRef<Record<string, string>>({})
   // Barge-in bookkeeping: the in-flight assistant item + when its audio started,
@@ -666,6 +693,7 @@ export function useRealtimeInterview(
   async function stop() {
     if (
       statusRef.current === 'ending' ||
+      statusRef.current === 'confidence' ||
       statusRef.current === 'grading'
     ) return
 
@@ -677,12 +705,35 @@ export function useRealtimeInterview(
 
     cleanup()
 
+    // Buffer the computed transcript/duration so grade() reads them after the
+    // optional confidence pause (the same path for user- and countdown-driven stop).
+    pendingTranscriptRef.current = finalTranscript
+    pendingDurationRef.current   = durationSec
+
+    if (showConfidence) {
+      // Pause for the one-tap rating; the page renders ConfidenceRating and
+      // calls submitConfidence(), which resumes into grade().
+      setStatusSafe('confidence')
+    } else {
+      await grade(finalTranscript)
+    }
+  }
+
+  // Confidence (spec-02 / D6): stamp the chosen self-report onto the last
+  // candidate turn, then grade. Idempotent — ignores a double-tap once grading.
+  function submitConfidence(value: number) {
+    if (statusRef.current !== 'confidence') return
+    void grade(stampConfidence(pendingTranscriptRef.current, value))
+  }
+
+  async function grade(transcript: Turn[]) {
+    const durationSec = pendingDurationRef.current
     setStatusSafe('grading')
     try {
       const { report: gradeReport } = await gradeInterview({
         attemptId:  mintResultRef.current!.attemptId,
         conceptId,
-        transcript: finalTranscript,
+        transcript,
         durationSec,
       })
       void analytics.interviewCompleted({
@@ -740,5 +791,6 @@ export function useRealtimeInterview(
     attemptId,
     start,
     stop,
+    submitConfidence,
   }
 }

@@ -11,6 +11,7 @@
   "beats": [
     {
       "beatId": "ev1-recall",
+      "schemaId": "first-step-analysis",
       "required": true,
       "prompt": "Back in Watch the First Heads you found that a fair coin takes 2 flips on average until the first Heads. Match each statement to its value.",
       "interaction": {
@@ -86,6 +87,7 @@
     },
     {
       "beatId": "ev1-win",
+      "schemaId": "linearity-indicators",
       "required": true,
       "prompt": "One roll of a fair die — you are paid the face value. What is the expected payoff? Enter as a fraction (e.g. 3/2).",
       "interaction": {
@@ -205,6 +207,7 @@
     },
     {
       "beatId": "ev1-pmf",
+      "schemaId": "linearity-indicators",
       "required": true,
       "prompt": "Roll two fair dice. (1) How many ordered pairs (d₁, d₂) sum to 5? Express as P(sum = 5). (2) A separate game pays $3 with probability 1/4, $5 with probability 1/2, $7 with probability 1/4. What is E[payout]?",
       "interaction": {
@@ -240,7 +243,40 @@
       }
     },
     {
+      "beatId": "transfer-heldout",
+      "schemaId": "symmetry",
+      "required": false,
+      "track": "B",
+      "heldOut": true,
+      "interviewNote": "Source: classic dice-sum pmf drill (Blitzstein & Hwang, Introduction to Probability, §4 — sum of two fair dice generalized to s sides). Symmetry shortcut: the {2…8} pmf is symmetric about 5, so E pins to the mirror point 5; the long Σx·P(x) certifies it.",
+      "prompt": "Mastery challenge (fresh): two fair FOUR-sided dice (d4). The seven possible sums 2 through 8 carry triangular weights (1, 2, 3, 4, 3, 2, 1)/16. Compute E[X] = Σ x·P(x). Enter a whole number or simplified fraction.",
+      "interaction": {
+        "type": "masteryChallenge",
+        "scenario": "Two fair d4 — sum the full non-uniform pmf. Weights peak at \\(P(5)=\\tfrac{4}{16}\\). The midpoint of 2–8 is 5 by symmetry. Is \\(E[X]\\) always the midpoint? Compute the weighted sum to find out.",
+        "fields": [
+          {
+            "id": "ev-two-d4",
+            "label": "\\(E[\\text{sum of two d4}]\\)",
+            "accept": [
+              "5",
+              "80/16"
+            ],
+            "placeholder": "?"
+          }
+        ]
+      },
+      "feedback": {
+        "correct": "The general formula sums every outcome times its probability: \\[ E[X] = \\sum_{x=2}^{8} x \\cdot P(x) \\] With triangular weights \\( P(k) = \\tfrac{4-|k-5|}{16} \\), the numerator is \\( 2\\cdot1+3\\cdot2+4\\cdot3+5\\cdot4+6\\cdot3+7\\cdot2+8\\cdot1 = 80 \\), so \\( E[X] = \\tfrac{80}{16} = 5 \\). The pmf is symmetric around 5 — symmetry always pins the mean to the mirror point, no matter how many sides the dice have.",
+        "hints": [
+          "Don't eyeball the middle face. Sum \\(x \\cdot P(x)\\) over the triangular pmf of the two-d4 sum.",
+          "Group by symmetry: \\(P(k)=P(10-k)\\). Each mirror pair \\((k,\\,10-k)\\) contributes \\(10 \\cdot P(k)\\); the peak \\(P(5)=\\tfrac{4}{16}\\) stands alone, pinning the mean to 5.",
+          "\\( \\tfrac{2\\cdot1+3\\cdot2+4\\cdot3+5\\cdot4+6\\cdot3+7\\cdot2+8\\cdot1}{16} = \\tfrac{80}{16} = 5 \\)."
+        ]
+      }
+    },
+    {
       "beatId": "ev1-prove",
+      "schemaId": "symmetry",
       "required": true,
       "interviewNote": "Shortcut check: by linearity of expectation (next lesson), E[sum of two dice] = E[die₁]+E[die₂] = 7/2+7/2 = 7. The triangular-pmf Σ x·P(x) certifies the same answer the hard way — these two routes agreeing is the sanity check.",
       "prompt": "Mastery challenge — the sum of two fair dice, the hard way. The table shows all 11 outcomes (sums 2 through 12) with their triangular weights (1, 2, 3, 4, 5, 6, 5, 4, 3, 2, 1)/36. Compute E[X] = Σ x·P(x). Enter a whole number or simplified fraction.",

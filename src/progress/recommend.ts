@@ -12,6 +12,7 @@
 
 import { SnapshotSchema, type Beat } from '../content/schema'
 import { gradedRequiredBeatIds } from '../lesson/mastery'
+import { METHODS, type MethodId } from '../content/methods'
 
 export type WeakNode = { lessonId: string; beatId: string; maxHintLevel: number }
 
@@ -95,4 +96,67 @@ export function recommendReview(
       l.completed && !masteredFromLive(l.beats, maxHintByLesson[l.lessonId] ?? {}),
   )
   return selectWeakNode(unmastered, maxHintByLesson)
+}
+
+// ── Method-indexed weakness (spec-10, brainlift app-action #10) ────────────────
+// Resurface the weakest METHOD (`schemaId`), not the weakest lesson: the queue
+// asks problems interleaved by hidden method, so weakness is best indexed the
+// same way. Reads the SAME live struggle signal as selectWeakNode
+// (`maxHintLevelByBeat`, R2), aggregated per method instead of per lesson.
+
+export type MethodWeakness = { schemaId: MethodId; totalHint: number; beatCount: number }
+
+/**
+ * Aggregate live struggle by method. For each graded-required beat carrying a
+ * `schemaId`, add its maxHintLevel to that method's bucket. Weakest = highest
+ * total hint; ties resolve to the highest mean (totalHint / beatCount), then to
+ * the alphabetically-first schemaId (stable for tests + a deterministic re-test).
+ *
+ * `schemaId` is read DEFENSIVELY (the field is optional during the spec-00
+ * backfill); a beat without one — or one whose id is not a real METHODS key — is
+ * skipped (R5: degrade quietly, don't throw). Returns `null` when no graded beat
+ * carries a usable schemaId, so the queue/recommender fall back to the legacy
+ * lesson-level path.
+ */
+export function selectWeakMethod(
+  lessons: { lessonId: string; beats: Beat[] }[],
+  maxHintByLesson: Record<string, Record<string, number>>,
+): MethodWeakness | null {
+  const totals = new Map<MethodId, { totalHint: number; beatCount: number }>()
+  for (const { lessonId, beats } of lessons) {
+    const map = maxHintByLesson[lessonId] ?? {}
+    const gradedIds = new Set(gradedRequiredBeatIds(beats))
+    for (const beat of beats) {
+      if (!gradedIds.has(beat.beatId)) continue
+      const schemaId = (beat as { schemaId?: MethodId }).schemaId
+      if (!schemaId || !(schemaId in METHODS)) continue // backfill-incomplete / unknown id
+      const lvl = map[beat.beatId] ?? 0
+      if (lvl <= 0) continue
+      const bucket = totals.get(schemaId) ?? { totalHint: 0, beatCount: 0 }
+      bucket.totalHint += lvl
+      bucket.beatCount += 1
+      totals.set(schemaId, bucket)
+    }
+  }
+
+  let best: MethodWeakness | null = null
+  for (const [schemaId, { totalHint, beatCount }] of totals) {
+    const candidate: MethodWeakness = { schemaId, totalHint, beatCount }
+    if (best === null) {
+      best = candidate
+      continue
+    }
+    if (totalHint !== best.totalHint) {
+      if (totalHint > best.totalHint) best = candidate
+      continue
+    }
+    const meanA = candidate.totalHint / candidate.beatCount
+    const meanB = best.totalHint / best.beatCount
+    if (meanA !== meanB) {
+      if (meanA > meanB) best = candidate
+      continue
+    }
+    if (schemaId < best.schemaId) best = candidate
+  }
+  return best
 }

@@ -10,6 +10,7 @@
     {
       "beatId": "retrieval-grid",
       "required": true,
+      "schemaId": "first-step-analysis",
       "prompt": "Match each result to its value \u2014 E[pattern] means the expected (average) wait for that pattern. Tap a result on the left, then its match on the right.",
       "interaction": {
         "type": "retrievalGrid",
@@ -48,6 +49,7 @@
     {
       "beatId": "which-waits-longest",
       "required": true,
+      "schemaId": "first-step-analysis",
       "prompt": "Match each pattern to its average wait. Which one waits the longest?",
       "interaction": {
         "type": "retrievalGrid",
@@ -88,6 +90,7 @@
     {
       "beatId": "plus-one-or-not",
       "required": true,
+      "schemaId": "first-step-analysis",
       "prompt": "Match each kind of recurrence \u2014 the rule linking a state to its neighbors \u2014 to its per-flip cost.",
       "interaction": {
         "type": "retrievalGrid",
@@ -108,6 +111,7 @@
     {
       "beatId": "weak-node",
       "required": true,
+      "schemaId": "first-step-analysis",
       "prompt": "On the HH machine: you've matched a lone H (state E1). Tap where each next flip sends you.",
       "interaction": {
         "type": "stateTap",
@@ -126,8 +130,33 @@
       }
     },
     {
+      "beatId": "transfer-heldout",
+      "required": false,
+      "track": "B",
+      "heldOut": true,
+      "schemaId": "first-step-analysis",
+      "pattern": "HTT",
+      "prompt": "A fair coin is flipped until \\(\\text{HTT}\\) (heads, then two tails) first appears. What is the average number of flips? Type a whole number.",
+      "interaction": {
+        "type": "masteryChallenge",
+        "scenario": "Build the state machine and read off where each flip sends you. The twist: after you've matched \\(\\text{HT}\\), a head doesn't send you all the way back — you still hold one head, so you only fall back to \"one H matched.\"",
+        "fields": [
+          { "id": "e-htt", "label": "Average flips until \\(\\text{HTT}\\)", "accept": ["8"], "placeholder": "?", "suffix": "flips" }
+        ]
+      },
+      "feedback": {
+        "correct": "\\(E[\\text{HTT}] = 8\\). Name the states by progress: \\(E_0\\) (nothing), \\(E_1\\) (one H), \\(E_2\\) (matched HT), \\(E_3 = 0\\) (done). First-step analysis writes one equation per state from where the next flip lands: \\[ E_0 = 1 + \\tfrac{1}{2}E_1 + \\tfrac{1}{2}E_0, \\] \\[ E_1 = 1 + \\tfrac{1}{2}E_1 + \\tfrac{1}{2}E_2, \\] \\[ E_2 = 1 + \\tfrac{1}{2}E_1 + \\tfrac{1}{2}E_3. \\] The key edge is from \\(E_2\\): a tail finishes (\\(E_3\\)), but a head does NOT reset to \\(E_0\\) — it lands back on \\(E_1\\), because that head is itself a fresh start of \\(\\text{H}\\)\\(\\dots\\). Back-substitute \\(E_2 = 1 + \\tfrac{1}{2}E_1\\) into \\(E_1\\): \\(E_1 = \\tfrac{3}{2} + \\tfrac{3}{4}E_1\\), so \\(\\tfrac{1}{4}E_1 = \\tfrac{3}{2}\\) and \\(E_1 = 6\\); then \\(E_2 = 4\\) and \\(E_0 = 1 + 3 + \\tfrac{1}{2}E_0\\), giving \\(E[\\text{HTT}] = 8\\). Same first-step method as \\(\\text{TT}\\) — only the partial-reset edge changes the answer.",
+        "hints": [
+          "First-step analysis: define a state for each amount of progress (\\(E_0\\) none, \\(E_1\\) one H, \\(E_2\\) matched HT) and write one equation per state for the average flips remaining.",
+          "Watch the \\(E_2\\) edge carefully. From \"matched HT,\" a tail finishes the pattern, but a head does not send you back to zero — you still hold a single head, so you drop to \\(E_1\\), not \\(E_0\\).",
+          "Solve \\(E_2 = 1 + \\tfrac{1}{2}E_1\\), \\(E_1 = 1 + \\tfrac{1}{2}E_1 + \\tfrac{1}{2}E_2\\Rightarrow E_1 = 6\\), then \\(E_0 = 1 + \\tfrac{1}{2}E_1 + \\tfrac{1}{2}E_0\\Rightarrow E[\\text{HTT}] = 8\\)."
+        ]
+      }
+    },
+    {
       "beatId": "mastery-challenge",
       "required": true,
+      "schemaId": "first-step-analysis",
       "prompt": "Mastery challenge: each part uses a different tool - a pattern wait or a walk between two walls. Decide which, then compute.",
       "interaction": {
         "type": "masteryChallenge",

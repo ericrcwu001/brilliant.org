@@ -93,8 +93,8 @@ describe('lesson-combinatorics-5 fact-check', () => {
 
   // ── Structural checks ───────────────────────────────────────────────────
 
-  it('lesson has exactly 10 beats', () => {
-    expect(lesson.beats).toHaveLength(10)
+  it('lesson has exactly 11 beats', () => {
+    expect(lesson.beats).toHaveLength(11)
   })
 
   it('beat order matches the spec', () => {
@@ -108,6 +108,7 @@ describe('lesson-combinatorics-5 fact-check', () => {
       'l5-scaffold',
       'l5-model',
       'l5-apply',
+      'transfer-heldout',
       'l5-prove',
       'l5-recap',
     ])

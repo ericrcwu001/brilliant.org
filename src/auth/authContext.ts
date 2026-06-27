@@ -13,6 +13,8 @@ export type OnboardingProfile = {
   pace: UserDoc['pace']
   defaultTrack: 'A' | 'B'
   recommendedConceptId: string
+  // Optional target interview date captured in the onboarding 5th step (D13).
+  targetInterviewDate?: string
 }
 
 export interface AuthContextValue {
@@ -33,6 +35,8 @@ export interface AuthContextValue {
   updateUserProfile: (displayName: string) => Promise<void>
   /** Onboarding survey completion: writes the 6 profile fields + timestamps. */
   completeOnboarding: (profile: OnboardingProfile) => Promise<void>
+  /** Profile edit: set (YYYY-MM-DD) or clear (null) the target interview date (D13). */
+  setTargetInterviewDate: (date: string | null) => Promise<void>
 }
 
 export const AuthContext = createContext<AuthContextValue | null>(null)

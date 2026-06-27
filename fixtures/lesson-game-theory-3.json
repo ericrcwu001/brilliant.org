@@ -10,6 +10,7 @@
     {
       "beatId": "l3-recall",
       "required": true,
+      "schemaId": "mixed-strategy",
       "prompt": "Warm up: match each idea to its answer.",
       "interaction": {
         "type": "retrievalGrid",
@@ -108,6 +109,7 @@
       "beatId": "l3-scaffold",
       "required": false,
       "track": "A",
+      "schemaId": "mixed-strategy",
       "prompt": "Rock-Paper-Scissors has three symmetric pure strategies. By the same indifference principle, what probability should you put on EACH move?",
       "interaction": {
         "type": "answerEntry",
@@ -182,6 +184,7 @@
     {
       "beatId": "l3-apply",
       "required": true,
+      "schemaId": "mixed-strategy",
       "interviewNote": "Two real-world examples: (1) Poker bluffing — at a pot-size bet the optimal bluff frequency is 1/3. Bluff less and opponents never fold; bluff more and they always call. The indifference condition pins it exactly. (2) Penalty kicks — Palacios-Huerta showed professional kickers and goalkeepers play close to the minimax mixed equilibrium, with success rates equalizing across strategies: a rare field confirmation of mixed Nash play.",
       "prompt": "Battle of the Sexes: you prefer Opera (payoffs (3, 2) when you coordinate there) and your partner prefers Football (payoffs (2, 3) when you coordinate there). Miscoordination pays (0, 0). In the mixed Nash equilibrium, what probability do you put on YOUR preferred venue (Opera)?",
       "interaction": {
@@ -200,8 +203,33 @@
       }
     },
     {
+      "beatId": "transfer-heldout",
+      "required": false,
+      "track": "B",
+      "heldOut": true,
+      "schemaId": "mixed-strategy",
+      "prompt": "Held-out transfer: a fresh zero-sum game, same indifference method.",
+      "interaction": {
+        "type": "masteryChallenge",
+        "scenario": "Penalty shootout (zero-sum). The kicker shoots Left or Right; the keeper dives Left or Right. The kicker's expected score payoff (the keeper's is its negative) is \\(M=\\begin{pmatrix} 3 & -1 \\\\ -2 & 4 \\end{pmatrix}\\) (rows = kicker shoots Left/Right, columns = keeper dives Left/Right). There is no saddle point. Use \\(\\Delta=a+d-b-c,\\; p=\\dfrac{d-c}{\\Delta},\\; v=\\dfrac{ad-bc}{\\Delta}\\).",
+        "fields": [
+          { "id": "mix", "label": "Kicker's probability on shooting Left (the top row)", "accept": ["3/5"], "placeholder": "fraction" },
+          { "id": "value", "label": "Value of the game (to the kicker)", "accept": ["1"], "placeholder": "fraction or integer" }
+        ]
+      },
+      "feedback": {
+        "correct": "\\(\\Delta = 3+4-(-1)-(-2)=10\\). \\(p=(d-c)/\\Delta=(4-(-2))/10=6/10=3/5\\). \\(v=(ad-bc)/\\Delta=(3\\cdot4-(-1)(-2))/10=(12-2)/10=1\\). The kicker shoots Left \\(3/5\\) of the time and guarantees an expected value of \\(1\\).",
+        "hints": [
+          "Compute \\(\\Delta = a+d-b-c = 3+4-(-1)-(-2) = 10\\).",
+          "Kicker's mix on the top row: \\(p=(d-c)/\\Delta = (4-(-2))/10 = 6/10 = 3/5\\).",
+          "Value: \\(v=(ad-bc)/\\Delta = (12-2)/10 = 1\\)."
+        ]
+      }
+    },
+    {
       "beatId": "l3-prove",
       "required": true,
+      "schemaId": "mixed-strategy",
       "prompt": "Lock it in with Two-finger Morra.",
       "interaction": {
         "type": "masteryChallenge",

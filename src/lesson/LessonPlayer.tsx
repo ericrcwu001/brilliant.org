@@ -5,13 +5,14 @@ import type { Lesson, Snapshot } from '../content/schema'
 import { PhaseRail } from './PhaseRail'
 import { biasChipState } from './phases'
 import { chapterOf, chapterHueVar } from './chapters'
-import { computeMastered, bumpMaxHintLevel } from './mastery'
+import { computeMastered, bumpMaxHintLevel, isCheckpointBeat } from './mastery'
 import { useReducedMotion } from './useReducedMotion'
 import { BeatView } from './beats'
 import type { LessonState } from './beats/types'
 import {
   hintLevelsOf,
   maxHintLevelsOf,
+  confidencesOf,
   snapshotToLessonState,
   useSnapshotWriter,
   type SnapshotInput,
@@ -46,6 +47,8 @@ export function LessonPlayer({
   badge,
   track = 'B',
   review = false,
+  showConfidence = false,
+  labelStripped = false,
 }: {
   lesson?: Lesson
   initialSnapshot?: Snapshot | null
@@ -62,6 +65,16 @@ export function LessonPlayer({
   // first beat with a fresh pass so mastery is re-evaluated (badge can only
   // improve, never demote — enforced server-side). Completion is never lost.
   review?: boolean
+  // Confidence capture gate (spec-02 / D6). The ROUTE must pass the quant-intensity
+  // gate (isQuantIntensity: track === 'B' || userDoc.learningGoal === 'interview');
+  // the player has no userDoc access and stays dumb. Default false ⇒ the rating
+  // renders nowhere (Track A / gentle) until a route opts in.
+  showConfidence?: boolean
+  // Label-stripping presentation mode (spec-13 / §3.3). When true the player hides
+  // the lesson title + the beat.prompt section surface-wide (the spec-20 queue sets
+  // it). A which-method gate beat is ALWAYS stripped locally regardless. Default
+  // false ⇒ today's chrome.
+  labelStripped?: boolean
 } = {}) {
   const [lesson] = useState<Lesson>(() => lessonProp ?? loadFlagshipLesson())
   const persist = !!persistence?.uid
@@ -103,6 +116,11 @@ export function LessonPlayer({
   const [maxHintLevelByBeat, setMaxHintLevelByBeat] = useState<
     Record<string, number>
   >(() => (initialSnapshot && !review ? maxHintLevelsOf(initialSnapshot) : {}))
+  // Per-checkpoint confidence ratings (spec-02 / D6). Seeded from the snapshot
+  // (same hydration guard as maxHintLevelByBeat); empty + unused on Track A.
+  const [confidenceByBeat, setConfidenceByBeat] = useState<
+    Record<string, number>
+  >(() => (initialSnapshot && !review ? confidencesOf(initialSnapshot) : {}))
   // Adaptive override (build-brief §4.10c): per-beat cap lift + re-prefill nonce.
   // When a learner reaches a capped beat's hint cap while still wrong, the cap is
   // lifted (the level-3 reveal becomes reachable — no dead-end) and, on an
@@ -146,6 +164,14 @@ export function LessonPlayer({
   // Density is resolved by track: Track A gets the segmented/scaffolded rendering
   // unless a beat pins its own `density`. Track B stays 'merged' (today).
   const density = beat.density ?? (track === 'A' ? 'split' : 'merged')
+
+  // Label-stripping (spec-13 / §3.3): a which-method gate is ALWAYS title-stripped
+  // locally (it must not reveal "Markov Chains → Lesson 3"); the spec-20 queue also
+  // sets `labelStripped` surface-wide. `stripped` drives the title (:521/:435) and
+  // the player's beat.prompt section (:555) suppression below.
+  const isGate =
+    beat.interaction.type === 'prediction' && !!beat.interaction.gate
+  const stripped = labelStripped || isGate
 
   // Per-lesson mastery signal (L1 §9): the required graded beats first-try-
   // correct with no hint ever shown (the hint high-water mark stays 0).
@@ -207,6 +233,19 @@ export function LessonPlayer({
     [beat.beatId, beat.maxHintLevel, clearRestoringNote],
   )
 
+  // Confidence rating chosen on a checkpoint beat (spec-02 / D6). Persisted into
+  // confidenceByBeat exactly like maxHintLevelByBeat; never gates anything.
+  const onConfidence = useCallback(
+    (v: number) => {
+      clearRestoringNote()
+      analytics.confidenceRated({ lessonId, beatId: beat.beatId, value: v })
+      setConfidenceByBeat((prev) =>
+        prev[beat.beatId] === v ? prev : { ...prev, [beat.beatId]: v },
+      )
+    },
+    [beat.beatId, lessonId, clearRestoringNote],
+  )
+
   // --- Persistence (Phase 15) -------------------------------------------------
   const writer = useSnapshotWriter({
     uid: persistence?.uid ?? null,
@@ -223,6 +262,7 @@ export function LessonPlayer({
       lessonState,
       hintLevelByBeat,
       maxHintLevelByBeat,
+      confidenceByBeat,
     }),
     [
       lessonId,
@@ -232,6 +272,7 @@ export function LessonPlayer({
       lessonState,
       hintLevelByBeat,
       maxHintLevelByBeat,
+      confidenceByBeat,
     ],
   )
 
@@ -405,7 +446,7 @@ export function LessonPlayer({
             ←
           </button>
           <div className="topbar__center">
-            <span className="topbar__title">{lesson.title}</span>
+            {!stripped && <span className="topbar__title">{lesson.title}</span>}
           </div>
           <WeeklyStreak count={streak.count} lastActiveDate={streak.lastActiveDate} compact />
         </header>
@@ -491,7 +532,7 @@ export function LessonPlayer({
           ←
         </button>
         <div className="topbar__center">
-          <span className="topbar__title">{lesson.title}</span>
+          {!stripped && <span className="topbar__title">{lesson.title}</span>}
           <div className="rail-row">
             <PhaseRail
               beatId={beat.beatId}
@@ -525,10 +566,16 @@ export function LessonPlayer({
         </StatusNote>
       )}
 
-      <section className="prompt">
-        {!beat.required && <p className="prompt__kicker">Extension</p>}
-        <p className="prompt__text">{beat.prompt}</p>
-      </section>
+      {/* Label-stripping (spec-13 / §3.3): the player renders beat.prompt OUTSIDE
+          the beat, so a method-revealing prompt would defeat the gate. Suppress it
+          when `stripped` — a gate beat shows WhichMethodGate's own neutral prompt;
+          a surface-wide labelStripped lesson hides the prompt likewise. */}
+      {!stripped && (
+        <section className="prompt">
+          {!beat.required && <p className="prompt__kicker">Extension</p>}
+          <p className="prompt__text">{beat.prompt}</p>
+        </section>
+      )}
 
       <BeatView
         key={beat.beatId}
@@ -552,6 +599,10 @@ export function LessonPlayer({
           prefillToLastTerm: true,
           nonce: assistNonceByBeat[beat.beatId] ?? 0,
         }}
+        showConfidence={showConfidence && isCheckpointBeat(beat)}
+        confidenceValue={confidenceByBeat[beat.beatId]}
+        onConfidence={onConfidence}
+        labelStripped={stripped}
         milestone={milestone}
         lessonComplete={done}
       />

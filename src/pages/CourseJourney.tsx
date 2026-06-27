@@ -8,11 +8,13 @@
 //
 // The exported signature is fixed — do not change it.
 
-import { Fragment, useRef, useState } from 'react'
+import { Fragment, useContext, useEffect, useRef, useState } from 'react'
 import type { Course, Progress } from '../content/schema'
 import type { NavigateFn } from './routes'
 import { lessonPath } from './routes'
 import { analytics } from '../analytics/events'
+import { AuthContext } from '../auth/authContext'
+import { loadDueQueue } from '../lesson/queue'
 import {
   resolveNodes,
   resolveChapters,
@@ -40,9 +42,35 @@ export function CourseJourney(props: {
 }): React.JSX.Element {
   const { course, progressById, navigate, reducedMotion, earned, completionMilestoneId, onInterviewCta } = props
 
+  // spec-10 R1 — the recommender's FIRST live call site. Read the auth context
+  // directly (useContext, NOT useAuth) so the pure StudyDesk render path still
+  // mounts with no <AuthProvider> (the /dev/home harness): uid is null there →
+  // the effect no-ops → dueLessonId stays null → byte-identical legacy behavior.
+  const uid = useContext(AuthContext)?.user?.uid ?? null
+  const [dueLessonId, setDueLessonId] = useState<string | null>(null)
+  useEffect(() => {
+    if (!uid) return
+    let cancelled = false
+    // loadDueQueue catches its own Firestore failures (→ []); guard again so a
+    // queue/read failure degrades to the legacy needsReview-driven path. State is
+    // only set from the async resolution (never synchronously in the effect body);
+    // the cleanup resets to null on uid change/unmount so a stale lesson can't leak.
+    loadDueQueue(uid, new Date())
+      .then((queue) => {
+        if (!cancelled) setDueLessonId(queue[0]?.lessonId ?? null)
+      })
+      .catch(() => {
+        if (!cancelled) setDueLessonId(null)
+      })
+    return () => {
+      cancelled = true
+      setDueLessonId(null)
+    }
+  }, [uid])
+
   const nodes = resolveNodes(course, progressById)
   const chapters = resolveChapters(course)
-  const action = recommendedAction(nodes, progressById)
+  const action = recommendedAction(nodes, progressById, dueLessonId)
   // The side card follows the learner's selection; it defaults to the
   // recommended lesson so the Home loads exactly as before. Clicking a card
   // re-points the side card (it no longer enters the lesson — only the side

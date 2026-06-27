@@ -30,6 +30,7 @@
     {
       "beatId": "l2-recall",
       "required": true,
+      "schemaId": "choose-vs-arrange",
       "prompt": "Match each factorial to its value — these shrinking products power everything ahead.",
       "interaction": {
         "type": "retrievalGrid",
@@ -78,6 +79,7 @@
     {
       "beatId": "l2-win",
       "required": true,
+      "schemaId": "choose-vs-arrange",
       "prompt": "The 5 candidates are Anya, Ben, Cara, Dan, and Eva. Tap 3 to fill the President, VP, and Treasurer slots — then tap Submit to count how many ways.",
       "interaction": {
         "type": "selectionGrid",
@@ -183,6 +185,7 @@
     {
       "beatId": "l2-fraction",
       "required": true,
+      "schemaId": "choose-vs-arrange",
       "maxHintLevel": 3,
       "prompt": "Three dice each show a different value. Step 1: what fraction of all orderings of those 3 values is strictly increasing? Step 2: what is the probability all three dice come up in strictly increasing order?",
       "interaction": {
@@ -214,8 +217,42 @@
       }
     },
     {
+      "beatId": "transfer-heldout",
+      "required": false,
+      "track": "B",
+      "heldOut": true,
+      "schemaId": "choose-vs-arrange",
+      "maxHintLevel": 3,
+      "prompt": "Five different runners finish a race and are awarded the 5 numbered medals (1st through 5th). In how many distinct orders can the 5 medals be handed out — one runner per medal?",
+      "interaction": {
+        "type": "masteryChallenge",
+        "scenario": "The \\(5\\) medal positions (1st, 2nd, 3rd, 4th, 5th) are distinct, labeled destinations and each runner takes exactly one. Swapping two runners between positions yields a genuinely different finishing order. Does this call for a permutation or a combination?",
+        "fields": [
+          {
+            "id": "orders",
+            "label": "Number of finishing orders",
+            "accept": [
+              "120"
+            ],
+            "placeholder": "?",
+            "suffix": "orders"
+          }
+        ]
+      },
+      "interviewNote": "Source: standard quant/Green-Book 'arrange n distinct items in n labeled slots' problem (a ranked-finish variant). Engine: nPk(5,5) = 5! = 120.",
+      "feedback": {
+        "correct": "\\[ 5! = 5 \\cdot 4 \\cdot 3 \\cdot 2 \\cdot 1 = 120 \\] Each medal is a distinct, labeled slot. Assign 1st place to any of \\(5\\) runners, 2nd to any of the \\(4\\) remaining, 3rd to \\(3\\), 4th to \\(2\\), and 5th to the last \\(1\\). Because the positions are distinguishable, swapping two runners produces a different finishing order — so this is a permutation, \\(5!\\), not a combination.",
+        "hints": [
+          "The 5 medal positions are labeled (1st, 2nd, …) — does swapping two runners between positions give a different result?",
+          "Distinguishable positions with one runner each means \\(5!\\): five distinct slots filled in order.",
+          "\\(5! = 5 \\cdot 4 \\cdot 3 \\cdot 2 \\cdot 1 = 120\\)."
+        ]
+      }
+    },
+    {
       "beatId": "l2-prove",
       "required": true,
+      "schemaId": "choose-vs-arrange",
       "maxHintLevel": 3,
       "prompt": "Deal a standard 52-card deck to 4 players (13 cards each). The 4 aces land in 4 distinct piles. How many ways can the aces be distributed — one per pile?",
       "interaction": {

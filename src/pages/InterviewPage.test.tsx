@@ -46,6 +46,7 @@ function makeReturn(overrides: Partial<UseRealtimeInterviewReturn>): UseRealtime
     attemptId: null,
     start: vi.fn(),
     stop: vi.fn(),
+    submitConfidence: vi.fn(),
     ...overrides,
   }
 }

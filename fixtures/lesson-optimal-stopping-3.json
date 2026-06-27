@@ -11,6 +11,7 @@
       "beatId": "l3-recall",
       "required": true,
       "prompt": "Quick recall. From the last lesson, match each pool size to the BEST chance any look-then-leap strategy can achieve.",
+      "schemaId": "threshold-rule",
       "interaction": {
         "type": "retrievalGrid",
         "pairs": [
@@ -117,6 +118,7 @@
       "beatId": "l3-cutoff10",
       "required": true,
       "prompt": "Pin down the exact numbers for n = 10.",
+      "schemaId": "threshold-rule",
       "interaction": {
         "type": "answerEntry",
         "fields": [
@@ -174,6 +176,7 @@
       "beatId": "l3-bignote",
       "required": true,
       "prompt": "State it in one number. As n grows without bound, both the optimal skip fraction and the best-case win probability approach 1/e. What is 1/e as a whole percent?",
+      "schemaId": "threshold-rule",
       "interaction": {
         "type": "answerEntry",
         "fields": [
@@ -195,9 +198,44 @@
       }
     },
     {
+      "beatId": "transfer-heldout",
+      "required": false,
+      "track": "B",
+      "heldOut": true,
+      "schemaId": "threshold-rule",
+      "prompt": "Fresh case — same idea.",
+      "interaction": {
+        "type": "masteryChallenge",
+        "scenario": "A talent agency reviews \\(n = 50\\) demo tapes in random order with irrevocable yes/no calls. Their analyst computes the optimal cutoff to be \\(r^* = 19\\). (a) The look phase automatically rejects the first \\(r^* - 1\\) tapes — what percent of the 50 is that? (b) Approximately what percent chance does the look-then-leap rule give of landing the single best tape from any large pool?",
+        "fields": [
+          {
+            "id": "skip",
+            "label": "Percent rejected first (r*-1 of 50)",
+            "accept": ["36"],
+            "placeholder": "%"
+          },
+          {
+            "id": "win",
+            "label": "Approx win percent for any large pool",
+            "accept": ["37"],
+            "placeholder": "%"
+          }
+        ]
+      },
+      "feedback": {
+        "correct": "\\[ r^* - 1 = 19 - 1 = 18 \\quad \\Rightarrow \\quad \\frac{18}{50} = 36\\% \\] The look phase rejects exactly 18 of the 50 tapes — 36%. As the pool grows the optimal skip fraction and the win probability both converge to \\(1/e \\approx 37\\%\\). For \\(n=50\\) the skip lands at 36%, but the win probability is already \\(\\approx 37\\%\\): skip roughly a third to earn a ~37% shot at the single best.",
+        "hints": [
+          "The look phase rejects the first \\(r^*-1\\) tapes automatically. With \\(r^*=19\\), that is 18 tapes.",
+          "18 out of 50 is 36%. The win probability for large \\(n\\) converges to \\(1/e \\approx 37\\%\\).",
+          "Answers: skip = 36, win \\(\\approx\\) 37."
+        ]
+      }
+    },
+    {
       "beatId": "l3-prove",
       "required": true,
       "prompt": "Prove you've got it.",
+      "schemaId": "threshold-rule",
       "interaction": {
         "type": "masteryChallenge",
         "scenario": "A firm screens \\(n = 100\\) candidates in random order, irrevocable decisions. Their analyst finds the optimal cutoff is \\(r^* = 38\\). (a) The look phase automatically rejects the first \\(r^* - 1\\) candidates — what percent of the 100 is that? (b) Approximately what percent chance does the look-then-leap rule give of landing the single best candidate from any large pool?",

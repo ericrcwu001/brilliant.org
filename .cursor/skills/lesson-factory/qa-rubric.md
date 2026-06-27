@@ -18,6 +18,14 @@ Model→Prove / P1–P5 rubric) — do not invent a parallel one.
   each answer and it matches the source's stated answer.
 - `validate-fixtures` cross-checks the fixture's targets against the engine (extend
   `scripts/validate-fixtures.ts` for new interaction/engine types as needed).
+- **Method tag (Foundation B / spec-00):** the Assessment Designer assigns each graded beat its
+  **deep-structure method** (`schemaId`) from `src/content/methods.ts` at brief time;
+  `validate-fixtures` enforces a valid registry `schemaId` on **every** graded beat (no missing/invalid
+  tags — `REQUIRE_SCHEMA_ID` is unconditional once the corpus is backfilled).
+- **Held-out transfer problem (spec-24):** the lesson's held-out transfer problem (Track-B gold gate) is
+  fact-checked **identically** — Stage 1 source (Green-Book / sourced quant Q, stated answer recorded) +
+  Stage 2 engine reproduction (its `accept` is the engine's exact output). It carries the **same
+  `schemaId`** as the mastery challenge and a **fresh surface**.
 
 A number is "true" only when the source states it **and** the engine reproduces it.
 
@@ -30,7 +38,7 @@ A number is "true" only when the source states it **and** the engine reproduces 
 | 3 | **Learning science / efficiency** | Dept 1 Architect | Bet→Explore→Model→Prove arc; one objective per beat; cognitive-load budget respected; concreteness-fading; no symbol before its referent. |
 | 4 | **Misconceptions** | Dept 1 Misconception Spec | Each key wrong model is elicited + refuted; predictions use per-option (`byOption`) feedback. |
 | 5 | **Interactivity** | Dept 2 Pedagogy-Fit + UX | Every beat is genuine direct-manipulation that embodies the idea — no text walls, no fake reveals. |
-| 6 | **Assessment, mastery & continuity** | Dept 1 Assessment + Corpus Cartographer | Retrieval opener; guaranteed early win (first graded beat isn't the hardest type); required mastery challenge before the recap; spacing/interleaving present. **Continuity Report shows no redundant re-teaching vs the existing corpus (shipped + in-dev), and every conceptual overlap is turned into deliberate recall / spaced review / interleaving** (`inclusive-research-5`). |
+| 6 | **Assessment, mastery & continuity** | Dept 1 Assessment + Corpus Cartographer | Retrieval opener; guaranteed early win (first graded beat isn't the hardest type); required mastery challenge before the recap; **a held-out transfer problem** (same `schemaId` as the mastery challenge, fresh surface, `heldOut:true track:'B' required:false`, placed **before** the mastery challenge) for the Track-B delayed gold gate (spec-24); spacing/interleaving present. **Continuity Report shows no redundant re-teaching vs the existing corpus (shipped + in-dev), and every conceptual overlap is turned into deliberate recall / spaced review / interleaving** (`inclusive-research-5`). |
 | 7 | **Accessibility & mobile** | Dept 2 A11y | 44px tap-only paths; reduced-motion renders a final frame; `aria-live` mirrors; keyboard/screen-reader OK. |
 | 8 | **Technical implementation** | Dept 3 Verify + Reviewer | `validate-fixtures` + `test` + `build` + `lint` + `e2e` all green; diff is surgical (`AGENTS.md`); uses design tokens. |
 | 9 | **Inclusivity gate** | Dept 3 Verification | The mechanized `validate-fixtures` inclusivity + mastery-challenge gates pass for the new lesson (add it to the gate sets). |
@@ -49,6 +57,20 @@ Call binaries directly — **`npm run` is broken in this repo** (npm 11 + bash 3
 
 Plus an explicit **engine-vs-source** assertion in the engine's golden test: each answer from the
 Lesson Brief problem table is reproduced by the engine at exact rational values.
+
+`validate-fixtures` also runs the **method-tag gate** (Foundation B / spec-00): **every graded beat
+declares a `schemaId`** from `src/content/methods.ts`, and it is a valid registry id (no
+missing/invalid tags). During the one-time backfill this is advisory; set `REQUIRE_SCHEMA_ID=1` to
+enforce, and it is unconditional once the corpus is fully tagged.
+
+`validate-fixtures` also runs the **held-out transfer gate** (spec-24): each lesson's held-out
+transfer beat must be well-formed (`heldOut:true track:'B' required:false`, a graded beat with a valid
+`schemaId` **equal to the mastery challenge's method**, placed **before** the mastery challenge, with a
+**fresh surface** distinct from the checkpoint), and pattern-pinned `pattern-hitting-times` transfer
+beats are engine-cross-checked the same way the mastery challenge is. The gate is **not allowlist-gated**
+— it runs over every lesson, so no extra wiring is needed; just author the beat. Per-lesson **presence**
+is advisory until `REQUIRE_TRANSFER=1` (set it only **after** `REQUIRE_SCHEMA_ID=1` + the backfill have
+landed, so the "schemaId == checkpoint method" check is meaningful).
 
 > ⚠️ **Gates 6 & 9 pass *vacuously* for a new concept unless you wire its lessons in.**
 > `GATED` and `MASTERY_LESSONS` are **manually-maintained allowlists** in `scripts/validate-fixtures.ts`

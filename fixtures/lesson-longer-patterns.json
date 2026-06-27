@@ -123,6 +123,7 @@
     },
     {
       "beatId": "failure-edge",
+      "schemaId": "first-step-analysis",
       "required": true,
       "maxHintLevel": 2,
       "prompt": "On the THH graph, tap the destination state for each outcome \u2014 H and T \u2014 then press Check.",
@@ -144,6 +145,7 @@
     },
     {
       "beatId": "equation-tiles",
+      "schemaId": "first-step-analysis",
       "required": true,
       "pattern": "THH",
       "maxHintLevel": 2,
@@ -230,6 +232,7 @@
     },
     {
       "beatId": "guided-solve",
+      "schemaId": "first-step-analysis",
       "required": true,
       "prompt": "You built THH's equations and found HTH's overlaps. Type each pattern's average wait.",
       "interaction": {
@@ -277,6 +280,7 @@
     },
     {
       "beatId": "overlap-compare",
+      "schemaId": "first-step-analysis",
       "required": true,
       "comparison": true,
       "prompt": "What makes HTH wait longer? Match each pattern to how it recovers from a near-miss.",
@@ -297,7 +301,32 @@
       }
     },
     {
+      "beatId": "transfer-heldout",
+      "required": false,
+      "track": "B",
+      "heldOut": true,
+      "schemaId": "recursion-self-reference",
+      "pattern": "HHTT",
+      "prompt": "Transfer challenge: on a fair coin, what is E[HHTT] - the average number of flips until the block heads, heads, tails, tails first appears? Type a whole number.",
+      "interaction": {
+        "type": "masteryChallenge",
+        "scenario": "Same overlap-shortcut method, a brand-new pattern: \\(\\text{HHTT}\\). Slide it over itself and ask at which shift lengths the front of the word matches the back. Then add \\(2^L\\) for each match.",
+        "fields": [
+          { "id": "e-hhtt", "label": "Average flips until \\(\\text{HHTT}\\)", "accept": ["16"], "placeholder": "?", "suffix": "flips" }
+        ]
+      },
+      "feedback": {
+        "correct": "\\(E[\\text{HHTT}] = 16\\). Slide \\(\\text{HHTT}\\) over itself: no proper prefix is also a suffix (H vs T, HH vs TT, HHT vs HTT all fail), so the ONLY self-overlap is the trivial full-length one at \\(L = 4\\). The shortcut \\(E[W] = \\sum 2^L\\) over self-overlap lengths gives \\(E = 2^4 = 16\\). Compare \\(\\text{HTHT}\\), whose front \\(\\text{HT}\\) matches its back \\(\\text{HT}\\) at \\(L = 2\\): that extra border adds \\(2^2\\), so \\(E[\\text{HTHT}] = 2^2 + 2^4 = 20\\). A pattern with NO partial overlap is the cheapest length-4 wait.",
+        "hints": [
+          "Forget building the whole state machine - use the overlap shortcut. \\(E[W] = \\sum 2^L\\), summed over every length \\(L\\) at which the first \\(L\\) symbols of \\(W\\) equal the last \\(L\\) symbols (always including the full length \\(L = 4\\)).",
+          "Check each shift for \\(\\text{HHTT}\\): does the length-1 prefix \\(\\text{H}\\) equal the length-1 suffix \\(\\text{T}\\)? No. Length-2 \\(\\text{HH}\\) vs \\(\\text{TT}\\)? No. Length-3 \\(\\text{HHT}\\) vs \\(\\text{HTT}\\)? No. Only the full \\(L = 4\\) matches.",
+          "So the sum has a single term: \\(E = 2^4 = 16\\)."
+        ]
+      }
+    },
+    {
       "beatId": "mastery-challenge",
+      "schemaId": "recursion-self-reference",
       "required": true,
       "pattern": "HTHT",
       "prompt": "Mastery challenge: use the overlap shortcut to find E[HTHT] - the average flips until HTHT first appears. Type a whole number.",

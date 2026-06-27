@@ -10,6 +10,7 @@
     {
       "beatId": "l6-recall",
       "required": true,
+      "schemaId": "backward-induction",
       "prompt": "Warm up: match each idea to its answer.",
       "interaction": {
         "type": "retrievalGrid",
@@ -183,6 +184,7 @@
     {
       "beatId": "l6-apply",
       "required": true,
+      "schemaId": "linearity-indicators",
       "interviewNote": "Green Book chocolate-bar invariant: each break splits one piece into two, so the piece count increases by exactly 1 per break. Starting from 1 piece you need exactly mn − 1 breaks to reach mn unit squares — the number is forced, not strategic. Coins on a round table (techinterview.org symmetry / strategy-stealing): the first player places a coin at the exact center, then mirrors every opponent move through the center — guaranteeing the first player always has a legal move when the opponent does, so the first player wins. Normal vs misère Nim: in normal play (last to take wins) the nim-sum rule applies exactly; in misère Nim (last to take loses) play normally until only heaps of size 0 or 1 remain, then take an odd number of those last tokens instead of even. The 21 game (take 1–3, the player forced to take 21 loses) is misère subtraction — P-positions shift by one.",
       "prompt": "A chocolate bar is 6 × 8 = 48 squares. You snap it along grid lines until you have 48 individual unit squares. What is the minimum number of breaks required?",
       "interaction": {
@@ -206,8 +208,33 @@
       }
     },
     {
+      "beatId": "transfer-heldout",
+      "required": false,
+      "track": "B",
+      "heldOut": true,
+      "schemaId": "backward-induction",
+      "prompt": "Held-out transfer: fresh heaps, same nim-sum method.",
+      "interaction": {
+        "type": "masteryChallenge",
+        "scenario": "Three Nim heaps: sizes 2, 3, and 4. Last to take wins (normal play). The nim-sum is \\(2 \\oplus 3 \\oplus 4\\), where \\(\\oplus\\) denotes bitwise XOR. Recall: a position with nim-sum \\(0\\) is a P-position (the player to move loses); a non-zero nim-sum is an N-position (the player to move wins).",
+        "fields": [
+          { "id": "nimsum", "label": "Nim-sum (XOR) of 2, 3, 4", "accept": ["5"], "placeholder": "?" },
+          { "id": "win", "label": "Does the player to move win? (yes/no)", "accept": ["yes"], "placeholder": "yes or no" }
+        ]
+      },
+      "feedback": {
+        "correct": "\\(2 \\oplus 3 = 1\\), then \\(1 \\oplus 4 = 5\\). Nim-sum \\(5 \\neq 0\\) ⇒ N-position: the player to move wins. The winning move reduces the 4-heap to \\(4 \\oplus 5 = 1\\), leaving \\((2,3,1)\\) with nim-sum \\(0\\). \\[ 2 \\oplus 3 \\oplus 4 = 5. \\]",
+        "hints": [
+          "2 in binary is 010; 3 is 011; 4 is 100. XOR column by column: 010 XOR 011 = 001 = 1.",
+          "Then 1 XOR 4 = 001 XOR 100 = 101 = 5. nim-sum = 5.",
+          "nim-sum \\(\\neq 0\\) ⇒ N-position ⇒ the mover wins → answer: yes (reduce the 4-heap to 1 to hand over nim-sum 0)."
+        ]
+      }
+    },
+    {
       "beatId": "l6-prove",
       "required": true,
+      "schemaId": "backward-induction",
       "prompt": "Nim heaps (1, 4, 5). Compute the nim-sum and decide who wins.",
       "interaction": {
         "type": "masteryChallenge",

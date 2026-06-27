@@ -123,6 +123,36 @@ describe('studyDesk model — recommended-action priority (Q9)', () => {
     expect(action).toEqual({ kind: 'start', lessonId: L2 })
   })
 
+  it('a due review card (reviewCardLessonId) drives Review ahead of a needsReview node (R7)', () => {
+    const progress: Record<string, Progress> = {
+      [L1]: { completionStatus: 'completed', needsReview: true },
+    }
+    const nodes = resolveNodes(builtCourse, progress)
+    // A different completed lesson has a due card; it wins the review focus.
+    const action = recommendedAction(nodes, progress, L2)
+    expect(action).toEqual({ kind: 'review', lessonId: L2 })
+  })
+
+  it('a due review card still loses to an in-progress Resume (priority unchanged)', () => {
+    const progress: Record<string, Progress> = {
+      [L1]: { completionStatus: 'in_progress' },
+    }
+    const nodes = resolveNodes(builtCourse, progress)
+    const action = recommendedAction(nodes, progress, L2)
+    expect(action).toEqual({ kind: 'resume', lessonId: L1 })
+  })
+
+  it('with reviewCardLessonId null/omitted, behavior is byte-identical to before', () => {
+    const progress: Record<string, Progress> = {
+      [L1]: { completionStatus: 'completed', needsReview: true },
+    }
+    const nodes = resolveNodes(builtCourse, progress)
+    const omitted = recommendedAction(nodes, progress)
+    const explicitNull = recommendedAction(nodes, progress, null)
+    expect(omitted).toEqual({ kind: 'review', lessonId: L1 })
+    expect(explicitNull).toEqual(omitted)
+  })
+
   it('all lessons mastered → Replay / course complete', () => {
     const progress: Record<string, Progress> = Object.fromEntries(
       builtCourse.lessons.map((l) => [

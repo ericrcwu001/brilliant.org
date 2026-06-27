@@ -105,12 +105,28 @@ sources: fixtures/lesson-*.json per branch; Firestore lessons/* + courses/* (dev
 |---------|--------|--------|----------|
 | <stmt> | <ans> | Green Book p.<n> §<x> | ☐ engine ☐ source |
 | <stmt> | <ans> | <web source + url> (GB-anchored to §<x>) | ☐ engine ☐ source |
+| **held-out transfer** <fresh-surface stmt> | <ans> | Green Book p.<n> §<x> / sourced quant Q | ☐ engine ☐ source |
+
+> The **held-out transfer problem** (Track-B gold gate, spec-24) is fact-checked
+> **identically** to any other problem (☐ source + ☐ engine) — its `accept` is the
+> engine's exact output. Same `schemaId` (method) as the mastery challenge, a
+> visibly different surface (numbers/objects/framing — never the checkpoint reworded).
 
 ## Beat-by-beat plan  (Bet → Explore → Model → Prove)
-| # | beatId | intent (one objective) | teaches | misconception elicited/refuted | graded? | track |
-|---|--------|------------------------|---------|--------------------------------|---------|-------|
-| 1 | ... | ... | ... | ... | no | A/B/both |
+| # | beatId | intent (one objective) | teaches | misconception elicited/refuted | graded? | schemaId | track |
+|---|--------|------------------------|---------|--------------------------------|---------|----------|-------|
+| 1 | ... | ... | ... | ... | no | — | A/B/both |
+| 5 | ... | ... | ... | ... | yes | first-step-analysis | both |
+| n-1 | <transfer> | held-out transfer (Track-B gold gate); `heldOut:true required:false` | ... | ... | yes | =mastery challenge's schemaId | B |
 ...
+
+> **`schemaId` (Foundation B / spec-00) is REQUIRED on every graded beat** — the hidden deep-structure
+> METHOD tag from `src/content/methods.ts` (`—` on ungraded beats). `validate-fixtures` enforces a valid
+> registry id on every graded beat. **Registry-extension process:** if no existing `METHODS` id fits a
+> graded beat, propose a new id (`id`, `name`, `domains`, plus its symmetric `CONFUSABLE` near-misses) as
+> a **Wave-0 addition to `src/content/methods.ts`**, reviewed by the Dept-3 Schema/Types Specialist with
+> the schema freeze. **Never put an unregistered string on a beat** — ids are persisted on review cards
+> and are permanent.
 
 ## Misconceptions (Specialist)
 - <wrong model> → where it fires → refutation copy (per-option)
@@ -119,6 +135,9 @@ sources: fixtures/lesson-*.json per branch; Firestore lessons/* + courses/* (dev
 - retrieval opener: <which prior headline — from the Continuity Report>
 - guaranteed early win: <which beat>
 - mastery challenge (required, before recap): <problem + pattern>
+- held-out transfer (Track-B gold gate, spec-24): <fresh-surface problem, SAME schemaId as the mastery
+  challenge> — authored `required:false, track:'B', heldOut:true`, placed **immediately before** the
+  mastery challenge (so the `(masteryChallenge, recap)` ending invariant holds), engine-verified.
 - spacing/interleaving: <what re-surfaces — from the Continuity Report>
 ```
 
@@ -172,6 +191,8 @@ sources: fixtures/lesson-*.json per branch; Firestore lessons/* + courses/* (dev
 ## Contracts (frozen in Wave 0)
 - engine: `function <name>(...): <type>`
 - schema: `<newType>` = { ... }
+- method tags: every graded beat in the fixture carries a `schemaId` (a valid `src/content/methods.ts`
+  id; Foundation B / spec-00) — any new registry id is frozen here in Wave 0 by the Schema/Types Specialist
 
 ## Parallel split
 - Coder A: engine + goldens

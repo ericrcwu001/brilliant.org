@@ -11,6 +11,7 @@
       "beatId": "recall-update",
       "required": true,
       "track": "both",
+      "schemaId": "prior-update",
       "prompt": "Quick warm-up from L1 — match each statement to what it describes.",
       "interaction": {
         "type": "retrievalGrid",
@@ -118,6 +119,7 @@
       "beatId": "compute-ppv",
       "required": true,
       "track": "both",
+      "schemaId": "natural-frequencies",
       "prompt": "Using the counts from the grid, compute P(disease | positive) = TP / (TP + FP).",
       "interaction": {
         "type": "answerEntry",
@@ -139,6 +141,7 @@
       "beatId": "ten-heads",
       "required": true,
       "track": "both",
+      "schemaId": "prior-update",
       "prompt": "1000 coins: one double-headed, 999 fair. You pick a coin at random and flip 10 heads in a row. What is P(double-headed | 10 heads)?",
       "interaction": {
         "type": "answerEntry",
@@ -159,6 +162,7 @@
       "beatId": "base-rate-sweep",
       "required": true,
       "track": "both",
+      "schemaId": "natural-frequencies",
       "prompt": "Same 99%/99% test — sweep the base rate and compute the posterior at each prevalence.",
       "interaction": {
         "type": "answerEntry",
@@ -202,9 +206,33 @@
       }
     },
     {
+      "beatId": "transfer-heldout",
+      "required": false,
+      "track": "B",
+      "heldOut": true,
+      "schemaId": "natural-frequencies",
+      "prompt": "Transfer: an airport scanner is 98% sensitive and 90% specific. 2% of bags actually contain contraband. A bag sets off the alarm. Compute P(contraband | alarm).",
+      "interaction": {
+        "type": "masteryChallenge",
+        "scenario": "An airport scanner is 98% sensitive and 90% specific. 2% of bags contain contraband. A bag alarms.",
+        "fields": [
+          { "id": "p", "label": "\\(P(\\text{contraband}\\mid\\text{alarm})\\)", "accept": ["1/6"] }
+        ]
+      },
+      "feedback": {
+        "correct": "Same natural-frequency count as the medical test, with bags in place of patients: \\[ P(\\text{contraband}\\mid\\text{alarm}) = \\frac{P(\\text{contraband})\\,P(\\text{alarm}\\mid\\text{contraband})}{P(\\text{contraband})\\,P(\\text{alarm}\\mid\\text{contraband}) + P(\\text{clean})\\,P(\\text{alarm}\\mid\\text{clean})} \\] Per 10,000 bags: \\(200\\) contraband \\(\\times\\,98\\% = 196\\) true alarms; \\(9{,}800\\) clean \\(\\times\\,10\\% = 980\\) false alarms; total \\(= 1176\\). Substituting: \\[ P(\\text{contraband}\\mid\\text{alarm}) = \\frac{196}{1176} = \\frac{1}{6} \\approx 17\\% \\] A 90% specific scanner still throws five false alarms for each true one — the 2% base rate, multiplied across thousands of clean bags, dominates the count.",
+        "hints": [
+          "Sensitivity 98% is \\(P(\\text{alarm}\\mid\\text{contraband})\\); specificity 90% means a 10% false-alarm rate on clean bags. Count actual bags over 10,000.",
+          "Per 10,000: 200 contraband \\(\\times\\,98\\% = 196\\) true alarms; 9,800 clean \\(\\times\\,10\\% = 980\\) false alarms; total 1,176.",
+          "\\(\\frac{196}{1176} = \\frac{1}{6}\\)."
+        ]
+      }
+    },
+    {
       "beatId": "mastery-challenge",
       "required": true,
       "track": "both",
+      "schemaId": "natural-frequencies",
       "prompt": "Mastery challenge: a weaker test — 95% sensitive, 95% specific, same 1% disease. Compute P(disease | positive).",
       "interaction": {
         "type": "masteryChallenge",

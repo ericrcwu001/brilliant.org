@@ -31,6 +31,7 @@
     },
     {
       "beatId": "ev3-recall",
+      "schemaId": "linearity-indicators",
       "required": true,
       "prompt": "You've computed these probabilities before. Match each situation to its value — they're each secretly E[1_A] for the right indicator.",
       "interaction": {
@@ -88,6 +89,7 @@
     },
     {
       "beatId": "ev3-win",
+      "schemaId": "linearity-indicators",
       "required": true,
       "prompt": "Draw one card at random from a shuffled 52-card deck. Let 1_ace = 1 if it's an ace, 0 otherwise. What is E[1_ace]?",
       "interaction": {
@@ -185,6 +187,7 @@
     },
     {
       "beatId": "ev3-count",
+      "schemaId": "linearity-indicators",
       "required": true,
       "prompt": "Roll a fair 6-sided die twice (N=6 faces, m=2 rolls). Let I_i = 1 if face i appears at least once. What is the expected number of distinct faces seen?",
       "interaction": {
@@ -210,7 +213,40 @@
       }
     },
     {
+      "beatId": "transfer-heldout",
+      "schemaId": "linearity-indicators",
+      "required": false,
+      "track": "B",
+      "heldOut": true,
+      "interviewNote": "Source: distinct-values-from-repeated-rolls indicator drill (Green Book, '50 Challenging Problems' lineage / Blitzstein indicator chapter). Same method as the first-ace problem — write the count as a sum of indicators and add their expectations. Here E[distinct] = N(1 − ((N−1)/N)^m), the complement of 'face i never appears'.",
+      "prompt": "Mastery challenge (fresh): roll a fair 6-sided die THREE times. Let I_i = 1 if face i shows at least once. Using indicators, find the expected number of distinct faces seen across the three rolls.",
+      "interaction": {
+        "type": "masteryChallenge",
+        "scenario": "Write the count of distinct faces as \\(\\sum_{i=1}^{6} I_i\\), where \\(I_i = 1\\) if face \\(i\\) appears in the three rolls. Each \\(E[I_i] = 1 - P(\\text{face } i \\text{ never shows}) = 1 - \\left(\\tfrac{5}{6}\\right)^3\\). Sum the six indicators.",
+        "fields": [
+          {
+            "id": "e-distinct-3",
+            "label": "\\(E[\\text{distinct faces in 3 rolls}]\\)",
+            "accept": [
+              "91/36"
+            ],
+            "placeholder": "?",
+            "suffix": "faces"
+          }
+        ]
+      },
+      "feedback": {
+        "correct": "Let \\( I_i = 1 \\) if face \\( i \\) appears at least once. By linearity, \\[ E[\\text{distinct}] = \\sum_{i=1}^{6} E[I_i] = 6\\left(1 - \\left(\\tfrac{5}{6}\\right)^{3}\\right) \\] \\( \\left(\\tfrac{5}{6}\\right)^3 = \\tfrac{125}{216} \\), so each \\( E[I_i] = \\tfrac{91}{216} \\) and \\( E[\\text{distinct}] = 6\\cdot\\tfrac{91}{216} = \\tfrac{91}{36} \\approx 2.53 \\). Three rolls give fewer than three distinct faces — repeats are likely. No casework: one indicator per face, then add.",
+        "hints": [
+          "Three rolls can repeat a face, so the answer is below 3. Sum each face's chance of appearing: \\(6\\left(1-\\left(\\tfrac{5}{6}\\right)^3\\right)\\).",
+          "\\(E[I_i] = 1 - P(\\text{face } i \\text{ missed all 3 rolls}) = 1 - \\left(\\tfrac{5}{6}\\right)^3 = 1 - \\tfrac{125}{216} = \\tfrac{91}{216}\\).",
+          "\\( 6 \\cdot \\tfrac{91}{216} = \\tfrac{546}{216} = \\tfrac{91}{36} \\)."
+        ]
+      }
+    },
+    {
       "beatId": "ev3-prove",
+      "schemaId": "linearity-indicators",
       "required": true,
       "prompt": "Mastery challenge: use indicator variables to find the expected number of cards turned over before (and including) the first ace.",
       "interaction": {

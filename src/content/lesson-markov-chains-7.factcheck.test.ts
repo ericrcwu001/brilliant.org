@@ -141,7 +141,7 @@ describe('lesson-markov-chains-7 fact-check', () => {
     expect((beat as unknown as Record<string, unknown>)['pattern']).toBeUndefined()
   })
 
-  it('lesson has exactly 11 beats in spec order', () => {
+  it('lesson has exactly 12 beats in spec order', () => {
     const ids = lesson.beats.map((b) => b.beatId)
     expect(ids).toEqual([
       'recall-LLN',
@@ -153,6 +153,7 @@ describe('lesson-markov-chains-7 fact-check', () => {
       'approach-pi',
       'periodic-trap',
       'interleave-forgets',
+      'transfer-heldout',
       'mastery-challenge',
       'recap',
     ])

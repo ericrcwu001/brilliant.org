@@ -6,6 +6,7 @@
 import { useState } from 'react'
 import type { BeatProps } from './types'
 import { BeatShell } from '../BeatShell'
+import { ConfidenceRating } from '../ConfidenceRating'
 import { resolveFeedback, useHintLadder } from '../feedback'
 import { MathText, mathToPlain } from '../MathText'
 import { norm, gradeAcceptFields } from '../grading'
@@ -104,6 +105,15 @@ export function MasteryChallengeBeat(props: BeatProps) {
             )
           })}
         </div>
+        {/* Confidence capture (spec-02 / D6): shown after the learner has checked
+            their answer, only on the quant-intensity gate. Never blocks advance. */}
+        {props.showConfidence && solved && (
+          <ConfidenceRating
+            value={props.confidenceValue}
+            onSelect={(v) => props.onConfidence?.(v)}
+            question="How sure were you before checking?"
+          />
+        )}
       </div>
     </BeatShell>
   )

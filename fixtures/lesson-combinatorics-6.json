@@ -30,6 +30,7 @@
     {
       "beatId": "l6-recall",
       "required": false,
+      "schemaId": "counting-product-rule",
       "prompt": "Retrieve the probabilities you've already calculated — each is a favorable ÷ total.",
       "interaction": {
         "type": "retrievalGrid",
@@ -78,6 +79,7 @@
     {
       "beatId": "l6-win",
       "required": true,
+      "schemaId": "counting-product-rule",
       "prompt": "In L4 you counted 624 four-of-a-kind hands. C(52,5) = 2,598,960 total 5-card hands exist. What is P(four of a kind)?",
       "interaction": {
         "type": "answerEntry",
@@ -167,6 +169,7 @@
     {
       "beatId": "l6-rank",
       "required": true,
+      "schemaId": "choose-vs-arrange",
       "prompt": "Rank these two hands from rarest to most common. Tap a hand to place it in order, or use Up/Down arrow keys to reorder.",
       "interaction": {
         "type": "handRanker",
@@ -211,8 +214,50 @@
       }
     },
     {
+      "beatId": "transfer-heldout",
+      "required": false,
+      "track": "B",
+      "heldOut": true,
+      "schemaId": "choose-vs-arrange",
+      "prompt": "From scratch: how many three-of-a-kind hands are in a 5-card deal from a 52-card deck? (Exactly three of one rank, and two kickers of two other distinct ranks.) Then find P(three of a kind).",
+      "interaction": {
+        "type": "masteryChallenge",
+        "scenario": "Choose the triple's rank — \\(13\\) ways; pick \\(3\\) of its \\(4\\) suits — \\(\\binom{4}{3}\\). Then choose \\(2\\) distinct kicker ranks unordered — \\(\\binom{12}{2}\\); give each kicker any of its \\(4\\) suits — \\(4 \\times 4\\). The triple-rank is a labeled role, but the two kicker ranks are interchangeable, so they are chosen unordered.",
+        "fields": [
+          {
+            "id": "trip-count",
+            "label": "Three-of-a-kind hands",
+            "accept": [
+              "54912",
+              "54,912"
+            ],
+            "placeholder": "?",
+            "suffix": "hands"
+          },
+          {
+            "id": "trip-prob",
+            "label": "\\(P(\\text{three of a kind})\\)",
+            "accept": [
+              "88/4165"
+            ],
+            "placeholder": "?"
+          }
+        ]
+      },
+      "interviewNote": "Source: standard poker-hand probability (Green-Book §4.2 hand table). Count = 13·C(4,3)·C(12,2)·4·4 = 13·4·66·16 = 54,912; C(52,5)=2,598,960; engine probabilityFromCounts(54912, 2598960) = 88/4165. Note C(12,2)=66 (kicker ranks UNORDERED), not 12·11.",
+      "feedback": {
+        "correct": "Count step by step: \\[ 13 \\cdot \\binom{4}{3} \\cdot \\binom{12}{2} \\cdot 4 \\cdot 4 = 13 \\cdot 4 \\cdot 66 \\cdot 16 = 54{,}912. \\] \\(13\\) ranks for the triple and \\(\\binom{4}{3}=4\\) suit-choices; then \\(\\binom{12}{2}=66\\) for the two kicker ranks (unordered — 'a 9 and a 2' equals 'a 2 and a 9'), each kicker free to be any of \\(4\\) suits (\\(4 \\times 4 = 16\\)). The probability is \\[ P(\\text{three of a kind}) = \\frac{54{,}912}{2{,}598{,}960} = \\frac{88}{4165}. \\]",
+        "hints": [
+          "The triple's rank is one labeled choice (and 3 of its 4 suits). The two kicker ranks are interchangeable — use \\(\\binom{12}{2}\\), not \\(12 \\times 11\\).",
+          "\\(13 \\cdot \\binom{4}{3} \\cdot \\binom{12}{2} \\cdot 4 \\cdot 4 = 13 \\cdot 4 \\cdot 66 \\cdot 16 = 54{,}912\\) hands.",
+          "\\(\\frac{54{,}912}{2{,}598{,}960} = \\frac{88}{4165}\\)."
+        ]
+      }
+    },
+    {
       "beatId": "l6-prove",
       "required": true,
+      "schemaId": "choose-vs-arrange",
       "prompt": "From scratch: how many two-pairs hands are in a 5-card deck? Then find P(two pairs). Finally, confirm the full ranking: four-of-a-kind, full house, two pairs.",
       "interaction": {
         "type": "masteryChallenge",

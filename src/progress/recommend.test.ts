@@ -1,6 +1,12 @@
 import { describe, it, expect } from 'vitest'
 import type { Beat } from '../content/schema'
-import { masteredFromLive, selectWeakNode, recommendReview } from './recommend'
+import type { MethodId } from '../content/methods'
+import {
+  masteredFromLive,
+  selectWeakNode,
+  recommendReview,
+  selectWeakMethod,
+} from './recommend'
 
 function gradedBeat(beatId: string, required = true): Beat {
   return {
@@ -10,6 +16,10 @@ function gradedBeat(beatId: string, required = true): Beat {
     interaction: { type: 'retrievalGrid', pairs: [{ left: 'a', right: 'b' }] },
     feedback: { correct: 'ok', hints: ['1', '2', '3'] },
   } as Beat
+}
+
+function taggedBeat(beatId: string, schemaId: MethodId | '', required = true): Beat {
+  return { ...gradedBeat(beatId, required), schemaId: schemaId || undefined } as Beat
 }
 
 describe('masteredFromLive', () => {
@@ -68,5 +78,59 @@ describe('recommendReview', () => {
   it('returns null when every completed lesson is mastered', () => {
     const lessons = [{ lessonId: 'L1', beats: [gradedBeat('a')], completed: true }]
     expect(recommendReview(lessons, { L1: {} })).toBeNull()
+  })
+})
+
+describe('selectWeakMethod', () => {
+  it('aggregates struggle by schemaId; highest total hint wins', () => {
+    const lessons = [
+      { lessonId: 'L1', beats: [taggedBeat('a', 'symmetry'), taggedBeat('b', 'conditioning')] },
+      { lessonId: 'L2', beats: [taggedBeat('c', 'symmetry')] },
+    ]
+    // symmetry: a=1 + c=3 = 4 over 2 beats; conditioning: b=2 over 1 beat.
+    const weak = selectWeakMethod(lessons, { L1: { a: 1, b: 2 }, L2: { c: 3 } })
+    expect(weak).toEqual({ schemaId: 'symmetry', totalHint: 4, beatCount: 2 })
+  })
+
+  it('breaks an equal-total tie by highest mean', () => {
+    const lessons = [
+      { lessonId: 'L1', beats: [taggedBeat('a', 'symmetry'), taggedBeat('b', 'symmetry')] },
+      { lessonId: 'L2', beats: [taggedBeat('c', 'conditioning')] },
+    ]
+    // symmetry total 4 over 2 (mean 2); conditioning total 4 over 1 (mean 4) → wins.
+    const weak = selectWeakMethod(lessons, { L1: { a: 2, b: 2 }, L2: { c: 4 } })
+    expect(weak?.schemaId).toBe('conditioning')
+  })
+
+  it('breaks an equal-total, equal-mean tie alphabetically by schemaId', () => {
+    const lessons = [
+      { lessonId: 'L1', beats: [taggedBeat('a', 'symmetry')] },
+      { lessonId: 'L2', beats: [taggedBeat('c', 'conditioning')] },
+    ]
+    // both total 3 over 1 beat → alphabetical: conditioning < symmetry.
+    const weak = selectWeakMethod(lessons, { L1: { a: 3 }, L2: { c: 3 } })
+    expect(weak?.schemaId).toBe('conditioning')
+  })
+
+  it('skips beats without a schemaId and non-graded / unstruggled beats', () => {
+    const lessons = [
+      {
+        lessonId: 'L1',
+        beats: [taggedBeat('a', 'symmetry'), taggedBeat('untagged', ''), gradedBeat('opt', false)],
+      },
+    ]
+    // untagged contributes nothing; opt is not graded-required; only a counts.
+    const weak = selectWeakMethod(lessons, { L1: { a: 2, untagged: 5, opt: 5 } })
+    expect(weak).toEqual({ schemaId: 'symmetry', totalHint: 2, beatCount: 1 })
+  })
+
+  it('returns null when no graded beat carries a usable schemaId (backfill-incomplete)', () => {
+    const lessons = [{ lessonId: 'L1', beats: [taggedBeat('a', '')] }]
+    expect(selectWeakMethod(lessons, { L1: { a: 3 } })).toBeNull()
+  })
+
+  it('returns null when nothing struggled', () => {
+    const lessons = [{ lessonId: 'L1', beats: [taggedBeat('a', 'symmetry')] }]
+    expect(selectWeakMethod(lessons, { L1: { a: 0 } })).toBeNull()
   })
 })

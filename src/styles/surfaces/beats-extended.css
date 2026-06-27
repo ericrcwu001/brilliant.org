@@ -1200,6 +1200,21 @@
   color: var(--ergo-ink-2);
 }
 
+/* ── Confidence rating (spec-02 / D6): a one-tap self-report shown after a
+   checkpoint is solved. Reuses .chips/.chip--select; only the question label
+   needs its own spacing/typography. ─────────────────────────────────────── */
+.confidence {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s2);
+}
+.confidence__q {
+  margin: 0;
+  font-size: calc(13px * var(--fs));
+  font-weight: 600;
+  color: var(--ergo-ink-2);
+}
+
 /* ── SliderBeat visible instruction ─────────────────────────────────────── */
 .numline__instruction {
   margin: 0;

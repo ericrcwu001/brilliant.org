@@ -108,6 +108,40 @@ describe('users/{uid} profile', () => {
       updateDoc(doc(alice(), 'users/alice'), { createdAt: 'tampered' }),
     )
   })
+
+  it('allows the owner to set targetInterviewDate (alone and with lastActiveAt)', async () => {
+    await seed('users/alice', { displayName: 'Alice', lastActiveAt: 'orig' })
+    await assertSucceeds(
+      updateDoc(doc(alice(), 'users/alice'), {
+        targetInterviewDate: '2026-09-01',
+      }),
+    )
+    await assertSucceeds(
+      updateDoc(doc(alice(), 'users/alice'), {
+        targetInterviewDate: '2026-09-02',
+        lastActiveAt: serverTimestamp(),
+      }),
+    )
+  })
+
+  it('denies a non-owner setting targetInterviewDate', async () => {
+    await seed('users/alice', { displayName: 'Alice' })
+    await assertFails(
+      updateDoc(doc(bob(), 'users/alice'), {
+        targetInterviewDate: '2026-09-01',
+      }),
+    )
+  })
+
+  it('denies a userDoc update smuggling a progression field alongside targetInterviewDate', async () => {
+    await seed('users/alice', { displayName: 'Alice' })
+    await assertFails(
+      updateDoc(doc(alice(), 'users/alice'), {
+        targetInterviewDate: '2026-09-01',
+        masteryStatus: 'mastered', // not in the update whitelist
+      }),
+    )
+  })
 })
 
 describe('snapshots (client-authoritative, whitelist)', () => {
@@ -260,6 +294,59 @@ describe('interviews / interviewUsage / interviewState (Cloud Functions only)', 
         doc(alice(), 'users/alice/interviewState/course-expected-value'),
         { attemptCount: 0 },
       ),
+    )
+  })
+})
+
+describe('reviews (Cloud Functions only)', () => {
+  it('allows owner reads but denies all client writes', async () => {
+    // Simulate a Cloud Function (submitReview / writeCardsForCompletion) write.
+    await seed('users/alice/reviews/lesson-bayes-rule-1__compute-posterior', {
+      lessonId: 'lesson-bayes-rule-1',
+      beatId: 'compute-posterior',
+      conceptId: 'course-bayes-rule',
+      schemaId: '',
+      track: 'A',
+      intervalDays: 1,
+      easeFactor: 2.5,
+      reps: 0,
+      lapses: 0,
+      lastResult: null,
+      lastConfidence: null,
+      isTransfer: false,
+      suspended: false,
+    })
+
+    // Owner reads.
+    await assertSucceeds(
+      getDoc(
+        doc(alice(), 'users/alice/reviews/lesson-bayes-rule-1__compute-posterior'),
+      ),
+    )
+    // Non-owner cannot read.
+    await assertFails(
+      getDoc(
+        doc(bob(), 'users/alice/reviews/lesson-bayes-rule-1__compute-posterior'),
+      ),
+    )
+
+    // Client writes denied — owner and non-owner, create and update (a client
+    // must not be able to forge a pass to mint gold; R13).
+    await assertFails(
+      setDoc(doc(alice(), 'users/alice/reviews/forged'), {
+        lessonId: 'lesson-bayes-rule-1',
+        beatId: 'compute-posterior',
+        lastResult: 'pass',
+      }),
+    )
+    await assertFails(
+      updateDoc(
+        doc(alice(), 'users/alice/reviews/lesson-bayes-rule-1__compute-posterior'),
+        { lastResult: 'pass', reps: 99 },
+      ),
+    )
+    await assertFails(
+      setDoc(doc(bob(), 'users/alice/reviews/forged'), { lastResult: 'pass' }),
     )
   })
 })

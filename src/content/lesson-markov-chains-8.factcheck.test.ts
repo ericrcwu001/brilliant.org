@@ -138,7 +138,7 @@ describe('lesson-markov-chains-8 fact-check', () => {
     expect(beat.required).toBe(false)
   })
 
-  it('lesson has exactly 10 beats in spec order', () => {
+  it('lesson has exactly 11 beats in spec order', () => {
     const ids = lesson.beats.map((b) => b.beatId)
     expect(ids).toEqual([
       'recall-birth-death',
@@ -149,6 +149,7 @@ describe('lesson-markov-chains-8 fact-check', () => {
       'telescope-to-pi',
       'triplet-reveal',
       'reversible-or-not',
+      'transfer-heldout',
       'mastery-ehrenfest-m3',
       'recap',
     ])

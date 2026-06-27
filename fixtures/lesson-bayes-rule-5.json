@@ -11,6 +11,7 @@
       "beatId": "recall-n-update",
       "required": true,
       "track": "both",
+      "schemaId": "prior-update",
       "prompt": "Quick warm-up from L4 — match each term to what it does in an N-hypothesis update.",
       "interaction": {
         "type": "retrievalGrid",
@@ -117,6 +118,7 @@
       "beatId": "host-likelihood",
       "required": true,
       "track": "both",
+      "schemaId": "conditioning",
       "prompt": "For each door, give the probability that the host opens Door 3 — given where the car is.",
       "interaction": {
         "type": "answerEntry",
@@ -139,6 +141,7 @@
       "beatId": "compute-23",
       "required": true,
       "track": "both",
+      "schemaId": "conditioning",
       "prompt": "Each door's prior is 1/3. Weighted by the likelihoods [½, 1, 0] and renormalized — what is P(car behind Door 2 | host opened Door 3)?",
       "interaction": {
         "type": "answerEntry",
@@ -160,6 +163,7 @@
       "beatId": "hundred-doors",
       "required": true,
       "track": "both",
+      "schemaId": "conditioning",
       "prompt": "Scale up to 100 doors: you pick 1, the host opens 98 goat doors and leaves one other door closed. What is P(win by switching)?",
       "interaction": {
         "type": "answerEntry",
@@ -201,9 +205,33 @@
       }
     },
     {
+      "beatId": "transfer-heldout",
+      "required": false,
+      "track": "B",
+      "heldOut": true,
+      "schemaId": "conditioning",
+      "prompt": "Transfer: three closed boxes, exactly one holds a prize. You pick Box A. A friend who does NOT know where the prize is opens one of the other two boxes at random; it happens to be empty (Box C). What is P(prize is in Box B)?",
+      "interaction": {
+        "type": "masteryChallenge",
+        "scenario": "Three boxes, one holds a prize. You pick Box A. A friend who does not know where the prize is opens one of the other two boxes uniformly at random; it turns out to be empty (Box C).",
+        "fields": [
+          { "id": "boxb", "label": "\\(P(\\text{prize in Box B}\\mid\\text{C opened empty})\\)", "accept": ["1/2"] }
+        ]
+      },
+      "feedback": {
+        "correct": "Condition on the actual evidence — that the friend's random open revealed Box C empty — exactly as with the random-host Monty: \\[ P(\\text{prize at B}\\mid\\text{C empty}) = \\frac{P(\\text{prize at B})\\,P(\\text{C empty}\\mid\\text{prize at B})}{\\sum_j P(\\text{prize at }j)\\,P(\\text{C empty}\\mid\\text{prize at }j)} \\] The friend picks uniformly from the two unchosen boxes, so the chance Box C ends up empty is: \\(P(\\text{C empty}\\mid\\text{prize at A}) = \\tfrac{1}{2}\\), \\(P(\\text{C empty}\\mid\\text{prize at B}) = \\tfrac{1}{2}\\), \\(P(\\text{C empty}\\mid\\text{prize at C}) = 0\\). Each prior is \\(\\tfrac{1}{3}\\). Substituting: \\[ P(\\text{prize at B}\\mid\\text{C empty}) = \\frac{\\tfrac{1}{3}\\cdot\\tfrac{1}{2}}{\\tfrac{1}{3}\\cdot\\tfrac{1}{2}+\\tfrac{1}{3}\\cdot\\tfrac{1}{2}+\\tfrac{1}{3}\\cdot 0} = \\frac{1}{2} \\] An uninformed opener carries no information about which live box hides the prize — switching and staying are equal at \\(\\tfrac{1}{2}\\).",
+        "hints": [
+          "The opener is uninformed, so condition on the data: given where the prize is, what is \\(P(\\text{C ends up empty})\\)?",
+          "If the prize is at A or B, the friend reveals C empty with probability \\(\\tfrac{1}{2}\\) each — likelihoods \\([\\tfrac{1}{2},\\tfrac{1}{2},0]\\). Equal likelihoods for the two live boxes → no update between them.",
+          "Posterior: \\(\\frac{\\tfrac{1}{6}}{\\tfrac{1}{6}+\\tfrac{1}{6}} = \\tfrac{1}{2}\\) for each live box."
+        ]
+      }
+    },
+    {
       "beatId": "mastery-challenge",
       "required": true,
       "track": "both",
+      "schemaId": "conditioning",
       "prompt": "Mastery challenge: same three doors, you pick Door 1 — but this host opens a remaining door completely at random and it happens to reveal a goat behind Door 3. What is P(win by switching)?",
       "interaction": {
         "type": "masteryChallenge",

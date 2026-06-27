@@ -10,6 +10,7 @@
     {
       "beatId": "l1-recall",
       "required": true,
+      "schemaId": "dominance-nash",
       "prompt": "Warm up: match each idea to its answer.",
       "interaction": {
         "type": "retrievalGrid",
@@ -188,6 +189,7 @@
     {
       "beatId": "l1-apply",
       "required": true,
+      "schemaId": "dominance-nash",
       "interviewNote": "The 'guess 2/3 of the average' game (Keynes's beauty contest) is a classic desk question and a market metaphor: iterated dominance drives the unique equilibrium to 0, but real players (and traders) reason only a few levels deep, so winning guesses cluster around 20–35. The lesson is that 'rational' equilibrium and observed behavior can diverge — pricing what others will do, not just fundamentals.",
       "prompt": "Everyone picks a real number in [0, 100]; the winner is closest to 2/3 of the average of all picks. By iterated elimination of dominated guesses, what is the unique Nash-equilibrium guess?",
       "interaction": {
@@ -206,8 +208,33 @@
       }
     },
     {
+      "beatId": "transfer-heldout",
+      "required": false,
+      "track": "B",
+      "heldOut": true,
+      "schemaId": "dominance-nash",
+      "prompt": "Held-out transfer: a fresh game, same dominance method.",
+      "interaction": {
+        "type": "masteryChallenge",
+        "scenario": "Two rival firms each choose a High or Low advertising budget. Profits (row firm, column firm): both High \\((2,2)\\); both Low \\((4,4)\\); if one goes High while the other goes Low, the High advertiser captures the market for \\(6\\) while the Low advertiser earns \\(1\\). Each firm is rational. Use iterated dominance to find the stable outcome.",
+        "fields": [
+          { "id": "ne", "label": "Profit to EACH firm at the dominant-strategy equilibrium", "accept": ["2"], "placeholder": "?" },
+          { "id": "coop", "label": "Profit to each if both had chosen Low", "accept": ["4"], "placeholder": "?" }
+        ]
+      },
+      "feedback": {
+        "correct": "High strictly dominates Low for both firms (\\(6>4\\) if the rival goes Low, \\(2>1\\) if the rival goes High), so both advertise High and earn \\(2\\) each. Had both restrained to Low they'd each earn \\(4\\) — Pareto-superior, but not stable, since either could deviate to \\(6\\). \\[ (\\text{High},\\text{High})=(2,2) \\quad\\text{vs}\\quad (\\text{Low},\\text{Low})=(4,4). \\]",
+        "hints": [
+          "Compare the Low row to the High row column by column for one firm.",
+          "High pays 6 vs 4 (if the rival goes Low) and 2 vs 1 (if the rival goes High) — strictly higher in both, so Low is dominated.",
+          "A dominated strategy is never played: both go High → each earns 2; the cooperative (Low, Low) would have paid 4 each."
+        ]
+      }
+    },
+    {
       "beatId": "l1-prove",
       "required": true,
+      "schemaId": "dominance-nash",
       "prompt": "Lock it in with the Prisoner's Dilemma below.",
       "interaction": {
         "type": "masteryChallenge",

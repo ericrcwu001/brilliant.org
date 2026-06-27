@@ -69,6 +69,39 @@ export async function completeLesson(
   return res.data
 }
 
+// spec-01: spaced-review submission (server-graded, R13). The client sends its
+// RAW answer (entryId/fieldId → value); the server loads the beat, grades against
+// the fixture accept-list, and returns the server-derived `result`. There is NO
+// `result` field on the input — a client can never assert a pass. `confidence` is
+// optional (the Daily-Review surface passes it per D6; it lands in lastConfidence).
+export type SubmitReviewInput = {
+  cardId: string
+  answer: Record<string, string>
+  confidence?: number
+}
+
+export type SubmitReviewResult = {
+  result: 'pass' | 'fail' // SERVER-graded
+  dueAt: string // ISO
+  intervalDays: number
+  easeFactor: number
+  reps: number
+  lapses: number
+  lastResult: 'pass' | 'fail'
+}
+
+export async function submitReview(
+  input: SubmitReviewInput,
+): Promise<SubmitReviewResult> {
+  const functions = await getFns()
+  const fn = httpsCallable<SubmitReviewInput, SubmitReviewResult>(
+    functions,
+    'submitReview',
+  )
+  const res = await fn(input)
+  return res.data
+}
+
 export async function recordQualifyingAction(
   input: RecordQualifyingActionInput,
 ): Promise<RecordQualifyingActionResult> {

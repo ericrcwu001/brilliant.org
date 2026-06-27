@@ -11,6 +11,7 @@
       "beatId": "l4-recall",
       "required": true,
       "prompt": "Warm-up. Match each partial harmonic sum to its exact reduced value.",
+      "schemaId": "threshold-rule",
       "interaction": {
         "type": "retrievalGrid",
         "pairs": [
@@ -102,6 +103,7 @@
       "beatId": "l4-decompose",
       "required": true,
       "prompt": "For n=4, r=2: each position i in the leap phase contributes (1/n)·(r−1)/(i−1) to the win probability. Position i=2 gives (1/4)·(1/1); i=3 gives (1/4)·(1/2); i=4 gives (1/4)·(1/3). Sum them.",
+      "schemaId": "threshold-rule",
       "interaction": {
         "type": "answerEntry",
         "fields": [
@@ -153,6 +155,7 @@
       "beatId": "l4-harmonic",
       "required": true,
       "prompt": "Plug in n=5, r=2. Since H_{r−2} = H_0 = 0, the formula simplifies to p_5(2) = (1/5)·H_4. Use H_4 = 25/12 to find p_5(2).",
+      "schemaId": "threshold-rule",
       "interaction": {
         "type": "answerEntry",
         "fields": [
@@ -177,6 +180,7 @@
       "beatId": "l4-threshold",
       "required": true,
       "prompt": "The optimal cutoff r* is the LARGEST r for which Σ_{j=r}^{n} 1/(j−1) > 1. For n=4, test r=2 and r=3 to find r*.",
+      "schemaId": "threshold-rule",
       "interaction": {
         "type": "answerEntry",
         "fields": [
@@ -198,9 +202,44 @@
       }
     },
     {
+      "beatId": "transfer-heldout",
+      "required": false,
+      "track": "B",
+      "heldOut": true,
+      "schemaId": "threshold-rule",
+      "prompt": "Fresh case — same idea.",
+      "interaction": {
+        "type": "masteryChallenge",
+        "scenario": "Use the formula \\(p_n(r) = \\frac{r-1}{n}\\sum_{j=r}^{n}\\frac{1}{j-1}\\) with \\(n=6\\), \\(r=2\\). Recall \\(H_5 = 1+\\frac{1}{2}+\\frac{1}{3}+\\frac{1}{4}+\\frac{1}{5} = \\frac{137}{60}\\). (a) Compute \\(p_6(2)\\). (b) Is \\(r=2\\) the optimal cutoff for \\(n=6\\)? Hint: compare with \\(p_6(3) = \\frac{2}{6}\\!\\left(\\frac{1}{2}+\\frac{1}{3}+\\frac{1}{4}+\\frac{1}{5}\\right)\\).",
+        "fields": [
+          {
+            "id": "prob",
+            "label": "p_6(2) success probability",
+            "accept": ["137/360"],
+            "placeholder": "a/b"
+          },
+          {
+            "id": "isopt",
+            "label": "Is r=2 the optimal cutoff for n=6? (yes/no)",
+            "accept": ["no"],
+            "placeholder": "yes / no"
+          }
+        ]
+      },
+      "feedback": {
+        "correct": "\\[ p_6(2) = \\frac{1}{6}\\left(1+\\frac{1}{2}+\\frac{1}{3}+\\frac{1}{4}+\\frac{1}{5}\\right) = \\frac{1}{6}\\cdot\\frac{137}{60} = \\frac{137}{360} \\approx 38.1\\% \\] But \\(r=3\\) gives \\(p_6(3) = \\frac{2}{6}\\left(\\frac{1}{2}+\\frac{1}{3}+\\frac{1}{4}+\\frac{1}{5}\\right) = \\frac{1}{3}\\cdot\\frac{77}{60} = \\frac{77}{180} = \\frac{154}{360} \\approx 42.8\\%\\), which is higher. So \\(r=2\\) is NOT the optimal cutoff for \\(n=6\\); the optimum is \\(r^*=3\\).",
+        "hints": [
+          "\\(p_6(2)\\): \\((r-1)/n = 1/6\\), sum \\(= H_5 = 137/60\\). So \\(p_6(2) = (1/6)(137/60) = 137/360\\).",
+          "Check \\(r=3\\): \\(p_6(3) = (2/6)(\\frac{1}{2}+\\frac{1}{3}+\\frac{1}{4}+\\frac{1}{5}) = (1/3)(77/60) = 77/180 = 154/360\\). Since \\(154/360 > 137/360\\), \\(r=2\\) is not optimal.",
+          "Answers: \\(p_6(2) = 137/360\\); \\(r=2\\) is NOT optimal — the answer to (b) is no."
+        ]
+      }
+    },
+    {
       "beatId": "l4-prove",
       "required": true,
       "prompt": "Prove you've got it.",
+      "schemaId": "threshold-rule",
       "interaction": {
         "type": "masteryChallenge",
         "scenario": "Use the formula \\(p_n(r) = \\frac{r-1}{n}\\sum_{j=r}^{n}\\frac{1}{j-1}\\) with \\(n=5\\), \\(r=2\\). Recall \\(H_4 = \\frac{25}{12}\\). (a) Compute \\(p_5(2)\\). (b) Is \\(r=2\\) the optimal cutoff for \\(n=5\\)? Hint: compare with \\(p_5(3) = \\frac{2}{5}\\!\\left(\\frac{1}{2}+\\frac{1}{3}+\\frac{1}{4}\\right)\\).",

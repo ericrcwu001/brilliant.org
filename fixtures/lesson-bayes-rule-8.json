@@ -11,6 +11,7 @@
       "beatId": "recall-direction",
       "required": true,
       "track": "both",
+      "schemaId": "prior-update",
       "prompt": "Quick warm-up — match each tool to where you already used it.",
       "interaction": {
         "type": "retrievalGrid",
@@ -119,6 +120,7 @@
       "beatId": "compute-taxicab",
       "required": true,
       "track": "both",
+      "schemaId": "natural-frequencies",
       "prompt": "Of 100 cabs: 15 blue, 85 green; the witness is right 80% of the time. Compute P(actually blue | witness says blue).",
       "interaction": {
         "type": "answerEntry",
@@ -139,6 +141,7 @@
       "beatId": "spam-costume",
       "required": true,
       "track": "both",
+      "schemaId": "natural-frequencies",
       "prompt": "Same move, ML costume: 20% of mail is spam, a filter has 99% recall and 2% false-positive rate. A message is flagged. What is P(spam | flagged)?",
       "interaction": {
         "type": "answerEntry",
@@ -160,6 +163,7 @@
       "beatId": "spot-the-base-rate",
       "required": true,
       "track": "both",
+      "schemaId": "prior-update",
       "prompt": "Match each unlabeled scenario to its base-rate lesson — four costumes, one rule.",
       "interaction": {
         "type": "retrievalGrid",
@@ -204,9 +208,33 @@
       }
     },
     {
+      "beatId": "transfer-heldout",
+      "required": false,
+      "track": "B",
+      "heldOut": true,
+      "schemaId": "natural-frequencies",
+      "prompt": "Transfer: an email spam filter has 99% recall and a 2% false-positive rate; spam makes up 1 in every 200 messages. The filter flags a message. What is P(spam | flagged)?",
+      "interaction": {
+        "type": "masteryChallenge",
+        "scenario": "A spam filter with 99% recall and a 2% false-positive rate flags a message; spam is 1 in every 200 messages.",
+        "fields": [
+          { "id": "spam", "label": "\\(P(\\text{spam}\\mid\\text{flagged})\\)", "accept": ["99/497"] }
+        ]
+      },
+      "feedback": {
+        "correct": "Same natural-frequency count as the fraud model, with email in place of transactions: \\[ P(\\text{spam}\\mid\\text{flagged}) = \\frac{P(\\text{spam})\\,P(\\text{flagged}\\mid\\text{spam})}{P(\\text{spam})\\,P(\\text{flagged}\\mid\\text{spam}) + P(\\text{ham})\\,P(\\text{flagged}\\mid\\text{ham})} \\] Per 100,000 messages (spam rate \\(= \\tfrac{1}{200}\\)): 500 spam \\(\\times\\,99\\% = 495\\) true flags; 99,500 ham \\(\\times\\,2\\% = 1990\\) false flags; total flagged \\(= 2485\\). Substituting: \\[ P(\\text{spam}\\mid\\text{flagged}) = \\frac{495}{2485} = \\frac{99}{497} \\approx 20\\% \\] Even 99% recall cannot rescue a flag when ham outnumbers spam 199 to 1 — the 2% false-positive rate on a huge ham pool produces four false flags for every true one.",
+        "hints": [
+          "Recall 99% is \\(P(\\text{flagged}\\mid\\text{spam})\\); you want \\(P(\\text{spam}\\mid\\text{flagged})\\) — flip the arrow using the 1-in-200 base rate.",
+          "Per 100,000 messages: 500 spam \\(\\times\\,99\\% = 495\\) true flags; 99,500 ham \\(\\times\\,2\\% = 1990\\) false flags; total 2,485.",
+          "\\(\\frac{495}{2485} = \\frac{99}{497}\\)."
+        ]
+      }
+    },
+    {
       "beatId": "mastery-challenge",
       "required": true,
       "track": "both",
+      "schemaId": "natural-frequencies",
       "prompt": "Mastery challenge: a fraud model with 95% recall and a 1% false-positive rate flags a transaction; fraud occurs in 1 of every 1000 transactions. What is P(fraud | flagged)?",
       "interaction": {
         "type": "masteryChallenge",

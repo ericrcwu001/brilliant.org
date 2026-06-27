@@ -10,6 +10,7 @@
     {
       "beatId": "l5-recall",
       "required": true,
+      "schemaId": "backward-induction",
       "prompt": "Warm up: match each idea to its answer.",
       "interaction": {
         "type": "retrievalGrid",
@@ -296,6 +297,7 @@
     {
       "beatId": "l5-apply",
       "required": true,
+      "schemaId": "backward-induction",
       "interviewNote": "Green Book p.3 'Screwy pirates': 5 pirates, 100 gold, ≥50% votes (proposer breaks ties), indifferent pirates vote NO. The senior (pirate 1) needs 2 additional votes. Pirates 3 and 5 each get 0 in the 4-pirate fallback, so 1 coin each is sufficient. Senior keeps 100 − 2 = 98. General pattern: with 2n+1 pirates and C coins, the senior keeps C − n (buying n votes at 1 coin each from every other-position pirate who alternates getting 0 in the fallback). `pirateGame(5,100)` = [98,0,1,0,1] (senior→junior). Some printed tables show a different vector — verify by deriving the sub-games yourself.",
       "prompt": "Five pirates, 100 gold coins. The senior proposes; ≥50% vote yes (proposer breaks ties); an indifferent pirate votes NO. Apply backward induction.",
       "interaction": {
@@ -325,8 +327,34 @@
       }
     },
     {
+      "beatId": "transfer-heldout",
+      "required": false,
+      "track": "B",
+      "heldOut": true,
+      "schemaId": "backward-induction",
+      "prompt": "Held-out transfer: fresh counts, same backward-induction logic.",
+      "interaction": {
+        "type": "masteryChallenge",
+        "scenario": "**Pirate game — 7 pirates, 100 gold (Green Book p.3 generalized).** The most-senior pirate proposes a split; a proposal passes with \\(\\ge 50\\%\\) of votes (the proposer breaks ties); pirates are rational, greedy, survival-first, and an indifferent pirate votes NO. **Tiger \\& sheep — 7 tigers, 1 sheep (Green Book p.4).** A tiger that eats the sheep itself becomes a sheep. Use backward induction (and parity) on both.",
+        "fields": [
+          { "id": "keep7", "label": "Pirate game (7 pirates, 100 gold): coins the senior keeps", "accept": ["97"], "placeholder": "?" },
+          { "id": "junior", "label": "Coins the most-junior pirate gets", "accept": ["1"], "placeholder": "?" },
+          { "id": "sheep", "label": "Tiger & sheep (7 tigers, 1 sheep): is the sheep eaten? (yes/no)", "accept": ["yes"], "placeholder": "yes or no" }
+        ]
+      },
+      "feedback": {
+        "correct": "pirateGame(7,100) = [97,0,1,0,1,0,1]: the senior needs \\(\\lceil 7/2 \\rceil - 1 = 3\\) extra votes, and the cheapest are the three pirates who get 0 in the 6-pirate fallback — bribe each with 1 coin, so the senior keeps \\(100-3 = 97\\) and the most-junior pirate (who would get 0 if the proposal fails) takes 1. tigerSheepEaten(7) = true: 7 is odd, so the first tiger safely eats the sheep (it leaves an even number of tigers facing a new sheep).",
+        "hints": [
+          "Pirate game: the senior needs \\(\\lceil 7/2\\rceil - 1 = 3\\) additional yes-votes; buy the three pirates who get 0 in the 6-pirate fallback at 1 coin each.",
+          "Senior keeps \\(100 - 3 = 97\\); the most-junior pirate is one of the bribed votes and gets 1.",
+          "Tiger & sheep parity: odd tiger count ⇒ the sheep is eaten (the eater is then safe among an even number of tigers). 7 is odd → 'yes'."
+        ]
+      }
+    },
+    {
       "beatId": "l5-prove",
       "required": true,
+      "schemaId": "backward-induction",
       "prompt": "Apply the same backward-induction logic to two new problems.",
       "interaction": {
         "type": "masteryChallenge",

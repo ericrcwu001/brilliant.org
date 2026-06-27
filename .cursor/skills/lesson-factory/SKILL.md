@@ -43,7 +43,11 @@ engine-verified question pool consumed by the live "interview an AI quant interv
    serving**; see `interview-packs.md`, `docs/adr/0005-ai-interview-questions-grounded-and-engine-verified.md`, and `docs/adr/0008-ai-capstone-interview-realtime-grounded.md`. ADR-0008 governs the live feature: server-minted ephemeral token, `toClientPack` hidden-stripping loader, leak-guard contract, and per-user/session cost caps.)
 3. **Two-stage fact-check on every number.** (1) the source states the answer; (2) the lesson's
    **engine independently reproduces it** and the `validate-fixtures` script cross-checks it. Both, or
-   it doesn't ship. Interview-pack questions follow the same engine-verify rule.
+   it doesn't ship. Interview-pack questions follow the same engine-verify rule. **Every lesson also
+   carries a held-out transfer problem** (`heldOut:true`, `track:'B'`, `required:false`) — the **same
+   method (`schemaId`)** as the mastery challenge on a **fresh surface** — engine-verified like any
+   other number and placed **before** the mastery challenge; it is reserved for the Track-B delayed
+   gold gate (spec-24) and is **never shown in normal lesson flow** on either track.
 4. **Autonomous end-to-end ship.** The factory builds each concept on a per-concept branch **in a
    worktree outside this repo** (this checkout stays on `main`), runs an automated smoke test on the
    **dev project `brilliant-org-dev`**, then — with **no approval step** — merges to `main`, pushes
@@ -90,7 +94,8 @@ Full rosters, responsibilities, and per-role model assignments: **`departments.m
 2. **Design** — Dept 2 turns each Lesson Brief into an **Interaction Spec**; Dept1↔Dept2 loop until
    a joint **Definition-of-Ready** holds for every beat.
 3. **Wave 0** — Manager freezes shared contracts (schema additions, engine interfaces, dispatcher
-   slots) once, at concept level.
+   slots, **`src/content/methods.ts` registry additions** for any new graded-beat `schemaId`) once, at
+   concept level.
 4. **Build** — Dept 3 implements every lesson in parallel (isolated worktrees): engine + schema +
    renderer/widget + fixture + tests.
 5. **QA** — two-stage fact-check + the 9-gate **Scorecard** per lesson (`qa-rubric.md`).

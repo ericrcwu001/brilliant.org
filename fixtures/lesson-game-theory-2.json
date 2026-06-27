@@ -10,6 +10,7 @@
     {
       "beatId": "l2-recall",
       "required": true,
+      "schemaId": "dominance-nash",
       "prompt": "Warm up: match each term to its definition.",
       "interaction": {
         "type": "retrievalGrid",
@@ -187,6 +188,7 @@
     {
       "beatId": "l2-interleave",
       "required": true,
+      "schemaId": "dominance-nash",
       "interviewNote": "Interviewers often ask 'how many Nash equilibria does this game have?' Solve it by the best-response method: mark each player's best-response arrows, then count the doubly-marked cells. If no cell is doubly marked, there are no pure NE and players must mix (L3). The three canonical counts are 1 (Prisoner's Dilemma), 2 (Stag Hunt, coordination games), and 0 (Matching Pennies).",
       "prompt": "Match each game to its number of pure Nash equilibria.",
       "interaction": {
@@ -207,8 +209,33 @@
       }
     },
     {
+      "beatId": "transfer-heldout",
+      "required": false,
+      "track": "B",
+      "heldOut": true,
+      "schemaId": "dominance-nash",
+      "prompt": "Held-out transfer: a fresh game, same best-response method.",
+      "interaction": {
+        "type": "masteryChallenge",
+        "scenario": "Two electronics makers each pick a disc format, Blu-ray or HD-DVD; consumers only benefit when the two firms align. Each firm slightly prefers the format it already tooled for. Payoffs (row firm, column firm): \\((\\text{Blu-ray},\\text{Blu-ray})=(2,1)\\), \\((\\text{Blu-ray},\\text{HD-DVD})=(0,0)\\), \\((\\text{HD-DVD},\\text{Blu-ray})=(0,0)\\), \\((\\text{HD-DVD},\\text{HD-DVD})=(1,2)\\). Apply the best-response method.",
+        "fields": [
+          { "id": "count", "label": "Number of pure Nash equilibria", "accept": ["2"], "placeholder": "?" },
+          { "id": "preferred", "label": "Payoff to a firm when both align on THAT firm's preferred format", "accept": ["2"], "placeholder": "?" }
+        ]
+      },
+      "feedback": {
+        "correct": "Best responses: if the rival picks Blu-ray, matching on Blu-ray pays \\(2>0\\); if the rival picks HD-DVD, matching on HD-DVD pays \\(2>0\\). The two doubly-marked cells are \\((\\text{Blu-ray},\\text{Blu-ray})\\) and \\((\\text{HD-DVD},\\text{HD-DVD})\\) — both pure Nash equilibria. A firm aligning on its own preferred format earns \\(2\\). \\[ \\text{NE}_1=(\\text{Blu-ray},\\text{Blu-ray}),\\quad \\text{NE}_2=(\\text{HD-DVD},\\text{HD-DVD}). \\]",
+        "hints": [
+          "If the rival picks Blu-ray: matching (Blu-ray) earns 2, mismatching (HD-DVD) earns 0 — best response is to match.",
+          "If the rival picks HD-DVD: matching (HD-DVD) earns 2, mismatching earns 0 — best response is to match.",
+          "Both diagonal cells are doubly marked → two pure Nash equilibria; the firm whose preferred format is chosen earns 2."
+        ]
+      }
+    },
+    {
       "beatId": "l2-prove",
       "required": true,
+      "schemaId": "dominance-nash",
       "prompt": "Lock in the method with a new game.",
       "interaction": {
         "type": "masteryChallenge",

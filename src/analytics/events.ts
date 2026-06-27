@@ -31,6 +31,29 @@ function getAnalyticsInstance(): Promise<Analytics | null> {
   return analyticsPromise
 }
 
+// Shared analytics DIMENSIONS (spec-04 §3.2 Layer 1). Resolved ONCE per session
+// (not per call) so every event can be sliced by cohort/track without a new event
+// taxonomy. Fail-absent: an unset dimension is OMITTED, never a guessed value.
+//
+//  - `cohort` enum is co-defined in README §4.5: 'treatment' | 'holdout' (the
+//    control arm is named 'holdout'; there is NO 'control' literal). It is set
+//    ONLY by spec-05's server-derived assignment (R12 — never from a spoofable
+//    client value); undefined until spec-05 stamps it, so spec-04's A-B read
+//    degrades to a single-cohort descriptive read pre-spec-05.
+//  - `track` reuses the existing isQuantIntensity track value (README §4 helper);
+//    set by the track context (spec-10/20). NOT re-derived here.
+let sessionDimensions: { cohort?: 'treatment' | 'holdout'; track?: 'A' | 'B' } = {}
+
+// Called once at session start as the user/cohort context becomes known. spec-05
+// calls it with `cohort`; the track context calls it with `track`. Merges so each
+// dimension can be set independently as it resolves.
+export function setAnalyticsDimensions(d: {
+  cohort?: 'treatment' | 'holdout'
+  track?: 'A' | 'B'
+}): void {
+  sessionDimensions = { ...sessionDimensions, ...d }
+}
+
 const ANON_KEY = 'phht.anonClientId'
 
 // A stable per-browser id for pre-auth events (taxonomy: "uid or anonymous
@@ -47,6 +70,25 @@ function anonClientId(): string {
   }
 }
 
+// Assembles the final event params: the auto-carried uid/client_ts, the shared
+// session dimensions (undefined keys OMITTED — fail-absent), then the call params.
+// Pure + exported so the omit-undefined contract is unit-testable without Firebase
+// (spec-04 §5 case 8).
+export function buildEventParams(
+  uid: string,
+  params: Record<string, unknown>,
+): Record<string, unknown> {
+  const dims: Record<string, unknown> = {}
+  if (sessionDimensions.cohort !== undefined) dims.cohort = sessionDimensions.cohort
+  if (sessionDimensions.track !== undefined) dims.track = sessionDimensions.track
+  return {
+    uid,
+    client_ts: Date.now(),
+    ...dims,
+    ...params,
+  }
+}
+
 async function track(
   name: string,
   params: Record<string, unknown>,
@@ -55,11 +97,11 @@ async function track(
     const analyticsInstance = await getAnalyticsInstance()
     if (!analyticsInstance) return
     const { logEvent } = await import('firebase/analytics')
-    logEvent(analyticsInstance, name, {
-      uid: auth.currentUser?.uid ?? anonClientId(),
-      client_ts: Date.now(),
-      ...params,
-    })
+    logEvent(
+      analyticsInstance,
+      name,
+      buildEventParams(auth.currentUser?.uid ?? anonClientId(), params),
+    )
   } catch {
     // Fire-and-forget: instrumentation must never break the learning flow.
   }
@@ -76,15 +118,39 @@ export const analytics = {
     track('hint_revealed', b),
   predictionSet: (b: BeatRef & { value: number | string }) =>
     track('prediction_set', b),
+  // Which-method discrimination gate pick (spec-13 / D12). Fired when the learner
+  // resolves a `prediction` gate beat; `picked` is the option label, `correct` the
+  // server-of-record grade (optionMethods[i] === gate.correct), `schemaId` the
+  // method under test. Additive — the gate is a graded `prediction`, not a new type.
+  methodGatePicked: (
+    b: BeatRef & { picked: string; correct: boolean; schemaId: string },
+  ) => track('method_gate_picked', b),
   simulationRun: (b: BeatRef & { n: number }) => track('simulation_run', b),
   lessonCompleted: (p: { lessonId: string; needsReview: boolean }) =>
     track('lesson_completed', p),
-  milestoneEarned: (p: { lessonId: string; milestoneId: string }) =>
-    track('milestone_earned', p),
+  // `kind` distinguishes instant silver from a delayed/transfer gold mint so the
+  // gold-mint rate (spec-04 §3.1 metric 3) is computable. Optional so spec-11 (the
+  // mint owner) can pass it independently; existing callers compile unchanged.
+  milestoneEarned: (p: {
+    lessonId: string
+    milestoneId: string
+    kind?: 'silver' | 'delayed_gold' | 'transfer_gold'
+  }) => track('milestone_earned', p),
   streakIncremented: (p: { count: number; date: string }) =>
     track('streak_incremented', p),
   reviewRecommendedShown: (p: { lessonId: string }) =>
     track('review_recommended_shown', p),
+  // Fired when a graded answer is a retrieval rep (README §4 Foundation D / spec-03).
+  // Counted by the governor (spec-21)/calibration (spec-12)/dashboards; independent
+  // of the streak (D10). Consumers wire the call site; this only reserves the hook.
+  retrievalRep: (
+    p: { lessonId: string; beatId: string; schemaId?: string; correct: boolean; source: 'lesson' | 'review' },
+  ) => track('retrieval_rep', p),
+  // Confidence captured on a checkpoint beat (spec-02 / D6). `value` is the
+  // self-reported probability in [0.5,1.0]; quant-intensity gate only. Passive
+  // signal — spec-12 scores calibration, not here.
+  confidenceRated: (b: BeatRef & { value: number }) =>
+    track('confidence_rated', b),
   catalogViewed: () => track('catalog_viewed', {}),
   conceptSelected: (p: { conceptId: string }) => track('concept_selected', p),
   onboardingStarted: () => track('onboarding_started', {}),

@@ -10,6 +10,7 @@
     {
       "beatId": "recall-6-4",
       "required": true,
+      "schemaId": "first-step-analysis",
       "prompt": "Quick warm-up from last time — match each wait to its average length on a fair coin.",
       "interaction": {
         "type": "retrievalGrid",
@@ -96,6 +97,7 @@
     {
       "beatId": "first-step-split",
       "required": true,
+      "schemaId": "first-step-analysis",
       "prompt": "Why a tie? After the first H lands, match each next flip to who it hands the race to.",
       "interaction": {
         "type": "retrievalGrid",
@@ -116,6 +118,7 @@
     {
       "beatId": "pick-your-counter",
       "required": true,
+      "schemaId": "first-step-analysis",
       "prompt": "New game: you pick HHH. Going second, type the 3-flip pattern (H/T) that beats HHH most often.",
       "interaction": {
         "type": "answerEntry",
@@ -171,6 +174,7 @@
     {
       "beatId": "win-prob-tiles",
       "required": true,
+      "schemaId": "first-step-analysis",
       "prompt": "A win-CHANCE is not a wait-TIME. Match each quantity to how its recurrence \u2014 the rule linking a state to its neighbors \u2014 behaves.",
       "interaction": {
         "type": "retrievalGrid",
@@ -207,8 +211,33 @@
       }
     },
     {
+      "beatId": "transfer-heldout",
+      "required": false,
+      "track": "B",
+      "heldOut": true,
+      "schemaId": "first-step-analysis",
+      "prompt": "Transfer: this time your friend opens with \\(\\text{HTH}\\) — a pattern that overlaps itself, not a flat run. Going second, type the 3-flip pattern that beats it most often, then give your exact win probability as a fraction.",
+      "interaction": {
+        "type": "masteryChallenge",
+        "scenario": "Same shared fair-coin stream; whoever's pattern appears first wins. Unlike \\(\\text{TTT}\\), the target \\(\\text{HTH}\\) has its own H reused as the start of a new try — so the race is closer than 7-to-1.",
+        "fields": [
+          { "id": "counter", "label": "Your counter to \\(\\text{HTH}\\)", "accept": ["HHT"], "placeholder": "e.g. HTH" },
+          { "id": "winprob", "label": "\\(P(\\text{your pattern appears before HTH})\\)", "accept": ["2/3", "0.667", ".667", "0.6667", "0.67"], "placeholder": "e.g. 3/4" }
+        ]
+      },
+      "feedback": {
+        "correct": "\\(\\text{HHT}\\) beats \\(\\text{HTH}\\) with probability \\(\\tfrac{2}{3}\\). Second-mover rule: negate \\(\\text{HTH}\\)'s second symbol (T becomes H) and prepend it to the first two symbols, giving \\(\\text{H}\\,\\text{HT}=\\text{HHT}\\). For the odds, do first-step analysis on the shared stream: both targets start with H, so condition on the flip after the first H lands. If it is H you are at \\(\\text{HH}\\) — one more T finishes your \\(\\text{HHT}\\), and a head keeps you primed; the opponent's \\(\\text{HTH}\\) can only complete by first passing through a state your pattern intercepts. Solving the state recurrence gives \\[ P(\\text{HHT wins}) = \\tfrac{2}{3}, \\qquad P(\\text{HTH wins}) = \\tfrac{1}{3}. \\] Conway's leading numbers confirm it: the odds are \\((L_{HTH,HTH}-L_{HTH,HHT}):(L_{HHT,HHT}-L_{HHT,HTH}) = (5-1):(4-2)=4:2\\), i.e. \\(2\\!:\\!1\\) for \\(\\text{HHT}\\). A self-overlapping target shrinks the edge from 7-to-1 down to 2-to-1, but going second still wins.",
+        "hints": [
+          "Don't pick the opposite or the reverse of \\(\\text{HTH}\\). You want the pattern that completes just before \\(\\text{HTH}\\) can finish.",
+          "Second-mover rule: negate \\(\\text{HTH}\\)'s second symbol (T→H) and prepend it to the first two symbols — that gives \\(\\text{HHT}\\). Now do first-step analysis after the first H to find the odds.",
+          "Counter = \\(\\text{HHT}\\). Condition on the flips after the first shared H; the recurrence (or Conway's \\(4\\!:\\!2\\) odds) gives \\(P(\\text{HHT wins}) = \\tfrac{2}{3}\\)."
+        ]
+      }
+    },
+    {
       "beatId": "mastery-challenge",
       "required": true,
+      "schemaId": "first-step-analysis",
       "prompt": "Mastery challenge: your friend goes first and picks TTT. Going second, pick the 3-flip pattern that beats it most often, and give your exact win probability as a fraction.",
       "interaction": {
         "type": "masteryChallenge",

@@ -12,6 +12,7 @@
       "required": true,
       "track": "both",
       "prompt": "Quick warm-up — match each wait-time fact to its answer.",
+      "schemaId": "stationary-distribution",
       "interaction": {
         "type": "retrievalGrid",
         "pairs": [
@@ -146,6 +147,7 @@
       "required": true,
       "track": "both",
       "prompt": "Solve πP = π with Σπ = 1 for the Clear/Rainy chain.",
+      "schemaId": "stationary-distribution",
       "interaction": {
         "type": "answerEntry",
         "fields": [
@@ -177,6 +179,7 @@
       "required": true,
       "track": "both",
       "prompt": "A clear day's long-run share is 3/7. By Kac's theorem, how many days until a clear day returns on average?",
+      "schemaId": "stationary-distribution",
       "interaction": {
         "type": "answerEntry",
         "fields": [
@@ -236,6 +239,7 @@
       "required": true,
       "track": "both",
       "prompt": "Tap to match each chain's πP = π to what it actually means.",
+      "schemaId": "stationary-distribution",
       "interaction": {
         "type": "retrievalGrid",
         "pairs": [
@@ -254,9 +258,55 @@
       }
     },
     {
+      "beatId": "transfer-heldout",
+      "required": false,
+      "track": "B",
+      "heldOut": true,
+      "schemaId": "stationary-distribution",
+      "prompt": "Solve a three-state server-load stationary distribution and apply Kac to the Low state.",
+      "interaction": {
+        "type": "masteryChallenge",
+        "scenario": "A web server's load cycles between **Low**, **Medium**, **High** with transition matrix \\[P = \\begin{pmatrix}0 & 1 & 0 \\\\ \\tfrac{1}{4} & \\tfrac{1}{2} & \\tfrac{1}{4} \\\\ 0 & \\tfrac{1}{2} & \\tfrac{1}{2}\\end{pmatrix}\\] (rows/columns = Low, Medium, High). Solve \\(\\pi P = \\pi\\) with \\(\\Sigma\\pi = 1\\), then apply Kac to the Low state.",
+        "fields": [
+          {
+            "id": "piLow",
+            "label": "π(Low)",
+            "accept": ["1/7"],
+            "placeholder": "e.g. 1/3"
+          },
+          {
+            "id": "piMedium",
+            "label": "π(Medium)",
+            "accept": ["4/7"]
+          },
+          {
+            "id": "piHigh",
+            "label": "π(High)",
+            "accept": ["2/7"]
+          },
+          {
+            "id": "kacLow",
+            "label": "Mean return time to a Low day",
+            "accept": ["7"],
+            "placeholder": "e.g. 5",
+            "suffix": "steps"
+          }
+        ]
+      },
+      "feedback": {
+        "correct": "Solve the linear system with exact fractions. The Low column gives \\(\\pi_{\\text{Low}} = \\tfrac14\\,\\pi_{\\text{Medium}}\\); the High column gives \\(\\pi_{\\text{High}} = \\tfrac14\\pi_{\\text{Medium}} + \\tfrac12\\pi_{\\text{High}}\\Rightarrow\\pi_{\\text{High}} = \\tfrac12\\pi_{\\text{Medium}}\\). With \\(\\Sigma\\pi=1\\): \\(\\pi_{\\text{Medium}}(\\tfrac14+1+\\tfrac12)=1\\Rightarrow\\pi_{\\text{Medium}}=\\tfrac47\\), so \\(\\mathbf{(1/7,\\,4/7,\\,2/7)}\\). Kac: a Low day (share \\(\\tfrac{1}{7}\\)) recurs every \\(\\tfrac{1}{1/7} = \\mathbf{7}\\) steps. Three states still solve to exact fractions.",
+        "hints": [
+          "πP=π with Σπ=1 is a linear system — solve it with exact fractions, column by column.",
+          "More states does NOT mean 'must simulate'; rational Gaussian elimination nails it. The Low column gives π_Low = ¼·π_Medium; pivot on Medium.",
+          "(1/7, 4/7, 2/7); Kac Low = 1/(1/7) = 7 steps."
+        ]
+      }
+    },
+    {
       "beatId": "mastery-cloudy-town",
       "required": true,
       "track": "both",
+      "schemaId": "stationary-distribution",
       "prompt": "Solve the three-state Cloudy-town stationary distribution and apply Kac to the sunny state.",
       "interviewNote": "The 3-state stationary solve is the canonical interview example: set up πP=π with Σπ=1 and eliminate column by column for exact fractions — cloudy-town lands on (1/5, 2/5, 2/5). Then Kac reads the mean return time straight off the share: a sunny day (π = 1/5) recurs every 5 days. Saying the reciprocal relationship — return time = 1/πᵢ — out loud is the insight.",
       "interaction": {

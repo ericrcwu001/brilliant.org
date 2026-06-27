@@ -50,6 +50,21 @@ export type BeatProps = {
   // learner's already-correct tiles. Inert at nonce 0.
   hintCapOverride?: 1 | 2 | 3
   assist?: { prefillToLastTerm: boolean; nonce: number }
+  // Confidence capture (spec-02 / D6). Present only when the active track sees
+  // confidence (quant-intensity gate); when `showConfidence` is false/undefined
+  // the beat renders no rating. The beat calls `onConfidence(v)` once the learner
+  // has answered the checkpoint; `confidenceValue` is the restored choice.
+  showConfidence?: boolean
+  confidenceValue?: number
+  onConfidence?: (value: number) => void
+  // Label-stripping presentation mode (spec-13 / D12, §3.3). When true the
+  // solving surface hides method-revealing chrome (lesson title + the player's
+  // beat.prompt section) so a which-method gate measures recognition of deep
+  // structure, not surface recall. Supplied by the player/queue driver; the
+  // actual suppression happens in the PLAYER (it owns the title + prompt chrome).
+  // A gate beat is ALWAYS title-stripped locally even when this is false. Default
+  // (absent) ⇒ today's chrome. The spec-20 queue sets it surface-wide.
+  labelStripped?: boolean
   // Habit loop (Phase 17): the milestone this lesson awards + whether the lesson
   // is complete, so the recap can press the milestone stamp on the recap flow.
   milestone: MilestoneMeta | null

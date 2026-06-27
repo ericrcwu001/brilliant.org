@@ -30,6 +30,7 @@
     {
       "beatId": "l3-recall",
       "required": true,
+      "schemaId": "choose-vs-arrange",
       "prompt": "Before we continue: match each expression to its value. These come from L1 and L2.",
       "interaction": {
         "type": "retrievalGrid",
@@ -68,6 +69,7 @@
     {
       "beatId": "l3-win",
       "required": true,
+      "schemaId": "choose-vs-arrange",
       "prompt": "Expand (a+b)². What is the coefficient of the ab term?",
       "interaction": {
         "type": "answerEntry",
@@ -169,6 +171,7 @@
     {
       "beatId": "l3-applied",
       "required": true,
+      "schemaId": "symmetry",
       "prompt": "Is (1+√2)ⁿ + (1−√2)ⁿ always an integer? Type yes or no.",
       "interaction": {
         "type": "answerEntry",
@@ -188,8 +191,41 @@
       }
     },
     {
+      "beatId": "transfer-heldout",
+      "required": false,
+      "track": "B",
+      "heldOut": true,
+      "schemaId": "choose-vs-arrange",
+      "maxHintLevel": 3,
+      "prompt": "Expand \\((x+2y)^5\\) using the binomial theorem. What is the coefficient of the \\(x^2 y^3\\) term?",
+      "interaction": {
+        "type": "masteryChallenge",
+        "scenario": "Expand \\((x+2y)^5\\) using the binomial theorem with row 5 of Pascal's triangle: \\(1, 5, 10, 10, 5, 1\\). The general term is \\(\\binom{5}{k} x^{5-k}(2y)^k\\). What is the coefficient of the \\(x^2 y^3\\) term?",
+        "fields": [
+          {
+            "id": "coeff-x2y3",
+            "label": "Coefficient of \\(x^2 y^3\\) in \\((x+2y)^5\\)",
+            "accept": [
+              "80"
+            ],
+            "placeholder": "?"
+          }
+        ]
+      },
+      "interviewNote": "Source: standard binomial-theorem 'coefficient of a specific term' problem (Green-Book style). Engine: nCk(5,3) = 10; coefficient = C(5,3)·2^3 = 10·8 = 80.",
+      "feedback": {
+        "correct": "The binomial theorem gives \\((x+2y)^5 = \\sum_{k=0}^{5} \\binom{5}{k} x^{5-k}(2y)^k\\). The \\(x^2 y^3\\) term is \\(k=3\\): \\[ \\binom{5}{3} \\cdot x^2 \\cdot (2y)^3 = 10 \\cdot 8 \\cdot x^2 y^3 = 80\\, x^2 y^3. \\] The Pascal coefficient \\(\\binom{5}{3}=10\\); substituting \\(2y\\) for \\(y\\) multiplies by \\(2^3 = 8\\), yielding coefficient \\(80\\).",
+        "hints": [
+          "Write the general term \\(\\binom{5}{k} x^{5-k}(2y)^k\\). Which \\(k\\) gives exactly three factors of \\(y\\)?",
+          "The \\(x^2 y^3\\) term is \\(k=3\\): \\(\\binom{5}{3} \\cdot x^2 \\cdot (2y)^3 = 10 \\cdot 2^3 \\cdot x^2 y^3\\).",
+          "\\(\\binom{5}{3} \\times 2^3 = 10 \\times 8 = 80\\)."
+        ]
+      }
+    },
+    {
       "beatId": "l3-prove",
       "required": true,
+      "schemaId": "choose-vs-arrange",
       "prompt": "Mastery challenge: expand (a+10b)³ using the binomial theorem. What is the coefficient of the a²b term?",
       "interaction": {
         "type": "masteryChallenge",

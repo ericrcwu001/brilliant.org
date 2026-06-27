@@ -45,12 +45,18 @@ export type SnapshotInput = {
   // visible level resets to 0 on a correct submit, so this is the only durable
   // signal of peak struggle — the input to the per-lesson mastery signal.
   maxHintLevelByBeat: Record<string, number>
+  // Per-checkpoint-beat confidence (spec-02 / D6). SELF-REPORTED subjective
+  // probability in [0.5,1.0]; captured only on checkpoint beats, gated by track.
+  // Empty for Track A; read by spec-12 for calibration (NOT scored here).
+  confidenceByBeat: Record<string, number>
 }
 
 const localKey = (uid: string, lessonId: string) =>
   `phht:snapshot:${uid}:${lessonId}`
 
-function toSnapshot(input: SnapshotInput, updatedAt: string): Snapshot {
+// Exported for the snapshot round-trip unit test (spec-02): the writer stamps
+// updatedAt/schemaVersion and assembles interactionState from SnapshotInput.
+export function toSnapshot(input: SnapshotInput, updatedAt: string): Snapshot {
   const ls = input.lessonState
   const prediction: PredictionBlob = {
     initialPrediction: ls.initialPrediction ?? null,
@@ -63,6 +69,7 @@ function toSnapshot(input: SnapshotInput, updatedAt: string): Snapshot {
     prediction,
     hintLevelByBeat: input.hintLevelByBeat,
     maxHintLevelByBeat: input.maxHintLevelByBeat,
+    confidenceByBeat: input.confidenceByBeat,
   }
   // Omit the key entirely when absent so we never write `undefined` to Firestore.
   if (ls.equationTiles) interactionState.equationTiles = ls.equationTiles
@@ -98,6 +105,13 @@ export function hintLevelsOf(snap: Snapshot): Record<string, number> {
 
 export function maxHintLevelsOf(snap: Snapshot): Record<string, number> {
   return snap.interactionState.maxHintLevelByBeat ?? {}
+}
+
+// Confidence ratings captured on checkpoint beats (spec-02 / D6). Returns {}
+// (never undefined) so the player seeds an empty map and toSnapshot never writes
+// `undefined` to Firestore — mirrors maxHintLevelsOf exactly.
+export function confidencesOf(snap: Snapshot): Record<string, number> {
+  return snap.interactionState.confidenceByBeat ?? {}
 }
 
 function readLocalSnapshot(uid: string, lessonId: string): Snapshot | null {

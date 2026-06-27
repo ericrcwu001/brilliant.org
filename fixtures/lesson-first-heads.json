@@ -89,8 +89,32 @@
       }
     },
     {
+      "beatId": "transfer-heldout",
+      "required": false,
+      "track": "B",
+      "heldOut": true,
+      "schemaId": "first-step-analysis",
+      "prompt": "A bent coin lands heads only 1 in 4 flips. You flip it until the first heads, counting flips. On average, how many flips until that first heads?",
+      "interaction": {
+        "type": "answerEntry",
+        "fields": [
+          { "id": "count", "label": "Average flips until the first heads", "accept": ["4"], "placeholder": "?", "suffix": "flips" }
+        ]
+      },
+      "interviewNote": "The first-success waiting time is the quant warm-up: E[flips to first heads] = 1/p. Same first-step recurrence as the fair-coin case (E = 1 + (1−p)·E), now with p = 1/4 instead of 1/2 — so the wait stretches from 2 to 4, not to some averaged in-between value.",
+      "feedback": {
+        "correct": "Exactly — E = 1/p = 1/(1/4) = 4. Same first-step analysis as the fair coin: write E = 1 + (1−p)·E (you always spend one flip, and with probability 1−p you're right back where you started), then solve E·p = 1, so E = 1/p. A rarer success just stretches the wait — at p = 1/4 it's 4 flips.",
+        "hints": [
+          "It's the same first-step setup as the fair coin: one flip now, and with probability 1−p you reset to the start.",
+          "Write the recurrence E = 1 + (1−p)·E, then collect terms: E·p = 1.",
+          "So E = 1/p. With p = 1/4, that's 4 flips."
+        ]
+      }
+    },
+    {
       "beatId": "l0-count",
       "required": true,
+      "schemaId": "first-step-analysis",
       "prompt": "Look at where the average settled, then type the average number of flips until the first heads.",
       "interaction": {
         "type": "answerEntry",

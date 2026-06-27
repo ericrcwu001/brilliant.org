@@ -10,6 +10,7 @@
     {
       "beatId": "l5-recall",
       "required": true,
+      "schemaId": "pigeonhole",
       "comparison": true,
       "prompt": "Warm up — match each counting scenario to the right tool or verdict.",
       "interaction": {
@@ -78,6 +79,7 @@
     {
       "beatId": "l5-win",
       "required": true,
+      "schemaId": "pigeonhole",
       "prompt": "Your drawer has 2 red, 20 yellow, and 31 blue socks. It's pitch dark. How many socks must you grab to guarantee a matching pair?",
       "interaction": {
         "type": "answerEntry",
@@ -184,6 +186,7 @@
     {
       "beatId": "l5-apply",
       "required": true,
+      "schemaId": "pigeonhole",
       "prompt": "A welcome party: 25 members join plus you — 26 people total. Everyone shakes hands with at least 1 and at most 25 others. First, identify the holes. Then decide: must two people have shaken exactly the same number of hands?",
       "interaction": {
         "type": "answerEntry",
@@ -213,8 +216,41 @@
       }
     },
     {
+      "beatId": "transfer-heldout",
+      "required": false,
+      "track": "B",
+      "heldOut": true,
+      "schemaId": "pigeonhole",
+      "prompt": "A lecture hall holds 32 students. Each student was born in one of the 12 calendar months. What is the minimum number of students that must share a single birth month?",
+      "interaction": {
+        "type": "masteryChallenge",
+        "scenario": "The \\(12\\) calendar months are the holes; the \\(32\\) students are the pigeons. Name the holes, count the pigeons, and apply \\(\\lceil N/H \\rceil\\) to find the guaranteed minimum crowding in some month.",
+        "fields": [
+          {
+            "id": "min-per-month",
+            "label": "Minimum students sharing one month",
+            "accept": [
+              "3"
+            ],
+            "placeholder": "?",
+            "suffix": "students"
+          }
+        ]
+      },
+      "interviewNote": "Source: classic pigeonhole 'people share a month/day' problem (Green-Book style). Engine: pigeonholeMin(32, 12) = ceil(32/12) = 3; forcesCollision(32,12)=true since 12·2=24<32.",
+      "feedback": {
+        "correct": "Name the holes: \\(12\\) months. Count the pigeons: \\(N = 32\\) students. Apply the ceiling formula: \\[ \\lceil 32/12 \\rceil = \\lceil 2.67 \\rceil = 3. \\] Even spread as evenly as possible, \\(12 \\times 2 = 24 < 32\\), so the \\(8\\) extra students force at least one month to hold \\(3\\). The guaranteed minimum crowding is \\(3\\).",
+        "hints": [
+          "\\(12\\) months are the holes; \\(32\\) students are the pigeons. Could all \\(32\\) fit with \\(2\\) or fewer per month?",
+          "\\(12 \\times 2 = 24 < 32\\), so some month must hold more. Apply \\(\\lceil N/H \\rceil = \\lceil 32/12 \\rceil\\).",
+          "\\(\\lceil 32/12 \\rceil = \\lceil 2.67 \\rceil = 3\\). Some month holds at least 3 students."
+        ]
+      }
+    },
+    {
       "beatId": "l5-prove",
       "required": true,
+      "schemaId": "pigeonhole",
       "prompt": "51 ants wander onto a unit square. You cut the square into a 5×5 grid of 25 equal smaller squares. You have a circular glass of radius 1/7. What is the minimum number of ants that must share one of the 25 regions?",
       "interaction": {
         "type": "masteryChallenge",

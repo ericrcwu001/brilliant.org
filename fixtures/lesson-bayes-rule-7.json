@@ -11,6 +11,7 @@
       "beatId": "recall-base-rate",
       "required": true,
       "track": "both",
+      "schemaId": "conditioning",
       "prompt": "Quick warm-up from L2 — match each conditional to which direction it points.",
       "interaction": {
         "type": "retrievalGrid",
@@ -117,6 +118,7 @@
       "beatId": "flip-the-conditional",
       "required": true,
       "track": "both",
+      "schemaId": "prior-update",
       "prompt": "From the pool of 10,001 possible sources: compute P(innocent | match) and then P(he is the source | match).",
       "interaction": {
         "type": "answerEntry",
@@ -138,6 +140,7 @@
       "beatId": "cold-vs-cause",
       "required": true,
       "track": "both",
+      "schemaId": "prior-update",
       "prompt": "Same 1-in-a-million match, two different priors. Compute P(source | match) in each case.",
       "interaction": {
         "type": "answerEntry",
@@ -160,6 +163,7 @@
       "beatId": "name-the-fallacy",
       "required": true,
       "track": "both",
+      "schemaId": "conditioning",
       "prompt": "Match each scenario to the backward read it hides.",
       "interaction": {
         "type": "retrievalGrid",
@@ -203,9 +207,33 @@
       }
     },
     {
+      "beatId": "transfer-heldout",
+      "required": false,
+      "track": "B",
+      "heldOut": true,
+      "schemaId": "prior-update",
+      "prompt": "Transfer: a partial fingerprint has a random-match probability of 1 in 500,000. Police trawl a database of 500,001 people (1 true source plus 500,000 innocents) and get exactly one match. What is P(he is the source | match)?",
+      "interaction": {
+        "type": "masteryChallenge",
+        "scenario": "A partial fingerprint with a random-match probability of 1 in 500,000. A database of 500,001 people (1 true source plus 500,000 innocents) yields one match.",
+        "fields": [
+          { "id": "fingerdb", "label": "\\(P(\\text{he is the source}\\mid\\text{match})\\)", "accept": ["1/2"] }
+        ]
+      },
+      "feedback": {
+        "correct": "Same odds-form database trawl as the DNA cold hit, with a fingerprint in place of a DNA profile: \\[ \\text{posterior odds} = \\text{prior odds}\\times\\text{likelihood ratio} \\] The database holds 500,001 people: 1 true source against 500,000 innocents, so prior odds \\(= 1:500{,}000\\). The likelihood ratio is \\[ \\frac{P(\\text{match}\\mid\\text{source})}{P(\\text{match}\\mid\\text{innocent})} = \\frac{1}{1/500{,}000} = 500{,}000. \\] Substituting: \\[ \\text{posterior odds} = \\frac{1}{500{,}000}\\times 500{,}000 = 1{:}1 \\] Odds \\(1:1\\) give \\(P(\\text{source}\\mid\\text{match}) = \\tfrac{1}{2}\\). When the database is about as large as the reciprocal random-match probability, the expected number of coincidental matches is about one — a cold hit is only as strong as a coin flip.",
+        "hints": [
+          "Prior odds \\(= 1:500{,}000\\) (1 true source vs 500,000 innocents in the database).",
+          "Likelihood ratio \\(= \\frac{P(\\text{match}\\mid\\text{source})}{P(\\text{match}\\mid\\text{innocent})} = \\frac{1}{1/500{,}000} = 500{,}000\\).",
+          "Posterior odds \\(= \\frac{1}{500{,}000}\\times 500{,}000 = 1{:}1\\), giving \\(P(\\text{source}\\mid\\text{match}) = \\tfrac{1}{2}\\)."
+        ]
+      }
+    },
+    {
       "beatId": "mastery-challenge",
       "required": true,
       "track": "both",
+      "schemaId": "prior-update",
       "prompt": "Mastery challenge: a cold hit found by trawling a database of 1,000,001 people; the same 1-in-1,000,000 random-match profile. What is P(he is the source | match)?",
       "interaction": {
         "type": "masteryChallenge",

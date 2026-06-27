@@ -148,8 +148,8 @@ describe('lesson-combinatorics-6 fact-check', () => {
 
   // ── Structural checks ──────────────────────────────────────────────────
 
-  it('lesson has exactly 10 beats', () => {
-    expect(lesson.beats).toHaveLength(10)
+  it('lesson has exactly 11 beats', () => {
+    expect(lesson.beats).toHaveLength(11)
   })
 
   it('beat order matches the spec', () => {
@@ -163,6 +163,7 @@ describe('lesson-combinatorics-6 fact-check', () => {
       'l6-model',
       'l6-rank',
       'l6-pairs-scaffold',
+      'transfer-heldout',
       'l6-prove',
       'l6-recap',
     ])
