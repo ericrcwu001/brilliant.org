@@ -107,6 +107,10 @@ const UNGRADED_TYPES = new Set([
   // concept-covariance: covarianceBoard is intentionally ungraded (graded reads
   // use answerEntry/masteryChallenge), mirroring stoppingBoard.
   'covarianceBoard',
+  // concept-binary-information: bitBoard/weighing are exploration surfaces;
+  // graded reads use answerEntry/masteryChallenge.
+  'bitBoard',
+  'weighing',
 ])
 
 const ALL_KNOWN_TYPES = new Set([...GRADED_TYPES, ...UNGRADED_TYPES])
@@ -360,7 +364,7 @@ function checkProbabilityCounter(beat: Beat) {
 
 describe('answer-acceptance audit', () => {
   it('discovers exactly 54 lesson fixtures', () => {
-    expect(lessons.length).toBe(54)
+    expect(lessons.length).toBe(60)
   })
 
   for (const lesson of lessons) {
@@ -447,6 +451,6 @@ describe('answer-acceptance audit', () => {
     for (const [type, count] of Object.entries(skippedCounts).sort())
       console.log(`  ${type}: ${count}`)
     // The summary it is always a pass — its job is to report, not gate.
-    expect(lessons.length).toBe(54)
+    expect(lessons.length).toBe(60)
   })
 })

@@ -1,0 +1,19 @@
+# Scorecard: Encoding the Answer  (lesson-binary-information-6)
+
+> Verified against `fixtures/lesson-binary-information-6.json`,
+> `src/content/lesson-binary-information-6.factcheck.test.ts`, `brief.md`, `interaction-spec.md`,
+> `src/engine/binary.ts`, and `scripts/validate-fixtures.ts`.
+
+| # | gate | owner | status | evidence |
+|---|------|-------|--------|----------|
+| 1 | Source fidelity | Dept 1 | ✅ | Mastery Missing Number `[9,6,4,2,3,5,7,0,1]`→8 and bet `[3,0,1]`→2 anchored to S15 (LeetCode 268). Mixed recall interleaves this concept's L2/L4/L5 + `lesson-combinatorics-1` (2ⁿ); spaced `l6-spaced` re-surfaces combinatorics-1 (strings), combinatorics-3 (Pascal rows), overlap-shortcut (Σ2^L). N=27 base-2-vs-base-3 from this concept's L3/L4. All cited in `brief.md`. |
+| 2 | Math correctness | Dept 3 Verify | ✅ | Engine reproduces every accept: `l6-win`=2 (`missingNumber([0,1,3])=2`), `l6-transfer`=2 (`missingNumber([0,1,3,4])=2`), `l6-prove`=8 (`missingNumber([9,6,4,2,3,5,7,0,1])=8`); bet `missingNumber([3,0,1])=2`. `l6-model` pairs use `bitsNeeded(27)=5` and `weighingsForN(27,true)=3`. bitBoard headline: `l6-explore` op=`xor` a=0 b=2 → `"10"` (=toBinary(xorAll([0,2]))=toBinary 2) — recomputed by `validate-fixtures §3f`. Factcheck passes. |
+| 3 | Learning science / efficiency | Dept 1 | ✅ | Synthesis arc: Bet (`l6-bet` missing number) → Explore (`l6-explore` XOR cancellation bit-by-bit) → Model (`l6-model` which encoding for N=27 — base-3 wins) → spaced review (`l6-spaced`) → Prove (`l6-prove`). One objective/beat; capstone frames all prior puzzles as one "choose the encoding" question. |
+| 4 | Misconceptions | Dept 1 | ✅ | 5 wrong models (each-puzzle-unrelated; missing⇒sum-and-subtract; always-use-binary; more-tests-always-finer; powers-of-2-were-just-binary). `l6-bet` byOption refutes "Sum then subtract"/"Scan for the gap"; correct option carries the XOR answer. `l6-model` hint refutes "more tests is finer" (alphabet sets the rate). *Low-severity nit, not a gate miss: the `l6-bet` correct chip label embeds "the answer is 2"; since `l6-bet` is an ungraded prediction and the graded beats (`l6-win`/`l6-prove`) do not, this only softens the bet's surprise — acceptable.* |
+| 5 | Interactivity | Dept 2 | ✅ | `l6-explore` genuine direct-manipulation (`bitBoard register` op=`xor`: running XOR folds indices+values column by column, survivor appears). `l6-recall`/`l6-model`/`l6-spaced` are graded `retrievalGrid` matching (tap-match), not text walls. `BitBoardBeat.tsx` xor-op confirmed. |
+| 6 | Assessment / mastery / continuity | Dept 1 | ✅ | Retrieval opener `l6-recall` (`retrievalGrid` mixed interleave, first graded = early win). Required `masteryChallenge` `l6-prove` (accept `8`) immediately before recap. Transfer `l6-transfer` (track:'B', required:false, accept `2`) immediately precedes mastery. `unlocks:null` (final lesson). Continuity: `l6-spaced` closes every Continuity-Report spaced 2ⁿ thread; `l6-model` interleaves base-2-vs-base-3 one last time — all overlaps = deliberate recall/interleave, no re-teach. |
+| 7 | Accessibility & mobile | Dept 2 | ✅ | `BitBoardBeat.tsx` xor mode: `reducedMotion` instant value update; `aria-live`+`aria-atomic` op readout; retrievalGrid tap-match (no drag required) with `aria-live`. 44px via CSS. e2e deferred to dev smoke + user-run. |
+| 8 | Technical implementation | Dept 3 | ✅ | validate/test/build/lint green; factcheck + goldens pass; `missingNumber` engine fn cross-checked; zero new failures. Surgical reuse + `bitBoard` xor. e2e deferred. |
+| 9 | Inclusivity gate | Dept 3 Verify | ✅ | In `GATED` + `MASTERY_LESSONS`; mechanized inclusivity + mastery gates ran and passed. |
+
+**Overall:** READY — synthesis capstone, every Missing-Number accept and the XOR bitBoard headline engine-reproduced, all 9 gates met (one low-severity bet-label nit noted, not a failure).

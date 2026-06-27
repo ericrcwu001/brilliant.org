@@ -47,6 +47,15 @@ const LESSON_CHAPTER: Record<string, ChapterHue> = {
   'lesson-covariance-4': 'ch1',
   'lesson-covariance-5': 'ch3',
   'lesson-covariance-6': 'ch3',
+  // concept-binary-information (Wave-0): course card accent is ch5, but chapter
+  // hues use ch1-ch3 only (CHAPTER_HEX/ChapterHue define ch1-ch4). ch-binary-1
+  // → ch1, ch-binary-2 → ch2, ch-binary-3 → ch3.
+  'lesson-binary-information-1': 'ch1',
+  'lesson-binary-information-2': 'ch1',
+  'lesson-binary-information-3': 'ch2',
+  'lesson-binary-information-4': 'ch2',
+  'lesson-binary-information-5': 'ch3',
+  'lesson-binary-information-6': 'ch3',
 }
 
 // Resolved hex per chapter — keep in sync with the --chN tokens in

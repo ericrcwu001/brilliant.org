@@ -68,6 +68,22 @@ import {
   type Game as GtGame,
   type GameTreeNode as GtNode,
 } from '../src/engine/gameTheory'
+import {
+  toBinary,
+  powersOfTwo,
+  bitsNeeded,
+  weighingsForN,
+  popcount,
+  isPowerOfTwo,
+  isPowerOfFour,
+  xorAll,
+  missingNumber,
+  bachetWeights,
+  eggDrops,
+  multiplyByShift,
+  balancedTernary,
+  binaryExpansion,
+} from '../src/engine/binary'
 
 const interviewsDir = join(dirname(fileURLToPath(import.meta.url)), '..', 'interviews')
 
@@ -382,9 +398,65 @@ function recomputeCovariance(q: Question): string | null {
   }
 }
 
+// Binary & Information pack recompute (returns the final answer STRING directly,
+// since binary answers are binary strings / weight lists / signed-ternary digits /
+// integers, not single Rationals). The Question Author encoded template params in
+// exactly these shapes so this independent reproduction matches the engineCheck
+// answer. The `calls` strings are documentation only — recompute from params/id.
+function recomputeBinary(q: Question): string | null {
+  const t = q.template?.id
+  const p = (q.template?.params ?? {}) as Record<string, unknown>
+  const num = (k: string): number => Number(p[k])
+  if (t === 'tmpl-binary-repr') return toBinary(BigInt(num('n')))
+  if (t === 'tmpl-powers-subset') return powersOfTwo(BigInt(num('n'))).join('+')
+  if (t === 'tmpl-bits-needed') return String(bitsNeeded(BigInt(num('N'))))
+  if (t === 'tmpl-weighings')
+    return String(weighingsForN(BigInt(num('N')), Boolean(p.directionKnown)))
+  if (t === 'tmpl-popcount') return String(popcount(BigInt(num('n'))))
+  if (t === 'tmpl-power-of-two') return isPowerOfTwo(BigInt(num('n'))) ? 'true' : 'false'
+  if (t === 'tmpl-power-of-four') return isPowerOfFour(BigInt(num('n'))) ? 'true' : 'false'
+  if (t === 'tmpl-single-number')
+    return String(xorAll((p.values as number[]).map((x: number) => BigInt(x))))
+  if (t === 'tmpl-missing-number')
+    return String(missingNumber((p.values as number[]).map((x: number) => BigInt(x))))
+  if (t === 'tmpl-bachet-weights') return bachetWeights(BigInt(num('maxMass'))).join(',')
+  if (t === 'tmpl-egg-drops') return String(eggDrops(BigInt(num('floors'))))
+  if (t === 'tmpl-multiply-shift') {
+    const x = BigInt(num('x'))
+    const k = num('k')
+    return p.minus ? String(multiplyByShift(x, k) - x) : String(multiplyByShift(x, k))
+  }
+  if (t === 'tmpl-balanced-ternary')
+    return balancedTernary(BigInt(num('target')), (p.weights as number[]).map((w: number) => BigInt(w)))
+  // free-form (by id) — every free-form id in this pack is engine-computable.
+  switch (q.id) {
+    case 'ff-poison-wine-1000':
+      return String(bitsNeeded(1000n))
+    case 'ff-poison-wine-cap-10':
+      return String(1n << 10n)
+    case 'ff-gold-rod-7':
+      return powersOfTwo(7n).join('+')
+    case 'ff-multiply-by-7':
+      return String(multiplyByShift(12n, 3) - 12n)
+    case 'ff-twelve-coins-dir-unknown':
+      return String(weighingsForN(12n, false))
+    case 'ff-single-number-classic':
+      return String(xorAll([4n, 1n, 2n, 1n, 2n]))
+    case 'ff-missing-number-classic':
+      return String(missingNumber([9n, 6n, 4n, 2n, 3n, 5n, 7n, 0n, 1n]))
+    case 'ff-bachet-40':
+      return bachetWeights(40n).join(',')
+    case 'ff-fair-coin-third':
+      return binaryExpansion({ n: 1, d: 3 }, 8)
+    default:
+      return null
+  }
+}
+
 function recomputeAnswer(q: Question): string | null {
   if (q.engineCheck.module === 'src/engine/gameTheory.ts') return recomputeGameTheory(q)
   if (q.engineCheck.module === 'src/engine/covariance.ts') return recomputeCovariance(q)
+  if (q.engineCheck.module === 'src/engine/binary.ts') return recomputeBinary(q)
   const r =
     q.engineCheck.module === 'src/engine/expectation.ts' ? recomputeEV(q) : recomputePHT(q)
   return r === null ? null : ratStr(r)

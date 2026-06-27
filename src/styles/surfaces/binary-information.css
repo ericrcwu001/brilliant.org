@@ -1,0 +1,315 @@
+/* ── Binary & Information surfaces (concept-binary-information, Wave 0) ───────
+   Two shared interactive widgets: BitBoardBeat (.bi-bitboard) and WeighingBeat
+   (.bi-weighing). Tokens only — no raw hex. The chapter accent resolves through
+   var(--accent) / var(--accent-tint), injected by the lesson shell (data-ch).
+   44px minimum tap targets; reduced-motion renders a static final frame. */
+
+/* ══ BitBoard ════════════════════════════════════════════════════════════════ */
+
+.bi-bitboard {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s3);
+}
+
+.bi-bitboard__status {
+  margin: 0;
+  min-height: 32px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s2);
+  align-items: center;
+  font-family: var(--font-mono);
+  font-size: calc(15px * var(--fs));
+  color: var(--ink);
+}
+
+.bi-bitboard__row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s2);
+  align-items: center;
+}
+
+/* Bit cells — square toggle buttons MSB→LSB. */
+.bi-bitboard__cell {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  min-height: 44px;
+  border-radius: var(--r-sm);
+  border: 2px solid var(--rule);
+  background: var(--ergo-surface);
+  font-family: var(--font-mono);
+  font-size: calc(16px * var(--fs));
+  font-weight: 600;
+  color: var(--ink);
+  cursor: pointer;
+  padding: 0;
+}
+
+.bi-bitboard__cell:not(:disabled):hover {
+  border-color: var(--accent);
+  background: var(--accent-tint);
+}
+
+.bi-bitboard__cell:focus-visible {
+  box-shadow: var(--ring-focus);
+  outline: none;
+}
+
+.bi-bitboard__cell--on {
+  border-color: var(--accent);
+  background: var(--accent-tint);
+  color: var(--accent);
+}
+
+/* Decimal/binary readout strip. */
+.bi-bitboard__readout {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s3);
+  font-family: var(--font-mono);
+  font-size: calc(14px * var(--fs));
+  color: var(--ink);
+}
+
+/* Bit-op result panel (L5). */
+.bi-bitboard__op {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s1);
+  padding: var(--s3);
+  border: 1px solid var(--rule);
+  border-radius: var(--r-sm);
+  background: var(--ergo-surface);
+}
+
+.bi-bitboard__op-label {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: calc(14px * var(--fs));
+  color: var(--ink);
+}
+
+.bi-bitboard__op-result {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: calc(16px * var(--fs));
+  font-weight: 700;
+  color: var(--accent);
+}
+
+.bi-bitboard__op-note {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: calc(13px * var(--fs));
+  color: var(--ink);
+  opacity: 0.75;
+}
+
+/* Group-test grid (poisoned wine). */
+.bi-bitboard__grid {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s1);
+  overflow-x: auto;
+}
+
+.bi-bitboard__tester {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 56px;
+  min-height: 44px;
+  font-family: var(--font-mono);
+  font-size: calc(13px * var(--fs));
+  color: var(--ink);
+  flex-shrink: 0;
+}
+
+/* Generic action button (questions yes/no, etc.). */
+.bi-bitboard__btn {
+  min-height: 44px;
+  padding: var(--s2) var(--s4);
+  border: 1.5px solid var(--rule);
+  border-radius: var(--r-sm);
+  background: var(--ergo-surface);
+  font-family: var(--font-mono);
+  font-size: calc(14px * var(--fs));
+  color: var(--ink);
+  cursor: pointer;
+}
+
+.bi-bitboard__btn:not(:disabled):hover {
+  border-color: var(--accent);
+  background: var(--accent-tint);
+}
+
+.bi-bitboard__btn:focus-visible {
+  box-shadow: var(--ring-focus);
+  outline: none;
+}
+
+/* ══ Weighing ════════════════════════════════════════════════════════════════ */
+
+.bi-weighing {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s3);
+}
+
+.bi-weighing__status {
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s2);
+  align-items: center;
+  font-family: var(--font-mono);
+  font-size: calc(15px * var(--fs));
+  color: var(--ink);
+}
+
+/* Two-pan balance. */
+.bi-weighing__pans {
+  display: flex;
+  gap: var(--s4);
+  align-items: flex-start;
+  justify-content: center;
+  padding: var(--s3) 0;
+}
+
+.bi-weighing__pan {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 96px;
+  min-height: 64px;
+  border: 2px solid var(--rule);
+  border-radius: var(--r-md);
+  background: var(--ergo-surface);
+  font-family: var(--font-mono);
+  font-size: calc(14px * var(--fs));
+  color: var(--ink);
+  transition: transform var(--dur-base) var(--ease-out);
+}
+
+.bi-weighing__pan--down {
+  transform: translateY(var(--s3));
+  border-color: var(--accent);
+  background: var(--accent-tint);
+}
+
+.bi-weighing__pan--up {
+  transform: translateY(calc(-1 * var(--s3)));
+}
+
+/* Three-way tilt buttons (the base-3 digit). */
+.bi-weighing__tilt-btns {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s2);
+  justify-content: center;
+}
+
+.bi-weighing__tilt-btn {
+  min-height: 44px;
+  padding: var(--s2) var(--s4);
+  border: 1.5px solid var(--rule);
+  border-radius: var(--r-sm);
+  background: var(--ergo-surface);
+  font-family: var(--font-mono);
+  font-size: calc(14px * var(--fs));
+  color: var(--ink);
+  cursor: pointer;
+}
+
+.bi-weighing__tilt-btn:not(:disabled):hover {
+  border-color: var(--accent);
+  background: var(--accent-tint);
+}
+
+.bi-weighing__tilt-btn:focus-visible {
+  box-shadow: var(--ring-focus);
+  outline: none;
+}
+
+.bi-weighing__tilt-btn--active {
+  border-color: var(--accent);
+  background: var(--accent-tint);
+  color: var(--accent);
+  font-weight: 700;
+}
+
+.bi-weighing__counter {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s3);
+  font-family: var(--font-mono);
+  font-size: calc(14px * var(--fs));
+  color: var(--ink);
+}
+
+/* Balanced-ternary placement chips. */
+.bi-weighing__ternary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s2);
+}
+
+.bi-weighing__weight {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-width: 56px;
+  min-height: 56px;
+  padding: var(--s2);
+  border: 2px solid var(--rule);
+  border-radius: var(--r-sm);
+  background: var(--ergo-surface);
+  font-family: var(--font-mono);
+}
+
+.bi-weighing__weight--plus {
+  border-color: var(--accent);
+  background: var(--accent-tint);
+  color: var(--accent);
+}
+
+.bi-weighing__weight--minus {
+  border-color: var(--ink);
+  color: var(--ink);
+}
+
+.bi-weighing__weight--off {
+  opacity: 0.5;
+}
+
+.bi-weighing__weight-sign {
+  font-size: calc(16px * var(--fs));
+  font-weight: 700;
+}
+
+.bi-weighing__weight-val {
+  font-size: calc(15px * var(--fs));
+}
+
+.bi-weighing__eq {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: calc(16px * var(--fs));
+  font-weight: 600;
+  color: var(--ink);
+  padding: var(--s2) var(--s3);
+  border-radius: var(--r-sm);
+  background: var(--accent-tint);
+}
+
+/* ── Reduced motion: no pan animation (static final frame). ─────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  .bi-weighing__pan {
+    transition: none;
+  }
+}

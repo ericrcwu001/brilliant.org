@@ -1,0 +1,233 @@
+{
+  "lessonId": "lesson-binary-information-3",
+  "courseId": "course-binary-information",
+  "title": "Group Testing (Poisoned Wine)",
+  "patternOptions": ["H"],
+  "milestoneId": "binary-information-grouptest",
+  "unlocks": "lesson-binary-information-4",
+  "schemaVersion": 1,
+  "beats": [
+    {
+      "beatId": "l3-recall",
+      "required": true,
+      "prompt": "Quick recall from Lessons 1 and 2. Match each number of bits k to the count of distinct items k bits can identify.",
+      "interaction": {
+        "type": "retrievalGrid",
+        "pairs": [
+          { "left": "k = 1", "right": "2" },
+          { "left": "k = 2", "right": "4" },
+          { "left": "k = 3", "right": "8" },
+          { "left": "k = 10", "right": "1024" }
+        ]
+      },
+      "feedback": {
+        "correct": "k bits ↔ 2ᵏ items — the same capacity, now for testers. 10 mice cover 2¹⁰ = 1024 bottles.",
+        "hints": [
+          "Each tester adds one bit, doubling the capacity.",
+          "1→2, 2→4, 3→8, 10→1024.",
+          "Match: k=1→2, k=2→4, k=3→8, k=10→1024."
+        ]
+      }
+    },
+    {
+      "beatId": "l3-bet",
+      "required": true,
+      "prompt": "1000 bottles of wine, exactly one poisoned. The poison kills in ~18 hours; you have a party in 20. You have 10 lab mice and one 18-hour round of testing. How many bottles can 10 mice clear?",
+      "interaction": {
+        "type": "prediction",
+        "options": ["10 bottles", "100 bottles", "All 1000"]
+      },
+      "feedback": {
+        "byOption": {
+          "10 bottles": {
+            "note": "Worth testing — each mouse covers half the bottles, not just one. 10 mice reach far more than 10."
+          },
+          "100 bottles": {
+            "note": "Worth testing — capacity doubles per mouse: 10 mice reach 2¹⁰ = 1024."
+          },
+          "All 1000": {
+            "note": "Right — 10 mice label 1024 bottles in binary; the dead/alive pattern names the culprit.",
+            "correct": true
+          }
+        }
+      }
+    },
+    {
+      "beatId": "l3-primer",
+      "required": false,
+      "track": "A",
+      "prompt": "One idea to anchor the method.",
+      "interaction": {
+        "type": "primer",
+        "variant": "custom",
+        "title": "A mouse = a bit, run in parallel",
+        "body": "Each mouse reports one bit: 'did the poison have a 1 here?' All mice sip at once — the 10 tests run in parallel in a single 18-hour round. The dead/alive pattern across the 10 mice is the poisoned bottle's 10-bit binary label.",
+        "collapsible": true
+      },
+      "feedback": {
+        "correct": "Exactly — parallel tests, one round. Each mouse answers one binary question simultaneously.",
+        "hints": [
+          "All mice drink at the same time; no sequential rounds needed.",
+          "Mouse i dies if and only if bit i of the poisoned bottle's label is 1.",
+          "Read it, then tap Continue."
+        ]
+      }
+    },
+    {
+      "beatId": "l3-win",
+      "required": true,
+      "prompt": "Guaranteed early win. Label bottles 00, 01, 10, 11 in binary. Mouse 1 drinks from bottles whose bit 1 is 1; mouse 2 drinks from bottles whose bit 2 is 1. How many bottles can 2 mice clear in one round?",
+      "interaction": {
+        "type": "answerEntry",
+        "fields": [
+          {
+            "id": "bottles",
+            "label": "Bottles 2 mice can clear",
+            "accept": ["4"],
+            "placeholder": "?"
+          }
+        ]
+      },
+      "feedback": {
+        "correct": "2 mice → labels 00, 01, 10, 11 → 4 bottles. 2 mice give 2 bits, and 2 bits distinguish 2² = 4 items.",
+        "hints": [
+          "Each mouse is a bit. 2 bits make 2² = 4 distinct labels.",
+          "With labels 00, 01, 10, 11 there are exactly 4 distinct patterns.",
+          "The answer is 4."
+        ]
+      }
+    },
+    {
+      "beatId": "l3-explore",
+      "required": true,
+      "prompt": "Explore the poisoned-wine grid. Tap a bottle to poison it — the mice whose bit is 1 light up as 'dead'. Read the dead/alive column top-to-bottom as a binary number to recover the culprit index.",
+      "interaction": {
+        "type": "bitBoard",
+        "display": "groupTest",
+        "items": 256,
+        "culprit": 176,
+        "interactive": true,
+        "headline": "176"
+      },
+      "feedback": {
+        "correct": "The dead/alive pattern is exactly the bottle's binary label read back as a number — the culprit index recovers itself from the pattern of deaths.",
+        "hints": [
+          "Read the dead pattern from top to bottom as a binary number (dead = 1, alive = 0).",
+          "Dead = 1, alive = 0, top mouse = highest bit.",
+          "The recovered index equals the culprit bottle number you poisoned."
+        ]
+      }
+    },
+    {
+      "beatId": "l3-model",
+      "required": true,
+      "interviewNote": "The poisoned-wine / lab-rats problem is a quant-interview staple — the trick is always 'label in binary, one tester per bit.' Lesson 4 shows what changes when the test has three outcomes.",
+      "prompt": "Generalize. With k mice labelling items 1 to 2ᵏ in binary, all mice drink in parallel — the dead/alive pattern across the 10 mice is the poisoned bottle's 10-bit label. Here culprit 1000 (binary 1111101000) is shown for 1024-bottle scale.",
+      "interaction": {
+        "type": "bitBoard",
+        "display": "groupTest",
+        "items": 1024,
+        "culprit": 1000,
+        "interactive": false,
+        "headline": "1000"
+      },
+      "feedback": {
+        "correct": "k mice cover 2ᵏ bottles in one round. 10 mice → 2¹⁰ = 1024 — one round, one 18-hour window. More bottles never need more rounds, just more mice.",
+        "hints": [
+          "The capacity doubles with each additional mouse (bit).",
+          "k mice label items 0 to 2ᵏ−1; k=10 covers 1024 bottles in one round.",
+          "The death pattern recovers the culprit no matter which bottle was poisoned."
+        ]
+      }
+    },
+    {
+      "beatId": "l3-apply",
+      "required": true,
+      "comparison": true,
+      "prompt": "A weighing interlude (seeding Lesson 4). You have 9 balls, one heavier than the rest. Using a two-pan balance — which has three outcomes (left heavy, balanced, right heavy) — what is the fewest number of weighings needed to always identify the heavy ball?",
+      "interaction": {
+        "type": "answerEntry",
+        "fields": [
+          {
+            "id": "weighings",
+            "label": "Fewest weighings to find the heavy ball among 9",
+            "accept": ["2"],
+            "placeholder": "?"
+          }
+        ]
+      },
+      "feedback": {
+        "correct": "A balance splits into thirds, so 9 balls take ⌈log₃9⌉ = 2 weighings. (Contrast: binary tests halve; ternary tests third — the base-3 world of Lesson 4.)",
+        "hints": [
+          "A balance has three outcomes, not two — it's a base-3 digit, not a bit.",
+          "3 groups of 3: weigh group 1 vs group 2. One weighing identifies which third contains the heavy ball; the second finds it.",
+          "The answer is 2."
+        ]
+      }
+    },
+    {
+      "beatId": "l3-transfer",
+      "required": false,
+      "track": "B",
+      "prompt": "Transfer. You have only 600 bottles to test, one poisoned, one round of 18 hours. What is the minimum number of mice needed?",
+      "interaction": {
+        "type": "answerEntry",
+        "fields": [
+          {
+            "id": "mice",
+            "label": "Minimum mice for 600 bottles",
+            "accept": ["10"],
+            "placeholder": "?"
+          }
+        ]
+      },
+      "feedback": {
+        "correct": "2⁹ = 512 < 600 ≤ 1024 = 2¹⁰ → 10 mice. 9 mice only cover 512 bottles; you need the 10th to reach 1024.",
+        "hints": [
+          "Find the smallest k with 2ᵏ ≥ 600.",
+          "2⁹ = 512 is too few; 2¹⁰ = 1024 covers 600.",
+          "The answer is 10."
+        ]
+      }
+    },
+    {
+      "beatId": "l3-prove",
+      "required": true,
+      "prompt": "Mastery. The original problem: 1000 bottles, exactly one poisoned, 10 lab mice, one 18-hour round. What is the minimum number of mice needed to identify the poisoned bottle?",
+      "interaction": {
+        "type": "masteryChallenge",
+        "scenario": "You are preparing for a party in 20 hours. There are 1000 bottles of wine and exactly one is poisoned (poison takes ~18 hours to act). You have lab mice and one round of testing. Each mouse can sip from multiple bottles simultaneously. What is the minimum number of mice needed to always identify the poisoned bottle?",
+        "fields": [
+          {
+            "id": "mice",
+            "label": "Minimum mice to identify the poisoned bottle among 1000",
+            "accept": ["10"],
+            "placeholder": "?"
+          }
+        ]
+      },
+      "feedback": {
+        "correct": "2¹⁰ = 1024 ≥ 1000 → 10 mice. Label each bottle 1–1000 in 10-bit binary; mouse i sips from every bottle whose bit i is 1. The dead/alive pattern across the 10 mice is the poisoned bottle's binary label.",
+        "hints": [
+          "One mouse per bit; how many bits are needed to label 1000 items?",
+          "10 bits (since 1000 < 1024 = 2¹⁰), so 10 mice suffice.",
+          "The answer is 10."
+        ]
+      }
+    },
+    {
+      "beatId": "l3-recap",
+      "required": true,
+      "prompt": "Close the loop.",
+      "interaction": { "type": "recap" },
+      "feedback": {
+        "correct": "Parallel binary labeling: give each item a binary label, assign tester i to bit i, run all tests at once. k testers identify the culprit among 2ᵏ items in one round — no sequential rounds needed. Next: when the test has three outcomes (a balance scale), the base changes from 2 to 3.",
+        "hints": [
+          "k testers, binary labels, one parallel round → 2ᵏ items identified.",
+          "The death pattern is the binary label — read it off to recover the culprit.",
+          "Next lesson: three-outcome tests and the base-3 analogue."
+        ]
+      }
+    }
+  ]
+}

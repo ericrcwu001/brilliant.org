@@ -84,6 +84,20 @@ import {
   type JointCell as CovJointCell,
   type Pmf as CovPmf,
 } from '../src/engine/covariance'
+import {
+  toBinary as biToBinary,
+  fromBinary as biFromBinary,
+  powersOfTwo as biPowersOfTwo,
+  popcount as biPopcount,
+  isPowerOfTwo as biIsPowerOfTwo,
+  isPowerOfFour as biIsPowerOfFour,
+  xorAll as biXorAll,
+  multiplyByShift as biMultiplyByShift,
+  bitsNeeded as biBitsNeeded,
+  weighingsForN as biWeighingsForN,
+  bachetWeights as biBachetWeights,
+  balancedTernary as biBalancedTernary,
+} from '../src/engine/binary'
 
 const fixturesDir = join(dirname(fileURLToPath(import.meta.url)), '..', 'fixtures')
 
@@ -279,6 +293,33 @@ console.log('✓ markov.ts goldens (3/8, 4/7,6/7, 3/7,4/7, 1/5,2/5,2/5, 4/13…,
   okG('nim 1-4-5 losing', gtNimSum([1, 4, 5]) === 0)
   okG('subtraction 12 losing / move(10,3)=2', gtSubWin(12, 3) === false && gtSubMove(10, 3) === 2)
   console.log('✓ gameTheory engine self-check (Stage-2 anchor)')
+}
+
+// ── 2e. Binary & Information engine goldens — inline fact-check independent of
+// fixtures; mirrors the gameTheory self-check so binary.ts correctness fails CI
+// directly (every value reproduces an exact source-dossier.md answer, NO floats).
+{
+  const okB = (label: string, cond: boolean) => {
+    if (!cond) fail(`binary golden failed: ${label}`)
+  }
+  okB('toBinary(1000)=1111101000', biToBinary(1000n) === '1111101000')
+  okB('fromBinary roundtrip', biFromBinary('1111101000') === 1000n)
+  okB('toBinary(100)=1100100', biToBinary(100n) === '1100100')
+  okB('powersOfTwo(1000)=512..8', biPowersOfTwo(1000n).join(',') === '512,256,128,64,32,8')
+  okB('popcount(11)=3', biPopcount(11n) === 3)
+  okB('popcount(1000)=6', biPopcount(1000n) === 6)
+  okB('isPowerOfTwo 16/5/1/0', biIsPowerOfTwo(16n) && !biIsPowerOfTwo(5n) && biIsPowerOfTwo(1n) && !biIsPowerOfTwo(0n))
+  okB('isPowerOfFour 16/8/64', biIsPowerOfFour(16n) && !biIsPowerOfFour(8n) && biIsPowerOfFour(64n))
+  okB('xorAll [2,2,1]=1', biXorAll([2n, 2n, 1n]) === 1n)
+  okB('xorAll [4,1,2,1,2]=4', biXorAll([4n, 1n, 2n, 1n, 2n]) === 4n)
+  okB('multiplyByShift 7x identity', biMultiplyByShift(13n, 3) - 13n === 7n * 13n)
+  okB('bitsNeeded 100/1000/1e6/1', biBitsNeeded(100n) === 7 && biBitsNeeded(1000n) === 10 && biBitsNeeded(1000000n) === 20 && biBitsNeeded(1n) === 0)
+  okB('weighingsForN 12 unknown=3', biWeighingsForN(12n, false) === 3)
+  okB('weighingsForN 13 unknown=4', biWeighingsForN(13n, false) === 4)
+  okB('weighingsForN 9/27 known=2/3', biWeighingsForN(9n, true) === 2 && biWeighingsForN(27n, true) === 3)
+  okB('bachetWeights(40)=1,3,9,27', biBachetWeights(40n).join(',') === '1,3,9,27')
+  okB('balancedTernary(22,[27,9,3,1])', biBalancedTernary(22n, [27n, 9n, 3n, 1n]) === '+1,-1,+1,+1')
+  console.log('✓ binary engine self-check (Stage-2 anchor)')
 }
 
 // ── 3. Engine cross-check (hitting-time recurrences only). A `equationTiles`
@@ -616,6 +657,90 @@ for (const lesson of lessons) {
 }
 console.log(`✓ covarianceBoard headlines match covariance.ts (${covChecked} beats)`)
 
+// ── 3g. bitBoard / weighing headline cross-check — recompute each declared
+// `headline` via binary.ts (switch on type/display) and assert equality (mirrors
+// §3c–§3e). bitBoard/weighing are NOT graded/hero; this cross-check is their
+// Stage-2 anchor (per-lesson factcheck tests cover answerEntry/mastery accepts).
+// NO floats: every reproduction is exact bigint/string from binary.ts.
+let biChecked = 0
+for (const lesson of lessons) {
+  for (const beat of lesson.beats) {
+    const it = beat.interaction
+    const where = `${lesson.lessonId}/${beat.beatId}`
+    if (it.type === 'bitBoard' && it.headline) {
+      let got: string
+      switch (it.display) {
+        case 'register': {
+          if (it.op === 'and-x-minus-1') {
+            // unary op on `value` (operands.a as fallback) — clears the lowest set bit
+            const v = it.value != null ? BigInt(it.value) : it.operands ? BigInt(it.operands.a) : null
+            if (v == null) { fail(`${where}: bitBoard and-x-minus-1 needs value (or operands.a)`); continue }
+            got = biToBinary(v & (v - 1n))
+          } else if (it.op === 'shift') {
+            if (!it.operands || it.operands.k == null) { fail(`${where}: bitBoard shift needs operands.a + operands.k`); continue }
+            got = biToBinary(biMultiplyByShift(BigInt(it.operands.a), it.operands.k))
+          } else if (it.op === 'xor') {
+            if (!it.operands || it.operands.b == null) { fail(`${where}: bitBoard xor needs operands.a + operands.b`); continue }
+            got = biToBinary(biXorAll([BigInt(it.operands.a), BigInt(it.operands.b)]))
+          } else {
+            if (it.value == null) { fail(`${where}: bitBoard register needs value (or op+operands)`); continue }
+            got = biToBinary(BigInt(it.value))
+          }
+          break
+        }
+        case 'questions': {
+          if (it.n == null) { fail(`${where}: bitBoard questions needs n`); continue }
+          got = String(biBitsNeeded(BigInt(it.n)))
+          break
+        }
+        case 'groupTest': {
+          if (it.culprit == null || it.items == null) {
+            fail(`${where}: bitBoard groupTest needs culprit + items`)
+            continue
+          }
+          // The k testers (k = bitsNeeded(items)) read the dead/alive pattern of
+          // the culprit's binary label back as a number = culprit itself.
+          got = String(biFromBinary(biToBinary(BigInt(it.culprit)) || '0'))
+          break
+        }
+        default:
+          continue
+      }
+      if (got !== it.headline) {
+        fail(`${where}: bitBoard(${it.display}) headline ${it.headline} ≠ engine ${got}`)
+      }
+      biChecked++
+    } else if (it.type === 'weighing' && it.headline) {
+      let got: string
+      switch (it.display) {
+        case 'scale': {
+          if (it.items == null) { fail(`${where}: weighing scale needs items`); continue }
+          got = String(biWeighingsForN(BigInt(it.items), it.directionKnown ?? false))
+          break
+        }
+        case 'ternary': {
+          if (it.target == null || !it.weights) {
+            fail(`${where}: weighing ternary needs target + weights.set`)
+            continue
+          }
+          // Sort the weight set descending (powers of 3) to match the renderer's
+          // convention; balancedTernary requires high→low ordering.
+          const wDesc = [...it.weights.set].sort((a, b) => b - a).map((w) => BigInt(w))
+          got = biBalancedTernary(BigInt(it.target), wDesc)
+          break
+        }
+        default:
+          continue
+      }
+      if (got !== it.headline) {
+        fail(`${where}: weighing(${it.display}) headline ${it.headline} ≠ engine ${got}`)
+      }
+      biChecked++
+    }
+  }
+}
+console.log(`✓ bitBoard/weighing headlines match binary.ts (${biChecked} beats)`)
+
 // ── 4. Inclusivity gate (build-brief §4.5 / §10). Mechanizable subset of the
 // per-lesson DoD, applied to the remaining lessons (L2–L6). L0/L1 predate the
 // gate (their own specs) and are exempt. The asserts are dormant until each
@@ -656,6 +781,9 @@ const GATED = new Set([
   // concept-covariance
   'lesson-covariance-1','lesson-covariance-2','lesson-covariance-3',
   'lesson-covariance-4','lesson-covariance-5','lesson-covariance-6',
+  // concept-binary-information (Wave-0 contract).
+  'lesson-binary-information-1','lesson-binary-information-2','lesson-binary-information-3',
+  'lesson-binary-information-4','lesson-binary-information-5','lesson-binary-information-6',
 ])
 // L5 transfer lesson is the logged exception to the retrieval-opener rule.
 const NO_RETRIEVAL_OPENER = new Set(['lesson-longer-patterns'])
@@ -832,6 +960,9 @@ const MASTERY_LESSONS = new Set([
   // concept-covariance
   'lesson-covariance-1','lesson-covariance-2','lesson-covariance-3',
   'lesson-covariance-4','lesson-covariance-5','lesson-covariance-6',
+  // concept-binary-information (Wave-0 contract).
+  'lesson-binary-information-1','lesson-binary-information-2','lesson-binary-information-3',
+  'lesson-binary-information-4','lesson-binary-information-5','lesson-binary-information-6',
 ])
 for (const lesson of lessons) {
   if (!MASTERY_LESSONS.has(lesson.lessonId)) continue
