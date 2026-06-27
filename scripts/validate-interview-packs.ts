@@ -36,6 +36,20 @@ import {
   orderStatUniform,
   noodleLoops,
 } from '../src/engine/expectation'
+import {
+  pureNashEquilibria as gtPureNash,
+  iesdsSolution as gtIesds,
+  saddlePoint as gtSaddle,
+  mixedValue2x2 as gtMixedValue,
+  backwardInduction as gtBackward,
+  pirateGame as gtPirate,
+  tigerSheepEaten as gtTiger,
+  nimSum as gtNimSum,
+  formatRational as gtFmt,
+  formatVector as gtVec,
+  type Game as GtGame,
+  type GameTreeNode as GtNode,
+} from '../src/engine/gameTheory'
 
 const interviewsDir = join(dirname(fileURLToPath(import.meta.url)), '..', 'interviews')
 
@@ -234,7 +248,55 @@ function recomputePHT(q: Question): Rational | null {
   return null
 }
 
+// Game Theory pack recompute (returns the final answer STRING directly, since
+// game-theory answers are cells/vectors/integers, not single Rationals). The
+// build script (interviews/_build/build-game-theory-pack.ts) MUST encode template
+// params in exactly these shapes so this independent reproduction matches.
+function recomputeGameTheory(q: Question): string | null {
+  const t = q.template?.id
+  const p = (q.template?.params ?? {}) as Record<string, unknown>
+  const num = (k: string): number => Number(p[k])
+  // payoffs: 3-D number array [[[rowPay,colPay], ...], ...]
+  const toGame = (payoffs: number[][][]): GtGame =>
+    payoffs.map((row) => row.map(([r, c]) => ({ row: { n: r, d: 1 }, col: { n: c, d: 1 } })))
+  // matrix: 2-D number array of ROW payoffs (zero-sum: col = -row)
+  const toM = (m: number[][]) => m.map((row) => row.map((x) => ({ n: x, d: 1 })))
+  if (t === 'tmpl-pure-nash') {
+    const eqs = gtPureNash(toGame(p.payoffs as number[][][]))
+    return eqs.length ? eqs.map((e) => `${e.row},${e.col}`).join(';') : 'none'
+  }
+  if (t === 'tmpl-iesds') {
+    const sol = gtIesds(toGame(p.payoffs as number[][][]))
+    return sol ? `${sol.row},${sol.col}` : 'none'
+  }
+  if (t === 'tmpl-saddle-value') {
+    const sp = gtSaddle(toM(p.matrix as number[][]))
+    return sp ? gtFmt(sp.value) : 'mixed'
+  }
+  if (t === 'tmpl-mixed-value') return gtFmt(gtMixedValue(toM(p.matrix as number[][])).value)
+  if (t === 'tmpl-mixed-prob') return gtFmt(gtMixedValue(toM(p.matrix as number[][])).p)
+  if (t === 'tmpl-pirate') return gtPirate(num('pirates'), num('coins')).join(',')
+  if (t === 'tmpl-nim-sum') return String(gtNimSum(p.heaps as number[]))
+  if (t === 'tmpl-subtraction') return String(num('pile') % (num('maxRemove') + 1))
+  if (t === 'tmpl-backward-induction')
+    return gtVec(gtBackward(p.tree as unknown as GtNode).payoff)
+  // free-form (by id) — only the engine-computable ones; conceptual ones return null.
+  switch (q.id) {
+    case 'ff-tiger-sheep-100':
+      return gtTiger(100) ? 'eaten' : 'safe'
+    case 'ff-tiger-sheep-99':
+      return gtTiger(99) ? 'eaten' : 'safe'
+    case 'ff-chocolate-6x8':
+      return String(6 * 8 - 1)
+    case 'ff-pirate-2n1-keep':
+      return String(gtPirate(5, 100)[0]) // 2n+1 with n=2 → keep 100−n = 98
+    default:
+      return null
+  }
+}
+
 function recomputeAnswer(q: Question): string | null {
+  if (q.engineCheck.module === 'src/engine/gameTheory.ts') return recomputeGameTheory(q)
   const r =
     q.engineCheck.module === 'src/engine/expectation.ts' ? recomputeEV(q) : recomputePHT(q)
   return r === null ? null : ratStr(r)
