@@ -394,6 +394,141 @@
   background: var(--ergo-brand);
 }
 
+/* Deterministic correctness anchor (mentor feedback): a small badge shown on the
+   correctness row when its score came from the engine check, not the LLM. */
+.iv-dim__anchor {
+  align-self: flex-start;
+  font-size: calc(11px * var(--fs));
+  font-weight: 600;
+  padding: 2px var(--s2);
+  border-radius: var(--r-sm);
+}
+
+.iv-dim__anchor--match {
+  color: var(--correct-text);
+  background: var(--correct-tint);
+}
+
+.iv-dim__anchor--mismatch {
+  color: var(--wrong-text);
+  background: var(--wrong-tint);
+}
+
+/* Rubric trend (mentor feedback): per-learner Capstone rubric scores over time.
+   Profile (full) + per-concept Study Desk (compact). DOM bars, tokens only. */
+.rubric-trend {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s2);
+}
+
+.rubric-trend__empty {
+  margin: 0;
+  font-size: calc(13px * var(--fs));
+  color: var(--ergo-ink-2);
+}
+
+.rubric-trend__chart {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--s1);
+  block-size: 72px;
+  padding: var(--s2);
+  border: 1px solid var(--ergo-line);
+  border-radius: var(--r-sm);
+  background: var(--ergo-surface-2);
+}
+
+.rubric-trend--compact .rubric-trend__chart {
+  block-size: 48px;
+}
+
+.rubric-trend__bar {
+  flex: 1 1 0;
+  min-inline-size: 4px;
+  max-inline-size: 28px;
+  background: var(--ergo-brand-tint);
+  border-radius: 2px 2px 0 0;
+}
+
+.rubric-trend__bar--latest {
+  background: var(--ergo-brand);
+}
+
+.rubric-trend__readout {
+  margin: 0;
+  font-size: calc(12px * var(--fs));
+  color: var(--ergo-ink-2);
+}
+
+.rubric-trend__dims {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--s1);
+}
+
+.rubric-trend__dim {
+  display: flex;
+  align-items: center;
+  gap: var(--s2);
+  font-size: calc(13px * var(--fs));
+}
+
+.rubric-trend__dim-label {
+  flex: 1;
+  color: var(--ergo-ink);
+}
+
+.rubric-trend__dim-score {
+  font-weight: 600;
+  color: var(--ergo-ink);
+  font-variant-numeric: tabular-nums;
+}
+
+.rubric-trend__delta {
+  font-size: calc(11px * var(--fs));
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  min-inline-size: 4ch;
+  text-align: end;
+}
+
+.rubric-trend__delta--up {
+  color: var(--correct-text);
+}
+
+.rubric-trend__delta--down {
+  color: var(--wrong-text);
+}
+
+.rubric-trend__delta--flat {
+  color: var(--ergo-ink-3);
+}
+
+/* Card wrapper for the compact per-concept trend on the Study Desk. */
+.rubric-trend-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s2);
+  padding: var(--s3);
+  border: 1px solid var(--ergo-line);
+  border-radius: var(--r-md, var(--r-sm));
+  background: var(--ergo-surface);
+  box-shadow: var(--ergo-shadow-sm);
+}
+
+.rubric-trend-card__label {
+  margin: 0;
+  font-size: calc(12px * var(--fs));
+  font-weight: 600;
+  color: var(--ergo-ink-2);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
 .iv-dim__evidence {
   margin: 0;
   font-size: calc(12px * var(--fs));

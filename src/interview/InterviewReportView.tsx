@@ -130,10 +130,26 @@ export function InterviewReportView({
       <div className="iv-dims">
         {DIMS.map(([key, label]) => {
           const dim = report.dimensions[key]
+          // Mentor feedback: when the correctness row was set by the
+          // deterministic engine check (not the LLM), say so explicitly.
+          const anchor =
+            key === 'correctness' && report.correctnessAnchor?.applied
+              ? report.correctnessAnchor
+              : null
           return (
             <div key={key} className="iv-dim">
               <div className="iv-dim__label">{label}</div>
               <ScorePips score={dim.score} />
+              {anchor && (
+                <span
+                  className={`iv-dim__anchor iv-dim__anchor--${anchor.verdict}`}
+                  title={`Engine answer: ${anchor.expected}`}
+                >
+                  {anchor.verdict === 'match'
+                    ? '✓ Verified against the engine'
+                    : '✗ Final answer didn’t match the engine'}
+                </span>
+              )}
               <blockquote className="iv-dim__evidence">
                 {dim.evidence}
               </blockquote>
