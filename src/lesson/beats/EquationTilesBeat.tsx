@@ -384,6 +384,12 @@ export function EquationTilesBeat(props: BeatProps) {
   // markers and hints never describe a stale attempt.
   const [checked, setChecked] = useState(false)
   const [solved, setSolved] = useState(false)
+  // Mirror of `solved` for the deferred drag-drop commit: the drop animation's
+  // onComplete fires after a SPRING delay, so a drag begun before the row was
+  // solved could otherwise commit a placement post-solve. The ref always holds
+  // the current value, so placeInto can reject late commits (the state closure
+  // captured at drag-end still reads solved===false).
+  const solvedRef = useRef(false)
   // Slot element refs for drag hit-testing, keyed as `${rowId}:${idx}`.
   const slotRefs = useRef<Map<string, HTMLButtonElement>>(new Map())
   // Tracks the slot currently under the dragged tile; toggled directly on the
@@ -526,6 +532,9 @@ export function EquationTilesBeat(props: BeatProps) {
   }
 
   function placeInto(row: string, idx: number, token: string) {
+    // Once solved the row is locked: reject any placement, including a deferred
+    // drag-drop commit whose animation settles after the solve (see solvedRef).
+    if (solvedRef.current) return
     setFilled((prev) => {
       const layout = slotsByRow[row]
       if (!layout) return prev
@@ -589,6 +598,7 @@ export function EquationTilesBeat(props: BeatProps) {
     const allOk = buildableRows.every((row) => diagByRow[row.lhs].ok)
     if (allOk) {
       ladder.submitCorrect()
+      solvedRef.current = true
       setSolved(true)
       setLessonState({ theoreticalValue: automaton.expectedTimes['E0' as StateId] })
     } else {
@@ -917,6 +927,7 @@ export function EquationTilesBeat(props: BeatProps) {
                       key={token}
                       className={`token token--${cat}${selected ? ' token--selected' : ''}`}
                       aria-pressed={selected}
+                      disabled={solved}
                       onTap={() => onTileTap(token)}
                       onDragMove={handleTileDrag}
                       clearDragover={clearDragover}

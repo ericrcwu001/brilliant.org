@@ -87,7 +87,7 @@ export function CouponCollectorSimBeat(props: BeatProps) {
   }
 
   useEffect(() => {
-    if (!heroRunning || setComplete) {
+    if (!heroRunning || setComplete || reducedMotion) {
       if (heroTimerRef.current) clearTimeout(heroTimerRef.current)
       return
     }
@@ -108,7 +108,7 @@ export function CouponCollectorSimBeat(props: BeatProps) {
       if (heroTimerRef.current) clearTimeout(heroTimerRef.current)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [heroRunning, setComplete, n])
+  }, [heroRunning, setComplete, n, reducedMotion])
 
   useEffect(() => {
     return () => {

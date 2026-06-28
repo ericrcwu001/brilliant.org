@@ -225,6 +225,17 @@
   transition: cx var(--dur-base) var(--ease-out), cy var(--dur-base) var(--ease-out);
 }
 
+.covboard__tick {
+  stroke: var(--ergo-line-2);
+  stroke-width: 1;
+}
+
+.covboard__ticklabel {
+  fill: var(--ergo-ink-2);
+  font-family: var(--font-sans);
+  font-size: 9px;
+}
+
 /* ── CorrVectors SVG ──────────────────────────────────────────────────────── */
 
 .covboard__origin {

@@ -59,3 +59,22 @@ export function needsReview(state: LadderState, required: boolean): boolean {
 export function isRevealed(state: LadderState): boolean {
   return state.outcome === 'wrong' && state.level >= 3
 }
+
+// Rebuild a ladder state from a persisted hint level (Phase 15 restore). The
+// level — and the derived wrongCount/everRevealed lower bounds — are preserved
+// so the next wrong submit resumes mid-struggle and needsReview accounting holds.
+// But outcome starts 'idle' so NO hint renders until the learner submits again
+// this session; otherwise a resumed beat shows its hint before any attempt.
+export function rehydrateLadder(
+  level: number,
+  maxHintLevel: number,
+): LadderState {
+  const lvl = Math.min(Math.max(level, 0), maxHintLevel)
+  if (lvl <= 0) return initialLadder
+  return {
+    level: lvl,
+    wrongCount: lvl,
+    everRevealed: lvl >= 3,
+    outcome: 'idle',
+  }
+}

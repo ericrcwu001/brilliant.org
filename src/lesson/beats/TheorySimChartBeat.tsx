@@ -17,6 +17,7 @@ import { BeatShell, type PrimaryAction, type SecondaryAction } from '../BeatShel
 import { resolveFeedback } from '../feedback'
 import type { FeedbackView } from '../FeedbackStrip'
 import { SimChart } from '../konva/SimChart'
+import { chapterColor } from '../chapters'
 import { useElementWidth } from '../konva/useElementWidth'
 import { analytics } from '../../analytics/events'
 import { Dialog } from '../../ui/Dialog'
@@ -188,7 +189,7 @@ export function TheorySimChartBeat(props: BeatProps) {
             />
             <text
               x={pad.l - 3}
-              y={pad.t + 4}
+              y={scY(maxV) + 4}
               textAnchor="end"
               className="noodle-chart__tick"
             >
@@ -196,7 +197,7 @@ export function TheorySimChartBeat(props: BeatProps) {
             </text>
             <text
               x={pad.l - 3}
-              y={pad.t + cH + 4}
+              y={scY(0) + 4}
               textAnchor="end"
               className="noodle-chart__tick"
             >
@@ -293,6 +294,7 @@ export function TheorySimChartBeat(props: BeatProps) {
               prediction={props.lessonState.finalPrediction}
               points={points}
               running={sim.running}
+              accent={chapterColor(lessonId)}
             />
           )}
         </div>

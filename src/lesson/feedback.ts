@@ -4,12 +4,12 @@
 
 import { useEffect, useRef, useState } from 'react'
 import {
-  initialLadder,
   isRevealed,
   needsReview,
   onCorrect,
   onTryAgain,
   onWrong,
+  rehydrateLadder,
   type LadderState,
 } from './hintLadder'
 import { analytics } from '../analytics/events'
@@ -40,22 +40,6 @@ export type HintLadder = {
   // Drop the visible verdict (e.g. when the learner edits their answer before
   // re-checking) while preserving wrongCount/everRevealed for needsReview.
   clear: () => void
-}
-
-// Rebuild a ladder state from a persisted hint level (Phase 15 restore). We
-// only persist the level, so wrongCount is approximated as the level (a lower
-// bound) and `everRevealed` is inferred from a reached reveal. The last hint the
-// learner saw is shown again (outcome 'wrong') so they resume mid-struggle and
-// never drop back to a level-1 hint.
-function rehydrateLadder(level: number, max: number): LadderState {
-  const lvl = Math.min(Math.max(level, 0), max)
-  if (lvl <= 0) return initialLadder
-  return {
-    level: lvl,
-    wrongCount: lvl,
-    everRevealed: lvl >= 3,
-    outcome: 'wrong',
-  }
 }
 
 export function useHintLadder(opts: {

@@ -630,8 +630,8 @@ export function LessonPlayer({
           {!stripped && <span className="topbar__title">{lesson.title}</span>}
           <div className="rail-row">
             <PhaseRail
-              beatId={beat.beatId}
-              lessonId={lesson.lessonId}
+              beats={visibleBeats}
+              index={index}
               reducedMotion={reducedMotion}
             />
             {chip !== 'hidden' && (

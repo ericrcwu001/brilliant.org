@@ -43,7 +43,8 @@ export function DominanceWheelBeat(props: BeatProps) {
                 className={
                   'token token--state' +
                   (show ? (isAns ? ' token--placed' : '') : '') +
-                  (picked === p ? ' token--selected' : '')
+                  (picked === p ? ' token--selected' : '') +
+                  (revealed && picked === p && !isAns ? ' token--wrong' : '')
                 }
                 disabled={revealed}
                 onClick={() => setPicked(p)}

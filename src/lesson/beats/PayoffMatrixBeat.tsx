@@ -535,28 +535,30 @@ export function PayoffMatrixBeat(props: BeatProps) {
                 aria-label={`p = probability ${rowPlayer} plays ${rowLabels[0]}`}
               />
             </label>
-            <div className="gt-payoff__ev-display">
-              <div
-                className={`gt-payoff__ev-line${atEquilibrium ? ' gt-payoff__ev-line--equal' : ''}`}
-              >
-                <span className="gt-payoff__ev-label">
-                  {`vs ${colLabels[0]}:`}
-                </span>
-                <span className="gt-payoff__ev-value">
-                  {mixEvVsCol0.toFixed(2)}
-                </span>
+            {colLabels.length >= 2 && rowMatrix.length === 2 && (
+              <div className="gt-payoff__ev-display">
+                <div
+                  className={`gt-payoff__ev-line${atEquilibrium ? ' gt-payoff__ev-line--equal' : ''}`}
+                >
+                  <span className="gt-payoff__ev-label">
+                    {`vs ${colLabels[0]}:`}
+                  </span>
+                  <span className="gt-payoff__ev-value">
+                    {mixEvVsCol0.toFixed(2)}
+                  </span>
+                </div>
+                <div
+                  className={`gt-payoff__ev-line${atEquilibrium ? ' gt-payoff__ev-line--equal' : ''}`}
+                >
+                  <span className="gt-payoff__ev-label">
+                    {`vs ${colLabels[1]}:`}
+                  </span>
+                  <span className="gt-payoff__ev-value">
+                    {mixEvVsCol1.toFixed(2)}
+                  </span>
+                </div>
               </div>
-              <div
-                className={`gt-payoff__ev-line${atEquilibrium ? ' gt-payoff__ev-line--equal' : ''}`}
-              >
-                <span className="gt-payoff__ev-label">
-                  {`vs ${colLabels[1]}:`}
-                </span>
-                <span className="gt-payoff__ev-value">
-                  {mixEvVsCol1.toFixed(2)}
-                </span>
-              </div>
-            </div>
+            )}
             {mixEq !== null && (
               <p className="gt-payoff__equilibrium">
                 {`Equilibrium: p* = ${formatRational(mixEq.p)}, q* = ${formatRational(mixEq.q)}, value = ${formatRational(mixEq.value)}`}
