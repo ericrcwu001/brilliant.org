@@ -8,7 +8,7 @@
 
 ## Purpose
 
-This BrainLift defines the scientifically best way to prepare for quant trading and HFT interviews, and translates that science into concrete product decisions for **Ergo**, my Brilliant clone. It rests on one claim: quant-interview readiness is a problem of durable retrieval, transfer, and composure under pressure — not of comprehension. Understanding a solution is overrated. The deciding variable is whether a candidate can reconstruct the right *method* for an unlabeled problem, from memory, aloud, weeks later, under stress. Ergo currently optimizes for the wrong thing. This document explains why, and what to do about it.
+This BrainLift defines the scientifically best way to prepare for quant trading and HFT interviews, and translates that science into concrete product decisions for **Ergo**, my Brilliant clone. It rests on one claim: quant-interview readiness is a problem of durable retrieval, transfer, and composure under pressure - not of comprehension. Understanding a solution is overrated. The deciding variable is whether a candidate can reconstruct the right *method* for an unlabeled problem, from memory, aloud, weeks later, under stress. Ergo currently optimizes for the wrong thing. This document explains why, and what to do about it.
 
 ### In Scope
 
@@ -18,28 +18,28 @@ This BrainLift defines the scientifically best way to prepare for quant trading 
 
 ### Out of Scope
 
-- The quant content canon itself — the specific Green Book and Heard-on-the-Street problem set, Markov chains, EV, combinatorics. That lives in the lesson factory and interview packs, not here.
+- The quant content canon itself - the specific Green Book and Heard-on-the-Street problem set, Markov chains, EV, combinatorics. That lives in the lesson factory and interview packs, not here.
 - Net-new ML/RAG infrastructure. This is a strategy and pedagogy document, not an architecture spec.
 - General test-prep for non-quant domains. The spikes are tuned to the quant interview's specific demands: novel problems, think-aloud, speed, and pressure.
 
 ---
 
-## DOK 4 — Spiky Points of View (SPOVs)
+## DOK 4 - Spiky Points of View (SPOVs)
 
-### SPOV 1 — Stop Teaching, Start Testing: the lesson is the least valuable part
+### SPOV 1 - Stop Teaching, Start Testing: the lesson is the least valuable part
 
 Ergo should be a spaced-retrieval testing engine with lessons bolted on, not a lesson app with quizzes bolted on. Invert the daily loop so the first thing a user hits is a mixed, cold recall queue. Treat the beautifully crafted lesson as a disposable on-ramp.
 
-The Brilliant model assumes the lesson *is* the product — that slicker explanations and smoother worked examples are where learning is manufactured, and that finishing a well-built lesson means you learned it. The implicit equation is: great encoding plus completion equals mastery.
+The Brilliant model assumes the lesson *is* the product - that slicker explanations and smoother worked examples are where learning is manufactured, and that finishing a well-built lesson means you learned it. The implicit equation is: great encoding plus completion equals mastery.
 
-That equation is wrong. The single most replicated result in the science of learning is that retrieval *is* the learning event, not a measurement of it. Roediger & Karpicke (2006) showed one round of testing beat repeated restudy at a one-week delay, even though the restudy group performed better immediately and predicted they would do better — a crossover that exactly describes what Ergo optimizes: in-session performance that never recurs in the real interview. Bjork's storage-vs-retrieval-strength framework and Soderstrom & Bjork's (2015) learning-vs-performance dissociation sharpen the case: conditions that make you look good now (re-reading an elegant solution) often do nothing for durable, transferable skill. Koriat's and Kornell & Bjork's work on the fluency illusion shows that the smoothness of a re-read solution is misread as competence. A quant interview is the cruelest exam of this gap: a novel problem, no solution to re-read, working memory under stress, and the candidate must generate and re-derive aloud. The training environment that transfers is the one isomorphic to that test — cold, delayed, interleaved retrieval — not a polished forward pass through a lesson.
+That equation is wrong. The single most replicated result in the science of learning is that retrieval *is* the learning event, not a measurement of it. Roediger & Karpicke (2006) showed one round of testing beat repeated restudy at a one-week delay, even though the restudy group performed better immediately and predicted they would do better - a crossover that exactly describes what Ergo optimizes: in-session performance that never recurs in the real interview. Bjork's storage-vs-retrieval-strength framework and Soderstrom & Bjork's (2015) learning-vs-performance dissociation sharpen the case: conditions that make you look good now (re-reading an elegant solution) often do nothing for durable, transferable skill. Koriat's and Kornell & Bjork's work on the fluency illusion shows that the smoothness of a re-read solution is misread as competence. A quant interview is the cruelest exam of this gap: a novel problem, no solution to re-read, working memory under stress, and the candidate must generate and re-derive aloud. The training environment that transfers is the one isomorphic to that test - cold, delayed, interleaved retrieval - not a polished forward pass through a lesson.
 
 Supporting research:
-- Testing effect — Roediger & Karpicke (2006): large long-delay retention advantage for testing over restudy (~+15-20 pts at 1 week), reversed on immediate tests. *Strong.*
-- Retrieval beats elaborative study on transfer — Karpicke & Blunt (2011, *Science*): retrieval practice beat concept-mapping on delayed inference questions; students predicted the opposite. *Strong.*
-- Spacing — Cepeda et al. (2006), 250+ studies: distributed practice robustly beats massing. *Strong.*
-- Generation effect — Slamecka & Graf (1978): self-generated answers retained better than read ones. *Moderate-strong.*
-- Pretesting / productive failure — Kapur (2008): attempting before instruction improves later transfer. *Moderate.*
+- Testing effect - Roediger & Karpicke (2006): large long-delay retention advantage for testing over restudy (~+15-20 pts at 1 week), reversed on immediate tests. *Strong.*
+- Retrieval beats elaborative study on transfer - Karpicke & Blunt (2011, *Science*): retrieval practice beat concept-mapping on delayed inference questions; students predicted the opposite. *Strong.*
+- Spacing - Cepeda et al. (2006), 250+ studies: distributed practice robustly beats massing. *Strong.*
+- Generation effect - Slamecka & Graf (1978): self-generated answers retained better than read ones. *Moderate-strong.*
+- Pretesting / productive failure - Kapur (2008): attempting before instruction improves later transfer. *Moderate.*
 
 App actions (Ergo):
 - [Large] Invert the daily loop: open into a Retrieval Queue (mixed, interleaved across concepts) *before* any lesson. Build on the existing `selectWeakNode` / `recommendReview` in `src/progress/recommend.ts` and ship the deferred spaced-repetition hook by adding a time axis (last-seen, decay) to data already persisted. Item types: `masteryChallenge`, `answerEntry`, `retrievalGrid`, `tripletReveal`.
@@ -49,7 +49,7 @@ App actions (Ergo):
 - [Small] Add a cold-open pretest (one `answerEntry`) before each lesson's teaching, for test-potentiated learning.
 
 Counterarguments and boundary conditions:
-- Expertise reversal / cognitive load (Kalyuga; Sweller): for genuine first contact, worked examples beat flailing — you cannot retrieve what was never encoded. The thin on-ramp stays; inversion applies *after* first exposure.
+- Expertise reversal / cognitive load (Kalyuga; Sweller): for genuine first contact, worked examples beat flailing - you cannot retrieve what was never encoded. The thin on-ramp stays; inversion applies *after* first exposure.
 - Context-bound retrieval does not equal transfer (Chi; Gick & Holyoak): drilling identical items builds recall of those items only. The queue must interleave by deep structure with fresh surfaces.
 - Calibrate to ~40-60% retrieval success: a relentless failure-first queue can crush competence and autonomy (Deci & Ryan) and induce choking (Beilock).
 
@@ -57,20 +57,20 @@ Counterarguments and boundary conditions:
 
 ---
 
-### SPOV 2 — Topics Are a Lie; Chapters Are Pedagogical Theater
+### SPOV 2 - Topics Are a Lie; Chapters Are Pedagogical Theater
 
 Ergo's topic catalog and tidy linear chapter path are the single biggest thing sabotaging interview readiness. Demote the "learning journey" to a reference glossary, and make a label-stripped, interleaved "which-method?" engine the home screen.
 
 Good pedagogy, in the standard edtech view, means a clean taxonomy: one topic at a time, mastered in sequence, each chapter unlocking the next. The unit of progress is "finish the gambler's-ruin chapter."
 
-The interview never asks you to execute gambler's ruin. It asks whether *this* is a gambler's-ruin problem — selection on an unlabeled prompt. That is a discrimination skill, and the decisive finding (Rohrer & Taylor, 2007; Rohrer, 2012) is that interleaved practice beats blocked practice on delayed math tests specifically because it trains strategy selection. A topic chapter eliminates the only skill being graded: the chapter title silently announces the method, so every problem inside is pre-solved at the level that matters. This compounds with Chi, Feltovich & Glaser (1981), who found that experts sort problems by deep structure while novices sort by surface features (coins, dice, cards). A topic catalog is an org chart of surface features — it rehearses the novice taxonomy and hands the deep principle over for free. Blocking produces better in-session performance and a smoother demo, and Kornell & Bjork (2008) found learners believe blocking works better even as interleaving wins at delay. The topic chapter optimizes the felt sense of mastery while starving the transfer the interview tests (Gick & Holyoak, 1983).
+The interview never asks you to execute gambler's ruin. It asks whether *this* is a gambler's-ruin problem - selection on an unlabeled prompt. That is a discrimination skill, and the decisive finding (Rohrer & Taylor, 2007; Rohrer, 2012) is that interleaved practice beats blocked practice on delayed math tests specifically because it trains strategy selection. A topic chapter eliminates the only skill being graded: the chapter title silently announces the method, so every problem inside is pre-solved at the level that matters. This compounds with Chi, Feltovich & Glaser (1981), who found that experts sort problems by deep structure while novices sort by surface features (coins, dice, cards). A topic catalog is an org chart of surface features - it rehearses the novice taxonomy and hands the deep principle over for free. Blocking produces better in-session performance and a smoother demo, and Kornell & Bjork (2008) found learners believe blocking works better even as interleaving wins at delay. The topic chapter optimizes the felt sense of mastery while starving the transfer the interview tests (Gick & Holyoak, 1983).
 
 Supporting research:
-- Interleaving > blocking on delayed math tests — Rohrer & Taylor (2007); Rohrer, Dedrick & Stershic (2015): delayed accuracy roughly doubled though practice-phase accuracy looked worse. *Strong.*
-- Discrimination hypothesis — Rohrer (2012): the benefit is learning to *select* the procedure. *Strong.*
-- Metacognitive illusion of blocking — Kornell & Bjork (2008). *Strong.*
-- Experts categorize by deep structure — Chi, Feltovich & Glaser (1981). *Foundational.*
-- Transfer requires compared analogs — Gick & Holyoak (1983); Gentner's analogical encoding: spontaneous transfer near floor with one example, rises sharply when two analogs are compared. *Strong.*
+- Interleaving > blocking on delayed math tests - Rohrer & Taylor (2007); Rohrer, Dedrick & Stershic (2015): delayed accuracy roughly doubled though practice-phase accuracy looked worse. *Strong.*
+- Discrimination hypothesis - Rohrer (2012): the benefit is learning to *select* the procedure. *Strong.*
+- Metacognitive illusion of blocking - Kornell & Bjork (2008). *Strong.*
+- Experts categorize by deep structure - Chi, Feltovich & Glaser (1981). *Foundational.*
+- Transfer requires compared analogs - Gick & Holyoak (1983); Gentner's analogical encoding: spontaneous transfer near floor with one example, rises sharply when two analogs are compared. *Strong.*
 
 App actions (Ergo):
 - [Large] Make a label-stripped "Mixed Floor" the home surface; demote the catalog to a reference index. Default practice draws problems across all concepts with topic and chapter titles hidden at the solving surface.
@@ -88,20 +88,20 @@ Counterarguments and boundary conditions:
 
 ---
 
-### SPOV 3 — Comfort Is Malpractice: you should fail ~half your reps
+### SPOV 3 - Comfort Is Malpractice: you should fail ~half your reps
 
-If Ergo ever makes you feel smooth, it has already failed you. Optimal quant prep runs a deliberate struggle band (~50-85% success), front-loads productive failure, treats fluency as an alarm rather than an achievement, and makes the mock interview deliberately brutal — surfacing the practice-vs-performance gap rather than concealing it.
+If Ergo ever makes you feel smooth, it has already failed you. Optimal quant prep runs a deliberate struggle band (~50-85% success), front-loads productive failure, treats fluency as an alarm rather than an achievement, and makes the mock interview deliberately brutal - surfacing the practice-vs-performance gap rather than concealing it.
 
 Mainstream edtech equates learning with high success rates, smooth progress, and confidence. Streaks and medallions reward exactly that.
 
-In-session success is a backwards signal for quant prep. Bjork's desirable difficulties and storage-vs-retrieval-strength framework show that performance-depressing conditions (spacing, interleaving, reduced cues, retrieval) raise transfer, while easy-feeling practice inflates short-term scores and corrodes long-term retention. Soderstrom & Bjork (2015) found that acquisition performance is an unreliable — sometimes negative — proxy for learning, which means a rising streak is the wrong needle. Kapur's productive failure research shows that attempting and failing *before* instruction beats instruction-first on transfer. Quick-rescue hints and high hit-rates are performance-optimizers that manufacture the fluency illusion (Roediger & Karpicke; Koriat) that destroys candidates on novel, timed, think-aloud interviews. And because a quant interview is a performance-under-pressure event, the only way to train for it is transfer-appropriate processing (Morris, Bransford & Franks, 1977) plus stress inoculation (Meichenbaum) — representative difficulty and pressure, not comfort.
+In-session success is a backwards signal for quant prep. Bjork's desirable difficulties and storage-vs-retrieval-strength framework show that performance-depressing conditions (spacing, interleaving, reduced cues, retrieval) raise transfer, while easy-feeling practice inflates short-term scores and corrodes long-term retention. Soderstrom & Bjork (2015) found that acquisition performance is an unreliable - sometimes negative - proxy for learning, which means a rising streak is the wrong needle. Kapur's productive failure research shows that attempting and failing *before* instruction beats instruction-first on transfer. Quick-rescue hints and high hit-rates are performance-optimizers that manufacture the fluency illusion (Roediger & Karpicke; Koriat) that destroys candidates on novel, timed, think-aloud interviews. And because a quant interview is a performance-under-pressure event, the only way to train for it is transfer-appropriate processing (Morris, Bransford & Franks, 1977) plus stress inoculation (Meichenbaum) - representative difficulty and pressure, not comfort.
 
 Supporting research:
-- Desirable difficulties / storage-vs-retrieval — Bjork. *Robust framework.*
-- Learning does not equal performance — Soderstrom & Bjork (2015). *Strong.*
-- Productive failure — Kapur (2008); Schwartz & Martin (2004). *Moderate-strong.*
-- Errorful generation helps later recall — Kornell, Hays & Bjork (2009); Slamecka & Graf (1978). *Solid.*
-- Pressure consumes working memory; train under representative stress — Beilock & Carr (2005); Morris, Bransford & Franks (1977); Meichenbaum stress inoculation. *Strong.*
+- Desirable difficulties / storage-vs-retrieval - Bjork. *Robust framework.*
+- Learning does not equal performance - Soderstrom & Bjork (2015). *Strong.*
+- Productive failure - Kapur (2008); Schwartz & Martin (2004). *Moderate-strong.*
+- Errorful generation helps later recall - Kornell, Hays & Bjork (2009); Slamecka & Graf (1978). *Solid.*
+- Pressure consumes working memory; train under representative stress - Beilock & Carr (2005); Morris, Bransford & Franks (1977); Meichenbaum stress inoculation. *Strong.*
 
 App actions (Ergo):
 - [Large] Add a ~50-85% difficulty governor: raise faded density, lower `hintCapOverride`, and suppress `assist` when rolling success climbs above ~85% (in `src/lesson/beats/types.ts` knobs); ease it if success drops below ~50%.
@@ -113,33 +113,33 @@ App actions (Ergo):
 Counterarguments and boundary conditions:
 - Unguided floundering harms novices (Kirschner, Sweller & Clark, 2006; Kalyuga): pair productive failure with contrasting cases and guaranteed consolidation (Loibl & Rummel). The band is ~50-85%, not 0-20%.
 - Math anxiety taxes working memory (Ashcraft & Kirk, 2001) and erodes SDT competence: pair difficulty with arousal reappraisal (Jamieson) and a pre-interview expressive-writing worry-dump (Ramirez & Beilock, 2011).
-- Speed primitives (mental math, powers of two, common identities) should be overlearned to fluency — automaticity is the exception where smoothness is the goal.
+- Speed primitives (mental math, powers of two, common identities) should be overlearned to fluency - automaticity is the exception where smoothness is the goal.
 
 *Insights feeding it: I5, I6, I11.*
 
 ---
 
-### SPOV 4 — Your Gamification Is Iatrogenic
+### SPOV 4 - Your Gamification Is Iatrogenic
 
 Ergo's streak, completion medallions, and the Strong-No to Strong-Yes "hire signal" are not neutral motivators. They pay out for smooth, hint-free fluency that masks non-learning, and thus degrade the very mastery they advertise. The most pro-mastery move is to stop rewarding completion, streaks, and right answers, and pay instead for effortful retrieval, calibration accuracy, and verified delayed transfer.
 
-The standard assumption is that gamification is a neutral-to-positive engagement layer — more engagement is good — and that a confidence-boosting hire signal readies a candidate.
+The standard assumption is that gamification is a neutral-to-positive engagement layer - more engagement is good - and that a confidence-boosting hire signal readies a candidate.
 
-The damage is structural. `computeMastered` in `src/lesson/mastery.ts` marks a concept "mastered" only when graded beats are first-try-correct with no hint ever shown. It literally penalizes help-seeking and rewards smoothness, which Soderstrom & Bjork (2015) identify as the treacherous proxy: desirable difficulties depress in-session performance while raising retention. Ergo's reward gradient thus points away from learning exactly when learning is happening — the desirable-difficulty dip breaks the streak and forfeits the medallion. Kluger & DeNisi (1996) found that roughly a third of feedback interventions lowered performance, concentrated where feedback targeted the self rather than the task. The hire signal is a six-point verdict-on-the-person, the canonical self-level cue that Hattie & Timperley (2007) rank as the weakest and most often harmful feedback type. Each mechanic rewards the fluency illusion (Bjork) and an ego-goal frame (Dweck) over the mastery frame a brutal interview demands. For a quant candidate specifically, a falsely reassuring signal manufactures the overconfidence the interview is built to detect.
+The damage is structural. `computeMastered` in `src/lesson/mastery.ts` marks a concept "mastered" only when graded beats are first-try-correct with no hint ever shown. It literally penalizes help-seeking and rewards smoothness, which Soderstrom & Bjork (2015) identify as the treacherous proxy: desirable difficulties depress in-session performance while raising retention. Ergo's reward gradient thus points away from learning exactly when learning is happening - the desirable-difficulty dip breaks the streak and forfeits the medallion. Kluger & DeNisi (1996) found that roughly a third of feedback interventions lowered performance, concentrated where feedback targeted the self rather than the task. The hire signal is a six-point verdict-on-the-person, the canonical self-level cue that Hattie & Timperley (2007) rank as the weakest and most often harmful feedback type. Each mechanic rewards the fluency illusion (Bjork) and an ego-goal frame (Dweck) over the mastery frame a brutal interview demands. For a quant candidate specifically, a falsely reassuring signal manufactures the overconfidence the interview is built to detect.
 
 Supporting research:
-- Feedback to the self can hurt — Kluger & DeNisi (1996), meta-analysis. *Strong.*
-- Feed-forward beats verdicts — Hattie & Timperley (2007). *Strong.*
-- Reward the dip; performance does not equal learning — Soderstrom & Bjork (2015). *Strong.*
-- Over-justification / crowding-out — Deci (1971); Deci, Koestner & Ryan (1999) meta-analysis. *Strong.*
-- Overconfidence is miscalibration — Dunning-Kruger (1999); Bjork illusions of competence. *Moderate-strong.*
+- Feedback to the self can hurt - Kluger & DeNisi (1996), meta-analysis. *Strong.*
+- Feed-forward beats verdicts - Hattie & Timperley (2007). *Strong.*
+- Reward the dip; performance does not equal learning - Soderstrom & Bjork (2015). *Strong.*
+- Over-justification / crowding-out - Deci (1971); Deci, Koestner & Ryan (1999) meta-analysis. *Strong.*
+- Overconfidence is miscalibration - Dunning-Kruger (1999); Bjork illusions of competence. *Moderate-strong.*
 
 App actions (Ergo):
 - [Small] Demote the hire-signal verdict to a calibration delta: keep the five dimensions as feed-forward "next fix" cards (`functions/src/interview.ts` / `InterviewReportView`); replace the Strong-No to Strong-Yes pill with *predicted vs measured* readiness.
 - [Medium] Invert the mastery signal in `src/lesson/mastery.ts`: reward productive struggle (used a hint, then succeeded on a later cold retrieval) instead of penalizing it.
 - [Large] Gate medallions on delayed transfer: a concept medallion mints only when a novel transfer problem is passed N days later, not on completion.
 - [Medium] Re-base the streak on spaced return: reward a successful retrieval after a gap, and remove the reset-to-zero loss-aversion penalty in the streaks module.
-- [Small] Make calibration the celebrated number: capture confidence on each `prediction`, score a Brier/calibration stat, and reward correctly-low confidence on hard items — training the trader's core skill, since bet sizing is calibration.
+- [Small] Make calibration the celebrated number: capture confidence on each `prediction`, score a Brier/calibration stat, and reward correctly-low confidence on hard items - training the trader's core skill, since bet sizing is calibration.
 
 Counterarguments and boundary conditions:
 - Adherence dominates for the marginal learner: streaks demonstrably drive retention (Duolingo). For low-comfort or slow-pace users, a light early streak may beat an optimal-but-abandoned regimen. Invert later, not on day one.
@@ -152,21 +152,21 @@ Counterarguments and boundary conditions:
 
 ## Experts
 
-- **Henry L. Roediger III & Jeffrey Karpicke** — Memory researchers (Washington Univ. in St. Louis / Purdue). Focus: the testing/retrieval-practice effect. The empirical bedrock of SPOV 1 — retrieval as the learning event. [Link](https://scholar.google.com/scholar?q=Roediger+Karpicke+test-enhanced+learning)
-- **Robert A. Bjork & Elizabeth Ligon Bjork** — UCLA, Learning & Forgetting Lab. Focus: desirable difficulties, storage-vs-retrieval strength, learning-vs-performance. The conceptual spine of SPOVs 1, 3, 4. [Link](https://bjorklab.psych.ucla.edu/)
-- **Nicholas Soderstrom** — Learning scientist. Focus: the learning-vs-performance distinction (Soderstrom & Bjork, 2015). The methodological hinge of SPOVs 1, 3, 4 — durable learning does not equal in-session performance, so judge prep at delay. [Link](https://scholar.google.com/scholar?q=Soderstrom+Bjork+2015+learning+versus+performance)
-- **Doug Rohrer & Kelli Taylor** — Univ. of South Florida. Focus: interleaving and the discrimination hypothesis in math. The backbone of SPOV 2. [Link](https://scholar.google.com/scholar?q=Rohrer+Taylor+interleaving+mathematics)
-- **Michelene Chi** — ASU cognitive scientist. Focus: expert/novice problem categorization; self-explanation. Grounds deep-structure recognition (SPOV 2) and self-explanation feedback. [Link](https://scholar.google.com/scholar?q=Chi+Feltovich+Glaser+1981+categorization+physics)
-- **Dedre Gentner / Keith Holyoak** — Analogy and transfer researchers. Focus: analogical encoding; comparing analogs to build schemas. The transfer engine behind SPOV 2's "same method, different costume." [Link](https://scholar.google.com/scholar?q=Gick+Holyoak+1983+analogical+problem+solving)
-- **John Sweller & Slava Kalyuga** — UNSW. Focus: cognitive load theory; worked examples; expertise reversal. The boundary conditions on every spike — when difficulty becomes overload. [Link](https://scholar.google.com/scholar?q=Sweller+cognitive+load+worked+examples)
-- **Manu Kapur** — ETH Zürich. Focus: productive failure. Grounds the failure-first sequencing in SPOV 3. [Link](https://scholar.google.com/scholar?q=Kapur+2008+productive+failure)
-- **Avraham Kluger & Angelo DeNisi / John Hattie** — Feedback researchers. Focus: when feedback helps vs hurts; feed-forward. The case against ego-level "hire signal" in SPOV 4. [Link](https://scholar.google.com/scholar?q=Kluger+DeNisi+1996+feedback+intervention)
-- **Sian Beilock & Mark Ashcraft** — Performance and math-anxiety researchers. Focus: choking under pressure; anxiety's working-memory cost. The pressure-training case in SPOV 3. [Link](https://scholar.google.com/scholar?q=Beilock+Carr+choking+under+pressure)
-- **Edward Deci & Richard Ryan** — Self-Determination Theory. Focus: intrinsic motivation; over-justification. The motivation critique in SPOV 4. [Link](https://selfdeterminationtheory.org/)
+- **Henry L. Roediger III & Jeffrey Karpicke** - Memory researchers (Washington Univ. in St. Louis / Purdue). Focus: the testing/retrieval-practice effect. The empirical bedrock of SPOV 1 - retrieval as the learning event. [Link](https://scholar.google.com/scholar?q=Roediger+Karpicke+test-enhanced+learning)
+- **Robert A. Bjork & Elizabeth Ligon Bjork** - UCLA, Learning & Forgetting Lab. Focus: desirable difficulties, storage-vs-retrieval strength, learning-vs-performance. The conceptual spine of SPOVs 1, 3, 4. [Link](https://bjorklab.psych.ucla.edu/)
+- **Nicholas Soderstrom** - Learning scientist. Focus: the learning-vs-performance distinction (Soderstrom & Bjork, 2015). The methodological hinge of SPOVs 1, 3, 4 - durable learning does not equal in-session performance, so judge prep at delay. [Link](https://scholar.google.com/scholar?q=Soderstrom+Bjork+2015+learning+versus+performance)
+- **Doug Rohrer & Kelli Taylor** - Univ. of South Florida. Focus: interleaving and the discrimination hypothesis in math. The backbone of SPOV 2. [Link](https://scholar.google.com/scholar?q=Rohrer+Taylor+interleaving+mathematics)
+- **Michelene Chi** - ASU cognitive scientist. Focus: expert/novice problem categorization; self-explanation. Grounds deep-structure recognition (SPOV 2) and self-explanation feedback. [Link](https://scholar.google.com/scholar?q=Chi+Feltovich+Glaser+1981+categorization+physics)
+- **Dedre Gentner / Keith Holyoak** - Analogy and transfer researchers. Focus: analogical encoding; comparing analogs to build schemas. The transfer engine behind SPOV 2's "same method, different costume." [Link](https://scholar.google.com/scholar?q=Gick+Holyoak+1983+analogical+problem+solving)
+- **John Sweller & Slava Kalyuga** - UNSW. Focus: cognitive load theory; worked examples; expertise reversal. The boundary conditions on every spike - when difficulty becomes overload. [Link](https://scholar.google.com/scholar?q=Sweller+cognitive+load+worked+examples)
+- **Manu Kapur** - ETH Zürich. Focus: productive failure. Grounds the failure-first sequencing in SPOV 3. [Link](https://scholar.google.com/scholar?q=Kapur+2008+productive+failure)
+- **Avraham Kluger & Angelo DeNisi / John Hattie** - Feedback researchers. Focus: when feedback helps vs hurts; feed-forward. The case against ego-level "hire signal" in SPOV 4. [Link](https://scholar.google.com/scholar?q=Kluger+DeNisi+1996+feedback+intervention)
+- **Sian Beilock & Mark Ashcraft** - Performance and math-anxiety researchers. Focus: choking under pressure; anxiety's working-memory cost. The pressure-training case in SPOV 3. [Link](https://scholar.google.com/scholar?q=Beilock+Carr+choking+under+pressure)
+- **Edward Deci & Richard Ryan** - Self-Determination Theory. Focus: intrinsic motivation; over-justification. The motivation critique in SPOV 4. [Link](https://selfdeterminationtheory.org/)
 
 ---
 
-## DOK 3 — Insights
+## DOK 3 - Insights
 
 **On retrieval and the data model**
 - I1. The quant interview is a delayed, cold, interleaved retrieval test under load. The highest-transfer trainer is isomorphic to that test, and a lesson-first loop optimizes a moment (in-lesson performance) that never occurs in the room.
@@ -174,8 +174,8 @@ Counterarguments and boundary conditions:
 - I9. Ergo already stores the only durable struggle signal (`maxHintLevelByBeat`) and a weak-node selector. It has the skeleton of a spaced scheduler and a measurement layer, and spends its craft on encoding instead. The cheapest 10x improvement is adding a time axis to data it already collects.
 
 **On structure and transfer**
-- I3. A chapter title is a permanent Level-0 hint — a built-in spoiler of the method — so a topic catalog has effectively capped every problem at maximum assistance on the exact decision the interview grades.
-- I4. Because Gick & Holyoak transfer requires cross-surface comparison, Ergo's highest-leverage new beat is not a harder solver but a `retrievalGrid` of "same method, different costume" matches — turning interleaving from a scheduling trick into explicit schema abstraction.
+- I3. A chapter title is a permanent Level-0 hint - a built-in spoiler of the method - so a topic catalog has effectively capped every problem at maximum assistance on the exact decision the interview grades.
+- I4. Because Gick & Holyoak transfer requires cross-surface comparison, Ergo's highest-leverage new beat is not a harder solver but a `retrievalGrid` of "same method, different costume" matches - turning interleaving from a scheduling trick into explicit schema abstraction.
 - I10. The product currently optimizes execution fluency inside a known method, which is anti-correlated with interview readiness. It optimizes the metric the interview punishes.
 
 **On difficulty, motivation, and calibration**
@@ -187,7 +187,7 @@ Counterarguments and boundary conditions:
 
 ---
 
-## DOK 2 — Knowledge Tree
+## DOK 2 - Knowledge Tree
 
 ### Category 1: Retrieval & Testing
 - Source: Roediger & Karpicke (2006), *Test-Enhanced Learning.*
@@ -216,7 +216,7 @@ Counterarguments and boundary conditions:
   - [Link](https://scholar.google.com/scholar?q=Kornell+Bjork+2008+learning+concepts+interleaving)
 
 ### Category 4: Desirable Difficulties & Learning-vs-Performance
-- Source: Bjork & Bjork — desirable difficulties; storage-vs-retrieval strength.
+- Source: Bjork & Bjork - desirable difficulties; storage-vs-retrieval strength.
   - DOK 1 facts: Difficulties that depress current performance (spacing, interleaving, reduced cues, retrieval) can raise long-term retention and transfer.
   - DOK 2 summary: Reward the dip, not the smoothness. Feeds SPOV 1, 3, 4.
   - [Link](https://scholar.google.com/scholar?q=Bjork+desirable+difficulties)
@@ -275,7 +275,7 @@ Counterarguments and boundary conditions:
 
 ---
 
-## Appendix — Consolidated App-Improvement Backlog
+## Appendix - Consolidated App-Improvement Backlog
 
 The actionable surface of all four spikes, deduplicated and prioritized. Effort: [S]mall / [M]edium / [L]arge.
 
@@ -292,4 +292,4 @@ The actionable surface of all four spikes, deduplicated and prioritized. Effort:
 | 9 | Calibration capture (confidence + Brier) on graded beats; reward correctly-low confidence | M | 4 | `prediction` beat, progress schema |
 | 10 | Method-indexed `recommend.ts` (resurface weakest method, not weakest lesson) | M | 2 | `src/progress/recommend.ts` |
 
-If you do only three things: ship #1 (spaced interleaved retrieval queue), #2 (honest, delayed mastery), and #3 (which-method discrimination). Those three moves deliver spacing, interleaving, transfer, and honest mastery — the highest-leverage intersection of the four spikes.
+If you do only three things: ship #1 (spaced interleaved retrieval queue), #2 (honest, delayed mastery), and #3 (which-method discrimination). Those three moves deliver spacing, interleaving, transfer, and honest mastery - the highest-leverage intersection of the four spikes.
