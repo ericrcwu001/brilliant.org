@@ -47,6 +47,7 @@ import {
   type CalibrationResult,
   type TrendSums,
 } from './calibration'
+import { compareAnswers } from './answerCheck'
 
 const OPENAI_API_KEY = defineSecret('OPENAI_API_KEY')
 
@@ -470,8 +471,15 @@ export const INTERVIEW_REPORT_SCHEMA = {
     // spec-22: a one-sentence "pressure graduation" note framing the result as
     // under-pressure retrieval, never a hire/no-hire verdict.
     pressureNote: { type: 'string' },
+    // Deterministic correctness anchor (mentor feedback): the candidate's
+    // explicitly stated FINAL answer, quoted verbatim, or null if they never
+    // committed to a single value. Pure low-discretion extraction — the SERVER
+    // decides correctness from it (compareAnswers vs engineCheck.answer), never
+    // the model. Stripped from the report before persistence (folded into
+    // correctnessAnchor.extracted). Null-union so strict mode allows null.
+    candidateFinalAnswer: { type: ['string', 'null'] },
   },
-  required: ['dimensions', 'summary', 'strengths', 'fixes', 'tier', 'pressureNote'],
+  required: ['dimensions', 'summary', 'strengths', 'fixes', 'tier', 'pressureNote', 'candidateFinalAnswer'],
   additionalProperties: false,
   $defs: {
     dim: {
@@ -529,7 +537,41 @@ export function buildGraderPrompt(question: Question, transcript: Turn[]): strin
       'live, timed, spoken interview is harder than untimed practice, and that ' +
       'improving under-pressure retrieval (not just knowing the method) is the ' +
       'goal. Encouraging, forward-looking, never a hire/no-hire verdict.',
+    'Also output `candidateFinalAnswer`: the single final numeric value the ' +
+      'candidate explicitly committed to, quoted VERBATIM as they stated it ' +
+      '(e.g. "1/2", "0.5", "50%", "10"). This is mechanical extraction, NOT a ' +
+      'judgment — do not infer, correct, or compute it. Return null if they ' +
+      'never committed to a single value, only gave a rounded approximation, or ' +
+      'the question asks for multiple parts / a non-numeric answer.',
   ].join('\n')
+}
+
+// Deterministic correctness anchor (mentor feedback). Mutates the report in
+// place: when the engine-canonical answer and the candidate's extracted final
+// answer are BOTH clean scalars (compareAnswers !== 'na'), HARD-OVERRIDE the
+// correctness row (match → 5, mismatch → 1) and record why. A 'na' verdict
+// leaves the LLM correctness score untouched and only records the anchor as
+// not-applied. Pure + exported so the override mapping is unit-testable without
+// the firebase runtime.
+export function applyCorrectnessAnchor(
+  report: InterviewReport,
+  engineAnswer: string,
+  candidateFinalAnswer: string | null,
+): void {
+  const verdict = compareAnswers(engineAnswer, candidateFinalAnswer)
+  if (verdict !== 'na') {
+    report.dimensions.correctness.score = verdict === 'match' ? 5 : 1
+    report.dimensions.correctness.evidence =
+      verdict === 'match'
+        ? `Final answer ${engineAnswer} verified against the engine.`
+        : `Stated ${candidateFinalAnswer}; the engine answer is ${engineAnswer}.`
+  }
+  report.correctnessAnchor = {
+    applied: verdict !== 'na',
+    verdict,
+    expected: engineAnswer,
+    extracted: candidateFinalAnswer,
+  }
 }
 
 export const gradeInterview = onCall(
@@ -609,6 +651,24 @@ export const gradeInterview = onCall(
     // could echo wrong). tier/pressureNote ride inside the `report` blob written
     // by the grade transaction below — no new Firestore field.
     report.tier = question.tier
+
+    // 4a-bis — Deterministic correctness anchor (mentor feedback). The
+    // `correctness` row is otherwise LLM-graded and can flatter or err. When the
+    // drawn question has an engine-canonical SCALAR answer AND the candidate
+    // committed to a single final value, OVERRIDE that row from a deterministic
+    // compare against question.engineCheck.answer (itself reproduced from the
+    // engine by src/engine/interviewPack.*.test.ts). A 'na' verdict — vector /
+    // multi-part / prose answer, or no committed value — leaves the LLM score
+    // untouched; under a hard override a misparse must NEVER force a wrong score.
+    // The corrected score then flows into isCorrect() below, so the calibration
+    // signal sharpens for free. The other four rubric rows stay LLM-graded, so a
+    // brutal question's method insight is still credited in approach/rigor.
+    const candidateFinalAnswer =
+      (report as { candidateFinalAnswer?: string | null }).candidateFinalAnswer ?? null
+    applyCorrectnessAnchor(report, question.engineCheck.answer, candidateFinalAnswer)
+    // candidateFinalAnswer was a transient extraction field — folded into the
+    // anchor above; drop it from the persisted/returned report.
+    delete (report as { candidateFinalAnswer?: unknown }).candidateFinalAnswer
 
     // 4b — calibration (spec-12). Build CalibrationItem[] from the transcript:
     // each candidate turn carrying a finite spec-02 `confidence`. correct is

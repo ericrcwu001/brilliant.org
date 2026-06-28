@@ -63,6 +63,41 @@ export function subscribeInterviewAttempts(
   }
 }
 
+// Realtime listener over ALL of a user's interview attempts (every concept),
+// sorted oldest→newest so a rubric trend reads left-to-right. Same collection /
+// validation / best-effort error handling as subscribeInterviewAttempts; it just
+// drops the concept filter (mentor feedback: surface the cross-concept delta over
+// time). Used by the Profile rubric trend.
+export function subscribeAllInterviewAttempts(
+  uid: string,
+  onChange: (attempts: InterviewAttempt[]) => void,
+): () => void {
+  let unsub: (() => void) | null = null
+  let cancelled = false
+  void getDb().then((db) => {
+    if (cancelled) return
+    unsub = onSnapshot(
+      collection(db, 'users', uid, 'interviews'),
+      (snap) => {
+        const out: InterviewAttempt[] = []
+        for (const d of snap.docs) {
+          const parsed = InterviewAttemptSchema.safeParse(d.data())
+          if (parsed.success) out.push({ ...parsed.data, id: d.id })
+        }
+        out.sort((a, b) => toMs(a.createdAt) - toMs(b.createdAt))
+        onChange(out)
+      },
+      () => {
+        // Denied/offline → keep last-known list (display best-effort).
+      },
+    )
+  })
+  return () => {
+    cancelled = true
+    unsub?.()
+  }
+}
+
 // Most-recent attempt by createdAt (Timestamp or epoch ms in tests).
 export function selectLatest(
   attempts: InterviewAttempt[],
@@ -74,22 +109,33 @@ export function selectLatest(
 }
 
 // The five rubric dimensions (each 1..5) the grader always returns (spec-23 §3.4).
-const DIM_KEYS = ['correctness', 'approach', 'rigor', 'communication', 'speed'] as const
+export const DIM_KEYS = ['correctness', 'approach', 'rigor', 'communication', 'speed'] as const
+export type DimKey = (typeof DIM_KEYS)[number]
+
+/** The five raw 1..5 dimension scores for a graded attempt; null if the report
+ *  shape is unusable. Powers the per-dimension rubric trend (mentor feedback). */
+export function dimensionScores(a: InterviewAttempt): Record<DimKey, number> | null {
+  const dims = (a.report as { dimensions?: Record<string, { score?: number }> } | undefined)
+    ?.dimensions
+  if (!dims) return null
+  const out = {} as Record<DimKey, number>
+  for (const k of DIM_KEYS) {
+    const s = dims[k]?.score
+    if (typeof s !== 'number') return null
+    out[k] = s
+  }
+  return out
+}
 
 /** Mean of the five 1..5 dimension scores; null if the report shape is unusable.
  *  Replaces the removed hireSignal rank (D11 / spec-23 §3.4) as the "best attempt"
  *  key: always present on a graded attempt, survives the hire-verdict removal, and
  *  needs no confidence capture (works for Track A). */
-function meanRubricScore(a: InterviewAttempt): number | null {
-  const dims = (a.report as { dimensions?: Record<string, { score?: number }> } | undefined)
-    ?.dimensions
-  if (!dims) return null
+export function meanRubricScore(a: InterviewAttempt): number | null {
+  const scores = dimensionScores(a)
+  if (!scores) return null
   let sum = 0
-  for (const k of DIM_KEYS) {
-    const s = dims[k]?.score
-    if (typeof s !== 'number') return null
-    sum += s
-  }
+  for (const k of DIM_KEYS) sum += scores[k]
   return sum / DIM_KEYS.length
 }
 
@@ -110,7 +156,7 @@ export function selectBest(
   })
 }
 
-function toMs(ts: unknown): number {
+export function toMs(ts: unknown): number {
   if (ts && typeof ts === 'object' && 'toMillis' in ts) {
     return (ts as { toMillis(): number }).toMillis()
   }

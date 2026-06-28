@@ -139,6 +139,19 @@ export interface InterviewReport {
   // the real signal), never a hire/no-hire verdict. spec-23 (D11 / ADR-0010)
   // removed the hire verdict entirely; the report feeds forward.
   pressureNote: string
+  // Deterministic correctness anchor (mentor feedback). When the drawn question
+  // has an engine-canonical scalar answer (engineCheck.answer) AND the candidate
+  // committed to a single final value, gradeInterview OVERRIDES the LLM
+  // correctness score from this verdict (match → 5, mismatch → 1). 'na' = not
+  // machine-checkable (vector / multi-part / prose answer, or no committed final
+  // value) and the LLM score stands. Present on attempts graded after this
+  // change; absent on older ones (UI treats absent as 'na').
+  correctnessAnchor?: {
+    applied: boolean
+    verdict: 'match' | 'mismatch' | 'na'
+    expected: string
+    extracted: string | null
+  }
 }
 
 export interface Turn {
