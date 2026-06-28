@@ -5,11 +5,16 @@
 // learner is never quant-gated in one surface and gentle in another. Consumed by
 // spec-02/13/20/21/22/23; none re-derives the predicate from `defaultTrack` alone.
 //
-// IMPORTANT — fails GENTLE on purpose. effectiveTrack = per-concept progress.track
-// ?? userDoc.defaultTrack ?? 'A'. A missing/loading track must never put a learner
-// on the aggressive path (matches `comfortToDefaultTrack`: new/dabbled → A). This
-// DELIBERATELY diverges from the app's other convention (`defaultTrack ?? 'B'`,
-// schema.ts:765); `learningGoal === 'interview'` is the only implicit opt-in.
+// UPDATE 2026-06-28 (product decision — "LS behaviors on for everyone"): the A/B
+// intensity split is COLLAPSED — every learner is treated as quant-intensity, so
+// this returns true unconditionally. Because both gatedOn() below and the direct
+// callers (confidence/calibration in App.tsx, the quantGate in ConceptCatalogPage/
+// LessonPage/DailyReviewPage) funnel through this one helper, flipping it here turns
+// the aggressive surfaces on everywhere at once. The feature flags + holdout cohort
+// (see flags.ts / gatedOn) still gate the four net-new behaviors, so a feature can
+// still be killed without a deploy. To restore the gentle path, revert the body to:
+//   const track = conceptProgress?.track ?? userDoc?.defaultTrack ?? 'A'
+//   return track === 'B' || userDoc?.learningGoal === 'interview'
 
 import type { UserDoc } from './userDoc'
 import type { Progress } from '../content/schema'
@@ -19,8 +24,11 @@ export function isQuantIntensity(
   userDoc: UserDoc | null | undefined,
   conceptProgress?: Progress | null,
 ): boolean {
-  const track = conceptProgress?.track ?? userDoc?.defaultTrack ?? 'A'
-  return track === 'B' || userDoc?.learningGoal === 'interview'
+  // A/B split collapsed (2026-06-28): everyone is quant-intensity. The inputs are
+  // accepted (and intentionally ignored) so call sites + signature stay unchanged.
+  void userDoc
+  void conceptProgress
+  return true
 }
 
 // ── Rollout-gated chokepoint (spec-05, D17 / R14) ───────────────────────────────
@@ -41,10 +49,13 @@ export function gatedOn(
   flags: Flags,
   conceptProgress?: Progress | null,
 ): boolean {
-  // Control cohort: never gets aggressive behavior, regardless of flags.
+  // Control cohort: never gets aggressive behavior, regardless of flags. This
+  // kill switch still works post-2026-06-28; with rolloutPercent=100 no NEW user is
+  // assigned 'holdout', but a previously-persisted holdout still opts out here.
   if (userDoc?.rolloutCohort === 'holdout') return false
-  // Per-feature flag off (or fail-closed default ⇒ false). DEFAULT-OFF (R14).
+  // Per-feature flag off ⇒ false. Flags now DEFAULT-ON (flags.ts), so this passes
+  // unless the feature is explicitly killed via Remote Config / the config doc.
   if (!flags[feature]) return false
-  // Existing intensity predicate — fails GENTLE (Track A unaffected by rollout).
+  // Intensity predicate — now true for everyone (the A/B split is collapsed).
   return isQuantIntensity(userDoc, conceptProgress)
 }

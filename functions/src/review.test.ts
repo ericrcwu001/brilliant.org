@@ -51,7 +51,7 @@ import {
   type ReviewLessonDoc,
   type ReviewOutcomeEvent,
 } from './review'
-import { serverGatedOn, ALL_OFF_SERVER } from './flags'
+import { serverGatedOn, DEFAULT_FLAGS_SERVER } from './flags'
 
 // Minimal fake Transaction: get reads docStore by ref.path; set records the write
 // and updates the store (so a follow-up read in a later "transaction" sees it).
@@ -537,8 +537,8 @@ describe('spec-11/12 review-rep calibration fold', () => {
 // ── spec-05: gold-mint SERVER kill switch (D17 / R14) ──────────────────────────
 // submitReviewTx's last arg (goldMintEnabled) gates the spec-11 mint branch. The
 // callable computes it via serverGatedOn('goldMint', cohort, serverFlags), which
-// is DEFAULT-OFF (fail-closed). These assert the wiring: false ⇒ no mint even on a
-// qualifying delayed pass; true ⇒ mints (the un-gated mechanism, already covered).
+// is DEFAULT-ON as of 2026-06-28 (kill via the config/flags doc). These assert the
+// wiring: false ⇒ no mint even on a qualifying delayed pass; true ⇒ mints.
 
 describe('spec-05 gold-mint kill switch (goldMintEnabled gate)', () => {
   it('goldMintEnabled=false ⇒ a qualifying DELAYED pass does NOT mint (kill switch)', async () => {
@@ -560,16 +560,16 @@ describe('spec-05 gold-mint kill switch (goldMintEnabled gate)', () => {
 })
 
 describe('spec-05 client flag ↔ server kill agree for goldMint', () => {
-  it('serverGatedOn goldMint is OFF by default and ON only for treatment + flag-on', () => {
+  it('serverGatedOn goldMint is ON by default, OFF for holdout or an explicit kill', () => {
     // Server twin (the authoritative gold-mint kill) agrees with the client gate
-    // shape: default-off, holdout-off, treatment+flag-on ⇒ on.
-    expect(serverGatedOn('goldMint', 'treatment', ALL_OFF_SERVER)).toBe(false) // flag off
+    // shape: default-on (2026-06-28), holdout-off, explicit-kill ⇒ off.
+    expect(serverGatedOn('goldMint', 'treatment', DEFAULT_FLAGS_SERVER)).toBe(true) // default on
     expect(
-      serverGatedOn('goldMint', 'holdout', { ...ALL_OFF_SERVER, goldMint: true }),
+      serverGatedOn('goldMint', 'holdout', DEFAULT_FLAGS_SERVER),
     ).toBe(false) // holdout control
     expect(
-      serverGatedOn('goldMint', 'treatment', { ...ALL_OFF_SERVER, goldMint: true }),
-    ).toBe(true) // treatment + on
+      serverGatedOn('goldMint', 'treatment', { ...DEFAULT_FLAGS_SERVER, goldMint: false }),
+    ).toBe(false) // explicit kill
   })
 })
 
