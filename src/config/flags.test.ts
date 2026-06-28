@@ -1,17 +1,17 @@
 // spec-05 client flags + cohort tests (pure parse / fail-closed / assignment).
 // firebase/app is mocked so importing flags.ts does not boot the SDK; loadFlags
-// runs the emulator-skip path (usingEmulators:true) which returns ALL_OFF.
+// runs the emulator-skip path (usingEmulators:true) which returns DEFAULT_FLAGS.
 
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 
 vi.mock('../firebase/app', () => ({
   app: {},
-  usingEmulators: true, // skip Remote Config in tests → loadFlags resolves ALL_OFF
+  usingEmulators: true, // skip Remote Config in tests → loadFlags resolves DEFAULT_FLAGS
 }))
 
 import {
   FlagsSchema,
-  ALL_OFF,
+  DEFAULT_FLAGS,
   loadFlags,
   getFlagsSync,
   assignCohort,
@@ -23,23 +23,23 @@ beforeEach(() => {
   __resetFlagsForTest()
 })
 
-describe('FlagsSchema / ALL_OFF (R14 — every feature DEFAULT-OFF)', () => {
-  it('parses {} to all-off defaults', () => {
+describe('FlagsSchema / DEFAULT_FLAGS (2026-06-28 — every feature DEFAULT-ON)', () => {
+  it('parses {} to all-on defaults', () => {
     const flags = FlagsSchema.parse({})
-    expect(flags.dailyReviewQueue).toBe(false)
-    expect(flags.difficultyGovernor).toBe(false)
-    expect(flags.brutalMockFloor).toBe(false)
-    expect(flags.goldMint).toBe(false)
-    expect(flags.rolloutPercent).toBe(0)
+    expect(flags.dailyReviewQueue).toBe(true)
+    expect(flags.difficultyGovernor).toBe(true)
+    expect(flags.brutalMockFloor).toBe(true)
+    expect(flags.goldMint).toBe(true)
+    expect(flags.rolloutPercent).toBe(100)
   })
 
-  it('ALL_OFF is every feature off', () => {
-    expect(ALL_OFF).toEqual({
-      dailyReviewQueue: false,
-      difficultyGovernor: false,
-      brutalMockFloor: false,
-      goldMint: false,
-      rolloutPercent: 0,
+  it('DEFAULT_FLAGS is every feature on', () => {
+    expect(DEFAULT_FLAGS).toEqual({
+      dailyReviewQueue: true,
+      difficultyGovernor: true,
+      brutalMockFloor: true,
+      goldMint: true,
+      rolloutPercent: 100,
     })
   })
 
@@ -55,16 +55,16 @@ describe('FlagsSchema / ALL_OFF (R14 — every feature DEFAULT-OFF)', () => {
   })
 })
 
-describe('loadFlags / getFlagsSync (fail-closed)', () => {
-  it('returns ALL_OFF in emulator/dev (no Remote Config backend)', async () => {
+describe('loadFlags / getFlagsSync (fails open — defaults all-on)', () => {
+  it('returns DEFAULT_FLAGS in emulator/dev (no Remote Config backend)', async () => {
     const flags = await loadFlags()
-    expect(flags).toEqual(ALL_OFF)
+    expect(flags).toEqual(DEFAULT_FLAGS)
   })
 
-  it('getFlagsSync returns ALL_OFF until loadFlags resolves, and the cached value after', async () => {
-    expect(getFlagsSync()).toEqual(ALL_OFF) // default before load
+  it('getFlagsSync returns DEFAULT_FLAGS until loadFlags resolves, and the cached value after', async () => {
+    expect(getFlagsSync()).toEqual(DEFAULT_FLAGS) // default before load
     await loadFlags()
-    expect(getFlagsSync()).toEqual(ALL_OFF)
+    expect(getFlagsSync()).toEqual(DEFAULT_FLAGS)
   })
 })
 
@@ -115,7 +115,7 @@ describe('assignCohort (deterministic, monotonic — README §4.5)', () => {
 
 describe('flags type export', () => {
   it('Flags is the inferred schema type', () => {
-    const f: Flags = ALL_OFF
+    const f: Flags = DEFAULT_FLAGS
     expect(typeof f.dailyReviewQueue).toBe('boolean')
   })
 })

@@ -8,38 +8,29 @@ vi.mock('../firebase/app', () => ({ app: {}, usingEmulators: true }))
 import { isQuantIntensity, gatedOn, type GatedFeature } from './track'
 import type { UserDoc } from './userDoc'
 import type { Progress } from '../content/schema'
-import { ALL_OFF, FlagsSchema, type Flags } from '../config/flags'
+import { DEFAULT_FLAGS, FlagsSchema, type Flags } from '../config/flags'
 
 const doc = (p: Partial<UserDoc>): UserDoc => ({ displayName: 'x', ...p })
 const flagsOn = (f: Partial<Flags>): Flags => FlagsSchema.parse(f)
 
-describe('isQuantIntensity (quant-intensity gate, README §4 helper)', () => {
-  it('fails GENTLE when nothing is set (undefined/null inputs)', () => {
-    expect(isQuantIntensity(undefined)).toBe(false)
-    expect(isQuantIntensity(null)).toBe(false)
-    expect(isQuantIntensity(doc({}))).toBe(false)
-  })
-
-  it('is true for Track B (per-concept overrides userDoc)', () => {
+describe('isQuantIntensity (collapsed 2026-06-28 — quant-intensity for everyone)', () => {
+  it('is true regardless of track / goal / missing inputs (the A/B split is collapsed)', () => {
+    expect(isQuantIntensity(undefined)).toBe(true)
+    expect(isQuantIntensity(null)).toBe(true)
+    expect(isQuantIntensity(doc({}))).toBe(true)
+    expect(isQuantIntensity(doc({ defaultTrack: 'A' }))).toBe(true)
     expect(isQuantIntensity(doc({ defaultTrack: 'B' }))).toBe(true)
-    expect(isQuantIntensity(doc({ defaultTrack: 'A' }), { track: 'B' } as Progress)).toBe(true)
-  })
-
-  it('per-concept Track A overrides a userDoc Track B (fails gentle to the concept)', () => {
-    expect(isQuantIntensity(doc({ defaultTrack: 'B' }), { track: 'A' } as Progress)).toBe(false)
-  })
-
-  it('is true for the interview learningGoal regardless of track', () => {
-    expect(isQuantIntensity(doc({ learningGoal: 'interview' }))).toBe(true)
+    expect(isQuantIntensity(doc({ defaultTrack: 'A', learningGoal: 'school' }))).toBe(true)
     expect(isQuantIntensity(doc({ defaultTrack: 'A', learningGoal: 'interview' }))).toBe(true)
   })
 
-  it('is gentle for non-interview goals on Track A', () => {
-    expect(isQuantIntensity(doc({ defaultTrack: 'A', learningGoal: 'school' }))).toBe(false)
+  it('no longer downgrades on a per-concept Track A override', () => {
+    expect(isQuantIntensity(doc({ defaultTrack: 'B' }), { track: 'A' } as Progress)).toBe(true)
+    expect(isQuantIntensity(doc({ defaultTrack: 'A' }), { track: 'A' } as Progress)).toBe(true)
   })
 })
 
-describe('gatedOn (spec-05 rollout chokepoint — D17 / R14)', () => {
+describe('gatedOn (spec-05 rollout chokepoint — D17; default-on 2026-06-28)', () => {
   const features: GatedFeature[] = [
     'dailyReviewQueue',
     'difficultyGovernor',
@@ -47,63 +38,49 @@ describe('gatedOn (spec-05 rollout chokepoint — D17 / R14)', () => {
     'goldMint',
   ]
 
-  it('DEFAULT-OFF: ALL_OFF flags ⇒ every feature off even for an intense, treatment user', () => {
+  it('DEFAULT-ON: DEFAULT_FLAGS ⇒ every feature on for a treatment user', () => {
     const u = doc({ defaultTrack: 'B', rolloutCohort: 'treatment' })
-    for (const f of features) expect(gatedOn(f, u, ALL_OFF)).toBe(false)
+    for (const f of features) expect(gatedOn(f, u, DEFAULT_FLAGS)).toBe(true)
   })
 
-  it('holdout ⇒ always false regardless of flag + intensity (control cohort)', () => {
+  it('DEFAULT-ON reaches even a gentle Track-A treatment user (split collapsed)', () => {
+    const u = doc({ defaultTrack: 'A', rolloutCohort: 'treatment' })
+    for (const f of features) expect(gatedOn(f, u, DEFAULT_FLAGS)).toBe(true)
+  })
+
+  it('holdout ⇒ always false regardless of flag + intensity (control cohort kill switch)', () => {
     const u = doc({ defaultTrack: 'B', learningGoal: 'interview', rolloutCohort: 'holdout' })
-    const allOn = flagsOn({
-      dailyReviewQueue: true,
-      difficultyGovernor: true,
-      brutalMockFloor: true,
-      goldMint: true,
-    })
-    for (const f of features) expect(gatedOn(f, u, allOn)).toBe(false)
+    for (const f of features) expect(gatedOn(f, u, DEFAULT_FLAGS)).toBe(false)
   })
 
-  it('flag-off ⇒ false even for treatment + intensity', () => {
+  it('an explicitly-killed flag ⇒ false even for treatment (kill switch still works)', () => {
     const u = doc({ defaultTrack: 'B', rolloutCohort: 'treatment' })
-    // brutalMockFloor on, the others off → only that feature can pass.
-    const flags = flagsOn({ brutalMockFloor: true })
-    expect(gatedOn('brutalMockFloor', u, flags)).toBe(true)
-    expect(gatedOn('difficultyGovernor', u, flags)).toBe(false)
-    expect(gatedOn('dailyReviewQueue', u, flags)).toBe(false)
-    expect(gatedOn('goldMint', u, flags)).toBe(false)
+    // brutalMockFloor killed, the others left on (now-default true) → only it is off.
+    const flags = flagsOn({ brutalMockFloor: false })
+    expect(gatedOn('brutalMockFloor', u, flags)).toBe(false)
+    expect(gatedOn('difficultyGovernor', u, flags)).toBe(true)
+    expect(gatedOn('dailyReviewQueue', u, flags)).toBe(true)
+    expect(gatedOn('goldMint', u, flags)).toBe(true)
   })
 
-  it('treatment + flag-on ⇒ equals isQuantIntensity (the gate adds, never replaces)', () => {
+  it('treatment + flag-on ⇒ true for everyone (intensity no longer downgrades)', () => {
     const flags = flagsOn({ dailyReviewQueue: true })
-    // Intense treatment user → true.
     const intense = doc({ defaultTrack: 'B', rolloutCohort: 'treatment' })
-    expect(gatedOn('dailyReviewQueue', intense, flags)).toBe(
-      isQuantIntensity(intense),
-    )
     expect(gatedOn('dailyReviewQueue', intense, flags)).toBe(true)
-    // GENTLE treatment user (Track A, no interview goal) → false (fails gentle).
+    // A gentle Track-A treatment user now ALSO passes (was false pre-2026-06-28).
     const gentle = doc({ defaultTrack: 'A', rolloutCohort: 'treatment' })
-    expect(gatedOn('dailyReviewQueue', gentle, flags)).toBe(
-      isQuantIntensity(gentle),
-    )
-    expect(gatedOn('dailyReviewQueue', gentle, flags)).toBe(false)
+    expect(gatedOn('dailyReviewQueue', gentle, flags)).toBe(true)
+    expect(gatedOn('dailyReviewQueue', gentle, flags)).toBe(isQuantIntensity(gentle))
   })
 
-  it('a learningGoal:interview treatment user passes a flagged feature (implicit intensity opt-in)', () => {
-    const u = doc({ defaultTrack: 'A', learningGoal: 'interview', rolloutCohort: 'treatment' })
-    expect(gatedOn('difficultyGovernor', u, flagsOn({ difficultyGovernor: true }))).toBe(true)
-  })
-
-  it('passes per-concept progress through to isQuantIntensity', () => {
+  it('a per-concept Track A override no longer fails gentle (split collapsed)', () => {
     const u = doc({ defaultTrack: 'B', rolloutCohort: 'treatment' })
     const flags = flagsOn({ difficultyGovernor: true })
-    // per-concept Track A overrides the userDoc Track B → fails gentle.
-    expect(gatedOn('difficultyGovernor', u, flags, { track: 'A' } as Progress)).toBe(false)
+    expect(gatedOn('difficultyGovernor', u, flags, { track: 'A' } as Progress)).toBe(true)
   })
 
-  it('a user with NO cohort assigned yet (undefined) still gates on flag + intensity', () => {
-    // undefined cohort is NOT holdout — it just hasn't been assigned. The flag +
-    // intensity still decide (a treatment-bound user mid-assignment isn't penalized).
+  it('a user with NO cohort assigned yet (undefined) still passes a flagged feature', () => {
+    // undefined cohort is NOT holdout — it just hasn't been assigned.
     const u = doc({ defaultTrack: 'B' }) // no rolloutCohort
     expect(gatedOn('brutalMockFloor', u, flagsOn({ brutalMockFloor: true }))).toBe(true)
   })

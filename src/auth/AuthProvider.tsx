@@ -37,7 +37,7 @@ import {
   ensureRolloutCohort,
   type UserDoc,
 } from './userDoc'
-import { ALL_OFF, assignCohort, loadFlags, type Flags } from '../config/flags'
+import { DEFAULT_FLAGS, assignCohort, loadFlags, type Flags } from '../config/flags'
 import { setAnalyticsDimensions } from '../analytics/events'
 
 const googleProvider = new GoogleAuthProvider()
@@ -53,8 +53,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [authReady, setAuthReady] = useState(false)
   const [userDocResult, setUserDocResult] = useState<UserDocResult | null>(null)
-  // Rollout flags (spec-05). ALL_OFF until loadFlags resolves; fail-closed.
-  const [flags, setFlags] = useState<Flags>(ALL_OFF)
+  // Rollout flags (spec-05). DEFAULT_FLAGS (now all-ON, 2026-06-28) until loadFlags
+  // resolves; fails open.
+  const [flags, setFlags] = useState<Flags>(DEFAULT_FLAGS)
 
   useEffect(() => {
     return onAuthStateChanged(auth, (nextUser) => {
@@ -63,9 +64,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     })
   }, [])
 
-  // Load rollout flags ONCE per session (cached in src/config/flags.ts). Fail-
-  // closed: loadFlags resolves to ALL_OFF on any error, so a surface never ships
-  // a gated feature ON because flags failed to load (R14).
+  // Load rollout flags ONCE per session (cached in src/config/flags.ts). Fails
+  // OPEN as of 2026-06-28: loadFlags resolves to DEFAULT_FLAGS (all-ON) on any
+  // error, so gated features stay ON even if flags fail to load.
   useEffect(() => {
     let cancelled = false
     void loadFlags().then((f) => {

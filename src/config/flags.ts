@@ -4,10 +4,18 @@
 // (or the config/flags fallback doc) directly — every gate goes through
 // getFlagsSync()/loadFlags() here + gatedOn() in src/auth/track.ts.
 //
-// THE MANDATE (R14 — no flag/remote-config/kill-switch infra existed before this
-// spec): every net-new aggressive behavior ships DEFAULT-OFF behind a flag, and a
-// flag that cannot be read FAILS CLOSED to all-off — a misconfigured or
-// unreachable backend can never accidentally ship a feature ON.
+// THE ORIGINAL MANDATE (R14): every net-new aggressive behavior shipped
+// DEFAULT-OFF behind a flag, failing CLOSED to all-off so an unreachable backend
+// could never accidentally ship a feature ON.
+//
+// UPDATE 2026-06-28 (product decision — "LS behaviors on for everyone"): the
+// defaults below are now flipped to DEFAULT-ON and rolloutPercent to 100, and the
+// quant-intensity gate is collapsed (see src/auth/track.ts:isQuantIntensity). This
+// DELIBERATELY inverts R14 — the app now fails OPEN (a backend that can't be read
+// leaves every feature ON). The flag + holdout-cohort kill switches still work, so
+// an individual feature can be turned back off via Remote Config / the config/flags
+// doc without a deploy. To restore the gentle path, set these defaults back to
+// false / 0 and re-add the Track-B/interview predicate in isQuantIntensity.
 //
 // Mechanism (spec-05 §3a): Firebase Remote Config is the primary client source
 // (zero-dep — firebase@^12 bundles firebase/remote-config; console-flippable with
@@ -19,31 +27,34 @@
 import { z } from 'zod'
 import { app, usingEmulators } from '../firebase/app'
 
-// FROZEN flag shape (spec-05 §3a). Every feature flag DEFAULT-OFF. `.strip()`
-// drops unknown keys so a backend typo cannot smuggle a truthy unknown gate.
+// FROZEN flag shape (spec-05 §3a). Every feature flag DEFAULT-ON as of 2026-06-28
+// (LS-on-for-everyone; see the header note). `.strip()` still drops unknown keys so
+// a backend typo cannot smuggle an unknown gate.
 // The four gated behaviors map 1:1 to D17's four net-new aggressive behaviors.
 export const FlagsSchema = z
   .object({
-    dailyReviewQueue: z.boolean().default(false), // spec-20 surface mount
-    difficultyGovernor: z.boolean().default(false), // spec-21 governor knobs
-    brutalMockFloor: z.boolean().default(false), // spec-22 tier floor (NOT the rubric bug fix)
+    dailyReviewQueue: z.boolean().default(true), // spec-20 surface mount
+    difficultyGovernor: z.boolean().default(true), // spec-21 governor knobs
+    brutalMockFloor: z.boolean().default(true), // spec-22 tier floor (NOT the rubric bug fix)
     // Async gold-mint is ALSO mirrored server-side (config/flags.goldMint, the
     // authoritative kill for the Function-owned write). Declared here for client
     // tooltip copy / parity only — the client never mints gold.
-    goldMint: z.boolean().default(false), // spec-11
+    goldMint: z.boolean().default(true), // spec-11
     // Staged rollout %: the deterministic cohort bucket threshold (§3c).
-    rolloutPercent: z.number().min(0).max(100).default(0),
+    // Now 100 by default → every newly-assigned user lands in 'treatment'.
+    rolloutPercent: z.number().min(0).max(100).default(100),
   })
   .strip()
 
 export type Flags = z.infer<typeof FlagsSchema>
 
-// Every feature default-off (R14 corollary). The cached value until loadFlags
-// resolves AND the fail-closed value on any error.
-export const ALL_OFF: Flags = FlagsSchema.parse({})
+// The default flag set — now every feature DEFAULT-ON (2026-06-28; see header).
+// The cached value until loadFlags resolves AND the value used when the backend is
+// unreachable, so the app now fails OPEN (every gated feature on) rather than off.
+export const DEFAULT_FLAGS: Flags = FlagsSchema.parse({})
 
 // Per-session in-memory cache. getFlagsSync returns this; loadFlags fills it.
-let cached: Flags = ALL_OFF
+let cached: Flags = DEFAULT_FLAGS
 let loadPromise: Promise<Flags> | null = null
 
 // Remote Config parameter keys map 1:1 to FlagsSchema keys. Remote Config stores
@@ -65,53 +76,54 @@ function coerceRemoteConfigValues(raw: Record<string, string>): unknown {
 }
 
 // Fetch + activate Remote Config, parse against FlagsSchema, cache for the
-// session. FAILS CLOSED to ALL_OFF on ANY error (network, parse, emulator). In
-// emulator/dev there is no Remote Config backend, so we skip it and stay ALL_OFF
-// (mirrors the App Check emulator-skip in src/firebase/app.ts).
+// session. Falls back to DEFAULT_FLAGS on ANY error (network, parse, emulator) —
+// which is now all-ON (fails OPEN, 2026-06-28). In emulator/dev there is no Remote
+// Config backend, so we skip it and stay on DEFAULT_FLAGS.
 export async function loadFlags(): Promise<Flags> {
   if (loadPromise) return loadPromise
   loadPromise = (async () => {
     try {
       if (usingEmulators) {
-        cached = ALL_OFF
+        cached = DEFAULT_FLAGS
         return cached
       }
       const { getRemoteConfig, fetchAndActivate, getAll } = await import(
         'firebase/remote-config'
       )
       const rc = getRemoteConfig(app)
-      // In-app defaults so a first paint before fetch is also all-off.
+      // In-app defaults so a first paint before fetch is also all-ON (2026-06-28).
       rc.defaultConfig = {
-        dailyReviewQueue: false,
-        difficultyGovernor: false,
-        brutalMockFloor: false,
-        goldMint: false,
-        rolloutPercent: 0,
+        dailyReviewQueue: true,
+        difficultyGovernor: true,
+        brutalMockFloor: true,
+        goldMint: true,
+        rolloutPercent: 100,
       }
       await fetchAndActivate(rc)
       const all = getAll(rc)
       const raw: Record<string, string> = {}
       for (const [k, v] of Object.entries(all)) raw[k] = v.asString()
       const parsed = FlagsSchema.safeParse(coerceRemoteConfigValues(raw))
-      cached = parsed.success ? parsed.data : ALL_OFF
+      cached = parsed.success ? parsed.data : DEFAULT_FLAGS
       return cached
     } catch {
-      // Fail CLOSED — a flag that cannot be read behaves as if OFF (R14).
-      cached = ALL_OFF
+      // Fail OPEN — a flag that cannot be read falls back to DEFAULT_FLAGS, which
+      // is now all-ON (2026-06-28 override of the original R14 fail-closed rule).
+      cached = DEFAULT_FLAGS
       return cached
     }
   })()
   return loadPromise
 }
 
-// Synchronous cached read for render-time gates. Returns ALL_OFF until loadFlags
-// resolves, so a surface that reads before flags load defaults OFF (fail-closed).
+// Synchronous cached read for render-time gates. Returns DEFAULT_FLAGS until
+// loadFlags resolves, so a surface that reads before flags load now defaults ON.
 export function getFlagsSync(): Flags {
   return cached
 }
 
-// Test seam: reset the module cache so each test starts from ALL_OFF.
-export function __resetFlagsForTest(next: Flags = ALL_OFF): void {
+// Test seam: reset the module cache so each test starts from DEFAULT_FLAGS.
+export function __resetFlagsForTest(next: Flags = DEFAULT_FLAGS): void {
   cached = next
   loadPromise = null
 }

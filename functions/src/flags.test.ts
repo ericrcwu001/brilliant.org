@@ -12,7 +12,7 @@ vi.mock('firebase-admin/firestore', () => ({
 
 import {
   ServerFlagsSchema,
-  ALL_OFF_SERVER,
+  DEFAULT_FLAGS_SERVER,
   loadServerFlags,
   serverGatedOn,
   __setFlagsDocReaderForTest,
@@ -34,45 +34,45 @@ beforeEach(() => {
   __setFlagsDocReaderForTest(null) // reset cache + reader to the default
 })
 
-describe('ServerFlagsSchema / ALL_OFF_SERVER (R14)', () => {
-  it('parses {} to all-off', () => {
-    expect(ALL_OFF_SERVER).toEqual({
-      dailyReviewQueue: false,
-      difficultyGovernor: false,
-      brutalMockFloor: false,
-      goldMint: false,
-      rolloutPercent: 0,
+describe('ServerFlagsSchema / DEFAULT_FLAGS_SERVER (2026-06-28 — default-on)', () => {
+  it('parses {} to all-on', () => {
+    expect(DEFAULT_FLAGS_SERVER).toEqual({
+      dailyReviewQueue: true,
+      difficultyGovernor: true,
+      brutalMockFloor: true,
+      goldMint: true,
+      rolloutPercent: 100,
     })
   })
 })
 
-describe('loadServerFlags (fail-closed)', () => {
-  it('returns ALL_OFF_SERVER when the doc is absent', async () => {
+describe('loadServerFlags (fails open — defaults all-on)', () => {
+  it('returns DEFAULT_FLAGS_SERVER when the doc is absent', async () => {
     __setFlagsDocReaderForTest(async () => undefined)
     const flags = await loadServerFlags(1)
-    expect(flags).toEqual(ALL_OFF_SERVER)
+    expect(flags).toEqual(DEFAULT_FLAGS_SERVER)
   })
 
-  it('returns ALL_OFF_SERVER when the reader THROWS (fail-closed)', async () => {
+  it('returns DEFAULT_FLAGS_SERVER when the reader THROWS (fails open)', async () => {
     __setFlagsDocReaderForTest(async () => {
       throw new Error('firestore down')
     })
     const flags = await loadServerFlags(1)
-    expect(flags).toEqual(ALL_OFF_SERVER)
+    expect(flags).toEqual(DEFAULT_FLAGS_SERVER)
   })
 
-  it('parses a real doc (goldMint:true reads through)', async () => {
-    __setFlagsDocReaderForTest(async () => ({ goldMint: true, rolloutPercent: 25 }))
+  it('parses a real doc (an explicitly-killed flag reads through)', async () => {
+    __setFlagsDocReaderForTest(async () => ({ dailyReviewQueue: false, rolloutPercent: 25 }))
     const flags = await loadServerFlags(1)
-    expect(flags.goldMint).toBe(true)
+    expect(flags.dailyReviewQueue).toBe(false) // explicit kill reads through
     expect(flags.rolloutPercent).toBe(25)
-    expect(flags.dailyReviewQueue).toBe(false) // default
+    expect(flags.goldMint).toBe(true) // default-on
   })
 
-  it('fails closed on a malformed doc (parse failure ⇒ ALL_OFF_SERVER)', async () => {
+  it('fails open on a malformed doc (parse failure ⇒ DEFAULT_FLAGS_SERVER)', async () => {
     __setFlagsDocReaderForTest(async () => ({ goldMint: 'yes-please' }))
     const flags = await loadServerFlags(1)
-    expect(flags).toEqual(ALL_OFF_SERVER)
+    expect(flags).toEqual(DEFAULT_FLAGS_SERVER)
   })
 
   it('caches within the TTL and refreshes after it (kill flip propagates ≤60s)', async () => {
@@ -92,21 +92,21 @@ describe('loadServerFlags (fail-closed)', () => {
 })
 
 describe('serverGatedOn (gold-mint kill — D17)', () => {
-  it('holdout ⇒ false even when the flag is ON (control cohort)', () => {
-    expect(serverGatedOn('goldMint', 'holdout', { ...ALL_OFF_SERVER, goldMint: true })).toBe(false)
+  it('holdout ⇒ false even when the flag is ON (control cohort kill switch)', () => {
+    expect(serverGatedOn('goldMint', 'holdout', DEFAULT_FLAGS_SERVER)).toBe(false)
   })
 
-  it('flag-off ⇒ false (DEFAULT-OFF / fail-closed)', () => {
-    expect(serverGatedOn('goldMint', 'treatment', ALL_OFF_SERVER)).toBe(false)
-    expect(serverGatedOn('goldMint', undefined, ALL_OFF_SERVER)).toBe(false)
+  it('an explicitly-killed flag ⇒ false (kill switch still works post-default-on)', () => {
+    expect(serverGatedOn('goldMint', 'treatment', { ...DEFAULT_FLAGS_SERVER, goldMint: false })).toBe(false)
+    expect(serverGatedOn('goldMint', undefined, { ...DEFAULT_FLAGS_SERVER, goldMint: false })).toBe(false)
   })
 
-  it('treatment + flag-on ⇒ true', () => {
-    expect(serverGatedOn('goldMint', 'treatment', { ...ALL_OFF_SERVER, goldMint: true })).toBe(true)
+  it('treatment + flag-on (default) ⇒ true', () => {
+    expect(serverGatedOn('goldMint', 'treatment', DEFAULT_FLAGS_SERVER)).toBe(true)
   })
 
   it('undefined cohort + flag-on ⇒ true (cohort not yet assigned is not holdout)', () => {
-    expect(serverGatedOn('goldMint', undefined, { ...ALL_OFF_SERVER, goldMint: true })).toBe(true)
+    expect(serverGatedOn('goldMint', undefined, DEFAULT_FLAGS_SERVER)).toBe(true)
   })
 })
 
@@ -116,7 +116,7 @@ describe('client ↔ server schema parity (drift guard)', () => {
     expect(serverKeys).toEqual(CANONICAL_FLAG_KEYS)
   })
 
-  it('server goldMint default is OFF (the client asserts the same in its own suite)', () => {
-    expect(ServerFlagsSchema.parse({}).goldMint).toBe(false)
+  it('server goldMint default is ON (the client asserts the same in its own suite)', () => {
+    expect(ServerFlagsSchema.parse({}).goldMint).toBe(true)
   })
 })

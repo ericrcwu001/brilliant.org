@@ -27,11 +27,11 @@ export interface AuthContextValue {
   /** True once the profile fetch for the current user has resolved. */
   userDocReady: boolean
   /**
-   * Rollout flags (spec-05, D17 / R14). ALL_OFF until loadFlags resolves, and
-   * fail-closed to ALL_OFF on any backend error — so a surface that reads before
-   * flags load (or when the backend is unreachable) defaults every gated feature
-   * OFF. Surfaces gate via gatedOn('<feature>', userDoc, flags, …) — never a raw
-   * flag-field read.
+   * Rollout flags (spec-05, D17). DEFAULT_FLAGS until loadFlags resolves, and the
+   * fallback on any backend error — now all-ON (2026-06-28), so a surface that reads
+   * before flags load (or when the backend is unreachable) defaults every gated
+   * feature ON (fails open). Surfaces gate via gatedOn('<feature>', userDoc, flags,
+   * …) — never a raw flag-field read.
    */
   flags: Flags
   signUpWithEmail: (email: string, password: string) => Promise<void>
