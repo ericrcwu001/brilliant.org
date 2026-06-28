@@ -20,7 +20,7 @@ import {
 import { reduce, ratAdd, ratMul } from '../engine/automaton'
 import { diagnoseRow } from './equationDiagnosis'
 import { balanceModel } from './beats/balanceModel'
-import type { Automaton, StateId, Rational, CanonicalRecurrence } from '../engine/types'
+import type { Automaton, StateId, Rational } from '../engine/types'
 import {
   covariance as covFn,
   variance as varFn,
@@ -246,7 +246,10 @@ function ratStr(r: { n: number; d: number }): string {
  * Format: [const:<c>, prob:<p0>, var:<s0>, prob:<p1>, var:<s1>, ...].
  * diagnoseRow(correctFill(target), target).ok === true always.
  */
-export function correctFill(target: CanonicalRecurrence): string[] {
+export function correctFill(target: {
+  constant: number
+  terms: { coeff: { n: number; d: number }; var: string }[]
+}): string[] {
   const out: string[] = [`const:${target.constant}`]
   for (const term of target.terms) out.push(`prob:${ratStr(term.coeff)}`, `var:${term.var}`)
   return out

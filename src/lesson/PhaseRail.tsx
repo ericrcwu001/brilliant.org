@@ -1,16 +1,19 @@
 import { useEffect, useRef } from 'react'
-import { getRail } from './phases'
+import { railSegments } from './phases'
 
 export function PhaseRail({
-  beatId,
-  lessonId,
+  beats,
+  index,
   reducedMotion,
 }: {
-  beatId: string
-  lessonId?: string
+  beats: { beatId: string }[]
+  index: number
   reducedMotion?: boolean
 }) {
-  const segments = getRail(beatId, lessonId)
+  const segments = railSegments(
+    beats.map((b) => b.beatId),
+    index,
+  )
   const currentRef = useRef<HTMLLIElement>(null)
 
   // Keep the current beat in view as the learner advances.
@@ -20,7 +23,7 @@ export function PhaseRail({
       block: 'nearest',
       behavior: reducedMotion ? 'auto' : 'smooth',
     })
-  }, [beatId, reducedMotion])
+  }, [index, reducedMotion])
 
   return (
     <ol className="rail" aria-label="Lesson progress">
@@ -28,7 +31,7 @@ export function PhaseRail({
         <li
           key={seg.beatId}
           ref={seg.state === 'current' ? currentRef : undefined}
-          className={`rail__seg rail__seg--${seg.phase.toLowerCase()} rail__seg--${seg.state}`}
+          className={`rail__seg rail__seg--${seg.state}`}
           aria-current={seg.state === 'current' ? 'step' : undefined}
         >
           <span className="rail__bar" />

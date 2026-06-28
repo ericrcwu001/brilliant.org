@@ -241,15 +241,16 @@ function checkOverlap(beat: Beat, lesson: Lesson) {
 function checkBayesUpdate(beat: Beat) {
   const it = beat.interaction
   if (it.type !== 'bayesUpdate') return
-  if (!isBayesUpdateGraded(beat)) return
+  const bayesBeat = { hero: beat.hero, interaction: it }
+  if (!isBayesUpdateGraded(bayesBeat)) return
 
   const population = it.population ?? 3
-  const n = bayesFocalCount(beat)
+  const n = bayesFocalCount(bayesBeat)
   expect(n, `bayesFocalCount out of range [0, ${population}]`).toBeGreaterThanOrEqual(0)
   expect(n, `bayesFocalCount out of range [0, ${population}]`).toBeLessThanOrEqual(population)
   const tapped = new Set(Array.from({ length: n }, (_, i) => i))
   expect(
-    isBayesUpdateCorrect(beat, tapped),
+    isBayesUpdateCorrect(bayesBeat, tapped),
     `isBayesUpdateCorrect returned false for canonical tapped set`,
   ).toBe(true)
 }
@@ -257,11 +258,12 @@ function checkBayesUpdate(beat: Beat) {
 function checkChainBoard(beat: Beat) {
   const it = beat.interaction
   if (it.type !== 'chainBoard') return
-  if (!isChainBoardGraded(beat)) return
+  const chainBeat = { hero: beat.hero, interaction: it }
+  if (!isChainBoardGraded(chainBeat)) return
 
-  const answer = correctChainAnswerFor(beat)
+  const answer = correctChainAnswerFor(chainBeat)
   expect(
-    isChainBoardCorrect(beat, answer),
+    isChainBoardCorrect(chainBeat, answer),
     `isChainBoardCorrect returned false for correctChainAnswerFor`,
   ).toBe(true)
 }
@@ -269,9 +271,10 @@ function checkChainBoard(beat: Beat) {
 function checkBalanceSolve(beat: Beat, lesson: Lesson) {
   const it = beat.interaction
   if (it.type !== 'balanceSolve') return
+  const balanceBeat = { interaction: it }
   const pattern = beat.pattern ?? lesson.patternOptions[0]
   const automaton = buildAutomaton(pattern, 0.5)
-  const bp = balancePointFor(beat, automaton)
+  const bp = balancePointFor(balanceBeat, automaton)
   const min = it.min
   const max = it.max
 
@@ -284,7 +287,7 @@ function checkBalanceSolve(beat: Beat, lesson: Lesson) {
     `balancePointFor=${bp} is above slider max=${max}`,
   ).toBeLessThanOrEqual(max)
   expect(
-    isBalanceSolved(beat, automaton, bp),
+    isBalanceSolved(balanceBeat, automaton, bp),
     `isBalanceSolved returned false at the balance point ${bp}`,
   ).toBe(true)
 }

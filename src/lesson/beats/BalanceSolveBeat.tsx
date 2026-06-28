@@ -50,7 +50,6 @@ export function BalanceSolveBeat({
   isLast,
   onAdvance,
   setLessonState,
-  initialHintLevel,
   onHintLevelChange,
 }: BeatProps) {
   // Extract interaction fields with safe defaults so hooks always run.
@@ -72,8 +71,9 @@ export function BalanceSolveBeat({
   const nonSelfTerms = rec?.terms.filter((t) => t.var !== solveState) ?? []
 
   const [candidate, setCandidate] = useState(min)
-  // Hint level: increments on demand; wired to initialHintLevel for persistence.
-  const [hintIdx, setHintIdx] = useState(initialHintLevel ?? 0)
+  // Hint level: starts at 0 every session so progressive hints only appear after
+  // the learner clicks; revealed levels are still persisted via onHintLevelChange.
+  const [hintIdx, setHintIdx] = useState(0)
   const reported = useRef(false)
 
   const leftVal = candidate

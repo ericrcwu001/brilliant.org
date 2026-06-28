@@ -76,6 +76,7 @@ export function OverlapBeat(props: BeatProps) {
     if (picked === correctPattern) {
       ladder.submitCorrect()
       setSolved(true)
+      setPicked(null)
     } else {
       ladder.submitWrong()
     }

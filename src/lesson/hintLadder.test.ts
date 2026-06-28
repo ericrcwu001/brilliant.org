@@ -6,6 +6,7 @@ import {
   onCorrect,
   onTryAgain,
   onWrong,
+  rehydrateLadder,
 } from './hintLadder'
 
 const wrongTimes = (n: number, max = 3) => {
@@ -73,5 +74,32 @@ describe('needsReview thresholds', () => {
 
   it('keeps needsReview after a correct submit following a reveal', () => {
     expect(needsReview(onCorrect(wrongTimes(3)), true)).toBe(true)
+  })
+})
+
+describe('rehydrateLadder (resume without premature hint)', () => {
+  it('returns the pristine ladder for level 0', () => {
+    expect(rehydrateLadder(0, 3)).toEqual(initialLadder)
+  })
+  it('restores the level but stays idle so no hint shows before an attempt', () => {
+    const s = rehydrateLadder(2, 3)
+    expect(s.outcome).toBe('idle')
+    expect(s.level).toBe(2)
+    expect(s.wrongCount).toBe(2)
+    expect(s.everRevealed).toBe(false)
+  })
+  it('marks everRevealed when resuming at the reveal level, still idle', () => {
+    const s = rehydrateLadder(3, 3)
+    expect(s.everRevealed).toBe(true)
+    expect(s.outcome).toBe('idle')
+  })
+  it('clamps the level to maxHintLevel', () => {
+    expect(rehydrateLadder(5, 2).level).toBe(2)
+  })
+  it('the next wrong submit resumes mid-struggle from the restored level', () => {
+    const resumed = rehydrateLadder(2, 3)
+    const afterWrong = onWrong(resumed, 3)
+    expect(afterWrong.level).toBe(3)
+    expect(afterWrong.outcome).toBe('wrong')
   })
 })

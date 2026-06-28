@@ -244,11 +244,11 @@ export function RetrievalGridBeat(props: BeatProps) {
           })}
         </ul>
         <div className="retgrid__palette" aria-label="Matches">
-          {rights.map((r) => {
+          {rights.map((r, i) => {
             const used = Object.values(assign).includes(r)
             return (
               <DraggableTile
-                key={r}
+                key={i}
                 className={'token token--const' + (used ? ' token--placed' : '')}
                 disabled={solved || revealed}
                 onTap={() => { if (selLeft === null) return; placeInto(selLeft, r) }}

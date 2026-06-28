@@ -16,7 +16,7 @@
 // src/engine/covariance.ts. Reduced-motion renders the final frame; an
 // aria-live mirror narrates each change.
 
-import { useState, useCallback, useMemo, type ReactNode, useRef } from 'react'
+import { useState, useCallback, useMemo, type ReactNode, useRef, useId } from 'react'
 import type { BeatProps } from './types'
 import { BeatShell } from '../BeatShell'
 import {
@@ -29,6 +29,7 @@ import {
   formatRangePair,
 } from '../../engine/covariance'
 import type { JointCell, Rational } from '../../engine/covariance'
+import { linScale, niceTicks, fmtTick } from '../plot'
 
 // ── Utility ───────────────────────────────────────────────────────────────────
 
@@ -339,28 +340,38 @@ function ScatterDisplay({
 }) {
   const cells: JointCell[] = it.joint ?? []
   const [scale, setScale] = useState(1)
+  const clipId = useId()
 
   // Build points: one per cell, weight by p
   const xVals = cells.map((c) => ratVal(c.x))
   const yVals = cells.map((c) => ratVal(c.y))
-  const allX = [...xVals]
-  const allY = [...yVals]
-  const xMin = Math.min(...allX)
-  const xMax = Math.max(...allX)
-  const yMin = Math.min(...allY)
-  const yMax = Math.max(...allY)
-  const xRange = xMax - xMin || 1
-  const yRange = yMax - yMin || 1
+  const xMin = Math.min(...xVals)
+  const xMax = Math.max(...xVals)
+  const yMin = Math.min(...yVals)
+  const yMax = Math.max(...yVals)
 
   const SVG_W = 280
   const SVG_H = 200
-  const PAD = 24
+  const PAD = 32
 
-  const toSvgX = (xv: number) =>
-    PAD + ((xv - xMin) / xRange) * (SVG_W - 2 * PAD) * scale
+  // The Scale slider is a true domain zoom centred on the data centroid: the
+  // visible window shrinks as scale grows. Axes, ticks, and points ALL derive
+  // from this one visible domain, so they stay aligned at every zoom level. (The
+  // old code multiplied only the point coords by scale, so points drifted off
+  // the fixed axes — the "axes don't work" bug.)
+  const xMid = (xMin + xMax) / 2
+  const yMid = (yMin + yMax) / 2
+  const halfX = ((xMax - xMin) / 2) * 1.1 || 0.5
+  const halfY = ((yMax - yMin) / 2) * 1.1 || 0.5
+  const dXMin = xMid - halfX / scale
+  const dXMax = xMid + halfX / scale
+  const dYMin = yMid - halfY / scale
+  const dYMax = yMid + halfY / scale
 
-  const toSvgY = (yv: number) =>
-    SVG_H - PAD - ((yv - yMin) / yRange) * (SVG_H - 2 * PAD) * scale
+  const toSvgX = linScale(dXMin, dXMax, PAD, SVG_W - PAD)
+  const toSvgY = linScale(dYMin, dYMax, SVG_H - PAD, PAD)
+  const xTicks = niceTicks(dXMin, dXMax)
+  const yTicks = niceTicks(dYMin, dYMax)
 
   // Trend line via least-squares
   const n = cells.length
@@ -371,8 +382,8 @@ function ScatterDisplay({
   const denom = n * sumX2 - sumX * sumX
   const mTrend = denom !== 0 ? (n * sumXY - sumX * sumY) / denom : 0
   const bTrend = (sumY - mTrend * sumX) / n
-  const trendY0 = mTrend * xMin + bTrend
-  const trendY1 = mTrend * xMax + bTrend
+  const trendY0 = mTrend * dXMin + bTrend
+  const trendY1 = mTrend * dXMax + bTrend
 
   // Engine Cov/rho for aria mirror
   const cov = covariance(cells)
@@ -394,6 +405,16 @@ function ScatterDisplay({
           aria-hidden="true"
           className="covboard__svg"
         >
+          <defs>
+            <clipPath id={clipId}>
+              <rect
+                x={PAD}
+                y={PAD}
+                width={SVG_W - 2 * PAD}
+                height={SVG_H - 2 * PAD}
+              />
+            </clipPath>
+          </defs>
           {/* Axes */}
           <line
             x1={PAD} y1={SVG_H - PAD}
@@ -405,32 +426,69 @@ function ScatterDisplay({
             x2={PAD} y2={SVG_H - PAD}
             className="covboard__axis"
           />
-          {/* Trend line */}
-          {!reducedMotion && denom !== 0 && (
-            <line
-              x1={toSvgX(xMin)}
-              y1={toSvgY(trendY0)}
-              x2={toSvgX(xMax)}
-              y2={toSvgY(trendY1)}
-              className="covboard__trendline"
-            />
-          )}
-          {/* Points */}
-          {cells.map((c, i) => {
-            const cx = toSvgX(ratVal(c.x))
-            const cy = toSvgY(ratVal(c.y))
-            const r = Math.max(3, Math.round(ratVal(c.p) * 20))
-            return (
-              <circle
-                key={i}
-                cx={cx}
-                cy={cy}
-                r={r}
-                className="covboard__point"
-                opacity={0.7}
+          {/* X ticks + numeric labels (share the data scale) */}
+          {xTicks.map((t) => (
+            <g key={`x${t}`}>
+              <line
+                x1={toSvgX(t)} y1={SVG_H - PAD}
+                x2={toSvgX(t)} y2={SVG_H - PAD + 4}
+                className="covboard__tick"
               />
-            )
-          })}
+              <text
+                x={toSvgX(t)} y={SVG_H - PAD + 14}
+                textAnchor="middle"
+                className="covboard__ticklabel"
+              >
+                {fmtTick(t)}
+              </text>
+            </g>
+          ))}
+          {/* Y ticks + numeric labels */}
+          {yTicks.map((t) => (
+            <g key={`y${t}`}>
+              <line
+                x1={PAD - 4} y1={toSvgY(t)}
+                x2={PAD} y2={toSvgY(t)}
+                className="covboard__tick"
+              />
+              <text
+                x={PAD - 6} y={toSvgY(t) + 3}
+                textAnchor="end"
+                className="covboard__ticklabel"
+              >
+                {fmtTick(t)}
+              </text>
+            </g>
+          ))}
+          {/* Data clipped to the plot area so zoomed-out-of-frame points hide */}
+          <g clipPath={`url(#${clipId})`}>
+            {/* Trend line */}
+            {!reducedMotion && denom !== 0 && (
+              <line
+                x1={toSvgX(dXMin)}
+                y1={toSvgY(trendY0)}
+                x2={toSvgX(dXMax)}
+                y2={toSvgY(trendY1)}
+                className="covboard__trendline"
+              />
+            )}
+            {/* Points */}
+            {cells.map((c, i) => {
+              const cx = toSvgX(ratVal(c.x))
+              const cy = toSvgY(ratVal(c.y))
+              const r = Math.max(3, Math.round(ratVal(c.p) * 20))
+              return (
+                <circle
+                  key={i}
+                  cx={cx}
+                  cy={cy}
+                  r={r}
+                  className="covboard__point"
+                  opacity={0.7}
+                />
+              )
+            })}
+          </g>
         </svg>
       </div>
 
@@ -648,8 +706,12 @@ function CorrVectorsDisplay({
             value={angleDeg}
             aria-label="Third vector angle"
             onKeyDown={(e) => {
-              if (e.key === 'Home') { e.preventDefault(); setAngleDeg(minDeg) }
-              if (e.key === 'End') { e.preventDefault(); setAngleDeg(maxDeg) }
+              // minDeg/maxDeg derive from rangeMin/rangeMax, which can be NaN when
+              // the corrRange float fallback hits Math.sqrt of a negative (authored
+              // |ρ|>1). Never feed angleDeg a non-finite value — fall back to the
+              // slider bounds (0 / 180), which are always valid.
+              if (e.key === 'Home') { e.preventDefault(); setAngleDeg(Number.isFinite(minDeg) ? minDeg : 0) }
+              if (e.key === 'End') { e.preventDefault(); setAngleDeg(Number.isFinite(maxDeg) ? maxDeg : 180) }
             }}
             onChange={(e) => setAngleDeg(Number(e.target.value))}
           />

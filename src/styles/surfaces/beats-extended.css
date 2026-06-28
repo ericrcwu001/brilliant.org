@@ -1068,6 +1068,13 @@
   }
 }
 
+.wheel__options .token--wrong {
+  border: 1.5px solid var(--wrong);
+  background: var(--wrong-tint);
+  color: var(--wrong-text);
+  box-shadow: none;
+}
+
 /* ── SumTilesBeat extended layout ──────────────────────────────────────────── */
 .sumtiles__kicker {
   margin: 0;

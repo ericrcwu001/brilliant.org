@@ -96,6 +96,9 @@ export function HandRankerBeat(props: BeatProps) {
     if (ranking.some((r) => r === handIdx)) return
     const nextEmpty = ranking.findIndex((r) => r === null)
     if (nextEmpty === -1) return
+    // Editing the answer drops any stale verdict (the auto-grade-when-full
+    // path below re-sets it); cf AnswerEntryBeat / RetrievalGridBeat.
+    ladder.clear()
     const newRanking = [...ranking]
     newRanking[nextEmpty] = handIdx
     setRanking(newRanking)
@@ -112,6 +115,8 @@ export function HandRankerBeat(props: BeatProps) {
   function moveSlot(slotIdx: number, dir: -1 | 1) {
     const targetIdx = slotIdx + dir
     if (targetIdx < 0 || targetIdx >= hands.length) return
+    // Rearranging cards drops any stale verdict; the learner re-grades via Check.
+    ladder.clear()
     const newRanking = [...ranking]
     const tmp = newRanking[slotIdx]!
     newRanking[slotIdx] = newRanking[targetIdx]!

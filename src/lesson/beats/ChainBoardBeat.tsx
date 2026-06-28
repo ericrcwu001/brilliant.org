@@ -156,13 +156,13 @@ function DiagramDisplay({
   function check() {
     let correct = false
     if (task === 'entry' && cell && tappedEdge) {
-      correct = isChainBoardCorrect(beat, { kind: 'edge', from: tappedEdge.from, to: tappedEdge.to })
+      correct = isChainBoardCorrect({ hero: beat.hero, interaction: ix }, { kind: 'edge', from: tappedEdge.from, to: tappedEdge.to })
     } else if (task === 'classify') {
-      correct = isChainBoardCorrect(beat, { kind: 'nodeClasses', classes: nodeClass })
+      correct = isChainBoardCorrect({ hero: beat.hero, interaction: ix }, { kind: 'nodeClasses', classes: nodeClass })
     } else if (task === 'pagerank') {
-      correct = tappedNode !== null && isChainBoardCorrect(beat, { kind: 'node', index: tappedNode })
+      correct = tappedNode !== null && isChainBoardCorrect({ hero: beat.hero, interaction: ix }, { kind: 'node', index: tappedNode })
     } else if (task === 'absorption') {
-      correct = isChainBoardCorrect(beat, { kind: 'text', value: absInput })
+      correct = isChainBoardCorrect({ hero: beat.hero, interaction: ix }, { kind: 'text', value: absInput })
     }
     if (correct) {
       ladder.submitCorrect()
@@ -417,7 +417,7 @@ function MatrixDisplay({
     const canCheck = allFilled && allRowsOne
 
     const check = () => {
-      const correct = isChainBoardCorrect(beat, { kind: 'matrix', cells: parsed })
+      const correct = isChainBoardCorrect({ hero: beat.hero, interaction: ix }, { kind: 'matrix', cells: parsed })
       if (correct) { ladder.submitCorrect(); setSolved(true) } else { ladder.submitWrong() }
     }
 
@@ -614,10 +614,10 @@ function PowersDisplay({
 
   function check() {
     if (ix.task === 'classify') {
-      const correct = verdict !== null && isChainBoardCorrect(beat, { kind: 'verdict', value: verdict })
+      const correct = verdict !== null && isChainBoardCorrect({ hero: beat.hero, interaction: ix }, { kind: 'verdict', value: verdict })
       if (correct) { ladder.submitCorrect(); setSolved(true) } else { ladder.submitWrong() }
     } else if (tappedCell && cell) {
-      const correct = isChainBoardCorrect(beat, { kind: 'cell', row: tappedCell.row, col: tappedCell.col })
+      const correct = isChainBoardCorrect({ hero: beat.hero, interaction: ix }, { kind: 'cell', row: tappedCell.row, col: tappedCell.col })
       if (correct) { ladder.submitCorrect(); setSolved(true) } else { ladder.submitWrong() }
     }
   }
@@ -819,7 +819,7 @@ function DistributionDisplay({
   const target = formatRational(stationary[cellRow])
 
   function check() {
-    const correct = isChainBoardCorrect(beat, { kind: 'text', value: shareInput })
+    const correct = isChainBoardCorrect({ hero: beat.hero, interaction: ix }, { kind: 'text', value: shareInput })
     if (correct) { ladder.submitCorrect(); setSolved(true) } else { ladder.submitWrong() }
   }
 
@@ -976,7 +976,7 @@ function StationaryDisplay({
   if (isPageRank) {
     const prBars = pagerank(P, liveDamping)
     const check = () => {
-      const correct = tappedChoice !== null && isChainBoardCorrect(beat, { kind: 'bool', value: tappedChoice })
+      const correct = tappedChoice !== null && isChainBoardCorrect({ hero: beat.hero, interaction: ix }, { kind: 'bool', value: tappedChoice })
       if (correct) { ladder.submitCorrect(); setSolved(true) } else { ladder.submitWrong() }
     }
     const primary = solved
@@ -1030,8 +1030,8 @@ function StationaryDisplay({
 
   const check = () => {
     const correct = reversibleChoice
-      ? (tappedChoice !== null && isChainBoardCorrect(beat, { kind: 'bool', value: tappedChoice }))
-      : isChainBoardCorrect(beat, { kind: 'text', value: piInput })
+      ? (tappedChoice !== null && isChainBoardCorrect({ hero: beat.hero, interaction: ix }, { kind: 'bool', value: tappedChoice }))
+      : isChainBoardCorrect({ hero: beat.hero, interaction: ix }, { kind: 'text', value: piInput })
     if (correct) { ladder.submitCorrect(); setSolved(true) } else { ladder.submitWrong() }
   }
   const interacted = reversibleChoice ? tappedChoice !== null : piInput.trim() !== ''
