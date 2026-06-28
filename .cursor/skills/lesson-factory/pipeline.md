@@ -66,9 +66,13 @@ resuming each lead in turn with the other's latest on-disk artifact:
    the mechanic, reuse-vs-new, build decomposition, feedback/hints, a11y, visual/motion, track.
 3. **Loop** (Manager resumes Dept 1 Lead with the Interaction Spec, then Dept 2 Lead with the
    revised Lesson Brief, alternating) until the joint **Definition-of-Ready** holds for every beat
-   (every beat has a verified+sourced problem AND a concrete interactive mechanic + feedback). Each
-   lead self-resolves within its lane; unresolved conflicts escalate to the Manager; the Manager
-   escalates to the user only as a last resort.
+   (every beat has a verified+sourced problem AND a concrete interactive mechanic + feedback) **and the
+   lesson satisfies the learning-science contract** (`learning-science.md` §6 checklist: `schemaId` on
+   every graded beat, a which-method gate, a held-out transfer problem, a cold graded checkpoint,
+   cold-retrieval opening, an assist path on every capped graded beat, `CONFUSABLE` interleaving + a
+   "same method, different costume" comparison, feed-forward feedback). Each lead self-resolves within
+   its lane; unresolved conflicts escalate to the Manager; the Manager escalates to the user only as a
+   last resort.
 
 Independent lessons run concurrently — the Manager fans out across lessons and drives each lesson's
 loop in parallel.

@@ -43,6 +43,12 @@ synthesized by its owning department lead from that lead's workers' outputs.
 ## New engine(s) / widget(s) anticipated (for Wave 0)
 - engine: src/engine/<topic>.ts — <what it computes>
 - interaction type(s): <name> — <one-liner>
+
+## Learning-science coverage (`learning-science.md` — concept level)
+- new `methods.ts` `schemaId`s this concept needs (+ their symmetric `CONFUSABLE` neighbours), for Wave 0
+- which-method gates planned (which lessons; which `CONFUSABLE` confusions they drill)
+- cross-lesson interleaving / "same method, different costume" pairs (which methods recur across lessons)
+- Interview Pack stance: brutal floor + tier-aware rubric + feed-forward report (§3)
 ```
 
 > ⚠️ **`chapters[]` is the catalog's hard requirement for a LIVE concept.** Every built `lessonId` must
@@ -131,14 +137,23 @@ sources: fixtures/lesson-*.json per branch; Firestore lessons/* + courses/* (dev
 ## Misconceptions (Specialist)
 - <wrong model> → where it fires → refutation copy (per-option)
 
-## Assessment + continuity (Designer + Cartographer)
-- retrieval opener: <which prior headline — from the Continuity Report>
+## Assessment + continuity + learning science (Designer + Cartographer — `learning-science.md` §2)
+- retrieval opener (COLD — not a primer; worked solution gated behind an attempt): <which prior headline — from the Continuity Report>
 - guaranteed early win: <which beat>
+- **which-method gate (spec-13 / §2.2):** <beatId> — graded `prediction.gate`, `gate.correct` = <MethodId>
+  (== the beat's `schemaId`), `optionMethods` = [<correct> + distractors from `CONFUSABLE[correct]`],
+  label-stripped prompt
+- **confidence checkpoint (spec-02/12 / §2.4):** <which graded checkpoint(s) confidence rides on — mastery
+  challenge and/or the gate>; opening bet stays an ungraded `prediction` (no `gate`)
 - mastery challenge (required, before recap): <problem + pattern>
 - held-out transfer (Track-B gold gate, spec-24): <fresh-surface problem, SAME schemaId as the mastery
   challenge> — authored `required:false, track:'B', heldOut:true`, placed **immediately before** the
   mastery challenge (so the `(masteryChallenge, recap)` ending invariant holds), engine-verified.
-- spacing/interleaving: <what re-surfaces — from the Continuity Report>
+- **"same method, different costume" comparison (§2.7):** <retrievalGrid/compare beatId — two surfaces, one schemaId>
+- spacing/interleaving: <what re-surfaces — from the Continuity Report; foils from `CONFUSABLE`, not random>
+- **difficulty-band / assist (spec-21 / §2.6):** every capped graded beat has an `assist`/`hintCapOverride`
+  path + a `density` flag; authored for ~50–85% success (never floored below ~50%)
+- **feedback (§2.9):** per-option (`byOption`) refutational; feed-forward / task-level; no person-verdict
 ```
 
 ---
@@ -169,6 +184,15 @@ sources: fixtures/lesson-*.json per branch; Firestore lessons/* + courses/* (dev
 - [ ] concrete interactive mechanic (real direct-manipulation)
 - [ ] instant feedback + 3-level hints designed
 - [ ] a11y (44px, reduced-motion, aria-live) covered
+- [ ] graded beats carry a `schemaId`; capped graded beats carry an `assist`/`hintCapOverride` path + `density`
+
+## Lesson-level learning-science checklist (`learning-science.md` §6 — must all hold)
+- [ ] cold-retrieval opener; worked solution gated behind an attempt
+- [ ] a which-method gate (`prediction.gate`, `correct == schemaId`, `CONFUSABLE` distractors, label-stripped)
+- [ ] a held-out transfer problem (`heldOut:true track:'B' required:false`, same schemaId as the mastery challenge, fresh surface)
+- [ ] ≥1 cold graded checkpoint confidence rides on; opening bet stays ungraded (no `gate`)
+- [ ] a "same method, different costume" comparison; overlaps → recall, foils from `CONFUSABLE` not random
+- [ ] thin worked-example on-ramp for first contact, faded fast; feed-forward, no person-verdict feedback
 ```
 
 ---

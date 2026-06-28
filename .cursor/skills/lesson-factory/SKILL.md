@@ -32,6 +32,10 @@ engine-verified question pool consumed by the live "interview an AI quant interv
 - `/lesson-factory` (no argument) → the Manager proposes a **Green-Book-grounded backlog** of
   candidate concepts and asks the user to pick.
 
+> The factory is **not bound to the existing concept-groupings**: a concept may ship under a **brand-new
+> `domain`/grouping** — the Curriculum Architect just sets a new `domain`/`domainOrder` on the catalog
+> card and it auto-registers as a new shelf in the Concept Catalog on seed (ADR-0004).
+
 ## Non-negotiable rules (read first)
 
 1. **Ground truth = the Green Book.** The book (`references/green-book.txt`, gitignored) decides
@@ -64,6 +68,20 @@ engine-verified question pool consumed by the live "interview an AI quant interv
    **retrieval practice, spaced review, and interleaving** (Continuity Report; `inclusive-research-5`).
 8. **Surgical & simple per `AGENTS.md`.** Reuse the existing engine, schema, widget catalog, rubric,
    and research memos before building new.
+9. **Apply the full learning-science contract (`learning-science.md`).** Every lesson is authored for
+   **durable, transferable, under-pressure retrieval — not comprehension** (the quant-interview is a
+   cold, delayed, interleaved test under load). The brainlift
+   (`docs/brainlift-learning-science-brilliant-quant-prep.md`) is already built into the app as
+   `docs/learning-science/spec-00…spec-24`; the factory's job is to author content that **uses** those
+   mechanisms. **Non-negotiable per lesson:** a `schemaId` on every graded beat with surface labels
+   stripped (spec-00); ≥1 **which-method discrimination gate** (graded `prediction.gate`, spec-13); a
+   **held-out transfer** problem (spec-24); ≥1 cold graded **checkpoint** that confidence rides on
+   (spec-02/12); **cold-retrieval opening + worked solution gated behind an attempt** (spec-03); an
+   **assist/`hintCapOverride` path + `density`** on every capped graded beat so the difficulty governor
+   never dead-ends a novice (spec-21); **interleaving by `CONFUSABLE` foils + a "same method, different
+   costume" comparison** (SPOV 2); and **feed-forward, per-option, no-person-verdict feedback**
+   (spec-23). Honor the boundary conditions (thin on-ramp for first contact, ~50–85% success band,
+   automaticity for speed primitives). Full rules + the per-lesson checklist: **`learning-science.md`**.
 
 ## Org chart
 
@@ -115,7 +133,8 @@ Step-by-step orchestration (with parallelism and worktrees): **`pipeline.md`**.
 Artifact templates (Concept Brief, Continuity Report, Lesson Brief, Interaction Spec, Implementation
 Brief, Scorecard): **`artifacts.md`**. QA gates + Definition-of-Done: **`qa-rubric.md`**. Staging, dev
 deploy, seed, prod ship, Slack: **`deploy.md`**. Capstone AI-interview assets (live feature — ADR-0008):
-**`interview-packs.md`**.
+**`interview-packs.md`**. The mandatory per-lesson + per-concept learning-science authoring rules
+(the brainlift → shipped-spec translation Dept 1 & Dept 2 build to): **`learning-science.md`**.
 
 ## Model routing (per `.cursor/rules/model-routing.mdc`; nested-department architecture: ADR-0007)
 
