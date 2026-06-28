@@ -1,0 +1,92 @@
+{
+  "courseId": "course-options",
+  "title": "Options, Payoffs & No-Arbitrage",
+  "description": "Two portfolios with the same payoff must cost the same — so you can price and hedge any option by the trade that cannot lose. From the piecewise-linear payoff, through put-call parity and no-arbitrage bounds, to replication, the risk-neutral measure q, the binomial tree, and the delta hedge, with Black-Scholes reached as the continuous limit but never graded.",
+  "persona": "For the quant-interview audience that knows expected value, combinatorics, and covariance and wants the finance payoff: pricing and hedging built entirely on exact, no-arbitrage reasoning. Every graded answer is an exact rational; Black-Scholes and the continuous Greeks are shown only as the continuous limit.",
+  "completionMilestoneId": "options-complete",
+  "schemaVersion": 1,
+  "domain": "Quantitative Finance",
+  "domainOrder": 3,
+  "order": 0,
+  "status": "live",
+  "tagline": "Price the trade that cannot lose.",
+  "accent": "ch2",
+  "vizKey": "twoNode",
+  "chapters": [
+    {
+      "id": "ch-options-1",
+      "label": "The Contract & No-Arbitrage",
+      "accent": "ch2",
+      "lessonIds": ["lesson-options-1", "lesson-options-2"]
+    },
+    {
+      "id": "ch-options-2",
+      "label": "Composing & Pricing",
+      "accent": "ch4",
+      "lessonIds": ["lesson-options-3", "lesson-options-4"]
+    },
+    {
+      "id": "ch-options-3",
+      "label": "Trees, Greeks & the Wild",
+      "accent": "ch1",
+      "lessonIds": ["lesson-options-5", "lesson-options-6"]
+    }
+  ],
+  "lessons": [
+    {
+      "lessonId": "lesson-options-1",
+      "title": "Payoffs & the Contract",
+      "summary": "Read and compose option payoffs: long/short calls and puts as piecewise-linear max(·,0); intrinsic vs time value; the protective-put identity max(S_T,K).",
+      "milestoneId": "opt-payoffs",
+      "built": false,
+      "glyphKey": "(S−K)⁺",
+      "vizKey": "twoNode"
+    },
+    {
+      "lessonId": "lesson-options-2",
+      "title": "Put-Call Parity & No-Arbitrage",
+      "summary": "Derive C − P = S − K·D as a no-arbitrage identity; spot the arbitrage gap, build the conversion trade, and bound a call or put by no-arbitrage.",
+      "milestoneId": "opt-parity",
+      "built": false,
+      "glyphKey": "C−P",
+      "vizKey": "twoNode"
+    },
+    {
+      "lessonId": "lesson-options-3",
+      "title": "Spreads & Straddles",
+      "summary": "Compose multi-leg payoffs (bull spread, butterfly, straddle, strangle); read caps and break-points; bound a spread's price 0 ≤ c₁−c₂ ≤ K₂−K₁ by no-arbitrage.",
+      "milestoneId": "opt-spreads",
+      "built": false,
+      "glyphKey": "c₁−c₂",
+      "vizKey": "sum"
+    },
+    {
+      "lessonId": "lesson-options-4",
+      "title": "One-Step Binomial: Price by Replication",
+      "summary": "Price by replication (Δ shares + bond B) and by the risk-neutral measure q=(R−d)/(u−d); show hedge cost = price = (1/R)·E_q[payoff].",
+      "milestoneId": "opt-replication",
+      "built": false,
+      "glyphKey": "q",
+      "vizKey": "twoNode"
+    },
+    {
+      "lessonId": "lesson-options-5",
+      "title": "Multi-Step Binomial → Black-Scholes",
+      "summary": "Fold a multi-step tree by backward induction; weight nodes nCk·q^k(1−q)^(n−k); reach Black-Scholes as the display-only continuous limit.",
+      "milestoneId": "opt-tree",
+      "built": false,
+      "glyphKey": "nCk",
+      "vizKey": "randomWalk"
+    },
+    {
+      "lessonId": "lesson-options-6",
+      "title": "Synthesis: Hedging, Greeks & In the Wild",
+      "summary": "The option delta is the Cov/Var hedge ratio; read the exact Greek signs; choose the right tool (delta-hedge vs replicate vs q-price) on unlabeled problems.",
+      "milestoneId": "opt-synthesis",
+      "built": false,
+      "glyphKey": "Δ",
+      "vizKey": "twoNode"
+    }
+  ],
+  "roadmap": []
+}

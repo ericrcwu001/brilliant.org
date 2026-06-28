@@ -2,7 +2,64 @@
 
 <!-- Orientation doc for a fresh context. Session-by-session narration lives in git history; this file keeps only what's needed going forward. -->
 
-## Learning-Science Overhaul — ✅ COMPLETE (2026-06-27, on branch `learning-science-overhaul`)
+## `lesson-options-1` Interaction Spec — ✅ COMPLETE (2026-06-28, Dept-2 design)
+
+**Output:** `concepts/options/lesson-options-1/interaction-spec.md` (written). Design-only; no production code.
+
+**DoR: READY** — all 10 beats ready; no blockers.
+
+**§6 LS checklist: fully holds** — cold retrieval opener (`E[X]` EV L1 recall), which-method gate (`payoff-construction`, foils ⊂ CONFUSABLE, label-stripped), held-out transfer (straddle #4, same schemaId `payoff-construction`, before mastery, engine-verified 30/30), ≥1 cold graded checkpoint, "same method different costume" compare (call vs put), thin on-ramp faded fast (tripletReveal), byOption feed-forward, no person-verdict.
+
+**optionBoard schema gap:** None. The frozen schema fully expresses L1 needs: `legs[]` toggle + `markS` + `headline` + `interactive`. No new props required. The `parityScale` schema gap (noted in L2 spec) is not relevant to L1.
+
+**Wave-0 wiring reminder:** `lesson-options-1` must be added to `GATED` + `MASTERY_LESSONS` in `scripts/validate-fixtures.ts` (blocked on Dept-3); `payoff-construction` method id frozen by Wave-0 schema work (see § below).
+
+---
+
+## `lesson-options-2` Interaction Spec — ✅ COMPLETE (2026-06-28, Dept-2 design)
+
+**Output:** `concepts/options/lesson-options-2/interaction-spec.md` (written). Design-only; no production code.
+
+**DoR: READY** (parityScale schema gap is a Wave-0 renderer dependency, not a DoR blocker — `headline=parityGap(8,2,100,95,1)=1` is engine-reproducible and validate-fixtures-checkable today; explore is ungraded).
+
+**§6 LS checklist: fully holds** — cold retrieval opener (`dominance-nash`), which-method gate (`put-call-parity`, foils ⊂ CONFUSABLE, label-stripped), held-out transfer (`D=10/11`, same schemaId, before mastery, engine-verified C=13), ≥1 cold graded checkpoint, "same method different costume" compare, thin on-ramp faded, byOption feed-forward, no person-verdict.
+
+**parityScale schema gap (Wave-0 amendment required):** the frozen `optionBoard` schema has no slot for the quoted market prices C and P or the discount D — `legs[].kind/K/qty` carries structural legs only. The renderer cannot draw the initial tilt or run `parityGap` live without them. Recommended: add `quotes:{C?,P?,S?,K?,D?}` (Option A) or per-leg `price:Rational` (Option B). Stopgap: pack as `labels` strings (fragile, not recommended). `headline` validation is unaffected.
+
+---
+
+## Wave-0 validate-fixtures wiring for concept-options — ✅ COMPLETE (2026-06-28, Verification Engineer)
+
+Four edits to `scripts/validate-fixtures.ts`:
+
+- **§1a (import):** Added options engine import block (`optSpreadPayoff`, `optParityGap`, `optParitySolve`, `optCallPayoff`, `optPutPayoff`, `optCallBounds`, `optRiskNeutralQ`, `optBinomialPrice`, `optReplicate`, `optTreeTerminals`, `optTreeWeights`, `optPathCount`, `optHedgeRatio`, `optMinVarWeights`, `optOneTouchPrice`, `optGreekSign`, `optToBig`, `optFmt`, `OptLeg`) after the `binary` import block.
+- **§3h (cross-check):** `optionBoard` engine cross-check block (mirrors §3f covarianceBoard); `payoffDiagram` via `spreadPayoff`, `binomialTree` via `binomialPrice`/`replicate.delta`, `parityScale` via `parityGap` legs-carry-values convention; `greeksSlider` exempted (display-only). NO-OP at 0 beats (correct — no options fixtures yet).
+- **§1c (GATED + MASTERY_LESSONS):** `lesson-options-1..6` added to both sets.
+- **§6d (self-check):** 42-assertion options engine self-check block after §6c.
+
+Created `concepts/options/wave0-contracts.md` documenting all frozen contracts for Stage-4 authors.
+
+**Gates (all green):** `tsc -b` → 0 errors; `eslint scripts/validate-fixtures.ts` → 0 errors; `tsx scripts/validate-fixtures.ts` → exit 0, prints:
+- `✓ optionBoard headlines match options.ts (0 beats)`
+- `✓ options engine self-check (Stage-2 anchor)`
+- `✓ chapters cover all built lessons: course-options`
+- `All fixtures valid.`
+
+---
+
+## Wave-0 Schema/Types for concept-options — ✅ COMPLETE (2026-06-28, branch `concept/options`)
+
+Three files updated with FROZEN Wave-0 contracts for `course-options`:
+
+- **`src/content/methods.ts`**: Added 6 new `METHODS` entries (`payoff-construction`, `put-call-parity`, `no-arbitrage-replication`, `risk-neutral-pricing`, `binomial-pricing`, `delta-hedging`) under `// ── options (concept-options) ──`. Updated `backward-induction` domains to include `'options'`. Added full CONFUSABLE block for options under `// ── options ──`. Added 7 reverse edges to existing entries (`dominance-nash`, `conditioning`, `linearity-indicators`, `prior-update`, `backward-induction`, `first-step-analysis`, `recursion-self-reference`). Symmetry verified + `methods.test.ts` 4/4 pass.
+- **`src/content/schema.ts`**: Inserted `optionBoard` discriminated-union member (4 displays: payoffDiagram/binomialTree/parityScale/greeksSlider; legs/tree/sigma/markS/labels/interactive/headline all optional) immediately after `weighing` and before closing `])`.
+- **`src/lesson/chapters.ts`**: Appended 6 options lessons (`lesson-options-1..6`) → ch2/ch2/ch4/ch4/ch1/ch1, with comment block.
+
+**Gates:** `vitest run src/content/methods.test.ts` → 4/4 pass; `tsc -b` → 0 errors; `eslint` (3 files) → 0 errors.
+
+---
+
+
 
 The full plan in `docs/learning-science/` (README + all 15 specs) is implemented, verified, and committed to branch **`learning-science-overhaul`** (NOT main — branched to protect the work after a concurrent `concept/covariance` merge into main; see the merge event note below). Commits: 2526970 (P0+P1w1), 37c49d3 (covariance), 8ccf01f (spec-12), b5face8 (spec-11), d770493 (P2w1), ff8c11a (P2w2), 9dba6d6 (spec-05 + final flag flip).
 
@@ -616,6 +673,19 @@ Wave 0 committed at `8f7f227`. Authored the 10 per-lesson fixtures + course enri
 4. Enable **Google sign-in** (last gate for full live auth).
 5. **Live end-to-end check** (emulator/seed/auth + live `/path`; verify unlock chain + milestones on an authed walk) — user's terminal (no Java here).
 6. **Tidy the working tree** (only when asked): commit pending work; consider removing the stray committed `docs/Hermes-Setup.dmg` (binary, likely unintended).
+
+## Session: OptionBoardBeat renderer (concept/options branch)
+
+**Completed (Jun 28 2026):** Implemented `OptionBoardBeat` renderer for all 4 display modes.
+
+Files created/edited:
+- `src/lesson/beats/OptionBoardBeat.tsx` — renderer with payoffDiagram, binomialTree, parityScale, greeksSlider sub-components
+- `src/styles/surfaces/options.css` — CSS classes optboard__* / optboard--*, tokens only, reduced-motion block
+- `src/lesson/beats/OptionBoardBeat.test.tsx` — 18 smoke tests via renderToString, all passing
+- `src/lesson/beats/index.tsx` — added import + `case 'optionBoard'` dispatch
+- `src/styles/app.css` — added `@import './surfaces/options.css' layer(components);`
+
+Gates: vitest 18/18 ✓ · tsc -b clean ✓ · eslint clean ✓
 
 ## Quick Reference
 

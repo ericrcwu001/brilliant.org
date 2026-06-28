@@ -42,6 +42,7 @@ import { CouponCollectorSimBeat } from './CouponCollectorSimBeat'
 import { ChainBoardBeat } from './ChainBoardBeat'
 import { StoppingBoardBeat } from './StoppingBoardBeat'
 import { CovarianceBoardBeat } from './CovarianceBoardBeat'
+import { OptionBoardBeat } from './OptionBoardBeat'
 import { PayoffMatrixBeat } from './PayoffMatrixBeat'
 import { GameTreeBeat } from './GameTreeBeat'
 import { NimBoardBeat } from './NimBoardBeat'
@@ -114,6 +115,8 @@ export function BeatView(props: BeatProps) {
       return <StoppingBoardBeat {...props} />
     case 'covarianceBoard':
       return <CovarianceBoardBeat {...props} />
+    case 'optionBoard':
+      return <OptionBoardBeat {...props} />
     // Lesson-specific heroes (build-brief §4.4 / §6).
     case 'raceSim':
       return <RaceSimBeat {...props} />

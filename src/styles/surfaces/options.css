@@ -1,0 +1,289 @@
+/* ── OptionBoardBeat — payoffDiagram, binomialTree, parityScale, greeksSlider
+   Tokens only; no raw hex. Chapter accent resolves through var(--accent).
+   Classes: optboard__* / optboard--*  */
+
+/* ── Root container ────────────────────────────────────────────────────────── */
+
+.optboard {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s3);
+}
+
+/* ── Readout strip ──────────────────────────────────────────────────────────── */
+
+.optboard__readout {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s2) var(--s3);
+  align-items: center;
+  padding: var(--s2) var(--s3);
+  background: var(--ergo-surface-2);
+  border-radius: var(--r-md);
+  font-family: var(--font-mono);
+  font-size: calc(13px * var(--fs));
+  font-variant-numeric: tabular-nums;
+  color: var(--ergo-ink-2);
+}
+
+.optboard__stat {
+  white-space: nowrap;
+}
+
+.optboard__approx {
+  font-size: calc(11px * var(--fs));
+  color: var(--ergo-ink-3);
+  margin-left: var(--s1);
+}
+
+/* ── Display-only note ──────────────────────────────────────────────────────── */
+
+.optboard__display-note {
+  padding: var(--s1) var(--s2);
+  background: var(--ergo-surface-2);
+  border: 1px solid var(--ergo-line-2);
+  border-radius: var(--r-md);
+  font-size: calc(11px * var(--fs));
+  color: var(--ergo-ink-3);
+  font-style: italic;
+}
+
+/* ── Chip — fair / arbitrage (parityScale) ──────────────────────────────────── */
+
+.optboard__chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s1);
+  padding: var(--s1) var(--s2);
+  border-radius: var(--r-pill);
+  font-size: calc(12px * var(--fs));
+  font-weight: 600;
+  border: 1px solid transparent;
+}
+
+.optboard__chip--fair {
+  background: var(--accent-tint);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.optboard__chip--arb {
+  background: var(--ergo-surface-2);
+  border-color: var(--ergo-line-2);
+  color: var(--ergo-ink-2);
+}
+
+/* ── SVG wrap ───────────────────────────────────────────────────────────────── */
+
+.optboard__svg-wrap {
+  background: var(--ergo-surface);
+  border: 1px solid var(--ergo-line);
+  border-radius: var(--r-md);
+  overflow: hidden;
+}
+
+.optboard__svg {
+  display: block;
+  width: 100%;
+  max-width: 380px;
+  height: auto;
+}
+
+.optboard__svg--tree {
+  max-width: 480px;
+}
+
+/* ── Payoff diagram SVG classes ─────────────────────────────────────────────── */
+
+.optboard__axis {
+  stroke: var(--ergo-line-2);
+  stroke-width: 1;
+}
+
+.optboard__zeroline {
+  stroke: var(--ergo-line-2);
+  stroke-width: 1;
+  stroke-dasharray: 4 3;
+  opacity: 0.5;
+}
+
+.optboard__tick {
+  stroke: var(--ergo-line-2);
+  stroke-width: 1;
+}
+
+.optboard__ticklabel {
+  fill: var(--ergo-ink-2);
+  font-family: var(--font-sans);
+  font-size: 9px;
+}
+
+.optboard__payline {
+  stroke: var(--accent);
+  stroke-width: 2;
+  stroke-linejoin: round;
+}
+
+.optboard__marker {
+  stroke: var(--ergo-ink-3);
+  stroke-width: 1;
+  stroke-dasharray: 3 2;
+}
+
+.optboard__markerdot {
+  fill: var(--accent);
+}
+
+/* ── Binomial tree SVG classes ──────────────────────────────────────────────── */
+
+.optboard__tree-edge {
+  stroke: var(--ergo-line-2);
+  stroke-width: 1;
+}
+
+.optboard__tree-node {
+  fill: var(--ergo-surface-2);
+  stroke: var(--ergo-line-2);
+  stroke-width: 1;
+  cursor: pointer;
+  transition:
+    fill var(--dur-micro) var(--ease-out),
+    stroke var(--dur-micro) var(--ease-out);
+}
+
+.optboard__tree-node:hover,
+.optboard__tree-node:focus-within {
+  fill: var(--accent-tint);
+  stroke: var(--accent);
+}
+
+.optboard__tree-node--selected {
+  fill: var(--accent-tint);
+  stroke: var(--accent);
+  stroke-width: 2;
+}
+
+.optboard__tree-label {
+  fill: var(--ergo-ink-2);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  pointer-events: none;
+}
+
+.optboard__tree-depthlabel {
+  fill: var(--ergo-ink-3);
+  font-family: var(--font-mono);
+  font-size: 9px;
+}
+
+/* ── Parity scale SVG classes ───────────────────────────────────────────────── */
+
+.optboard__scale-stand {
+  stroke: var(--ergo-line-2);
+  stroke-width: 2;
+  stroke-linecap: round;
+}
+
+.optboard__scale-beam {
+  stroke: var(--ergo-ink-2);
+  stroke-width: 2.5;
+  stroke-linecap: round;
+}
+
+.optboard__scale-fulcrum {
+  fill: var(--ergo-ink-2);
+}
+
+.optboard__scale-rope {
+  stroke: var(--ergo-line-2);
+  stroke-width: 1;
+}
+
+.optboard__scale-pan {
+  fill: var(--ergo-surface-2);
+  stroke: var(--accent);
+  stroke-width: 1;
+}
+
+.optboard__scale-panlabel {
+  fill: var(--accent);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 600;
+  pointer-events: none;
+}
+
+/* ── Greeks grid ────────────────────────────────────────────────────────────── */
+
+.optboard__greeks-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s2);
+}
+
+.optboard__greek-chip {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--s1);
+  padding: var(--s2) var(--s3);
+  background: var(--ergo-surface-2);
+  border: 1px solid var(--ergo-line);
+  border-radius: var(--r-md);
+  min-width: 64px;
+}
+
+.optboard__greek-name {
+  font-family: var(--font-mono);
+  font-size: calc(11px * var(--fs));
+  color: var(--ergo-ink-3);
+}
+
+.optboard__greek-sign {
+  font-size: calc(16px * var(--fs));
+  font-weight: 700;
+}
+
+.optboard__greek-sign--pos {
+  color: var(--accent);
+}
+
+.optboard__greek-sign--neg {
+  color: var(--ergo-ink-2);
+}
+
+.optboard__greek-sign--zero {
+  color: var(--ergo-ink-3);
+}
+
+/* ── Slider control ──────────────────────────────────────────────────────────── */
+
+.optboard__control {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s2);
+  font-size: calc(13px * var(--fs));
+  font-family: var(--font-mono);
+  color: var(--ergo-ink-2);
+}
+
+.optboard__control input[type='range'] {
+  width: 100%;
+  min-height: 44px;
+  cursor: pointer;
+  accent-color: var(--accent);
+}
+
+/* ── Reduced-motion overrides ──────────────────────────────────────────────── */
+
+@media (prefers-reduced-motion: reduce) {
+  .optboard__tree-node {
+    transition: none;
+  }
+
+  .optboard__scale-beam,
+  .optboard__scale-rope,
+  .optboard__scale-pan {
+    transition: none;
+  }
+}

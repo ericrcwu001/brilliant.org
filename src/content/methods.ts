@@ -26,7 +26,7 @@ export const METHODS = {
   'inclusion-exclusion':   { name: 'Inclusion–exclusion',    domains: ['combinatorics'] },
   'pigeonhole':            { name: 'Pigeonhole',             domains: ['combinatorics'] },
   'dominance-nash':        { name: 'Dominance / Nash',       domains: ['game-theory'] },
-  'backward-induction':    { name: 'Backward induction',     domains: ['game-theory', 'optimal-stopping'] },
+  'backward-induction':    { name: 'Backward induction',     domains: ['game-theory', 'optimal-stopping', 'options'] },
   'mixed-strategy':        { name: 'Mixed strategy / indifference', domains: ['game-theory'] },
   'threshold-rule':        { name: 'Threshold / secretary',  domains: ['optimal-stopping'] },
   // ── binary & information (concept-binary-information) ─────────────────────
@@ -34,6 +34,13 @@ export const METHODS = {
   'information-bound':     { name: 'Information bound (⌈log₂N⌉)', domains: ['binary-information'] },
   'base-encoding':         { name: 'Base-b / balanced-ternary encoding', domains: ['binary-information'] },
   'bit-invariants':        { name: 'Bit manipulation / XOR invariants', domains: ['binary-information'] },
+  // ── options (concept-options) ──
+  'payoff-construction':       { name: 'Payoff construction',     domains: ['options'] },
+  'put-call-parity':           { name: 'Put–call parity',         domains: ['options'] },
+  'no-arbitrage-replication':  { name: 'No-arbitrage replication', domains: ['options'] },
+  'risk-neutral-pricing':      { name: 'Risk-neutral pricing',    domains: ['options'] },
+  'binomial-pricing':          { name: 'Binomial pricing',        domains: ['options'] },
+  'delta-hedging':             { name: 'Delta hedging',           domains: ['options'] },
 } as const
 
 export type MethodId = keyof typeof METHODS
@@ -51,10 +58,10 @@ export const MethodIdSchema = z.enum(
 // SYMMETRIC relation: if A lists B, B must list A (the methods.test.ts symmetry
 // case enforces this). Every key and every value MUST be a valid MethodId.
 export const CONFUSABLE: Record<MethodId, MethodId[]> = {
-  'first-step-analysis':   ['states-markov', 'backward-induction', 'recursion-self-reference', 'absorbing-states'],
+  'first-step-analysis':   ['states-markov', 'backward-induction', 'recursion-self-reference', 'absorbing-states', 'binomial-pricing'],
   'states-markov':         ['first-step-analysis', 'absorbing-states', 'stationary-distribution'],
-  'backward-induction':    ['first-step-analysis', 'threshold-rule', 'recursion-self-reference', 'dominance-nash'],
-  'recursion-self-reference': ['first-step-analysis', 'backward-induction', 'conditioning'],
+  'backward-induction':    ['first-step-analysis', 'threshold-rule', 'recursion-self-reference', 'dominance-nash', 'binomial-pricing'],
+  'recursion-self-reference': ['first-step-analysis', 'backward-induction', 'conditioning', 'binomial-pricing'],
   'absorbing-states':      ['states-markov', 'first-step-analysis', 'stationary-distribution'],
   'stationary-distribution': ['states-markov', 'absorbing-states'],
   'symmetry':              ['complementary-counting', 'conditioning'],
@@ -63,11 +70,11 @@ export const CONFUSABLE: Record<MethodId, MethodId[]> = {
   'counting-product-rule': ['inclusion-exclusion', 'choose-vs-arrange'],
   'choose-vs-arrange':     ['counting-product-rule', 'pigeonhole'],
   'pigeonhole':            ['choose-vs-arrange'],
-  'conditioning':          ['prior-update', 'natural-frequencies', 'recursion-self-reference', 'symmetry', 'linearity-indicators'],
-  'prior-update':          ['conditioning', 'natural-frequencies'],
+  'conditioning':          ['prior-update', 'natural-frequencies', 'recursion-self-reference', 'symmetry', 'linearity-indicators', 'risk-neutral-pricing'],
+  'prior-update':          ['conditioning', 'natural-frequencies', 'risk-neutral-pricing'],
   'natural-frequencies':   ['prior-update', 'conditioning'],
-  'linearity-indicators':  ['conditioning'],
-  'dominance-nash':        ['mixed-strategy', 'backward-induction'],
+  'linearity-indicators':  ['conditioning', 'risk-neutral-pricing', 'delta-hedging'],
+  'dominance-nash':        ['mixed-strategy', 'backward-induction', 'no-arbitrage-replication'],
   'mixed-strategy':        ['dominance-nash'],
   'threshold-rule':        ['backward-induction'],
   // ── binary & information ─────────────────────────────────────────────────
@@ -75,4 +82,11 @@ export const CONFUSABLE: Record<MethodId, MethodId[]> = {
   'information-bound':     ['binary-encoding', 'base-encoding'],
   'base-encoding':         ['binary-encoding', 'information-bound'],
   'bit-invariants':        ['binary-encoding'],
+  // ── options ──
+  'payoff-construction':       ['put-call-parity', 'no-arbitrage-replication'],
+  'put-call-parity':           ['payoff-construction', 'no-arbitrage-replication'],
+  'no-arbitrage-replication':  ['payoff-construction', 'put-call-parity', 'risk-neutral-pricing', 'delta-hedging', 'dominance-nash'],
+  'risk-neutral-pricing':      ['no-arbitrage-replication', 'binomial-pricing', 'conditioning', 'linearity-indicators', 'prior-update'],
+  'binomial-pricing':          ['risk-neutral-pricing', 'delta-hedging', 'backward-induction', 'first-step-analysis', 'recursion-self-reference'],
+  'delta-hedging':             ['no-arbitrage-replication', 'binomial-pricing', 'linearity-indicators'],
 }

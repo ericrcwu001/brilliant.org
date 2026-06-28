@@ -36,3 +36,4 @@
 @import './surfaces/game-theory-nim.css' layer(components);
 @import './surfaces/covariance.css' layer(components);
 @import './surfaces/binary-information.css' layer(components);
+@import './surfaces/options.css' layer(components);

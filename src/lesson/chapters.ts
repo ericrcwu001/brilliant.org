@@ -56,6 +56,15 @@ const LESSON_CHAPTER: Record<string, ChapterHue> = {
   'lesson-binary-information-4': 'ch2',
   'lesson-binary-information-5': 'ch3',
   'lesson-binary-information-6': 'ch3',
+  // concept-options (Wave-0): course card accent ch2; chapter hues ch2/ch4/ch1
+  // (all within ch1-ch4 which have CHAPTER_HEX). ch-options-1 → ch2, ch-options-2
+  // → ch4, ch-options-3 → ch1. Mirrors course-options.json chapters[].
+  'lesson-options-1': 'ch2',
+  'lesson-options-2': 'ch2',
+  'lesson-options-3': 'ch4',
+  'lesson-options-4': 'ch4',
+  'lesson-options-5': 'ch1',
+  'lesson-options-6': 'ch1',
 }
 
 // Resolved hex per chapter — keep in sync with the --chN tokens in

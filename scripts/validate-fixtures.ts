@@ -98,6 +98,27 @@ import {
   bachetWeights as biBachetWeights,
   balancedTernary as biBalancedTernary,
 } from '../src/engine/binary'
+import {
+  spreadPayoff as optSpreadPayoff,
+  parityGap as optParityGap,
+  paritySolve as optParitySolve,
+  callPayoff as optCallPayoff,
+  putPayoff as optPutPayoff,
+  callBounds as optCallBounds,
+  riskNeutralQ as optRiskNeutralQ,
+  binomialPrice as optBinomialPrice,
+  replicate as optReplicate,
+  treeTerminals as optTreeTerminals,
+  treeWeights as optTreeWeights,
+  pathCount as optPathCount,
+  hedgeRatio as optHedgeRatio,
+  minVarWeights as optMinVarWeights,
+  oneTouchPrice as optOneTouchPrice,
+  greekSign as optGreekSign,
+  toBig as optToBig,
+  formatRational as optFmt,
+  type Leg as OptLeg,
+} from '../src/engine/options'
 
 const fixturesDir = join(dirname(fileURLToPath(import.meta.url)), '..', 'fixtures')
 
@@ -741,6 +762,71 @@ for (const lesson of lessons) {
 }
 console.log(`✓ bitBoard/weighing headlines match binary.ts (${biChecked} beats)`)
 
+// ── 3h. optionBoard engine cross-check — recompute each declared `headline`
+// via options.ts (switch on display) and assert equality. optionBoard is NOT
+// in HERO_TYPES/GRADED_TYPES; this cross-check carries the math anchor (mirrors
+// §3c–§3g). Graded reads live in answerEntry / masteryChallenge beats and are
+// checked in the per-lesson factcheck tests (Stage 4). No-op until options fixtures land.
+const toOptLeg = (l: { kind: 'call' | 'put' | 'stock' | 'bond'; K?: { n: number; d: number }; qty: { n: number; d: number } }): OptLeg => ({
+  kind: l.kind,
+  K: l.K ? optToBig(l.K) : undefined,
+  qty: optToBig(l.qty),
+})
+let optChecked = 0
+for (const lesson of lessons) {
+  for (const beat of lesson.beats) {
+    const it = beat.interaction
+    if (it.type !== 'optionBoard' || !it.headline) continue
+    const where = `${lesson.lessonId}/${beat.beatId}`
+    if (it.display === 'greeksSlider') continue
+    let got: string
+    switch (it.display) {
+      case 'payoffDiagram': {
+        if (!it.legs || !it.markS) fail(`${where}: payoffDiagram needs legs + markS`)
+        got = optFmt(optSpreadPayoff(it.legs.map(toOptLeg), optToBig(it.markS)))
+        break
+      }
+      case 'binomialTree': {
+        if (!it.tree) fail(`${where}: binomialTree needs tree`)
+        const t = it.tree
+        const price = optBinomialPrice(optToBig(t.S0), optToBig(t.u), optToBig(t.d), optToBig(t.R), optToBig(t.K), t.n, t.kind)
+        const priceStr = optFmt(price)
+        got = priceStr
+        if (it.headline !== priceStr) {
+          if (t.n === 1) {
+            const deltaStr = optFmt(optReplicate(optToBig(t.S0), optToBig(t.u), optToBig(t.d), optToBig(t.R), optToBig(t.K), t.kind).delta)
+            if (it.headline !== deltaStr) fail(`${where}: binomialTree headline ${it.headline} ≠ price ${priceStr} nor delta ${deltaStr}`)
+            got = deltaStr
+          } else {
+            fail(`${where}: binomialTree headline ${it.headline} ≠ engine price ${priceStr}`)
+          }
+        }
+        break
+      }
+      case 'parityScale': {
+        if (!it.legs) fail(`${where}: parityScale needs legs`)
+        const callLeg = it.legs.find((l) => l.kind === 'call')
+        const putLeg = it.legs.find((l) => l.kind === 'put')
+        const stockLeg = it.legs.find((l) => l.kind === 'stock')
+        const bondLeg = it.legs.find((l) => l.kind === 'bond')
+        if (!callLeg || !putLeg || !stockLeg || !bondLeg) {
+          fail(`${where}: parityScale legs must include call, put, stock, bond`)
+        }
+        if (!bondLeg.K) fail(`${where}: parityScale bond leg must have K`)
+        got = optFmt(optParityGap(optToBig(callLeg.qty), optToBig(putLeg.qty), optToBig(stockLeg.qty), optToBig(bondLeg.K), optToBig(bondLeg.qty)))
+        break
+      }
+      default:
+        continue
+    }
+    if (got !== it.headline) {
+      fail(`${where}: optionBoard(${it.display}) declared headline ${it.headline} ≠ engine ${got}`)
+    }
+    optChecked++
+  }
+}
+console.log(`✓ optionBoard headlines match options.ts (${optChecked} beats)`)
+
 // ── 4. Inclusivity gate (build-brief §4.5 / §10). Mechanizable subset of the
 // per-lesson DoD, applied to the remaining lessons (L2–L6). L0/L1 predate the
 // gate (their own specs) and are exempt. The asserts are dormant until each
@@ -784,6 +870,9 @@ const GATED = new Set([
   // concept-binary-information (Wave-0 contract).
   'lesson-binary-information-1','lesson-binary-information-2','lesson-binary-information-3',
   'lesson-binary-information-4','lesson-binary-information-5','lesson-binary-information-6',
+  // concept-options (Wave-0 contract).
+  'lesson-options-1','lesson-options-2','lesson-options-3',
+  'lesson-options-4','lesson-options-5','lesson-options-6',
 ])
 // L5 transfer lesson is the logged exception to the retrieval-opener rule.
 const NO_RETRIEVAL_OPENER = new Set(['lesson-longer-patterns'])
@@ -963,6 +1052,9 @@ const MASTERY_LESSONS = new Set([
   // concept-binary-information (Wave-0 contract).
   'lesson-binary-information-1','lesson-binary-information-2','lesson-binary-information-3',
   'lesson-binary-information-4','lesson-binary-information-5','lesson-binary-information-6',
+  // concept-options (Wave-0 contract).
+  'lesson-options-1','lesson-options-2','lesson-options-3',
+  'lesson-options-4','lesson-options-5','lesson-options-6',
 ])
 for (const lesson of lessons) {
   if (!MASTERY_LESSONS.has(lesson.lessonId)) continue
@@ -1216,6 +1308,54 @@ for (const lesson of lessons) {
   ok('runStrategy([2,1,3],2).win', runStrategy([2, 1, 3], 2).win === true)
   ok('runStrategy([2,1,3],1) miss rank2', runStrategy([2, 1, 3], 1).win === false && runStrategy([2, 1, 3], 1).selectedRank === 2)
   console.log('✓ optimal-stopping engine self-check (Stage-2 anchor)')
+}
+
+// ── 6d. Options engine self-check (Stage-2 math anchor for course-options).
+// Asserts the frozen options.ts reproduces every source-dossier §5 golden so the
+// optionBoard interface can't silently drift before the options fixtures land.
+{
+  const r = (n: number, d = 1): { n: bigint; d: bigint } => ({ n: BigInt(n), d: BigInt(d) })
+  const ok = (label: string, cond: boolean) => { if (!cond) fail(`options engine self-check failed: ${label}`) }
+  ok('callPayoff(130,100)=30', optFmt(optCallPayoff(r(130), r(100))) === '30')
+  ok('callPayoff(70,100)=0', optFmt(optCallPayoff(r(70), r(100))) === '0')
+  ok('putPayoff(70,100)=30', optFmt(optPutPayoff(r(70), r(100))) === '30')
+  ok('straddle|130-100|=30', optFmt(optSpreadPayoff([{ kind: 'call', K: r(100), qty: r(1) }, { kind: 'put', K: r(100), qty: r(1) }], r(130))) === '30')
+  ok('bull(100,120)@130=20', optFmt(optSpreadPayoff([{ kind: 'call', K: r(100), qty: r(1) }, { kind: 'call', K: r(120), qty: r(-1) }], r(130))) === '20')
+  ok('butterfly(90,100,110)@100=10', optFmt(optSpreadPayoff([{ kind: 'call', K: r(90), qty: r(1) }, { kind: 'call', K: r(100), qty: r(-2) }, { kind: 'call', K: r(110), qty: r(1) }], r(100))) === '10')
+  ok('parityGap(8,2,100,95,1)=1', optFmt(optParityGap(r(8), r(2), r(100), r(95), r(1))) === '1')
+  ok('paritySolve C=13', optFmt(optParitySolve({ P: r(3), S: r(50), K: r(44), D: r(10, 11) })) === '13')
+  ok('paritySolve P=10', optFmt(optParitySolve({ C: r(10), S: r(100), K: r(100), D: r(1) })) === '10')
+  ok('callBounds(100,90,1)=10..100', optFmt(optCallBounds(r(100), r(90), r(1)).lo) === '10' && optFmt(optCallBounds(r(100), r(90), r(1)).hi) === '100')
+  ok('riskNeutralQ(6/5,4/5,1)=1/2', optFmt(optRiskNeutralQ(r(6, 5), r(4, 5), r(1))) === '1/2')
+  ok('binomialPrice call=10', optFmt(optBinomialPrice(r(100), r(6, 5), r(4, 5), r(1), r(100), 1, 'call')) === '10')
+  ok('replicate call delta=1/2', optFmt(optReplicate(r(100), r(6, 5), r(4, 5), r(1), r(100), 'call').delta) === '1/2')
+  ok('replicate call bond=-40', optFmt(optReplicate(r(100), r(6, 5), r(4, 5), r(1), r(100), 'call').bond) === '-40')
+  ok('binomialPrice put=10', optFmt(optBinomialPrice(r(100), r(6, 5), r(4, 5), r(1), r(100), 1, 'put')) === '10')
+  ok('replicate put delta=-1/2', optFmt(optReplicate(r(100), r(6, 5), r(4, 5), r(1), r(100), 'put').delta) === '-1/2')
+  ok('replicate put bond=60', optFmt(optReplicate(r(100), r(6, 5), r(4, 5), r(1), r(100), 'put').bond) === '60')
+  ok('twin price=30', optFmt(optBinomialPrice(r(100), r(7, 4), r(3, 4), r(5, 4), r(100), 1, 'call')) === '30')
+  ok('twin delta=3/4', optFmt(optReplicate(r(100), r(7, 4), r(3, 4), r(5, 4), r(100), 'call').delta) === '3/4')
+  ok('twin bond=-45', optFmt(optReplicate(r(100), r(7, 4), r(3, 4), r(5, 4), r(100), 'call').bond) === '-45')
+  ok('q-drill=3/5', optFmt(optRiskNeutralQ(r(3, 2), r(1, 2), r(11, 10))) === '3/5')
+  ok('treeTerminals 2=144,96,64', optTreeTerminals(r(100), r(6, 5), r(4, 5), 2).map(optFmt).join(',') === '144,96,64')
+  ok('treeWeights(1/2,2)=1/4,1/2,1/4', optTreeWeights(r(1, 2), 2).map(optFmt).join(',') === '1/4,1/2,1/4')
+  ok('binomialPrice n=2 call=11', optFmt(optBinomialPrice(r(100), r(6, 5), r(4, 5), r(1), r(100), 2, 'call')) === '11')
+  ok('pathCount(2,1)=2', optPathCount(2, 1) === 2n)
+  ok('pathCount(3,3)=1', optPathCount(3, 3) === 1n)
+  ok('3-step top=864/5', optFmt(optTreeTerminals(r(100), r(6, 5), r(4, 5), 3)[0]) === '864/5')
+  ok('hedgeRatio(6,9)=2/3', optFmt(optHedgeRatio(r(6), r(9))) === '2/3')
+  ok('hedgeRatio(-6,9)=-2/3', optFmt(optHedgeRatio(r(-6), r(9))) === '-2/3')
+  ok('minVarWeights wA=6/7', optFmt(optMinVarWeights(r(1, 25), r(9, 100), r(3, 100)).wA) === '6/7')
+  ok('minVarWeights wB=1/7', optFmt(optMinVarWeights(r(1, 25), r(9, 100), r(3, 100)).wB) === '1/7')
+  ok('minVarWeights varMin=27/700', optFmt(optMinVarWeights(r(1, 25), r(9, 100), r(3, 100)).varMin) === '27/700')
+  ok('oneTouchPrice(5/4)=4/5', optFmt(optOneTouchPrice(r(5, 4))) === '4/5')
+  ok('oneTouchPrice(2)=1/2', optFmt(optOneTouchPrice(r(2))) === '1/2')
+  ok('greekSign delta call=+1', optGreekSign('delta', 'call') === 1)
+  ok('greekSign delta put=-1', optGreekSign('delta', 'put') === -1)
+  ok('greekSign gamma=+1', optGreekSign('gamma', 'call') === 1 && optGreekSign('gamma', 'put') === 1)
+  ok('greekSign theta=-1', optGreekSign('theta', 'call') === -1)
+  ok('greekSign rho put=-1', optGreekSign('rho', 'put') === -1)
+  console.log('✓ options engine self-check (Stage-2 anchor)')
 }
 
 // ── 7. Chapters-coverage gate (live-concept hard requirement, ADR-0004). The

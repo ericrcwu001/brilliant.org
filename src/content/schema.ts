@@ -694,6 +694,32 @@ export const InteractionSchema = z.discriminatedUnion('type', [
     // ternary → balancedTernary(target, weights.set). Validation anchor.
     headline: z.string().optional(),
   }),
+  // optionBoard — concept-options Wave-0 contract (FROZEN). ONE new interaction
+  // type, four display modes: payoffDiagram (P/L at expiry), binomialTree (risk-
+  // neutral lattice), parityScale (put–call parity balance), greeksSlider (Δ/Γ/Θ
+  // sensitivity). Engine dep: src/engine/options.ts. NOT graded / NOT HERO.
+  // `headline` is engine-reproducible and cross-checked by validate-fixtures §3h;
+  // greeksSlider is display-only (exempt). Firestore-safe: no directly-nested arrays
+  // (legs/labels are top-level optional arrays on the object itself, not nested).
+  z.object({
+    type: z.literal('optionBoard'),
+    display: z.enum(['payoffDiagram', 'binomialTree', 'parityScale', 'greeksSlider']),
+    legs: z.array(z.object({
+      kind: z.enum(['call', 'put', 'stock', 'bond']),
+      K: RationalSchema.optional(),
+      qty: RationalSchema,
+    })).optional(),
+    tree: z.object({
+      S0: RationalSchema, u: RationalSchema, d: RationalSchema,
+      R: RationalSchema, K: RationalSchema,
+      n: z.number().int(), kind: z.enum(['call', 'put']),
+    }).optional(),
+    sigma: RationalSchema.optional(),
+    markS: RationalSchema.optional(),
+    labels: z.array(z.string()).optional(),
+    interactive: z.boolean().optional(),
+    headline: z.string().optional(),
+  }),
 ])
 
 const HintTripleSchema = z.tuple([z.string(), z.string(), z.string()])
