@@ -1,0 +1,269 @@
+{
+  "lessonId": "lesson-options-4",
+  "courseId": "course-options",
+  "title": "One-Step Binomial: Price by Replication",
+  "patternOptions": ["H"],
+  "milestoneId": "opt-replication",
+  "unlocks": null,
+  "schemaVersion": 1,
+  "beats": [
+    {
+      "beatId": "opt4-recall",
+      "schemaId": "linearity-indicators",
+      "required": true,
+      "density": "merged",
+      "prompt": "Cumulative recall: match each expectation result to its value.",
+      "interaction": {
+        "type": "retrievalGrid",
+        "pairs": [
+          { "left": "E[X]=Σx·P(x) is the fair price of a", "right": "bet" },
+          { "left": "Weight each outcome by its", "right": "probability" },
+          { "left": "Fair die: E[X]", "right": "7/2" }
+        ]
+      },
+      "feedback": {
+        "correct": "E[X]=Σx·P(x) — weight each outcome by its probability, sum up; that's the fair price of any bet. (EV L1.)",
+        "hints": [
+          "One card asks what E[X] is the fair price of; one asks what you weight outcomes by.",
+          "Σx·P(x) multiplies each value by its probability — that's the weight; E[X] is the break-even price.",
+          "bet; probability; 7/2 (#EV1)."
+        ]
+      }
+    },
+    {
+      "beatId": "opt4-bet",
+      "required": false,
+      "prompt": "The stock is 100. In one step it goes to 120 or 80. A call struck at 100 pays 20 or 0. Which probability do you weight the payoffs by to price it?",
+      "interaction": {
+        "type": "prediction",
+        "options": [
+          "The real-world probability p that the stock rises",
+          "A weight q computed from u, d, R (not p), then discounted",
+          "50/50 — by symmetry the two outcomes are equally likely"
+        ]
+      },
+      "feedback": {
+        "byOption": {
+          "The real-world probability p that the stock rises": {
+            "note": "Let's test it — but you were never told p. The astonishing result: the price doesn't depend on it. No-arbitrage forces a different weight q=(R−d)/(u−d) that replaces the real odds entirely (#13).",
+            "correct": false
+          },
+          "A weight q computed from u, d, R (not p), then discounted": {
+            "note": "Good instinct — price comes from replication / no-arbitrage. Here q=(R−d)/(u−d)=1/2, then discount by 1/R. The real p never appears (#13).",
+            "correct": true
+          },
+          "50/50 — by symmetry the two outcomes are equally likely": {
+            "note": "Let's test it — you land on 1/2, but for the wrong reason. It isn't symmetry of the real odds; it's q=(R−d)/(u−d), which is 1/2 only for this tree. Change u,d,R and q moves — the q-drill gives 3/5 (#15).",
+            "correct": false
+          }
+        }
+      }
+    },
+    {
+      "beatId": "opt4-explore",
+      "required": false,
+      "prompt": "Tap the up-node (S=120) or down-node (S=80) in the one-step lattice. The side panel reads S, the q-weight, the rolled-back option value, and the replicating portfolio {Δ, B}. Tap \"Reveal hedge cost\" to see hedge cost = Δ·S + B = price at the root.",
+      "interaction": {
+        "type": "optionBoard",
+        "display": "binomialTree",
+        "interactive": true,
+        "tree": {
+          "S0": { "n": 100, "d": 1 },
+          "u":  { "n": 6,   "d": 5 },
+          "d":  { "n": 4,   "d": 5 },
+          "R":  { "n": 1,   "d": 1 },
+          "K":  { "n": 100, "d": 1 },
+          "n":  1,
+          "kind": "call"
+        },
+        "headline": "10"
+      },
+      "hero": {
+        "slowFirst": true,
+        "structuralReadout": "One-step binomial tree: S₀=100 branches to 120 (up) or 80 (down); call pays 20 or 0; hedge cost = price = 10.",
+        "reducedMotionFinalFrame": true
+      },
+      "feedback": {
+        "correct": "The cost of the hedge is the price — regardless of which branch. The replicating portfolio {Δ=1/2, B=−40} costs ½·100 − 40 = 10 = call price (#13).",
+        "hints": [
+          "Tap the up-node (S=120) or down-node (S=80) to read S, the q-weight, and the rolled-back option value.",
+          "The side panel shows the replicating portfolio {Δ, B}; tap 'Reveal hedge cost' to see Δ·S + B at the root.",
+          "Hedge cost = ½·100 − 40 = 10 = price. The real odds never entered (#13)."
+        ]
+      }
+    },
+    {
+      "beatId": "opt4-model",
+      "required": false,
+      "prompt": "Three lenses on option pricing — read, then continue.",
+      "interaction": {
+        "type": "primer",
+        "variant": "custom",
+        "title": "Three lenses: q, replication, and the discount",
+        "body": "① Risk-neutral weight: q=(R−d)/(u−d). This is NOT the real up-probability p; it is a no-arbitrage weight forced by the tree. Example: u=3/2, d=1/2, R=11/10 gives q=(11/10−1/2)/(3/2−1/2)=3/5 (#15 — worked example only). ② Replication: build a portfolio of Δ shares and a bond B that copies the option payoff at every node — Δ=(V_u−V_d)/(S(u−d)), B=price−Δ·S. ③ Discount: price=(1/R)·E_q[payoff]. Replication and the q-measure are two views of the same answer; the real p never appears in either.",
+        "collapsible": true
+      },
+      "feedback": {
+        "correct": "Three lenses, one answer: q=(R−d)/(u−d) is the no-arbitrage weight; Δ and B replicate the payoff; price=(1/R)·E_q. The real odds never enter.",
+        "hints": [
+          "Lens ①: q=(R−d)/(u−d) is forced by no-arbitrage, not the real up-prob.",
+          "Lens ②: replicate with Δ shares and bond B so the portfolio matches the option at every node.",
+          "Lens ③: price=(1/R)·E_q[payoff]. Continue when ready."
+        ]
+      }
+    },
+    {
+      "beatId": "opt4-win",
+      "schemaId": "risk-neutral-pricing",
+      "required": true,
+      "density": "split",
+      "prompt": "Canonical tree: S₀=100, u=6/5, d=4/5, R=1. Compute the risk-neutral weight q=(R−d)/(u−d).",
+      "interaction": {
+        "type": "answerEntry",
+        "fields": [
+          {
+            "id": "q",
+            "label": "Risk-neutral q for the canonical tree",
+            "accept": ["1/2", "0.5", ".5"]
+          }
+        ]
+      },
+      "feedback": {
+        "correct": "q=(R−d)/(u−d): (1−4/5)/(6/5−4/5) = (1/5)/(2/5) = 1/2. The no-arb weight, not the real up-prob (#13).",
+        "hints": [
+          "q=(R−d)/(u−d); plug u=6/5, d=4/5, R=1.",
+          "Numerator: R−d=1−4/5=1/5; denominator: u−d=6/5−4/5=2/5.",
+          "(1/5)÷(2/5) = 1/2 (#13)."
+        ]
+      }
+    },
+    {
+      "beatId": "opt4-gate",
+      "schemaId": "risk-neutral-pricing",
+      "required": true,
+      "density": "merged",
+      "prompt": "A stock at 100 moves to 120 or 80 in one step; R=1. A call struck at 100 pays 20 or 0. Which method gives its arbitrage-free price?",
+      "interaction": {
+        "type": "prediction",
+        "options": ["Risk-neutral pricing", "Linearity / indicators", "Conditioning", "Prior update"],
+        "gate": {
+          "kind": "which-method",
+          "correct": "risk-neutral-pricing",
+          "optionMethods": ["risk-neutral-pricing", "linearity-indicators", "conditioning", "prior-update"]
+        }
+      },
+      "feedback": {
+        "byOption": {
+          "Risk-neutral pricing": {
+            "note": "Discount the q-weighted payoff: q=(R−d)/(u−d)=(1−4/5)/(2/5)=1/2, then price=(1/1)·(1/2·20+1/2·0)=10. q comes from no-arbitrage, not the real odds — that's why you never needed p (#13).",
+            "correct": true
+          },
+          "Linearity / indicators": {
+            "note": "Linearity of expectation under the real p doesn't price an option — that's the marquee trap. You must use the no-arbitrage weight q and discount by 1/R. Averaging 20 and 0 under real odds is not the arbitrage-free price (#13).",
+            "correct": false
+          },
+          "Conditioning": {
+            "note": "Conditioning on the first step is the right shape, but only the q-weighted, discounted version is arbitrage-free. A plain conditional average under p still smuggles in the real odds (#13).",
+            "correct": false
+          },
+          "Prior update": {
+            "note": "There is no prior and no evidence here. q is a change of measure forced by no-arbitrage, not Bayes' rule — you solve (R−d)/(u−d), not Bayes' theorem. (The continuity report flags this exact false-analogy; #13.)",
+            "correct": false
+          }
+        }
+      }
+    },
+    {
+      "beatId": "opt4-compare",
+      "schemaId": "risk-neutral-pricing",
+      "required": true,
+      "density": "merged",
+      "prompt": "Same method, different costume. Match each result to its tree.",
+      "interaction": {
+        "type": "retrievalGrid",
+        "pairs": [
+          { "left": "r=0 tree (u=6/5,d=4/5): q",    "right": "1/2 (r=0)" },
+          { "left": "r=0 tree: call price",           "right": "10" },
+          { "left": "r=1/4 tree (u=7/4,d=3/4): q",   "right": "1/2 (r=1/4)" },
+          { "left": "r=1/4 tree: call price",         "right": "30" },
+          { "left": "What is the same in both?",      "right": "discounted E_q (never the real odds)" }
+        ]
+      },
+      "feedback": {
+        "correct": "Discounted E_q — the same formula regardless of r. q=(R−d)/(u−d) absorbs the interest rate; the real odds never enter. Method invariant across costumes (#13, #14).",
+        "hints": [
+          "Plug each tree's u, d, R into q=(R−d)/(u−d) — what do you get for both?",
+          "#13: q=(1−4/5)/(2/5)=1/2, price=(1/1)·(1/2·20+1/2·0)=10; #14: q=(5/4−3/4)/(7/4−3/4)=1/2, price=(4/5)·(1/2·75+1/2·0)=30.",
+          "Both trees use discounted E_q — the real odds never enter (#13, #14)."
+        ]
+      }
+    },
+    {
+      "beatId": "transfer-heldout",
+      "schemaId": "risk-neutral-pricing",
+      "required": false,
+      "track": "B",
+      "heldOut": true,
+      "density": "split",
+      "prompt": "Transfer challenge: same tree as #13 (S=100, u=6/5, d=4/5, R=1), but price the PUT struck at K=100. Then check put-call parity.",
+      "interaction": {
+        "type": "masteryChallenge",
+        "scenario": "Put on the canonical tree: P_u=max(100−120,0)=0 up, P_d=max(100−80,0)=20 down. Use q=1/2. Find price=(1/R)·E_q, delta Δ=(P_u−P_d)/(S(u−d)), bond B=price−Δ·S, and parity gap C−P−(S−K).",
+        "fields": [
+          { "id": "price",  "label": "Put price",              "accept": ["10"] },
+          { "id": "delta",  "label": "Put delta Δ",            "accept": ["-1/2", "−1/2", "-0.5", "−0.5"] },
+          { "id": "bond",   "label": "Bond B",                 "accept": ["60", "+60"] },
+          { "id": "parity", "label": "Parity gap C−P−(S−K)",  "accept": ["0"] }
+        ]
+      },
+      "feedback": {
+        "correct": "Same q-method, opposite payoffs: q=1/2, price=(1/2·0+1/2·20)/1=10; Δ=(0−20)/40=−1/2; B=10−(−1/2)·100=60; parity C−P=10−10=0=S−K ✓ (#16).",
+        "hints": [
+          "For a put: P_u=max(K−S_u,0)=0, P_d=max(K−S_d,0)=20; use q=1/2 from the call tree.",
+          "Δ=(P_u−P_d)/(S(u−d))=(0−20)/(100·2/5)=−20/40; B=price−Δ·S=10−(−1/2)·100.",
+          "price=10; Δ=−1/2; B=60; parity C−P=10−10=0=S−K ✓ (#16)."
+        ]
+      }
+    },
+    {
+      "beatId": "opt4-mastery",
+      "schemaId": "risk-neutral-pricing",
+      "required": true,
+      "density": "split",
+      "prompt": "Required mastery: canonical call (#13). Give q, the call price, delta Δ, and bond B. Then confirm hedge cost = price.",
+      "interaction": {
+        "type": "masteryChallenge",
+        "scenario": "Canonical call: S₀=100, u=6/5, d=4/5, R=1, K=100. C_u=max(120−100,0)=20, C_d=max(80−100,0)=0. Find q=(R−d)/(u−d), price=(1/R)·E_q, Δ=(C_u−C_d)/(S(u−d)), B=price−Δ·S.",
+        "fields": [
+          { "id": "q",     "label": "q",          "accept": ["1/2", "0.5", ".5"] },
+          { "id": "price", "label": "Call price",  "accept": ["10"] },
+          { "id": "delta", "label": "Call delta Δ","accept": ["1/2", "0.5", ".5"] },
+          { "id": "bond",  "label": "Bond B",      "accept": ["-40", "−40"] }
+        ]
+      },
+      "feedback": {
+        "correct": "Replication and the q-measure agree: q=1/2 by no-arbitrage, price=(1/1)·(1/2·20+1/2·0)=10, hedge cost=½·100−40=10=price. The real odds never entered (#13).",
+        "hints": [
+          "q=(R−d)/(u−d)=(1−4/5)/(2/5)=1/2; price=(1/R)·(q·C_u+(1−q)·C_d)=(1/1)·(1/2·20+1/2·0).",
+          "Δ=(C_u−C_d)/(S·(u−d))=(20−0)/(100·2/5)=20/40; B=price−Δ·S=10−(1/2)·100.",
+          "q=1/2; price=10; Δ=1/2; B=−40; hedge cost=½·100−40=10=price (#13)."
+        ]
+      }
+    },
+    {
+      "beatId": "opt4-recap",
+      "required": true,
+      "interviewNote": "Interview framing: 'Price a one-step binomial call' is a Green-Book classic — the key is q=(R−d)/(u−d), the risk-neutral weight (NOT the real up-probability); then price=(1/R)·E_q[payoff]. Replication gives the same answer: Δ shares + bond B such that Δ·S_u+B=C_u and Δ·S_d+B=C_d; the cost Δ·S+B equals the price. Canonical tree (u=6/5,d=4/5,R=1,K=100): q=1/2, price=10, Δ=1/2, B=−40. The real up-probability never enters. A put on the same tree gives q=1/2, price=10, Δ=−1/2, B=+60, and parity C−P=0=S−K.",
+      "prompt": "One method, two lenses — pricing by replication and the risk-neutral measure.",
+      "interaction": { "type": "recap" },
+      "feedback": {
+        "correct": "q=(R−d)/(u−d) is a no-arbitrage weight, not the real up-probability and not a Bayes posterior. price = hedge cost = (1/R)·E_q. Next: multi-step trees (L5).",
+        "hints": [
+          "Read each recap card.",
+          "q is a no-arbitrage weight; replication and E_q are the same answer viewed differently.",
+          "Tap to finish."
+        ]
+      }
+    }
+  ]
+}

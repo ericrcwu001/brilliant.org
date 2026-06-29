@@ -1,0 +1,250 @@
+{
+  "lessonId": "lesson-options-2",
+  "courseId": "course-options",
+  "title": "Put-Call Parity & No-Arbitrage",
+  "patternOptions": ["H"],
+  "milestoneId": "opt-parity",
+  "unlocks": null,
+  "schemaVersion": 1,
+  "beats": [
+    {
+      "beatId": "opt2-recall",
+      "required": true,
+      "schemaId": "dominance-nash",
+      "density": "merged",
+      "prompt": "Match each game-theory term to its definition.",
+      "interaction": {
+        "type": "retrievalGrid",
+        "pairs": [
+          { "left": "a move best no matter what the opponent does", "right": "dominant" },
+          { "left": "no profitable deviation", "right": "Nash equilibrium" }
+        ]
+      },
+      "feedback": {
+        "correct": "Dominant: the move beats every opponent response. Arbitrage is the same idea applied to prices — no risky step, strict gain. Markets erase it, which forces the parity identity.",
+        "hints": [
+          "One card names the strictly-better move, one names the stable equilibrium.",
+          "Dominant = beats all responses; Nash = no player can profitably deviate.",
+          "dominant; Nash equilibrium."
+        ]
+      }
+    },
+    {
+      "beatId": "opt2-bet",
+      "required": false,
+      "prompt": "Same stock, S=100, K=95, r=0. Market quotes: C=$8, P=$2. The call costs $6 more than the put, but S−K is only $5. Is the extra $1 free money?",
+      "interaction": {
+        "type": "prediction",
+        "options": [
+          "Yes — parity forces C−P to equal S−K=$5, but the quotes give $6, so there's a risk-free edge.",
+          "No — you can't call it mispriced without a volatility / Black-Scholes model.",
+          "No — C−P should equal K−S = −$5, and these quotes look close enough."
+        ]
+      },
+      "feedback": {
+        "byOption": {
+          "Yes — parity forces C−P to equal S−K=$5, but the quotes give $6, so there's a risk-free edge.": {
+            "note": "Right — the gap (C−P)−(S−K) = 6−5 = 1 is a genuine $1 arbitrage. The explore builds the conversion that harvests it, and the mastery proves it nets +$1 today, $0 at expiry (#7).",
+            "correct": true
+          },
+          "No — you can't call it mispriced without a volatility / Black-Scholes model.": {
+            "note": "Parity is an exact no-arbitrage identity, not an empirical fit. Two portfolios with the same expiry payoff must cost the same today; no σ and no Black-Scholes enter. The mismatch is real — and harvestable (#7).",
+            "correct": false
+          },
+          "No — C−P should equal K−S = −$5, and these quotes look close enough.": {
+            "note": "Sign check: a long call + short put pays S_T−K at expiry (it synthesizes stock-minus-strike), so C−P = S−K·D, not K−S. Verify the payoff at S_T≥K and at S_T<K (#5).",
+            "correct": false
+          }
+        }
+      }
+    },
+    {
+      "beatId": "opt2-explore",
+      "required": false,
+      "hero": {
+        "slowFirst": true,
+        "structuralReadout": "Scale balanced — conversion assembled, $1 gap extracted.",
+        "reducedMotionFinalFrame": true
+      },
+      "prompt": "Two-pan balance: left pan shows C + K·D, right pan shows P + S. With C=8, P=2, S=100, K=95, D=1 the left pan dips (gap = +1). Build the conversion that rebalances the scale to flat.",
+      "interaction": {
+        "type": "optionBoard",
+        "display": "parityScale",
+        "interactive": true,
+        "legs": [
+          { "kind": "call",  "qty": { "n": 8,   "d": 1 } },
+          { "kind": "put",   "qty": { "n": 2,   "d": 1 } },
+          { "kind": "stock", "qty": { "n": 100, "d": 1 } },
+          { "kind": "bond",  "K": { "n": 95, "d": 1 }, "qty": { "n": 1, "d": 1 } }
+        ],
+        "headline": "1"
+      },
+      "feedback": {
+        "correct": "Scale balanced — you've assembled the conversion and extracted the $1 gap.",
+        "hints": [
+          "Drag or tap legs from the palette into the conversion tray.",
+          "The gap is +1 (left pan too heavy). Sell the overpriced side (call) and buy the cheap side.",
+          "Conversion: sell call (qty=−1), buy put (qty=+1), buy stock (qty=+1), borrow 95 (qty=−1). Gap → 0."
+        ]
+      }
+    },
+    {
+      "beatId": "opt2-model",
+      "required": false,
+      "prompt": "Three lenses on the same no-arbitrage identity — read the card.",
+      "interaction": {
+        "type": "primer",
+        "variant": "custom",
+        "title": "Same payoff ⇒ same price",
+        "body": "Two portfolios with the same expiry payoff must cost the same today — no Black-Scholes, no σ needed. This forces the identity: C − P = S − K·D. At r=0 (D=1): C − P = S − K. No-arb bounds also follow: max(S − K·D, 0) ≤ C ≤ S. Example: S=100, K=90, D=1 → 10 ≤ C ≤ 100."
+      },
+      "feedback": {
+        "correct": "Two portfolios with the same payoff cost the same — no σ, no model, just no free lunch.",
+        "hints": [
+          "Read each lens: same payoff → same price; the identity C−P=S−K·D; the no-arb bounds.",
+          "C − P = S − K·D is the exact no-arbitrage identity. The bounds max(S−K·D,0) ≤ C ≤ S follow from the same principle.",
+          "Continue when ready."
+        ]
+      }
+    },
+    {
+      "beatId": "opt2-win",
+      "required": true,
+      "density": "split",
+      "schemaId": "put-call-parity",
+      "prompt": "r=0, S=100, K=100, C=10 (identity and all inputs handed). Type the missing put price.",
+      "interaction": {
+        "type": "answerEntry",
+        "fields": [
+          { "id": "putprice", "label": "Put price P", "accept": ["10", "10/1"], "placeholder": "?" }
+        ]
+      },
+      "feedback": {
+        "correct": "P = C−(S−K) = 10−(100−100) = 10. No model needed — no-arbitrage alone pins the put price.",
+        "hints": [
+          "The parity identity is C−P = S−K at r=0. You have C, S, K — rearrange for P.",
+          "P = C−(S−K) = 10−(100−100). What is 100−100?",
+          "P = 10 (#6). S=K so the gap term vanishes — the put and call cost the same."
+        ]
+      }
+    },
+    {
+      "beatId": "opt2-gate",
+      "required": true,
+      "density": "merged",
+      "schemaId": "put-call-parity",
+      "prompt": "You're quoted three of {call price, put price, spot price, discounted strike}. Which move prices the missing one fastest?",
+      "interaction": {
+        "type": "prediction",
+        "options": ["Put–call parity", "No-arbitrage replication", "Payoff construction"],
+        "gate": {
+          "kind": "which-method",
+          "correct": "put-call-parity",
+          "optionMethods": ["put-call-parity", "no-arbitrage-replication", "payoff-construction"]
+        }
+      },
+      "feedback": {
+        "byOption": {
+          "Put–call parity": {
+            "note": "One identity ties C, P, S and K·D; rearranging for the missing quote is a single step. Fastest path — you don't rebuild anything.",
+            "correct": true
+          },
+          "No-arbitrage replication": {
+            "note": "You could rebuild the replicating portfolio leg-by-leg from scratch — but the parity identity already encodes that replication. Recognizing the identity is the faster move; replication is the long path to the same number.",
+            "correct": false
+          },
+          "Payoff construction": {
+            "note": "Drawing the payoff diagram gives the value at expiry, not the price relationship today. Parity is the current-cost identity that pins the fourth quote — a payoff read alone won't.",
+            "correct": false
+          }
+        }
+      }
+    },
+    {
+      "beatId": "opt2-compare",
+      "required": true,
+      "density": "merged",
+      "schemaId": "put-call-parity",
+      "prompt": "Two parity surfaces, one method. Match each problem to its answer, then name what they share.",
+      "interaction": {
+        "type": "retrievalGrid",
+        "pairs": [
+          { "left": "Solve for P (C=10,S=100,K=100,D=1)",    "right": "10" },
+          { "left": "Solve for C (P=3,S=50,K=44,D=10/11)",   "right": "13" },
+          { "left": "The shared move",                         "right": "one identity C−P=S−K·D, two directions" }
+        ]
+      },
+      "feedback": {
+        "correct": "One identity C−P=S−K·D, two rearrangements. The schemaId is put-call-parity either way.",
+        "hints": [
+          "Both surfaces share the same four quantities — C, P, S, K·D. What single equation connects them?",
+          "P = C−(S−K·D); C = P+(S−K·D). Same identity flipped.",
+          "One identity, two directions — solve-for-P and solve-for-C are the same method."
+        ]
+      }
+    },
+    {
+      "beatId": "transfer-heldout",
+      "required": false,
+      "heldOut": true,
+      "track": "B",
+      "density": "merged",
+      "schemaId": "put-call-parity",
+      "prompt": "Transfer: D=10/11, S=50, K=44, P=3. Find the no-arbitrage call price by parity. (K·D = 40 exactly.)",
+      "interaction": {
+        "type": "masteryChallenge",
+        "scenario": "D=10/11 (discount bites here — not r=0). S=50, K=44, P=3. Solve C = P + S − K·D. Compute K·D first.",
+        "fields": [
+          { "id": "callprice", "label": "No-arbitrage call price C", "accept": ["13", "13/1"] }
+        ]
+      },
+      "feedback": {
+        "correct": "C = P + S − K·D = 3 + 50 − 40 = 13. The discount bites now (D=10/11 ≠ 1), and K·D = 44·(10/11) = 40 exact.",
+        "hints": [
+          "Same identity, but r≠0 this time: C = P + S − K·D. Compute K·D first.",
+          "K·D = 44 × (10/11) = 440/11 = 40 exactly (exact rational, no float). So C = 3 + 50 − 40.",
+          "C = 13 (#8)."
+        ]
+      }
+    },
+    {
+      "beatId": "opt2-mastery",
+      "required": true,
+      "density": "split",
+      "schemaId": "put-call-parity",
+      "prompt": "Mastery — two parts. Part A: S=100, K=95, C=8, P=2, r=0 — what is the arbitrage gap? Part B: state the conversion cash flows — profit today and net at expiry.",
+      "interaction": {
+        "type": "masteryChallenge",
+        "scenario": "Part A: gap = (C−P) − (S−K). Part B: sell call, buy put, buy stock, borrow K=95. State the cash flows today and at expiry.",
+        "fields": [
+          { "id": "gap",    "label": "Arbitrage gap",   "accept": ["1"] },
+          { "id": "today",  "label": "Profit today",    "accept": ["1"] },
+          { "id": "expiry", "label": "Net at expiry",   "accept": ["0"] }
+        ]
+      },
+      "feedback": {
+        "correct": "Part A: gap = (C−P)−(S−K) = (8−2)−(100−95) = 6−5 = 1. Part B: sell call (+8), buy put (−2), buy stock (−100), borrow 95 (+95) → +$1 today; the (stock+put−call) book is always worth K=95 at expiry, repay 95 → $0 net.",
+        "hints": [
+          "Part A: gap = (C−P)−(S−K). C−P = 6, S−K = 5. Part B: the scale tips toward the call — sell the overpriced side, buy the cheap side.",
+          "Part A: 6−5 = 1. Part B: sell call (+8), buy put (−2), buy stock (−100), borrow 95 (+95); sum today = +1.",
+          "Part A: gap = 1. Part B: today +$1, at expiry $0 (#7)."
+        ]
+      }
+    },
+    {
+      "beatId": "opt2-recap",
+      "required": true,
+      "interviewNote": "Interview framing: 'Put-call parity' is a quant interview classic. The key: C − P = S − K·D (no σ, no Black-Scholes); at K=95, C=8, P=2, S=100, the gap = 1 is a real $1 arbitrage — harvest it by selling the call, buying the put, buying the stock, borrowing K·D=95 (profit today +$1, at expiry $0). No-arb bounds max(S−K·D,0) ≤ C ≤ S also follow from the same identity; at S=100, K=90: 10 ≤ C ≤ 100.",
+      "prompt": "One identity, one toolkit.",
+      "interaction": { "type": "recap" },
+      "feedback": {
+        "correct": "Two portfolios → one price → C−P=S−K·D; the gap is the arb; the conversion (sell call, buy put, buy stock, borrow K·D) extracts it; no-arb bounds max(S−K·D,0) ≤ C ≤ S. Next: spreads and straddles compose legs.",
+        "hints": [
+          "Read each recap card.",
+          "The identity, the gap, the conversion, the bounds — one connected toolkit.",
+          "Tap to finish."
+        ]
+      }
+    }
+  ]
+}

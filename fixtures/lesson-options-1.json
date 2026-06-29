@@ -1,0 +1,251 @@
+{
+  "lessonId": "lesson-options-1",
+  "courseId": "course-options",
+  "title": "Payoffs & the Contract",
+  "patternOptions": ["H"],
+  "milestoneId": "opt-payoffs",
+  "unlocks": null,
+  "schemaVersion": 1,
+  "beats": [
+    {
+      "beatId": "opt1-recall",
+      "schemaId": "linearity-indicators",
+      "required": true,
+      "prompt": "Warm-up recall from Expected Value L1. Match each result to its value.",
+      "interaction": {
+        "type": "retrievalGrid",
+        "pairs": [
+          { "left": "E[X], fair die", "right": "7/2" },
+          { "left": "A fair bet is worth its…", "right": "expected value" },
+          { "left": "An option is a bet whose payoff…", "right": "bends at the strike K" }
+        ]
+      },
+      "feedback": {
+        "correct": "E[X]=7/2 is the fair price; a bet on a kink bends at the strike — that's what makes a call not a forward.",
+        "hints": [
+          "Both came from Expected Value (ev1-recall/ev1-win).",
+          "Die mean = (1+2+3+4+5+6)/6 = 7/2; a bet is worth its expectation.",
+          "7/2; the option payoff bends at the strike K."
+        ]
+      }
+    },
+    {
+      "beatId": "opt1-bet",
+      "required": false,
+      "prompt": "Long call K=100. At expiry S_T=70. What is the call worth at expiry?",
+      "interaction": {
+        "type": "prediction",
+        "options": ["-30", "0", "-5"]
+      },
+      "feedback": {
+        "byOption": {
+          "-30": {
+            "note": "Let's test it — that treats the call like a forward (an obligation). A call is a right: when the stock is cheaper you simply walk away. The payoff is max(S−K,0) — floored at 0, never −30. You never exercise into a loss.",
+            "correct": false
+          },
+          "0": {
+            "note": "Good instinct — exercising would mean overpaying, so you don't. Payoff = max(70−100,0) = 0. The downside is clamped at the strike — that's the kink.",
+            "correct": true
+          },
+          "-5": {
+            "note": "Let's test it — that's profit (payoff minus the premium), not the contract's payoff. Today we read the payoff at expiry, which is 0 here. The premium and P&L come later (pricing, L2+). Payoff is always ≥ 0; only profit can go negative.",
+            "correct": false
+          }
+        }
+      }
+    },
+    {
+      "beatId": "opt1-explore",
+      "required": false,
+      "prompt": "Toggle long-call ↔ long-put. Drag the S_T marker along the x-axis and read the payoff live — watch the hockey-stick curve.",
+      "interaction": {
+        "type": "optionBoard",
+        "display": "payoffDiagram",
+        "interactive": true,
+        "legs": [
+          { "kind": "call", "K": { "n": 100, "d": 1 }, "qty": { "n": 1, "d": 1 } }
+        ],
+        "markS": { "n": 130, "d": 1 },
+        "labels": ["S_T", "Payoff"],
+        "headline": "30"
+      },
+      "hero": {
+        "slowFirst": true,
+        "structuralReadout": "Hockey-stick curve — flat at 0 below K=100, rises 45° above. The kink is the whole idea.",
+        "reducedMotionFinalFrame": true
+      },
+      "feedback": {
+        "correct": "Both payoffs are 0 below (or above) the strike — the kink at K is the whole idea. A straight line would be a forward.",
+        "hints": [
+          "Tap the CALL/PUT toggle and drag the markS marker left and right.",
+          "Move markS below K, at K, above K — read 0, 0, and positive respectively.",
+          "Below its strike the call pays 0; above it pays S_T−K. The kink is at K=100."
+        ]
+      }
+    },
+    {
+      "beatId": "opt1-model",
+      "required": false,
+      "prompt": "The call payoff formula — three lenses.",
+      "interaction": {
+        "type": "primer",
+        "variant": "custom",
+        "title": "Payoff = max(·,0) — the kink at K",
+        "body": "① Definition — A call gives you a right, not an obligation: exercise only when favorable. Payoff = max(S_T−K, 0), always ≥ 0, since you walk away from a losing exercise.\n\n② The (·)⁺ floor — The clamp max(·,0) creates the kink at K. Intrinsic value is floored at 0; below the strike, intrinsic = 0, never negative. Call: (S−K)⁺; put: (K−S)⁺.\n\n③ Intrinsic vs time value — At expiry, option value = intrinsic = max(·,0). Before expiry the option carries extra time value (the remaining chance to end up in the money). Pricing the time value is deferred — today we read the contract."
+      },
+      "feedback": {
+        "correct": "Payoff = max(·,0) — the floor IS the kink. Pricing is later.",
+        "hints": [
+          "Read the three lenses.",
+          "The (·)⁺ clamp is the kink at K — the payoff is never negative.",
+          "Continue when ready."
+        ]
+      }
+    },
+    {
+      "beatId": "opt1-win",
+      "schemaId": "payoff-construction",
+      "required": true,
+      "density": "split",
+      "prompt": "Formula max(S−K, 0), K=100. Type the call payoff at each expiry spot.",
+      "interaction": {
+        "type": "answerEntry",
+        "fields": [
+          { "id": "p130", "label": "Payoff when S_T=130", "accept": ["30"], "placeholder": "?" },
+          { "id": "p70", "label": "Payoff when S_T=70", "accept": ["0"], "placeholder": "?" }
+        ]
+      },
+      "feedback": {
+        "correct": "Yes — max(130−100,0)=30; max(70−100,0)=0. The floor kicks in below K and clamps the payoff to 0.",
+        "hints": [
+          "The payoff needs two pieces — the inner gap and the floor; you have the formula.",
+          "max(130−100, 0): inner gap = 30 ≥ 0 so payoff = 30; max(70−100, 0): inner gap = −30 < 0 so payoff = 0 — don't stop at the gap.",
+          "30; 0 (#1)."
+        ]
+      }
+    },
+    {
+      "beatId": "opt1-gate",
+      "schemaId": "payoff-construction",
+      "required": true,
+      "density": "split",
+      "prompt": "At expiry the stock sits at S_T=80. You hold a long put with K=100 and need its cash value at expiry. Which move gets you there?",
+      "interaction": {
+        "type": "prediction",
+        "options": ["Payoff construction", "Put–call parity", "No-arbitrage replication"],
+        "gate": {
+          "kind": "which-method",
+          "correct": "payoff-construction",
+          "optionMethods": ["payoff-construction", "put-call-parity", "no-arbitrage-replication"]
+        }
+      },
+      "feedback": {
+        "byOption": {
+          "Payoff construction": {
+            "note": "Right — at a known expiry spot you evaluate the piecewise-linear payoff: max(100−80,0)=20. No second instrument, no portfolio — payoff construction.",
+            "correct": true
+          },
+          "Put–call parity": {
+            "note": "Parity (C−P=S−K·D) ties a call and a put's prices together; here you're handed one option and a known S_T and asked for its cash value. There's no second instrument and nothing to price — reading max(K−S,0) is the move. Save parity for L2, when two prices must agree.",
+            "correct": false
+          },
+          "No-arbitrage replication": {
+            "note": "Replication builds a synthetic copy to price an option before expiry. At expiry, with S_T known, you read the payoff straight off the kinked line — no hedge, no replicating portfolio. That's pricing machinery for later lessons.",
+            "correct": false
+          }
+        },
+        "hints": [
+          "One move reads a cash value at a known S_T; the other two are for pricing before expiry — which one fits?",
+          "The formula is max(K−S_T, 0); nothing else is needed to get the number.",
+          "Payoff construction: max(100−80,0)=20."
+        ]
+      }
+    },
+    {
+      "beatId": "opt1-compare",
+      "schemaId": "payoff-construction",
+      "required": true,
+      "density": "split",
+      "prompt": "Match each payoff expression to its value — call and put at the same strike.",
+      "interaction": {
+        "type": "retrievalGrid",
+        "pairs": [
+          { "left": "Long call K=100 at S_T=130", "right": "30 (=130−100)" },
+          { "left": "Long put K=100 at S_T=70", "right": "30 (=100−70)" },
+          { "left": "Below its strike, a call's intrinsic value is", "right": "0" }
+        ]
+      },
+      "feedback": {
+        "correct": "Same method, different costume — both payoffs are max(·,0) of the favorable gap, floored at 0. A below-strike call has 0 intrinsic, never negative.",
+        "hints": [
+          "One is a call (S−K)⁺, one is a put (K−S)⁺ — what's the same?",
+          "Call: max(130−100,0)=30; put: max(100−70,0)=30; below-strike call: the gap is negative → floored to 0.",
+          "30, 30, 0 (#1, #2)."
+        ]
+      }
+    },
+    {
+      "beatId": "transfer-heldout",
+      "schemaId": "payoff-construction",
+      "required": false,
+      "heldOut": true,
+      "track": "B",
+      "density": "merged",
+      "prompt": "Long straddle: long call K=100 + long put K=100. At expiry, what is the payoff at S_T=130? At S_T=70?",
+      "interaction": {
+        "type": "masteryChallenge",
+        "scenario": "Long straddle: one call leg (K=100) plus one put leg (K=100). Evaluate each leg separately, then add. At S_T=130: call pays max(130−100,0), put pays max(100−130,0). At S_T=70: call pays max(70−100,0), put pays max(100−70,0).",
+        "fields": [
+          { "id": "s130", "label": "Straddle payoff at S_T=130", "accept": ["30"] },
+          { "id": "s70", "label": "Straddle payoff at S_T=70", "accept": ["30"] }
+        ]
+      },
+      "feedback": {
+        "correct": "The straddle is call + put at the same K — you get paid whichever way the stock moves. Payoff = |S_T−100| = 30 both ways.",
+        "hints": [
+          "A straddle has two legs — evaluate each leg separately, then add.",
+          "At S_T=130: call pays max(30,0)=30, put pays max(−30,0)=0 → total 30; at S_T=70: call pays 0, put pays 30 → total 30.",
+          "30 (both spots, #4)."
+        ]
+      }
+    },
+    {
+      "beatId": "opt1-mastery",
+      "schemaId": "payoff-construction",
+      "required": true,
+      "density": "split",
+      "prompt": "Protective put: long stock + long put K=100. At expiry, what is the terminal value at S_T=130? At S_T=80?",
+      "interaction": {
+        "type": "masteryChallenge",
+        "scenario": "Protective put: long stock (pays S_T always) + long put K=100 (pays max(100−S_T,0)). Terminal value = S_T + max(100−S_T,0) = max(S_T,100). Evaluate at S_T=130 and S_T=80.",
+        "fields": [
+          { "id": "pp130", "label": "Terminal value at S_T=130", "accept": ["130"] },
+          { "id": "pp80", "label": "Terminal value at S_T=80", "accept": ["100"] }
+        ]
+      },
+      "feedback": {
+        "correct": "Long stock + long put = protective put. The put floors the terminal value at K=100, so the total is max(S_T,100) — 130 when the stock wins, 100 when it doesn't.",
+        "hints": [
+          "Add the two payoffs: stock pays S_T always; put pays max(100−S_T,0).",
+          "At S_T=130: stock=130, put=max(100−130,0)=0 → total 130; at S_T=80: stock=80, put=max(100−80,0)=20 → total 100.",
+          "130; 100 (#3)."
+        ]
+      }
+    },
+    {
+      "beatId": "opt1-recap",
+      "required": true,
+      "interviewNote": "The straddle (long call + long put, same K) pays |S_T−K| — minimum at the strike, V-shaped. The protective put (long stock + long put K) floors terminal wealth at K via max(S_T,K). Both identities follow from adding kinked max(·,0) lines, no pricing needed.",
+      "prompt": "The payoff = max(·,0) — one move.",
+      "interaction": { "type": "recap" },
+      "feedback": {
+        "correct": "Payoff = max(·,0), the kink at K; compose legs, payoffs add; next: parity & no-arbitrage.",
+        "hints": [
+          "Read each recap card.",
+          "Every result is one piecewise-linear max(·,0) payoff.",
+          "Tap to finish."
+        ]
+      }
+    }
+  ]
+}

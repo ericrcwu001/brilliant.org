@@ -111,6 +111,10 @@ const UNGRADED_TYPES = new Set([
   // graded reads use answerEntry/masteryChallenge.
   'bitBoard',
   'weighing',
+  // concept-options: optionBoard (payoffDiagram/binomialTree/parityScale/
+  // greeksSlider) is intentionally ungraded — graded reads use answerEntry/
+  // masteryChallenge; headlines are cross-checked in validate-fixtures §3h.
+  'optionBoard',
 ])
 
 const ALL_KNOWN_TYPES = new Set([...GRADED_TYPES, ...UNGRADED_TYPES])
@@ -366,8 +370,8 @@ function checkProbabilityCounter(beat: Beat) {
 // ── Main audit ───────────────────────────────────────────────────────────────
 
 describe('answer-acceptance audit', () => {
-  it('discovers exactly 54 lesson fixtures', () => {
-    expect(lessons.length).toBe(60)
+  it('discovers exactly 66 lesson fixtures', () => {
+    expect(lessons.length).toBe(66)
   })
 
   for (const lesson of lessons) {
@@ -454,6 +458,6 @@ describe('answer-acceptance audit', () => {
     for (const [type, count] of Object.entries(skippedCounts).sort())
       console.log(`  ${type}: ${count}`)
     // The summary it is always a pass — its job is to report, not gate.
-    expect(lessons.length).toBe(60)
+    expect(lessons.length).toBe(66)
   })
 })

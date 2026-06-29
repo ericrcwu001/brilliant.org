@@ -38,7 +38,7 @@
       "title": "Payoffs & the Contract",
       "summary": "Read and compose option payoffs: long/short calls and puts as piecewise-linear max(·,0); intrinsic vs time value; the protective-put identity max(S_T,K).",
       "milestoneId": "opt-payoffs",
-      "built": false,
+      "built": true,
       "glyphKey": "(S−K)⁺",
       "vizKey": "twoNode"
     },
@@ -47,7 +47,7 @@
       "title": "Put-Call Parity & No-Arbitrage",
       "summary": "Derive C − P = S − K·D as a no-arbitrage identity; spot the arbitrage gap, build the conversion trade, and bound a call or put by no-arbitrage.",
       "milestoneId": "opt-parity",
-      "built": false,
+      "built": true,
       "glyphKey": "C−P",
       "vizKey": "twoNode"
     },
@@ -56,7 +56,7 @@
       "title": "Spreads & Straddles",
       "summary": "Compose multi-leg payoffs (bull spread, butterfly, straddle, strangle); read caps and break-points; bound a spread's price 0 ≤ c₁−c₂ ≤ K₂−K₁ by no-arbitrage.",
       "milestoneId": "opt-spreads",
-      "built": false,
+      "built": true,
       "glyphKey": "c₁−c₂",
       "vizKey": "sum"
     },
@@ -65,7 +65,7 @@
       "title": "One-Step Binomial: Price by Replication",
       "summary": "Price by replication (Δ shares + bond B) and by the risk-neutral measure q=(R−d)/(u−d); show hedge cost = price = (1/R)·E_q[payoff].",
       "milestoneId": "opt-replication",
-      "built": false,
+      "built": true,
       "glyphKey": "q",
       "vizKey": "twoNode"
     },
@@ -74,7 +74,7 @@
       "title": "Multi-Step Binomial → Black-Scholes",
       "summary": "Fold a multi-step tree by backward induction; weight nodes nCk·q^k(1−q)^(n−k); reach Black-Scholes as the display-only continuous limit.",
       "milestoneId": "opt-tree",
-      "built": false,
+      "built": true,
       "glyphKey": "nCk",
       "vizKey": "randomWalk"
     },
@@ -83,7 +83,7 @@
       "title": "Synthesis: Hedging, Greeks & In the Wild",
       "summary": "The option delta is the Cov/Var hedge ratio; read the exact Greek signs; choose the right tool (delta-hedge vs replicate vs q-price) on unlabeled problems.",
       "milestoneId": "opt-synthesis",
-      "built": false,
+      "built": true,
       "glyphKey": "Δ",
       "vizKey": "twoNode"
     }

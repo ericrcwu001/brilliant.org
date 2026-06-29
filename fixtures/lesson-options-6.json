@@ -1,0 +1,314 @@
+{
+  "lessonId": "lesson-options-6",
+  "courseId": "course-options",
+  "title": "Synthesis: Hedging, Greeks & In the Wild",
+  "patternOptions": ["H"],
+  "milestoneId": "opt-synthesis",
+  "unlocks": null,
+  "schemaVersion": 1,
+  "beats": [
+    {
+      "beatId": "opt6-recall",
+      "schemaId": "linearity-indicators",
+      "required": true,
+      "prompt": "Cumulative recall across the whole arc. Match each headline result to its value.",
+      "interaction": {
+        "type": "retrievalGrid",
+        "pairs": [
+          { "left": "Var(X+Y)", "right": "Var(X)+Var(Y)+2Cov(X,Y)" },
+          { "left": "Min-variance hedge h*=Cov/Var", "right": "−2/3" },
+          { "left": "σ =", "right": "spread (standard deviation)" }
+        ]
+      },
+      "feedback": {
+        "correct": "Every load-bearing prereq for the capstone: Var(X+Y)=Var+Var+2Cov (the cross term), the min-variance ratio h*=Cov/Var=−2/3, and σ=SD=the spread.",
+        "hints": [
+          "Each card is the headline from a different prior lesson.",
+          "Var(X+Y) adds a 2Cov cross term (not just two variances); h* has the variance of the short leg in the denominator; σ is the standard deviation, not the variance.",
+          "Var+Var+2Cov (cov3-win); −2/3 (cov5-win); spread (cov1)."
+        ]
+      }
+    },
+    {
+      "beatId": "opt6-mixed",
+      "schemaId": "binomial-pricing",
+      "required": true,
+      "prompt": "Second cold match — no method labels. Match each unlabeled arc result to its quantity type.",
+      "interaction": {
+        "type": "retrievalGrid",
+        "pairs": [
+          { "left": "Call payoff at S_T=130 (K=100)", "right": "30" },
+          { "left": "No-arbitrage parity gap", "right": "1" },
+          { "left": "Risk-neutral q", "right": "1/2" },
+          { "left": "Two-step binomial price", "right": "11" }
+        ]
+      },
+      "feedback": {
+        "correct": "One method per spine: payoff 30 is a piecewise-linear read (max(130−100,0)); gap 1 is the parity no-arb shortfall; q=1/2 is the risk-neutral measure; 11 is the two-step backward fold.",
+        "hints": [
+          "No method labels — identify by what type of quantity it is (a cash payoff? a probability? a price?).",
+          "payoff = max expression at a point; gap = C−P−(S−K); q=(R−d)/(u−d); 2-step price = (1/R²)·Σweight·payoff.",
+          "30 (#1); 1 (#7); 1/2 (#13); 11 (#17)."
+        ]
+      }
+    },
+    {
+      "beatId": "opt6-bet",
+      "required": false,
+      "prompt": "You spent a whole concept on the statistical hedge ratio h=Cov/Var — the share count that makes a two-asset book least wiggly. An option trader quotes a delta. Are these the same thing, or two different worlds?",
+      "interaction": {
+        "type": "prediction",
+        "options": [
+          "No — unrelated; one is statistics, the other is calculus (∂V/∂S).",
+          "Yes — but only by coincidence at one price.",
+          "Yes — the delta is h=Cov/Var, re-struck each step."
+        ]
+      },
+      "feedback": {
+        "byOption": {
+          "No — unrelated; one is statistics, the other is calculus (∂V/∂S).": {
+            "note": "Let's test it — they're the same move in two costumes. The delta is the share count that makes a hedged book locally riskless — exactly what h=Cov/Var does, only re-struck each step as S moves. (#21)",
+            "correct": false
+          },
+          "Yes — but only by coincidence at one price.": {
+            "note": "Closer — but it's not a coincidence. Delta IS the (instantaneous) Cov/Var hedge ratio; the tree's Δ=(C_u−C_d)/(S(u−d)) is that ratio for the next step. (#21, #13)",
+            "correct": false
+          },
+          "Yes — the delta is h=Cov/Var, re-struck each step.": {
+            "note": "Exactly — one risk-cancelling ratio, two surfaces. The capstone proves it on #21 (h=2/3) and the canonical tree (Δ=1/2).",
+            "correct": true
+          }
+        }
+      }
+    },
+    {
+      "beatId": "opt6-explore",
+      "required": false,
+      "prompt": "Drag the σ-slider and the S-sweep marker — the Black-Scholes delta-curve and Greek sign readouts update live. Call Δ stays +(0,1); put Δ stays −(−1,0); Γ, vega stay +; Θ stays −. Sweep the full range and observe signs hold even as magnitudes vary continuously.",
+      "interaction": {
+        "type": "optionBoard",
+        "display": "greeksSlider",
+        "interactive": true,
+        "sigma": { "n": 1, "d": 5 },
+        "markS": { "n": 100, "d": 1 },
+        "tree": {
+          "S0": { "n": 100, "d": 1 },
+          "u": { "n": 6, "d": 5 },
+          "d": { "n": 4, "d": 5 },
+          "R": { "n": 1, "d": 1 },
+          "K": { "n": 100, "d": 1 },
+          "n": 1,
+          "kind": "call"
+        }
+      },
+      "hero": {
+        "slowFirst": true,
+        "structuralReadout": "Signs hold across all σ and S — call Δ +, put Δ −, Γ +, vega +, Θ −. Magnitudes display-only.",
+        "reducedMotionFinalFrame": true
+      },
+      "feedback": {
+        "correct": "Signs hold across all σ and S — the sign is the thing you can bet your book on. Magnitudes (Δ=N(d₁), Γ, vega, Θ) are display-only.",
+        "hints": [
+          "Drag the σ-slider and the S-sweep marker to watch the Greek signs respond.",
+          "Call Δ stays positive; put Δ stays negative; Γ and vega stay positive; Θ stays negative.",
+          "Signs hold even as magnitudes vary continuously — the sign is the invariant (#opt6-explore)."
+        ]
+      }
+    },
+    {
+      "beatId": "opt6-win",
+      "schemaId": "delta-hedging",
+      "required": true,
+      "prompt": "Type the min-variance hedge ratio. Long 1 share A, short h shares B. With Cov(A,B)=6 and Var(B)=9: what is h*? Then with Cov=−6: what is h*?",
+      "interaction": {
+        "type": "answerEntry",
+        "fields": [
+          { "id": "h", "label": "Min-variance hedge ratio (Cov=6, Var=9)", "accept": ["2/3"] },
+          { "id": "hneg", "label": "With Cov=−6", "accept": ["-2/3", "−2/3"] }
+        ]
+      },
+      "feedback": {
+        "correct": "h*=Cov/Var=6/9=2/3; flip the sign with Cov=−6 → −2/3. One division; the sign follows the direction of the covariance.",
+        "hints": [
+          "h = Cov ÷ Var, one division.",
+          "6÷9=2/3; Cov=−6 → −2/3; do NOT report Cov alone or invert the ratio.",
+          "2/3 and −2/3 (#21, GB §4.5 p.48)."
+        ]
+      }
+    },
+    {
+      "beatId": "opt6-gate",
+      "schemaId": "delta-hedging",
+      "required": true,
+      "prompt": "A desk is long one option and wants the number of shares to short right now so the book barely moves on small wiggles in the stock. Which tool gives that number?",
+      "interaction": {
+        "type": "prediction",
+        "options": [
+          "Delta hedging",
+          "Linearity / indicators",
+          "No-arbitrage replication",
+          "Binomial pricing"
+        ],
+        "gate": {
+          "kind": "which-method",
+          "correct": "delta-hedging",
+          "optionMethods": [
+            "delta-hedging",
+            "linearity-indicators",
+            "no-arbitrage-replication",
+            "binomial-pricing"
+          ]
+        }
+      },
+      "feedback": {
+        "byOption": {
+          "Delta hedging": {
+            "note": "Right — the risk-cancelling share count is the delta = the Cov/Var hedge ratio, re-struck each step.",
+            "correct": true
+          },
+          "Linearity / indicators": {
+            "note": "That averages payoffs as a linear combination — an expected value, not a share count. The question asks how many shares to short, not what the option is worth. (delta-hedging)",
+            "correct": false
+          },
+          "No-arbitrage replication": {
+            "note": "Static replication rebuilds the whole {Δ shares + bond} to PRICE the option; here you only need today's risk-cancelling share count — that's the delta itself. (delta-hedging)",
+            "correct": false
+          },
+          "Binomial pricing": {
+            "note": "Re-pricing the tree gives the option's VALUE, not its hedge. Choose by what's asked: a risk-cancelling share count = delta-hedging (Cov/Var), not re-pricing. (#21)",
+            "correct": false
+          }
+        }
+      }
+    },
+    {
+      "beatId": "opt6-greeksigns",
+      "schemaId": "delta-hedging",
+      "required": true,
+      "prompt": "For each Greek, enter its sign for a long option position: +, 0, or −.",
+      "interaction": {
+        "type": "answerEntry",
+        "fields": [
+          { "id": "callDelta", "label": "Call Δ sign", "accept": ["+", "+1"] },
+          { "id": "putDelta", "label": "Put Δ sign", "accept": ["−", "-", "-1", "−1"] },
+          { "id": "gamma", "label": "Γ sign", "accept": ["+", "+1"] },
+          { "id": "vega", "label": "vega sign", "accept": ["+", "+1"] },
+          { "id": "theta", "label": "Θ sign", "accept": ["−", "-", "-1", "−1"] }
+        ]
+      },
+      "feedback": {
+        "correct": "Call Δ ∈(0,1) → +; put Δ ∈(−1,0) → −; Γ + (convexity in your favor); vega + (long options gain with vol); Θ − (long options bleed time value). Magnitudes are display-only on the greeksSlider.",
+        "hints": [
+          "A long call gains when the stock rises (+ delta); a long put loses when the stock rises (− delta).",
+          "Convexity: a long option's value curve bends upward → Γ +; volatility raises a long option's value → vega +; time costs a long position → Θ −.",
+          "Call Δ +, put Δ −, Γ +, vega +, Θ − (greekSign engine goldens, GB §6.2 p.75)."
+        ]
+      }
+    },
+    {
+      "beatId": "opt6-exotic",
+      "schemaId": "no-arbitrage-replication",
+      "required": true,
+      "prompt": "A one-touch digital option pays $1 the first time S hits barrier H. Martingale with S₀=1, r=0: replicate by buying 1/H shares at S₀=1. Price the one-touch for H=5/4 and H=2.",
+      "interaction": {
+        "type": "answerEntry",
+        "fields": [
+          { "id": "h54", "label": "One-touch price for H=5/4", "accept": ["4/5", "0.8", ".8"] },
+          { "id": "h2", "label": "One-touch price for H=2", "accept": ["1/2", "0.5", ".5"] }
+        ]
+      },
+      "feedback": {
+        "correct": "Martingale S₀=1, r=0: replicate a $1-at-H payout by buying 1/H shares at price S₀=1. Replicating cost = price = 1/H. H=5/4 → 4/5; H=2 → 1/2.",
+        "hints": [
+          "Martingale + r=0: what portfolio costs $1 when S first reaches H?",
+          "Buy 1/H shares at S₀=1; the replicating cost IS the no-arb price; price=1/H, not 1−1/H.",
+          "H=5/4 → 4/5; H=2 → 1/2 (GB §6.2 p.75 L11741)."
+        ]
+      }
+    },
+    {
+      "beatId": "opt6-primer",
+      "required": false,
+      "track": "A",
+      "prompt": "A spaced re-test before the mastery — read the card, then continue.",
+      "interaction": {
+        "type": "primer",
+        "variant": "custom",
+        "title": "Delta = Cov/Var, re-struck each step",
+        "body": "The option delta IS the Cov/Var hedge ratio, re-struck each step as S moves. On #21: Cov=6, Var=9 → Δ = h* = 2/3. For the transfer problem (#22): the answer is the VARIANCE 27/700 — never the standard deviation (the irrational square root of that variance), which is display-only. Grade the variance, not the root.",
+        "collapsible": true
+      },
+      "feedback": {
+        "correct": "Delta = Cov/Var = the risk-cancelling share count, re-struck each step; grade the variance (27/700), never the irrational root.",
+        "hints": [
+          "Read the card.",
+          "Delta = h* = Cov/Var; grade the variance, not the root.",
+          "Continue when ready."
+        ]
+      }
+    },
+    {
+      "beatId": "transfer-heldout",
+      "required": false,
+      "track": "B",
+      "heldOut": true,
+      "schemaId": "delta-hedging",
+      "prompt": "Transfer challenge — a fresh surface. Two-stock min-variance portfolio: σ_A=20% (Var_A=1/25), σ_B=30% (Var_B=9/100), ρ=1/2 (Cov=ρσ_Aσ_B=3/100). Find the optimal weights w_A and w_B and the minimum variance.",
+      "interaction": {
+        "type": "masteryChallenge",
+        "scenario": "Same Cov/Var minimization re-struck as portfolio weights: w_A=(Var_B−Cov)/(Var_A+Var_B−2Cov). Read what each blank asks for, then apply the tool. Note: grade the variance (an exact rational), never the irrational standard deviation.",
+        "fields": [
+          { "id": "wa", "label": "Weight in A", "accept": ["6/7"] },
+          { "id": "wb", "label": "Weight in B", "accept": ["1/7"] },
+          { "id": "var", "label": "Minimum variance", "accept": ["27/700"] }
+        ]
+      },
+      "feedback": {
+        "correct": "Same Cov/Var minimization re-struck as portfolio weights: w_A=(Var_B−Cov)/(Var_A+Var_B−2Cov)=(9/100−3/100)/(1/25+9/100−6/100)=(6/100)/(7/100)=6/7; w_B=1−w_A=1/7; min Var=27/700.",
+        "hints": [
+          "Same h=Cov/Var structure — now solve for the weight in the two-asset portfolio.",
+          "w_A=(Var_B−Cov)/(Var_A+Var_B−2Cov); w_B=1−w_A; min Var=w_A²·Var_A+w_B²·Var_B+2w_Aw_B·Cov.",
+          "6/7 in A, 1/7 in B; Var=27/700 (#22, GB §6.4 p.82-83)."
+        ]
+      }
+    },
+    {
+      "beatId": "opt6-mastery",
+      "schemaId": "delta-hedging",
+      "required": true,
+      "density": "split",
+      "prompt": "Mastery — two parts. Part A: the option delta as the dynamic hedge ratio. Part B: from the canonical tree, the risk-cancelling share count.",
+      "interaction": {
+        "type": "masteryChallenge",
+        "scenario": "Part A: long 1 share A, short Δ shares B; Cov(A,B)=6, Var(B)=9. The option delta IS h*=Cov/Var — give the dynamic Δ. Part B: one-step call tree (handed C_u=20, C_d=0, S=100, u=6/5, d=4/5, R=1, K=100). Give the risk-cancelling share count Δ — NOT the price.",
+        "fields": [
+          { "id": "ha", "label": "Dynamic delta h*=Cov/Var", "accept": ["2/3"] },
+          { "id": "delta", "label": "Tree hedge share count Δ", "accept": ["1/2", "0.5", ".5"] }
+        ]
+      },
+      "feedback": {
+        "correct": "Part A: h*=Cov/Var IS today's option delta — the same risk-cancelling share count, one method in two costumes. Cov=6, Var=9 → Δ=h*=2/3. Part B: Δ=(C_u−C_d)/(S(u−d))=(20−0)/(100·(6/5−4/5))=20/20=1/2. The desk wants the risk-cancelling share count, not the price (which would be 10).",
+        "hints": [
+          "Part A: the bet proved it — the option delta IS the Cov/Var hedge ratio, re-struck each step. Part B: a risk-cancelling share count = delta-hedging, not re-pricing.",
+          "Part A: same formula as opt6-win; now read it as the option's dynamic Δ. Part B: Δ=(V_u−V_d)/(S(u−d)); you are given C_u=20, C_d=0.",
+          "Part A: 2/3 (#21). Part B: 20/(100·2/5)=20/20=1/2 (#mastery, GB §6.1+§5.3)."
+        ]
+      }
+    },
+    {
+      "beatId": "opt6-recap",
+      "required": true,
+      "interviewNote": "Interview framing: the options toolkit is one connected set of moves, told apart on sight by what the question asks for — payoff (piecewise-linear max), parity no-arb gap, risk-neutral q and backward fold, and the delta = Cov/Var hedge ratio re-struck each step. Greek signs are exact (call Δ +, put Δ −, Γ +, vega +, Θ −); magnitudes are irrational and display-only. The one-touch digital price = 1/H (replicate by buying 1/H shares at S₀). The capstone move: read what the question asks for, then reach for the matching tool.",
+      "prompt": "One toolkit, told apart on sight.",
+      "interaction": { "type": "recap" },
+      "feedback": {
+        "correct": "Payoff · parity/no-arb · q-price · tree · delta — one connected toolkit. The capstone move: read which object the question asks for, then reach for the matching tool.",
+        "hints": [
+          "Read each recap card.",
+          "Every method this concept taught is one move in a single connected toolkit.",
+          "Tap to finish."
+        ]
+      }
+    }
+  ]
+}

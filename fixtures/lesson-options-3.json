@@ -1,0 +1,260 @@
+{
+  "lessonId": "lesson-options-3",
+  "courseId": "course-options",
+  "title": "Spreads & Straddles",
+  "patternOptions": ["H"],
+  "milestoneId": "opt-spreads",
+  "unlocks": null,
+  "schemaVersion": 1,
+  "beats": [
+    {
+      "beatId": "opt3-recall",
+      "schemaId": "payoff-construction",
+      "required": true,
+      "prompt": "Match each single-leg option to its payoff at expiry.",
+      "interaction": {
+        "type": "retrievalGrid",
+        "pairs": [
+          { "left": "Long call K=100, S_T=130", "right": "30" },
+          { "left": "Long call K=100, S_T=70", "right": "0" },
+          { "left": "Long put K=100, S_T=70", "right": "30" }
+        ]
+      },
+      "feedback": {
+        "correct": "Single-leg payoffs from L1: call = max(S_T−K,0), put = max(K−S_T,0). Now we stack two.",
+        "hints": [
+          "Which legs are in-the-money at each S_T? Recall the hockey-stick shape from L1.",
+          "Long call(100) at 130: in-the-money (130>100), pays 130−100=30; at 70: OTM, pays 0. Long put(100) at 70: in-the-money (70<100), pays 100−70=30.",
+          "30; 0; 30 (callPayoff(130,100)=30, callPayoff(70,100)=0, putPayoff(70,100)=30)."
+        ]
+      }
+    },
+    {
+      "beatId": "opt3-bet",
+      "required": false,
+      "prompt": "You buy a call struck at 100 and sell a call struck at 120 — a bull call spread. The stock expires at S_T = 130. How much does the position pay?",
+      "interaction": {
+        "type": "prediction",
+        "options": [
+          "30 — your long call pays 130−100=30; the upside is yours",
+          "20 — the call you sold caps the gain at K₂−K₁ = 20",
+          "0 — a long and a short call just cancel"
+        ]
+      },
+      "feedback": {
+        "byOption": {
+          "30 — your long call pays 130−100=30; the upside is yours": {
+            "note": "Let's test it — you sold the 120 call, so it pays you −(130−120) = −10. Net = 30 − 10 = 20. The short leg caps every dollar above 120.",
+            "correct": false
+          },
+          "20 — the call you sold caps the gain at K₂−K₁ = 20": {
+            "note": "Above 120 both legs move dollar-for-dollar and offset, freezing the spread at 20. Let's prove it leg by leg.",
+            "correct": true
+          },
+          "0 — a long and a short call just cancel": {
+            "note": "They only offset above 120. Between 100 and 120 the long leg is live and the short is worthless, so the spread climbs to its 20 cap there. Partial cancellation, not total.",
+            "correct": false
+          }
+        }
+      }
+    },
+    {
+      "beatId": "opt3-explore",
+      "required": false,
+      "prompt": "Drag legs onto the payoff diagram and watch the piecewise-linear curve redraw live. Add long c(100) then short c(120) — watch the flat cap at 20 form. The markS marker at S_T=110 shows the live payoff.",
+      "interaction": {
+        "type": "optionBoard",
+        "display": "payoffDiagram",
+        "interactive": true,
+        "legs": [
+          { "kind": "call", "K": { "n": 100, "d": 1 }, "qty": { "n": 1, "d": 1 } },
+          { "kind": "call", "K": { "n": 120, "d": 1 }, "qty": { "n": -1, "d": 1 } }
+        ],
+        "markS": { "n": 110, "d": 1 },
+        "labels": ["S_T", "payoff"],
+        "headline": "10"
+      },
+      "hero": {
+        "slowFirst": true,
+        "structuralReadout": "the curve is the live sum of its legs — a flat cap at 20",
+        "reducedMotionFinalFrame": true
+      },
+      "feedback": {
+        "correct": "You built the spread — the curve caps at 20 because the short leg eats every dollar above 120.",
+        "hints": [
+          "Tap 'add' to place a long call at K=100 on the diagram and watch the hockey-stick appear.",
+          "Add a short call at K=120 — the curve flattens above 120 and the cap locks at 20.",
+          "The markS marker at S_T=110 reads 10 — only the long leg is live there; the short hasn't kicked in yet."
+        ]
+      }
+    },
+    {
+      "beatId": "opt3-model",
+      "required": false,
+      "density": "split",
+      "prompt": "Three lenses, one rule: a multi-leg payoff is always the sum of its legs.",
+      "interaction": {
+        "type": "primer",
+        "variant": "custom",
+        "title": "Σ qty·max(·,0) — the multi-leg payoff rule",
+        "body": "Any multi-leg position's payoff is the sum of its legs: Σ qty·max(·,0). Long legs carry qty=+1; short legs carry qty=−1 (they subtract).\n\nLens 1 — Sum: payoff = Σ qty·max(S_T−K,0) for calls, plus Σ qty·max(K−S_T,0) for puts.\n\nLens 2 — Short legs subtract: the 120 call you sold contributes −max(S_T−120,0). At S_T=130 that's −10, capping the bull spread at 20.\n\nLens 3 — Caps & break-points draw themselves: wherever a short leg's kink meets a long leg's kink, the curve flattens — the structure emerges automatically from the sum.",
+        "collapsible": true
+      },
+      "feedback": {
+        "correct": "Any multi-leg payoff is the sum — short legs subtract, so the gain caps where they meet.",
+        "hints": [
+          "Read the card — Σ qty·max(·,0) with short legs carrying qty<0.",
+          "Short legs subtract: a qty=−1 call at K=120 contributes −max(S_T−120,0) at expiry.",
+          "Continue when ready."
+        ]
+      }
+    },
+    {
+      "beatId": "opt3-win",
+      "schemaId": "payoff-construction",
+      "required": true,
+      "density": "split",
+      "prompt": "Bull call spread: long c(K=100), short c(K=120). The leg table shows each leg's max(·,0). What is the spread payoff at each S_T?",
+      "interaction": {
+        "type": "answerEntry",
+        "fields": [
+          { "id": "b130", "label": "Bull spread payoff at S_T=130", "accept": ["20"] },
+          { "id": "b110", "label": "Bull spread payoff at S_T=110", "accept": ["10"] }
+        ]
+      },
+      "feedback": {
+        "correct": "The short c(120) starts paying back at 120+: at 130 it costs −10, leaving 20; at 110 only the long is live, paying 10.",
+        "hints": [
+          "Apply the leg table: long c(100) pays max(S_T−100,0); short c(120) pays −max(S_T−120,0); sum them at each S_T.",
+          "At S_T=130: long pays 30, short pays −10; 30+(−10)=20. At S_T=110: long pays 10, short is OTM (pays 0); 10+0=10.",
+          "20 (spreadPayoff([c100+1,c120−1], 130)=20); 10 (spreadPayoff([c100+1,c120−1], 110)=10)."
+        ]
+      }
+    },
+    {
+      "beatId": "opt3-gate",
+      "schemaId": "payoff-construction",
+      "required": true,
+      "density": "split",
+      "prompt": "An investor is long c(100) and short c(120). What is the first move to find the cash payoff at S_T=130?",
+      "interaction": {
+        "type": "prediction",
+        "options": [
+          "Payoff construction",
+          "Put–call parity",
+          "No-arbitrage replication"
+        ],
+        "gate": {
+          "kind": "which-method",
+          "correct": "payoff-construction",
+          "optionMethods": ["payoff-construction", "put-call-parity", "no-arbitrage-replication"]
+        }
+      },
+      "feedback": {
+        "byOption": {
+          "Payoff construction": {
+            "note": "Add each leg's max(·,0) at S_T=130 (short legs subtract); spreadPayoff = 20.",
+            "correct": true
+          },
+          "Put–call parity": {
+            "note": "Parity (C−P=S−K) relates a call and a put price — there's no put in this position and you're asked for the cash at expiry, not a price relation. That's a payoff read, not parity.",
+            "correct": false
+          },
+          "No-arbitrage replication": {
+            "note": "Replication builds a stock+bond book to price the position. The question wants the payoff (what it pays at S_T), which you read directly by summing each leg's max(·,0).",
+            "correct": false
+          }
+        }
+      }
+    },
+    {
+      "beatId": "opt3-compare",
+      "schemaId": "payoff-construction",
+      "required": true,
+      "density": "split",
+      "prompt": "Match each position to its payoff at S_T=130, and name what they share.",
+      "interaction": {
+        "type": "retrievalGrid",
+        "pairs": [
+          { "left": "Bull spread (long c100/short c120) at S_T=130", "right": "20" },
+          { "left": "Straddle |S_T−100| at S_T=130", "right": "30" },
+          { "left": "The shared move in both", "right": "sum each leg's max(·,0)" }
+        ]
+      },
+      "feedback": {
+        "correct": "One rule, two costumes — spreads cap the payoff, straddles open it both ways, but both add each leg's max(·,0). The method is the same; the position's shape is different.",
+        "hints": [
+          "Match each value with its position type first — which one has the flat top? which one has the V-shape?",
+          "Bull spread = long c(100)+short c(120): flat cap at 20 (at 130: 30−10=20). Straddle = long c(100)+long p(100): V-shape (at 130: 30+0=30).",
+          "20; 30; sum each leg's max(·,0) — one payoff-construction schema, two costumes."
+        ]
+      }
+    },
+    {
+      "beatId": "transfer-heldout",
+      "schemaId": "payoff-construction",
+      "required": false,
+      "track": "B",
+      "density": "split",
+      "heldOut": true,
+      "prompt": "A position is long put K=90 and long call K=110. What is the payoff at each S_T?",
+      "interaction": {
+        "type": "masteryChallenge",
+        "scenario": "Both legs are long (qty=+1, no subtraction). Identify which leg is in-the-money at each S_T, then sum.",
+        "fields": [
+          { "id": "st130", "label": "Strangle payoff at S_T=130", "accept": ["20"] },
+          { "id": "st100", "label": "at S_T=100", "accept": ["0"] },
+          { "id": "st70", "label": "at S_T=70", "accept": ["20"] }
+        ]
+      },
+      "feedback": {
+        "correct": "Strangle = long put(90) + long call(110) — a magnitude/volatility bet. Both legs are long (qty=+1, no subtraction). At 130: call pays 20, put OTM → 20. At 100: both OTM → 0. At 70: put pays 20, call OTM → 20.",
+        "hints": [
+          "Two long legs — both add (no negative qty here). Identify which leg is in-the-money at each S_T.",
+          "At 130: call(110) pays 130−110=20, put(90) is OTM (pays 0). At 70: put(90) pays 90−70=20, call(110) is OTM. At 100: both OTM, pays 0.",
+          "130→20; 100→0; 70→20 (spreadPayoff([put90+1,call110+1], ·) golden)."
+        ]
+      }
+    },
+    {
+      "beatId": "opt3-mastery",
+      "schemaId": "payoff-construction",
+      "required": true,
+      "density": "split",
+      "prompt": "Mastery — two parts. Part A: butterfly payoff at the peak and wing. Part B: no-arbitrage price bounds for the bull spread.",
+      "interaction": {
+        "type": "masteryChallenge",
+        "scenario": "Part A: long butterfly — long c(90), short 2·c(100), long c(110). Apply Σ qty·max(·,0) at S_T=100 (peak) and S_T=90 (wing). Part B: bull spread long c(100)/short c(120). The payoff envelope is in [0, K₂−K₁] at every S_T — what are the no-arbitrage price bounds?",
+        "fields": [
+          { "id": "bfpeak", "label": "Butterfly peak at S_T=100", "accept": ["10"] },
+          { "id": "bfwing", "label": "Butterfly wing at S_T=90", "accept": ["0"] },
+          { "id": "lo", "label": "Bull-spread price lower bound", "accept": ["0"] },
+          { "id": "hi", "label": "upper bound", "accept": ["20"] }
+        ]
+      },
+      "feedback": {
+        "correct": "Part A: at S_T=100: long c(90) pays 10, short 2·c(100) pays 0 (ATM), long c(110) pays 0 — peak = 10. At S_T=90: all three OTM → 0. Part B: The bull spread payoff is in [0, K₂−K₁]=[0,20] at every S_T, so by no-arbitrage the price is trapped in [0, 20].",
+        "hints": [
+          "Part A: apply Σ qty·max(·,0) at each S_T, tracking all three legs separately. Part B: the price can't exceed the maximum possible payoff (no free lunch) and can't be negative (free money if it were).",
+          "Part A: at S_T=100: long c(90)=max(10,0)·1=10; short 2·c(100)=max(0,0)·(−2)=0; long c(110)=max(−10,0)·1=0; sum=10. Part B: max payoff = K₂−K₁=120−100=20; min payoff = 0.",
+          "Part A: peak=10; wing=0. Part B: lower bound=0; upper bound=20."
+        ]
+      }
+    },
+    {
+      "beatId": "opt3-recap",
+      "required": true,
+      "interviewNote": "Interview framing: 'Bull spread or butterfly payoff' — the move is Σ qty·max(·,0): each leg's max(·,0) weighted by qty (short legs carry qty<0 and subtract). Caps & break-points draw themselves from the sum: wherever a short leg's kink meets a long leg's the curve flattens. No-arb price bound: payoff is in [0, K₂−K₁] at every S_T forces price in [0, K₂−K₁].",
+      "prompt": "One composition rule, two costumes.",
+      "interaction": { "type": "recap" },
+      "feedback": {
+        "correct": "Legs add (Σ qty·max(·,0)); caps & break-points draw themselves from the sum; the spread price is bounded by no-arbitrage: 0 ≤ c₁−c₂ ≤ K₂−K₁.",
+        "hints": [
+          "Read each recap card.",
+          "Short legs carry qty<0 — they subtract and create caps; long-only spreads (straddles, strangles) open both ways.",
+          "Tap to finish."
+        ]
+      }
+    }
+  ]
+}
