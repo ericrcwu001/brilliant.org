@@ -8,45 +8,31 @@
 
 ## Purpose
 
-This BrainLift defines the learning-science spine of **Ergo**, a quant-interview prep product.
+This BrainLift defines the learning-science logic behind **Ergo**, which is a Brilliant.org clone for quant-interview prep.
 
-- The central claim: quant-interview readiness is durable, transferable retrieval under pressure, not comprehension.
+- The central claim of this BrainLift is that quant-interview preparedness is durable, transferable retrieval under pressure, not just comprehension.
 - Quant interviews test unlabeled method identification, reconstruction from memory, verbal reasoning, speed, calibration, and composure.
-- Ergo therefore optimizes for delayed recall, method selection, calibrated confidence, transfer to fresh surfaces, and pressure performance.
+- Thus, Ergo optimizes for delayed recall, method selection, calibrated confidence, transfer to fresh surfaces, and pressure performance.
 
 ### In Scope
 
 - Retrieval practice, spacing, interleaving, desirable difficulties, worked-example fading, transfer and analogical encoding, productive failure, feedback and metacognition, motivation, and performance psychology.
-- Product translation for Ergo: lesson beats, review cards, scheduling, mastery signals, capstone interviews, motivation surfaces, and measurement.
-- Spiky product principles that challenge lesson-first edtech and make the codebase accountable to durable interview performance.
+- For Ergo: lesson beats, review cards, scheduling, mastery signals, capstone interviews, motivation surfaces, and measurement.
+- Spiky product principles that challenge lesson-first edtech (like Brilliant) and make the codebase accountable to durable interview performance.
 
 ### Out of Scope
 
-- The quant content canon itself. Green Book / Heard-on-the-Street problems, Markov chains, expected value, combinatorics, Bayes, game theory, and optimal stopping live in the lesson factory and interview packs.
-- RAG or net-new ML infrastructure.
+- The quant content-base itself.
 - General test-prep outside quant-interview conditions.
 
 ---
 
-## Ergo Learning Model
+## Ergo Learning Model from SPOVs
 
-- **Teach lightly, then test repeatedly.** Lessons seed schemas; durable learning comes from delayed retrieval after initial encoding.
-- **Store practice at the problem level.** Review cards are keyed by `lessonId__beatId`, not by a coarse chapter completion flag.
-- **Index every graded problem by hidden method.** `schemaId` names the deep structure independent of surface story.
-- **Interleave confusable methods.** The queue should make the learner choose a method before executing it.
-- **Make mastery delayed.** Completion gives silver; gold requires delayed, server-graded retrieval or transfer.
-- **Reward calibration and feed-forward.** The capstone report should surface rubric dimensions, correctness anchors, and next fixes, not ego-level verdicts.
-
-Key product anchors:
-
-- Spacing lives in `src/progress/scheduling.ts` and `functions/src/review.ts`: SM-2 scheduling, interview-date anchoring, `submitReview`, and card advancement.
-- Retrieval queue logic lives in `src/lesson/queue.ts`: due-card selection, suspended-card filtering, method interleaving, and confusable foils.
-- Method discrimination lives in `src/content/methods.ts` and `src/lesson/WhichMethodGate.tsx`: `METHODS`, symmetric `CONFUSABLE`, and graded method selection.
-- Honest mastery lives in `functions/src/goldMint.ts`, `functions/src/review.ts`, and `src/lesson/mastery.ts`: delayed gold, server-graded review, and hints forgiven during learning.
-- Transfer lives in `BeatSchema.heldOut`, transfer cards, transfer-validator gates, and lesson-factory requirements for `schemaId` plus held-out transfer checks.
-- Desirable difficulty lives in `src/lesson/retrievalRep.ts` and `src/lesson/governor.ts`: cold-recall reps and bounded scaffold adjustment in the 50-85% success band.
-- Calibration lives in `src/lesson/ConfidenceRating.tsx`, calibration trend code, and interview confidence fields.
-- Pressure performance lives in capstone packs, `functions/src/answerCheck.ts`, engine-verified pack tests, and `src/interview/RubricTrend.tsx`.
+- **Teach lightly --> test repeatedly.** Lessons seed schemas, but durable learning only comes from delayed retrieval after the user's initial encounter.
+- **Interleave confusable methods.** The queue should make the learner choose a method before executing it; choosing what type of problem-solving method a question requires builds the learning.
+- **Make mastery delayed.** Completion only gives silver. Gold requires delayed, server-graded retrieval or transfer.
+- **Reward calibration** The website should surface rubric dimensions, correctness anchors, and next fixes, not ego-level verdicts.
 
 ---
 
@@ -54,7 +40,7 @@ Key product anchors:
 
 ### SPOV 1 - Stop Teaching, Start Testing
 
-- The product law: Ergo is a spaced-retrieval testing engine with lessons as on-ramps, not a lesson app with quizzes attached.
+- Ergo is a spaced-retrieval testing engine with lessons as on-ramps, not a lesson app with quizzes attached.
 - Lesson completion is an encoding event. Retrieval is the learning event.
 - Roediger & Karpicke show the core reversal: restudy can look better immediately, while testing wins at delay.
 - Bjork's storage-vs-retrieval-strength framework explains the trap: smooth performance can leave weak durable access.
@@ -88,7 +74,7 @@ Boundary conditions:
 
 ### SPOV 2 - Topics Are Hints; Method Selection Is the Interview
 
-- The product law: a topic title is a Level-0 hint, and a chapter path can pre-solve the interview's most important decision.
+- A topic title is a Level-0 hint, and a chapter path can pre-solve the interview's most important decision.
 - Quant interviews rarely grade "execute gambler's ruin" in a labeled setting. They grade whether the candidate recognizes that a surface story is first-step analysis, linearity, symmetry, conditioning, Markov states, threshold rules, or another deep method.
 - Blocked practice makes execution feel fluent inside a known category. Interleaving trains discrimination between categories.
 - Chi, Feltovich, and Glaser show the expert/novice split: experts sort by deep structure; novices sort by surface story.
@@ -120,7 +106,7 @@ Boundary conditions:
 
 ### SPOV 3 - Comfort Is a False Signal
 
-- The product law: smoothness is not mastery. Quant prep should live in a controlled struggle band, roughly 50-85% retrieval success.
+- Quant prep should live in a controlled struggle band, roughly 50-85% retrieval success.
 - Desirable difficulties depress current performance while improving retention and transfer.
 - Productive failure works when struggle precedes consolidation, not when learners are abandoned.
 - Pressure performance requires representative practice conditions: cold prompt, time pressure, think-aloud reasoning, and limited working memory.
@@ -151,7 +137,7 @@ Boundary conditions:
 
 ### SPOV 4 - Rewards Must Point at Durable Mastery
 
-- The product law: gamification is not neutral. Rewards train the behavior they pay out for.
+- Gamification is not inherently good; rewards must train the behavior they pay out for.
 - Streaks, medallions, and verdicts become harmful when they reward immediate fluency, hint avoidance, or ego-level approval.
 - Useful rewards point at delayed retrieval, transfer, productive recovery after hints, calibration accuracy, and feed-forward improvement.
 - Calibration is especially important in quant prep because it is both the learning antidote to fluency and the trading skill behind bet sizing.

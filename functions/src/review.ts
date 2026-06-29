@@ -552,7 +552,11 @@ export const submitReview = onCall(
       if (typeof data.confidence !== 'number' || !Number.isFinite(data.confidence)) {
         throw new HttpsError('invalid-argument', 'confidence must be a finite number.')
       }
-      confidence = data.confidence
+      // Clamp untrusted client confidence to the documented [0,1] scale so an
+      // out-of-range value can never persist as card.lastConfidence. The
+      // calibration math already clamps for Brier; this hardens the stored value.
+      const c = data.confidence
+      confidence = c < 0 ? 0 : c > 1 ? 1 : c
     }
 
     const now = new Date() // server now — R12; never a client timestamp

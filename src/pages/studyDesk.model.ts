@@ -243,8 +243,14 @@ export function chapterForLesson(lessonId: string, chapters?: Chapter[]): Chapte
 
 /**
  * Returns chapter groupings from the course doc when present and non-empty;
- * otherwise falls back to ERGO_CHAPTERS. Maps CourseChapter.accent directly
- * to Chapter.hueVar (both use the 'ch1'/'ch2'/... token format).
+ * otherwise derives a single ungrouped chapter from the course's own lessons.
+ * Maps CourseChapter.accent directly to Chapter.hueVar (both use the
+ * 'ch1'/'ch2'/... token format).
+ *
+ * The old ERGO_CHAPTERS fallback was PHT-specific and caused PHT's optional
+ * lesson-first-heads to bleed into other concepts when their Firestore docs
+ * lacked a chapters[] field (stale seed). Using the course's own lessons
+ * prevents that cross-concept contamination.
  */
 export function resolveChapters(course: Course): Chapter[] {
   if (course.chapters && course.chapters.length > 0) {
@@ -255,7 +261,12 @@ export function resolveChapters(course: Course): Chapter[] {
       lessonIds: ch.lessonIds,
     }))
   }
-  return ERGO_CHAPTERS
+  return [{
+    id: 'all',
+    label: '',
+    hueVar: course.accent ?? 'ch1',
+    lessonIds: course.lessons.map((l) => l.lessonId),
+  }]
 }
 
 export type MathVizKind =

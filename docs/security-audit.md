@@ -518,3 +518,161 @@ if (!usingEmulators && import.meta.env.PROD && !appCheckSiteKey) {
 ## Residual Risk
 
 After these fixes the code-level posture is strong; the remaining real-world risk is concentrated in console configuration (App Check enforcement toggle, API-key referrer lock, Auth protections) and validating the CSP against a live deploy. Dev/debug routes (F6) and documented low-severity items (A–D) represent acceptable MVP tradeoffs once F1–F3 and F2 are verified in production.
+
+---
+
+## Re-Audit Addendum — 2026-06-28 (Learning-Science Overhaul + Concept-Options surface)
+
+**Trigger:** the large "learning-science overhaul" + "concept-options" work landed since the last audit pass (commit `5db37ea`): new Cloud Functions `submitReview` (`functions/src/review.ts`), `deleteLearningData` (`functions/src/privacy.ts`), plus `scheduling.ts`/`goldMint.ts`/`calibration.ts`/`flags.ts`/`answerCheck.ts`; new Firestore rules blocks `config`, `users/{uid}/reviews`, `users/{uid}/calibration`; the `targetInterviewDate`+`rolloutCohort` user-update whitelist additions; ADR-0010 interview changes (hire-signal removed, deterministic correctness anchor added); and the `optionBoard` lesson concept. **Methodology:** same multi-model pipeline — gemini-3-flash recon + evidence, claude-opus-4-8-thinking adjudication, composer brief.
+
+**Result:** the new surface matches the established secure patterns; backend posture unchanged-strong. **Net new posture: 0 Critical · 0 High · 1 Medium (a re-confirmation of prior I1) · 2 Low · rest Info.** ONE safe, surgical, server-only hardening was APPLIED this pass (confidence clamp); everything else is deferred/accepted/documented or a false positive.
+
+### Applied this change set
+
+- **Confidence clamp in `submitReview`** (`functions/src/review.ts`): the callable validated `confidence` as finite but not range-bounded; the raw value persisted as `card.lastConfidence`. Now clamped to the documented `[0,1]` scale at the callable. Server-only, test-neutral (the `submitReviewTx` unit tests pass the tx body directly with in-range values; no test exercises the callable with out-of-range input). The calibration Brier math already clamped (`functions/src/calibration.ts` `clamp01`); this hardens the stored value too. Maps to prior Finding D / I5-class (self-affecting).
+
+### New findings (adjudicated)
+
+| ID | Title | Severity | Status |
+|----|-------|----------|--------|
+| **LS1** | App Check asymmetry on new callables | Low/Info | DEFERRED (fold into F1) |
+| **LS2** | `rolloutCohort` is client-writable + client-assigned + server-trusted | Low | ACCEPTED (security) / DOCUMENTED (A/B-experiment integrity) |
+| **LS3** | `flags.ts` fails OPEN (all-ON) | Info | DOCUMENTED (intentional posture change) |
+| **LS4** | Calibration confidence finite-but-unbounded | Info | FIXED (clamp, see Applied) |
+| **LS5** | `deleteLearningData` recursiveDelete is non-atomic | Low/Info | ACCEPTED |
+| **LS6** | App Check replay / `consumeAppCheckToken` on the billable mint | Low/Info | DEFERRED (fold into F1, scoped to `mintInterviewToken`) |
+
+---
+
+### LS1 — App Check asymmetry on new callables
+
+| | |
+|---|---|
+| **Severity** | Low / Info (asymmetry) |
+| **Status** | DEFERRED — fold into F1 |
+| **CWE** | CWE-693 (Protection Mechanism Failure) |
+| **OWASP** | A05:2021 |
+
+**Evidence:** `submitReview` (`functions/src/review.ts:540`), `deleteLearningData` (`functions/src/privacy.ts:109`); also `gradeInterview` / `completeLesson` / `recordQualifyingAction` remain bare `onCall`. Same class as F1/I6: only `mintInterviewToken` enforces App Check (prod-only per-env constant `interview.ts:83-84`).
+
+**Exploit / why:** Adding `enforceAppCheck` (the same `enforceAppCheck` constant) to the other five is LOCALLY safe (it's false under emulator/CI) but flipping prod enforcement is exactly what the F1 monitor-then-enforce rollout reserves — so DEFER and land all five with F1. Downstream impact is self-affecting (own progression/gold/own data), so the gap is a consistency issue, not a new hole.
+
+**Remediation:** add `enforceAppCheck` to `submitReview`, `deleteLearningData`, `gradeInterview`, `completeLesson`, and `recordQualifyingAction` together with the F1 App Check monitor-then-enforce rollout.
+
+---
+
+### LS2 — `rolloutCohort` is client-writable + client-assigned + server-trusted
+
+| | |
+|---|---|
+| **Severity** | Low |
+| **Status** | ACCEPTED (security) / DOCUMENTED (A/B-experiment integrity) |
+| **CWE** | CWE-602 / CWE-639 (Client-Side Enforcement of Server-Side Security / Authorization Bypass Through User-Controlled Key) |
+| **OWASP** | A04:2021 / A01:2021 |
+
+**Evidence:** whitelisted in `firestore.rules:67`; assigned client-side `src/auth/userDoc.ts:128-140` (`ensureRolloutCohort`); trusted in `functions/src/flags.ts:83-91` `serverGatedOn` to gate `goldMint` (`review.ts:575`) + `brutalMockFloor` (`interview.ts:243`).
+
+**Exploit / why:** a user can self-select their A/B arm (write `treatment` to opt in, `holdout` to opt out). No privilege/cross-tenant/cost impact — everything gated is cosmetic/self-affecting, `rolloutPercent=100` collapses the split, and `holdout` only subtracts behavior. The genuine (non-security) cost is experiment-integrity: the "immutable cohort" claim (`userDoc.ts:35-41`) is enforced only client-side.
+
+**Remediation:** optional rules-only hardening (enum + absent→value assign-once guard on the `users` update) is low-risk but NOT required this pass — Documented.
+
+---
+
+### LS3 — `flags.ts` fails OPEN (all-ON)
+
+| | |
+|---|---|
+| **Severity** | Info |
+| **Status** | DOCUMENTED (intentional posture change) |
+| **CWE** | CWE-636 (Failure to Fail Securely) |
+| **OWASP** | A05:2021 |
+
+**Evidence:** `functions/src/flags.ts:8-9,38,65-76`. Intentional 2026-06-28 override (commit `cbb486f`, "LS on for everyone") of the original spec-05 fail-closed rule documented in earlier addenda.
+
+**Exploit / why:** NOT a vuln: an attacker can't selectively fail only the `config/flags` read; fail-open enables only cosmetic features (`goldMint` still needs a delayed server-graded pass; `brutalMockFloor` is self-inflicted difficulty); and `serverGatedOn` checks `holdout` BEFORE the flag, so fail-open never overrides an explicit holdout. **NOTE:** this REVERSES the "spec-05 fails closed to ALL_OFF" statement in the 2026-06-24/learning-science notes — that prior text is no longer current.
+
+**Remediation:** none required; intentional posture change is documented here.
+
+---
+
+### LS4 — Calibration confidence finite-but-unbounded
+
+| | |
+|---|---|
+| **Severity** | Info |
+| **Status** | FIXED (clamp, see Applied) |
+| **CWE** | CWE-20 (Improper Input Validation) |
+| **OWASP** | A04:2021 |
+
+**Evidence:** `review.ts:550-556` (finite-only validation), `calibration.ts:69,76,153-155` (`clamp01` in Brier/mean). Owner-scoped `calibration/summary` is `write: if false` (`firestore.rules:138-141`) ⇒ no cross-tenant reach; NaN/∞ excluded; out-of-range squashed.
+
+**Exploit / why:** was Info defense-in-depth; now hardened at the callable.
+
+**Remediation applied:** clamp `confidence` to `[0,1]` in `submitReview` before persisting `card.lastConfidence`.
+
+---
+
+### LS5 — `deleteLearningData` recursiveDelete is non-atomic
+
+| | |
+|---|---|
+| **Severity** | Low / Info |
+| **Status** | ACCEPTED |
+| **CWE** | CWE-460 (Improper Cleanup on Thrown Exception) |
+| **OWASP** | A04:2021 |
+
+**Evidence:** `privacy.ts:49-50`, owner-only `:110`.
+
+**Exploit / why:** mid-failure can leave a partial state, but the op is owner-only, idempotent (retry completes; `recursiveDelete` on empty is a no-op), and single-player volumes are tiny. Accepted as designed.
+
+**Remediation:** none required.
+
+---
+
+### LS6 — App Check replay / `consumeAppCheckToken` on the billable mint
+
+| | |
+|---|---|
+| **Severity** | Low / Info |
+| **Status** | DEFERRED — fold into F1, scoped to `mintInterviewToken` |
+| **CWE** | CWE-294 (Authentication Bypass by Capture-replay) |
+| **OWASP** | A07:2021 |
+
+**Evidence:** 2026 Firebase supports `consumeAppCheckToken: true` for v2 callables.
+
+**Exploit / why:** reasonable to add to the mint so a captured App Check token can't be replayed to mint many sessions. Only matters once App Check enforcement is on (F1) and pairs with I1 (reservation is the bigger lever). Don't overstate.
+
+**Remediation:** add `consumeAppCheckToken: true` to `mintInterviewToken` when F1 enforcement lands.
+
+---
+
+### Re-confirmed (no change)
+
+- **I1 (mint quota checked but never reserved) is STILL OPEN** — the one finding with real $ impact. `mintInterviewToken` does a read-only quota check (`interview.ts:256-260`); `secondsUsed` increments ONLY in the grade transaction (`:753`). A `mint→connect→abandon` loop (or parallel tabs) keeps `secondsUsed=0` → unbounded billable OpenAI Realtime sessions. Ready-to-apply reservation code is in the §I1 block above. **Recommendation: apply before go-live** (still Medium · DEFERRED).
+- **Prior interview fixes intact:** I2 generic upstream-error message (`interview.ts:359-360,643-644`), I3 `loadPack` slug charset `^[a-z0-9-]+$` (`:110-112`), I4 transcript turn/char caps (`:71-72,596-603`).
+- **F1/F3 App Check deferral** still binding — now ALSO covers `submitReview` + `deleteLearningData` (LS1).
+- **F4 dependency posture UNCHANGED:** functions runtime stays `firebase-admin ^13.10.0` (`functions/package.json:17`, capped by `firebase-functions ^7.2.5`). Root `package.json:61` carries `firebase-admin ^14` but in **devDependencies** (Admin SDK for seed/rules-test scripts on Node, never bundled to the browser) — dev-only, so F4 stands: no runtime bump, never `npm audit fix --force`. (Phase-4 `npm audit` numbers may differ from the prior measurement; treat as informational/dev-only.)
+
+### Certified-strong NEW controls (DO NOT touch)
+
+- `users/{uid}/reviews`, `users/{uid}/calibration`, and `config/{doc}` are all `write: if false` (`firestore.rules:130-141,42-45`) — Function/Admin-SDK-only, owner read.
+- `submitReview` SERVER-GRADES the answer against the fixture accept-list (R13) — client cannot assert a pass to mint gold (`review.ts:415`).
+- `completeLesson` IGNORES the client-sent `derived.mastered` and always writes `mastered:false` (`index.ts:140`); gold is minted only later by the delayed SR path — a HARDENING vs the prior addendum's note.
+- Gold-mint anti-forgery = server `createdAt` + server `now` + ≥1-day first interval + server grade + flag + cohort (`goldMint.ts:20-24,45`, `scheduling.ts:45-47`, `review.ts:455-462`). No same-day speed-run.
+- `deleteLearningData` is owner-only (operates solely on `request.auth.uid`, never a target uid — `privacy.ts:110`).
+
+### False positives / rejected (with reason)
+
+- Gold-mint same-day speed-run — server time + ≥1-day interval make it impossible.
+- OpenAI `Safety-Identifier` spoofing — it's `sha256(server uid)` (`interview.ts:308`), not client-supplied.
+- Calibration cross-tenant poisoning — owner-scoped doc + clamped math.
+- New XSS/eval/SSRF/secret + `optionBoard` sink + `answerCheck` ReDoS — none: only the pre-existing trusted KaTeX `dangerouslySetInnerHTML` (`src/lesson/Katex.tsx:49`); functions `fetch` is hardcoded `https://api.openai.com/...` (no SSRF); `answerCheck.ts` regexes are linear (no catastrophic backtracking) and run on output-token-bounded LLM extraction.
+- `candidateFinalAnswer` "forge correct" — the correct answer is stripped from `ClientQuestion`, and for scalar answers the deterministic `compareAnswers` OVERRIDES the LLM correctness row; residual prompt-injection on non-scalar answers is self-affecting cosmetic (I5).
+
+### Recommendation
+
+- **Before go-live:** apply the §I1 mint-quota reservation (real $ control).
+- **With the F1 App Check rollout:** add `enforceAppCheck` to `submitReview`/`deleteLearningData`/`gradeInterview`/`completeLesson`/`recordQualifyingAction` (LS1) and `consumeAppCheckToken: true` to `mintInterviewToken` (LS6).
+- **Optional / documented:** rules-level enum + assign-once guard on `rolloutCohort` (LS2, experiment integrity only).
+
+**Residual risk:** code posture remains strong; residual real risk is concentrated in I1's pre-launch cost control and the console-side App Check enforcement the binding decisions already own.

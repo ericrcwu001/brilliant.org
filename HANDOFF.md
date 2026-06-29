@@ -2,6 +2,23 @@
 
 <!-- Orientation doc for a fresh context. Session-by-session narration lives in git history; this file keeps only what's needed going forward. -->
 
+## Fix: PHT intro lesson bleeding into other concepts (2026-06-28)
+
+**File changed:** `src/pages/studyDesk.model.ts` — `resolveChapters` fallback.
+
+**Bug:** When a course's Firestore doc was seeded before its `chapters[]` field was added to the fixture, `resolveChapters` fell back to the PHT-specific `ERGO_CHAPTERS` constant. That constant includes `lesson-first-heads` in its foundations chapter. If the stale doc also had `lesson-first-heads` in its `lessons` array, `resolveNodes` created a node for it, the foundations `chNodes` filter included it, and it rendered in the journey for the wrong concept.
+
+**Fix:** Replaced the `return ERGO_CHAPTERS` fallback with a single course-derived chapter (`{ id: 'all', label: '', hueVar: course.accent ?? 'ch1', lessonIds: course.lessons.map(l => l.lessonId) }`). Courses with `chapters[]` defined (all current fixtures) are unaffected — the `if` branch fires first. Aligns with ADR-0004 which already declares `ERGO_CHAPTERS` retired.
+
+## Security re-audit — Learning-Science Overhaul + Concept-Options (2026-06-28, brief NOT COMMITTED)
+
+Ran the `/security-audit` skill on the delta since the 2026-06-26 interview pass — primarily the **learning-science overhaul** (`submitReview`, `deleteLearningData`, SR/gold-mint/calibration/flags) + **concept-options** (`optionBoard`). Findings appended to `docs/security-audit.md` → §"Re-Audit Addendum — 2026-06-28". **Net: 0 Critical / 0 High / 1 Medium (I1 re-confirmed) / 2 Low / rest Info.** New surface matches established secure patterns; backend posture unchanged-strong.
+
+- **Applied (server-only):** confidence clamp `[0,1]` in `submitReview` (`functions/src/review.ts`) — LS4/FIXED.
+- **Deferred (fold into F1):** LS1 App Check asymmetry on new callables (`submitReview`, `deleteLearningData`, + prior bare callables); LS6 `consumeAppCheckToken` on `mintInterviewToken`.
+- **Accepted / documented:** LS2 `rolloutCohort` client-writable (security OK, A/B integrity only); LS3 `flags.ts` fail-OPEN (intentional 2026-06-28 posture change — reverses spec-05 fail-closed); LS5 `deleteLearningData` non-atomic recursiveDelete.
+- **Still open before go-live:** **I1 (Medium)** mint-quota reservation (real $ control).
+
 ## `lesson-options-1` Interaction Spec — ✅ COMPLETE (2026-06-28, Dept-2 design)
 
 **Output:** `concepts/options/lesson-options-1/interaction-spec.md` (written). Design-only; no production code.
