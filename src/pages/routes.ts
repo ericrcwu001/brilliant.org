@@ -28,6 +28,8 @@ export const ROUTES = {
   devGate: '/dev/gate',
   /** Dev-only Daily Review harness (spec-20; fixtures, no Firebase). */
   devReview: '/dev/review',
+  /** Dev-only capstone report + rubric-trend demo (fixture, no Firebase). */
+  devReport: '/dev/report',
 } as const
 
 export const FLAGSHIP_LESSON_ID = 'lesson-pattern-hitting-times'

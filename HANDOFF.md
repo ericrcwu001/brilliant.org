@@ -2,6 +2,16 @@
 
 <!-- Orientation doc for a fresh context. Session-by-session narration lives in git history; this file keeps only what's needed going forward. -->
 
+## Demo video script + prod demo-data injection (2026-06-28)
+
+For a 6-min intro video: built a recording-script **canvas** at `~/.cursor/projects/Users-ericwu-Developer-brilliant-org/canvases/ergo-demo-script.canvas.tsx` (2-min product → 4-min learning-science; capstone shown via the 3-persona test runs, not a live interview; includes the mentor-feedback two-liner + the fake-data plan).
+
+**New code (temporary demo aids):**
+- `scripts/demo-inject.ts` (+ `package.json` `demo:inject`) — firebase-admin injector for the **LIVE `brilliant-org`** project. Idempotent; default dry-run, `--commit` writes, `--undo [--commit]` deletes. For `eric.wu@alphaaiengineering.com` (uid `km83gt7Mm1Y7vfG8j7HAKmhk78B2`) it writes: 3 graded `interviews/demo-{1,2,3}` (rising rubric 2.6→3.6→4.8, demo-3 `correctnessAnchor` match=6), `streaks/current` (12/21), 4 `milestones`, mixed `progress` (2 gold completed, penneys `needsReview`, gamblers `in_progress`; last 3 lessons absent→locked), `interviewState`, plus a non-destructive user-doc merge. **RAN with `--commit` against prod.** Clean up post-filming: `GOOGLE_CLOUD_PROJECT=brilliant-org npx tsx scripts/demo-inject.ts --undo --commit`.
+- `src/pages/DevReportPage.tsx` + route `/dev/report` (`src/pages/routes.ts`, `src/pages/DevRoutes.tsx`) — fixture render of `InterviewReportView` (verified + mismatch anchor badge) and `RubricTrend` (rising per-dimension deltas). **TEMPORARY** filming aid; safe to delete.
+
+Gates: `tsc --noEmit` + `eslint` clean on all new files; `/dev/report` serves (200) under Vite.
+
 ## Fix: PHT intro lesson bleeding into other concepts (2026-06-28)
 
 **File changed:** `src/pages/studyDesk.model.ts` — `resolveChapters` fallback.

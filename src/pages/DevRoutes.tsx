@@ -9,10 +9,12 @@ import { DevHomePage } from './DevHomePage'
 import { DevInterviewPage } from './DevInterviewPage'
 import { DevGatePage } from './DevGatePage'
 import { DevReviewPage } from './DevReviewPage'
+import { DevReportPage } from './DevReportPage'
 
 export function DevRoutes({ path }: { path: string }) {
   if (path === ROUTES.devGate) return <DevGatePage />
   if (path === ROUTES.devReview) return <DevReviewPage />
+  if (path === ROUTES.devReport) return <DevReportPage />
 
   if (path === ROUTES.devLesson) {
     const track =

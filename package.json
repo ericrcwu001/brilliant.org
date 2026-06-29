@@ -17,7 +17,8 @@
     "validate:interviews": "tsx scripts/validate-interview-packs.ts",
     "seed": "tsx scripts/seed-firestore.ts",
     "e2e": "playwright test",
-    "tokens": "tsx scripts/build-tokens.ts"
+    "tokens": "tsx scripts/build-tokens.ts",
+    "demo:inject": "tsx scripts/demo-inject.ts"
   },
   "dependencies": {
     "@fontsource/inter": "^5.2.8",
