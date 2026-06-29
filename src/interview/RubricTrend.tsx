@@ -110,3 +110,47 @@ export function RubricTrend({
     </div>
   )
 }
+
+// Loading placeholder for RubricTrend — shown while the attempts subscription
+// resolves (Profile). Mirrors the `full` layout (chart + readout + dim rows) so
+// the real content swaps in without layout shift, and suppresses RubricTrend's
+// "Finish a Capstone interview…" empty-state during load. Composes the shared
+// `.skeleton` shimmer primitive; reduced-motion handling comes from that base
+// class. Purely presentational — the caller owns the loading vs. ready decision.
+const SKELETON_BAR_HEIGHTS = ['40%', '60%', '50%', '78%', '88%']
+
+export function RubricTrendSkeleton({
+  variant = 'full',
+}: {
+  variant?: 'full' | 'compact'
+}) {
+  return (
+    <div
+      className={`rubric-trend-skeleton${variant === 'compact' ? ' rubric-trend-skeleton--compact' : ''}`}
+      aria-busy="true"
+      aria-live="polite"
+    >
+      <span className="visually-hidden">Loading your Capstone progress…</span>
+      <div className="rubric-trend-skeleton__chart" aria-hidden="true">
+        {SKELETON_BAR_HEIGHTS.map((h, i) => (
+          <span
+            key={i}
+            className="skeleton rubric-trend-skeleton__bar"
+            style={{ height: h }}
+          />
+        ))}
+      </div>
+      <div className="skeleton rubric-trend-skeleton__readout" aria-hidden="true" />
+      {variant === 'full' && (
+        <ul className="rubric-trend-skeleton__dims" aria-hidden="true">
+          {DIM_KEYS.map((k) => (
+            <li key={k} className="rubric-trend-skeleton__dim">
+              <span className="skeleton rubric-trend-skeleton__dim-label" />
+              <span className="skeleton rubric-trend-skeleton__dim-score" />
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  )
+}

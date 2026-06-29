@@ -14,7 +14,7 @@ import {
   subscribeAllInterviewAttempts,
   type InterviewAttempt,
 } from '../interview/attempts'
-import { RubricTrend } from '../interview/RubricTrend'
+import { RubricTrend, RubricTrendSkeleton } from '../interview/RubricTrend'
 import { ROUTES, type NavigateFn } from './routes'
 
 export function ProfilePage({ navigate }: { navigate: NavigateFn }) {
@@ -26,7 +26,12 @@ export function ProfilePage({ navigate }: { navigate: NavigateFn }) {
   const [status, setStatus] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
 
-  const [attempts, setAttempts] = useState<InterviewAttempt[]>([])
+  // `null` = subscription not yet resolved (loading). The subscription's onChange
+  // always fires with an array — `[]` when there are no docs — so we leave the
+  // loading state on first resolve, distinguishing loading from genuinely-empty
+  // (otherwise RubricTrend would flash its "Finish a Capstone interview…" message
+  // at a learner who actually has attempts).
+  const [attempts, setAttempts] = useState<InterviewAttempt[] | null>(null)
   useEffect(() => {
     const uid = user?.uid
     if (!uid) return
@@ -209,7 +214,11 @@ export function ProfilePage({ navigate }: { navigate: NavigateFn }) {
 
         <section className="profile__section" aria-label="Capstone progress">
           <h2 className="profile__section-title">Capstone progress</h2>
-          <RubricTrend attempts={attempts} />
+          {attempts === null ? (
+            <RubricTrendSkeleton variant="full" />
+          ) : (
+            <RubricTrend attempts={attempts} />
+          )}
         </section>
 
         <div className="profile__signout">

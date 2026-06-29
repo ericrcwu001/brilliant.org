@@ -508,6 +508,70 @@
   color: var(--ergo-ink-3);
 }
 
+/* Loading skeleton for the rubric trend (Profile). Layout only — the shared
+   `.skeleton` base class (composed on each placeholder) supplies the shimmer and
+   the prefers-reduced-motion fallback. Mirrors the `full` RubricTrend structure
+   so real data swaps in without layout shift. The chart fill is --ergo-surface
+   (not surface-2) so the surface-2 bar placeholders stay visible. */
+.rubric-trend-skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s2);
+}
+
+.rubric-trend-skeleton__chart {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--s1);
+  block-size: 72px;
+  padding: var(--s2);
+  border: 1px solid var(--ergo-line);
+  border-radius: var(--r-sm);
+  background: var(--ergo-surface);
+}
+
+.rubric-trend-skeleton--compact .rubric-trend-skeleton__chart {
+  block-size: 48px;
+}
+
+.rubric-trend-skeleton__bar {
+  flex: 1 1 0;
+  min-inline-size: 4px;
+  max-inline-size: 28px;
+  border-radius: 2px 2px 0 0;
+}
+
+.rubric-trend-skeleton__readout {
+  block-size: calc(12px * var(--fs));
+  inline-size: 70%;
+}
+
+.rubric-trend-skeleton__dims {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--s1);
+}
+
+.rubric-trend-skeleton__dim {
+  display: flex;
+  align-items: center;
+  gap: var(--s2);
+}
+
+.rubric-trend-skeleton__dim-label {
+  flex: 1;
+  block-size: calc(13px * var(--fs));
+  max-inline-size: 9rem;
+}
+
+.rubric-trend-skeleton__dim-score {
+  block-size: calc(13px * var(--fs));
+  inline-size: 2.5rem;
+}
+
 /* Card wrapper for the compact per-concept trend on the Study Desk. */
 .rubric-trend-card {
   display: flex;

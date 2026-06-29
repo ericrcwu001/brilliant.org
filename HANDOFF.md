@@ -60,6 +60,11 @@ Three files updated with FROZEN Wave-0 contracts for `course-options`:
 ---
 
 
+## Brainlift learning-science doc refresh (2026-06-29, docs-only)
+
+Updated `docs/brainlift-learning-science-brilliant-quant-prep.md` into a standalone learning-science truth document with natural-language bullets. It preserves the original experts, sources, evidence strength, boundary conditions, DOK insights, and app-action detail while mapping retrieval/spacing, hidden `schemaId` method discrimination, held-out transfer, delayed gold mastery, difficulty governor, calibration, deterministic capstone correctness, and rubric trends to the code. No app code changed for this doc task. Pre-existing uncommitted interview/Profile UI changes remain separate and untouched.
+
+## Learning-Science Overhaul — ✅ COMPLETE (2026-06-27, on branch `learning-science-overhaul`)
 
 The full plan in `docs/learning-science/` (README + all 15 specs) is implemented, verified, and committed to branch **`learning-science-overhaul`** (NOT main — branched to protect the work after a concurrent `concept/covariance` merge into main; see the merge event note below). Commits: 2526970 (P0+P1w1), 37c49d3 (covariance), 8ccf01f (spec-12), b5face8 (spec-11), d770493 (P2w1), ff8c11a (P2w2), 9dba6d6 (spec-05 + final flag flip).
 
