@@ -70,3 +70,6 @@ references/
 
 # Interview demo bot artifacts (audio, transcripts, reports — not committed).
 artifacts/
+
+# Lesson-factory isolated worktrees (per-concept + per-lesson builds)
+.lf/

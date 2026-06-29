@@ -50,7 +50,13 @@ toBinary · fromBinary · powersOfTwo(largest-first) · popcount · isPowerOfTwo
 - [x] Stage 3 Wave 0 + renderers (Dept 3): balancedTernary (47 goldens) · schema variants verbatim · dispatcher · BitBoardBeat+WeighingBeat+CSS · validate §2e/§3f active+✓ · GATED/MASTERY · chapters.ts. tsc no-new-errors; eslint clean. NOTE: validate-fixtures §7 RED until the 6 fixtures land (expected; gate not weakened, course doc untouched).
 - [~] Stage 4 Build: 6 fixtures + factcheck tests — Workflow wf_f54d8e9d-c6c RUNNING (6 Sonnet authors, self-verifying)
 - [x] Stage 5b Interview Pack — DONE & GREEN: interviews/course-binary-information.{json,md}, 88 Qs (hard33/harder30/brutal25), recomputeBinary added, validate-interview-packs 88/88 ✓ exit0, leak test 2/2. (Pre-existing old-pack breakage NOT present on this baseline.)
-- [ ] Stage 5 QA: 6 scorecards (9 gates) — after full validate-fixtures green
-- [ ] MANAGER FINAL GATE (run after fixtures land): validate-fixtures (full, incl §7) · vitest run (baseline: 57 pre-existing interviewPack.bayes fails, NOT ours) · tsc -b (no new) · eslint new files · vite build
-- [ ] Stage 6 Dev smoke (brilliant-org-dev) + capped mint smoke (dev secret IS set)
-- [ ] Stage 7 STOP → present everything, await "ship it"
+- [x] Stage 4 Build: 6 fixtures + 6 factcheck tests — DONE & verified.
+- [x] Manager bug-fix: §3f register op (and-x-minus-1 reads `value`) — fixed; validate-fixtures green. answerAcceptance.audit updated (48→54, +bitBoard/weighing ungraded).
+- [x] MANAGER FINAL GATE: validate-fixtures "All fixtures valid" · vitest 2012 pass / 57 pre-existing bayes fails (zero new) · tsc 23 pre-existing (none ours) · eslint clean · vite build ✓ · validate-interview-packs "All packs valid" 88/88 · leak 2/2.
+- [x] Stage 5 QA: 6 scorecards — all READY (L4 gate6 ⚠️ = transfer is weighing/ternary not graded answerEntry; documented, not a failure). No blockers.
+- [x] COMMIT 94f1d65 on concept/binary-information (clean).
+- [x] Stage 6 Dev smoke: vite build --mode dev ✓ · seed dev Firestore ✓ (course+6 lessons) · deploy hosting+firestore → brilliant-org-dev ✓ · GET / + /concept 200 ✓ · interview pack bundles into functions/packs ✓. (Functions NOT deployed to dev: code unchanged, pack validated+bundle-verified, live mint needs auth; live interview deploys at ship — both secrets set.)
+- [ ] Stage 7 STOP → presented to user, awaiting explicit "ship it".
+
+## SHIP CAVEAT (must reconcile before prod merge)
+Main checkout is DIRTY (uncommitted learning-science work). Concept branch is off committed main ef47403. Overlapping edits in **schema.ts** + **scripts/validate-fixtures.ts** (both modified in main's working tree AND by this concept) → `git merge concept/binary-information` will refuse/conflict until the learning-science work is committed/stashed. Also: this concept's graded beats carry NO schemaId (built to committed baseline); when learning-science flips REQUIRE_SCHEMA_ID=1, the 6 binary lessons will need schemaId backfilled too. Prod ship is NOT a clean one-shot merge — see Manager's final report.

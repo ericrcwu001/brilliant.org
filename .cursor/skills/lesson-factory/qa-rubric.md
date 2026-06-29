@@ -35,10 +35,10 @@ A number is "true" only when the source states it **and** the engine reproduces 
 |---|------|-------|----------------|
 | 1 | **Source fidelity** | Dept 1 Source Miner | Concept anchored to GB; every problem cited+sourced (Stage 1). |
 | 2 | **Math correctness** | Dept 3 Verification | Engine reproduces every answer; `validate-fixtures` green (Stage 2). |
-| 3 | **Learning science / efficiency** | Dept 1 Architect | Bet→Explore→Model→Prove arc; one objective per beat; cognitive-load budget respected; concreteness-fading; no symbol before its referent. |
-| 4 | **Misconceptions** | Dept 1 Misconception Spec | Each key wrong model is elicited + refuted; predictions use per-option (`byOption`) feedback. |
+| 3 | **Learning science / efficiency** | Dept 1 Architect | Bet→Explore→Model→Prove arc; one objective per beat; cognitive-load budget respected; concreteness-fading; no symbol before its referent. **The lesson satisfies the learning-science contract (`learning-science.md` §6 checklist):** cold-retrieval opening (worked solution gated behind an attempt); thin worked-example on-ramp for first contact that fades fast; difficulty authored for ~50–85% success with an `assist`/`hintCapOverride` path on every capped graded beat (spec-21, R6); speed primitives overlearned to automaticity. |
+| 4 | **Misconceptions** | Dept 1 Misconception Spec | Each key wrong model is elicited + refuted; predictions use per-option (`byOption`) feedback that is **feed-forward / task-level, never a verdict-on-the-learner** (ADR-0010). Which-method gate foils refute a real `CONFUSABLE` near-miss method, not a strawman. |
 | 5 | **Interactivity** | Dept 2 Pedagogy-Fit + UX | Every beat is genuine direct-manipulation that embodies the idea — no text walls, no fake reveals. |
-| 6 | **Assessment, mastery & continuity** | Dept 1 Assessment + Corpus Cartographer | Retrieval opener; guaranteed early win (first graded beat isn't the hardest type); required mastery challenge before the recap; **a held-out transfer problem** (same `schemaId` as the mastery challenge, fresh surface, `heldOut:true track:'B' required:false`, placed **before** the mastery challenge) for the Track-B delayed gold gate (spec-24); spacing/interleaving present. **Continuity Report shows no redundant re-teaching vs the existing corpus (shipped + in-dev), and every conceptual overlap is turned into deliberate recall / spaced review / interleaving** (`inclusive-research-5`). |
+| 6 | **Assessment, mastery, discrimination & continuity** | Dept 1 Assessment + Corpus Cartographer | Cold retrieval opener; guaranteed early win (first graded beat isn't the hardest type); **a which-method discrimination gate** (graded `prediction.gate`, `gate.correct == schemaId`, distractors from `CONFUSABLE[correct]`, label-stripped prompt — spec-13); **≥1 cold graded checkpoint confidence can ride on** (mastery challenge and/or the gate; opening bet stays an ungraded `prediction` — spec-02/12); required mastery challenge before the recap; **a held-out transfer problem** (same `schemaId` as the mastery challenge, fresh surface, `heldOut:true track:'B' required:false`, placed **before** the mastery challenge) for the Track-B delayed gold gate (spec-24); **≥1 "same method, different costume" comparison** (spec-10/§2.7); spacing/interleaving present with foils from `CONFUSABLE` (not random). **Continuity Report shows no redundant re-teaching vs the existing corpus (shipped + in-dev), and every conceptual overlap is turned into deliberate recall / spaced review / interleaving** (`inclusive-research-5`). |
 | 7 | **Accessibility & mobile** | Dept 2 A11y | 44px tap-only paths; reduced-motion renders a final frame; `aria-live` mirrors; keyboard/screen-reader OK. |
 | 8 | **Technical implementation** | Dept 3 Verify + Reviewer | `validate-fixtures` + `test` + `build` + `lint` + `e2e` all green; diff is surgical (`AGENTS.md`); uses design tokens. |
 | 9 | **Inclusivity gate** | Dept 3 Verification | The mechanized `validate-fixtures` inclusivity + mastery-challenge gates pass for the new lesson (add it to the gate sets). |
@@ -60,8 +60,16 @@ Lesson Brief problem table is reproduced by the engine at exact rational values.
 
 `validate-fixtures` also runs the **method-tag gate** (Foundation B / spec-00): **every graded beat
 declares a `schemaId`** from `src/content/methods.ts`, and it is a valid registry id (no
-missing/invalid tags). During the one-time backfill this is advisory; set `REQUIRE_SCHEMA_ID=1` to
-enforce, and it is unconditional once the corpus is fully tagged.
+missing/invalid tags). This is now **HARD** (the one-time backfill has landed; `REQUIRE_SCHEMA_ID=1` is
+unconditional) — a graded beat without a valid `schemaId` fails CI.
+
+`validate-fixtures` also runs the **which-method gate well-formedness check** (spec-13 / §2.2) over
+**every** `prediction` beat that carries `interaction.gate` (not allowlist-gated): `optionMethods` length
+== `options` length, `gate.correct` ∈ `optionMethods`, no duplicate `optionMethods`, `byOption`
+refutation present and its per-option `correct` agrees with `gate.correct`, **`beat.schemaId` ==
+`gate.correct`**, and **every distractor is a declared `CONFUSABLE[gate.correct]` near-miss** (an ad-hoc
+or domain-overlap distractor fails). So if you author a gate, it is mechanically checked; the gate's
+**presence** per lesson is the Scorecard gate-6 judgment call.
 
 `validate-fixtures` also runs the **held-out transfer gate** (spec-24): each lesson's held-out
 transfer beat must be well-formed (`heldOut:true track:'B' required:false`, a graded beat with a valid
@@ -69,8 +77,8 @@ transfer beat must be well-formed (`heldOut:true track:'B' required:false`, a gr
 **fresh surface** distinct from the checkpoint), and pattern-pinned `pattern-hitting-times` transfer
 beats are engine-cross-checked the same way the mastery challenge is. The gate is **not allowlist-gated**
 — it runs over every lesson, so no extra wiring is needed; just author the beat. Per-lesson **presence**
-is advisory until `REQUIRE_TRANSFER=1` (set it only **after** `REQUIRE_SCHEMA_ID=1` + the backfill have
-landed, so the "schemaId == checkpoint method" check is meaningful).
+is now **HARD** (`REQUIRE_TRANSFER=1`, flipped strictly after `REQUIRE_SCHEMA_ID=1` + the backfill —
+gate Issue #12): every lesson must carry a well-formed held-out transfer beat or it fails CI.
 
 > ⚠️ **Gates 6 & 9 pass *vacuously* for a new concept unless you wire its lessons in.**
 > `GATED` and `MASTERY_LESSONS` are **manually-maintained allowlists** in `scripts/validate-fixtures.ts`
@@ -112,6 +120,10 @@ citations + engine cross-check + the Interview Pack: N engine-verified questions
 The capstone AI-interview pack has its own gates — every pooled question anchor-and-source +
 engine-verified, pool de-duplicated, interviewer/generator prompts reviewed (no-leak / grounding /
 engine-verify-before-serve / avoid-list), difficulty tiers + follow-ups present, and the asset validates.
+It also carries a **learning-science gate** (`learning-science.md` §3): brutal floor for the
+quant-intensity audience, **tier-aware** `hidden.rubric`, a **feed-forward report** (next-fix cards +
+predicted-vs-measured calibration + `pressureNote`) with **no hire-signal / person-verdict** (spec-22/23,
+ADR-0010), and per-question confidence captured for calibration (spec-12).
 The mechanized portion runs via:
 
 ```bash

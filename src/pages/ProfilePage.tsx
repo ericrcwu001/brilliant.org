@@ -2,7 +2,7 @@
 // client-writable, whitelisted profile field) and sign out. Signing out drops
 // the user, and App's route guard handles the redirect back to the landing page.
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useAuth } from '../auth/authContext'
 import { authErrorMessage } from '../auth/authErrors'
 import {
@@ -10,6 +10,11 @@ import {
   validateDisplayName,
   validateInterviewDate,
 } from '../auth/userDoc'
+import {
+  subscribeAllInterviewAttempts,
+  type InterviewAttempt,
+} from '../interview/attempts'
+import { RubricTrend } from '../interview/RubricTrend'
 import { ROUTES, type NavigateFn } from './routes'
 
 export function ProfilePage({ navigate }: { navigate: NavigateFn }) {
@@ -20,6 +25,13 @@ export function ProfilePage({ navigate }: { navigate: NavigateFn }) {
   const [formError, setFormError] = useState<string | null>(null)
   const [status, setStatus] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
+
+  const [attempts, setAttempts] = useState<InterviewAttempt[]>([])
+  useEffect(() => {
+    const uid = user?.uid
+    if (!uid) return
+    return subscribeAllInterviewAttempts(uid, setAttempts)
+  }, [user?.uid])
 
   const [interviewDate, setInterviewDate] = useState(
     userDoc?.targetInterviewDate ?? '',
@@ -194,6 +206,11 @@ export function ProfilePage({ navigate }: { navigate: NavigateFn }) {
             </button>
           </div>
         </form>
+
+        <section className="profile__section" aria-label="Capstone progress">
+          <h2 className="profile__section-title">Capstone progress</h2>
+          <RubricTrend attempts={attempts} />
+        </section>
 
         <div className="profile__signout">
           <button

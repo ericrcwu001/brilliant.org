@@ -30,9 +30,10 @@ import {
   extractGradeJson,
   buildGraderPrompt,
   resolveTierFloor,
+  applyCorrectnessAnchor,
   INTERVIEW_REPORT_SCHEMA,
 } from './interview'
-import type { Question } from './interviewPack'
+import type { Question, InterviewReport } from './interviewPack'
 
 // Minimal stub question per tier — only the fields buildGraderPrompt reads.
 function stubQuestion(tier: 'hard' | 'harder' | 'brutal'): Question {
@@ -83,6 +84,12 @@ describe('buildGraderPrompt — tier-aware rubric scaling (spec-22)', () => {
     expect(prompt).toContain('under-pressure retrieval')
   })
 
+  it('asks the grader to extract candidateFinalAnswer verbatim (anchor)', () => {
+    const prompt = buildGraderPrompt(stubQuestion('hard'), [])
+    expect(prompt).toContain('candidateFinalAnswer')
+    expect(prompt).toContain('VERBATIM')
+  })
+
   it('instructs scaling the 1–5 scores to the difficulty tier', () => {
     const prompt = buildGraderPrompt(stubQuestion('brutal'), [])
     expect(prompt).toContain('scaling the 1–5 scores to the difficulty tier')
@@ -114,6 +121,67 @@ describe('INTERVIEW_REPORT_SCHEMA (spec-22)', () => {
       'harder',
       'brutal',
     ])
+  })
+})
+
+describe('INTERVIEW_REPORT_SCHEMA — correctness anchor extraction field', () => {
+  it('requires candidateFinalAnswer and types it as a string|null union (strict)', () => {
+    expect(INTERVIEW_REPORT_SCHEMA.required).toContain('candidateFinalAnswer')
+    expect(INTERVIEW_REPORT_SCHEMA.properties.candidateFinalAnswer.type).toEqual([
+      'string',
+      'null',
+    ])
+  })
+})
+
+describe('applyCorrectnessAnchor — deterministic hard override (mentor feedback)', () => {
+  const dim = (score: number) => ({ score: score as 1 | 2 | 3 | 4 | 5, evidence: 'e' })
+  function stubReport(correctness = 3): InterviewReport {
+    return {
+      dimensions: {
+        correctness: dim(correctness),
+        approach: dim(3),
+        rigor: dim(3),
+        communication: dim(3),
+        speed: dim(3),
+      },
+      summary: 's',
+      strengths: [],
+      fixes: [],
+      tier: 'hard',
+      pressureNote: 'p',
+    }
+  }
+
+  it('exact match → correctness forced to 5 (even across equivalent forms)', () => {
+    const r = stubReport(2)
+    applyCorrectnessAnchor(r, '1/2', '0.5')
+    expect(r.dimensions.correctness.score).toBe(5)
+    expect(r.correctnessAnchor).toMatchObject({ applied: true, verdict: 'match' })
+    expect(r.dimensions.correctness.evidence).toContain('verified against the engine')
+  })
+
+  it('concrete wrong number → correctness forced to 1 (no flattery)', () => {
+    const r = stubReport(5) // LLM was lenient
+    applyCorrectnessAnchor(r, '1/2', '1/3')
+    expect(r.dimensions.correctness.score).toBe(1)
+    expect(r.correctnessAnchor).toMatchObject({ applied: true, verdict: 'mismatch' })
+    expect(r.dimensions.correctness.evidence).toContain('engine answer is 1/2')
+  })
+
+  it('prose / multi-part ground truth → na, LLM score untouched', () => {
+    const r = stubReport(4)
+    applyCorrectnessAnchor(r, '(a) 11/30; (b) 19/30', '11/30')
+    expect(r.dimensions.correctness.score).toBe(4)
+    expect(r.correctnessAnchor).toMatchObject({ applied: false, verdict: 'na' })
+  })
+
+  it('no committed final answer → na, LLM score untouched', () => {
+    const r = stubReport(3)
+    applyCorrectnessAnchor(r, '1/2', null)
+    expect(r.dimensions.correctness.score).toBe(3)
+    expect(r.correctnessAnchor).toMatchObject({ applied: false, verdict: 'na' })
+    expect(r.correctnessAnchor?.extracted).toBeNull()
   })
 })
 

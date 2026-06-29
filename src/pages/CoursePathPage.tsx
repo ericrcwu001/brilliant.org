@@ -15,6 +15,7 @@ import type { Course, Progress } from '../content/schema'
 import { subscribeProgressMap } from '../progress/progress'
 import { subscribeStreak, ZERO_STREAK, type Streak } from '../habit/streaks'
 import { subscribeEarnedMilestones } from '../habit/milestones'
+import { subscribeInterviewAttempts, type InterviewAttempt } from '../interview/attempts'
 import { loadTrack, saveTrack, type Track } from '../progress/track'
 import { analytics } from '../analytics/events'
 import { StudyDesk } from './StudyDesk'
@@ -60,6 +61,8 @@ export function CoursePathPage({
   // Per-concept track. `undefined` = still loading; `null` = Calibrate not yet
   // taken for this concept (show the gate); 'A'/'B' = chosen.
   const [track, setTrack] = useState<Track | null | undefined>(undefined)
+  // This concept's Capstone attempts — feeds the compact per-concept rubric trend.
+  const [interviewAttempts, setInterviewAttempts] = useState<InterviewAttempt[]>([])
 
   useEffect(() => {
     if (!user) return
@@ -110,6 +113,11 @@ export function CoursePathPage({
     }
   }, [user])
 
+  useEffect(() => {
+    if (!user) return
+    return subscribeInterviewAttempts(user.uid, effectiveConceptId, setInterviewAttempts)
+  }, [user, effectiveConceptId])
+
   const reviewFired = useRef(false)
   useEffect(() => {
     if (reviewFired.current) return
@@ -158,6 +166,7 @@ export function CoursePathPage({
       conceptTitle={course?.title}
       completionMilestoneId={course?.completionMilestoneId}
       onInterviewCta={(conceptId) => navigate(interviewPath(conceptId))}
+      interviewAttempts={interviewAttempts}
     />
   )
 }

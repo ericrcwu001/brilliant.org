@@ -18,6 +18,8 @@ import { prefetchLesson } from '../app/prefetch'
 import { WeeklyStreak } from '../habit/WeeklyStreak'
 import { ConceptMedallion } from '../habit/ConceptMedallion'
 import { CourseJourney } from './CourseJourney'
+import { RubricTrend } from '../interview/RubricTrend'
+import type { InterviewAttempt } from '../interview/attempts'
 
 export interface StudyDeskProps {
   course: Course | null
@@ -37,6 +39,9 @@ export interface StudyDeskProps {
   completionMilestoneId?: string
   /** Called when learner clicks "Take capstone interview" on the detail card. */
   onInterviewCta?: (conceptId: string) => void
+  /** This concept's graded Capstone attempts (oldest→newest). Drives the compact
+   *  per-concept rubric trend; empty (default) renders nothing. */
+  interviewAttempts?: InterviewAttempt[]
 }
 
 // Stagger: sections rise in sequence on load; reduced-motion drops the slide
@@ -62,8 +67,10 @@ export function StudyDesk({
   conceptTitle,
   completionMilestoneId,
   onInterviewCta,
+  interviewAttempts,
 }: StudyDeskProps) {
   const reducedMotion = useReducedMotion()
+  const gradedAttempts = (interviewAttempts ?? []).filter((a) => a.status === 'graded')
 
   return (
     <div className="ergo-home">
@@ -158,6 +165,17 @@ export function StudyDesk({
                 onInterviewCta={onInterviewCta}
               />
             </m.div>
+
+            {/* ── Capstone rubric trend (mentor feedback) — only once this
+                concept has a graded interview, so untouched concepts stay clean. ── */}
+            {gradedAttempts.length > 0 && (
+              <m.div variants={deskItem}>
+                <section className="rubric-trend-card" aria-label="Capstone progress">
+                  <p className="rubric-trend-card__label">Your Capstone progress</p>
+                  <RubricTrend attempts={gradedAttempts} variant="compact" />
+                </section>
+              </m.div>
+            )}
           </m.div>
         )}
       </main>

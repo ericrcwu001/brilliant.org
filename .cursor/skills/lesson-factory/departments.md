@@ -6,6 +6,10 @@ within a department still run **in parallel** wherever there's no data dependenc
 `SKILL.md` → Model routing. Pass each subagent full context (they don't see the conversation): the
 relevant brief/spec, the ground-truth rules, and the target files.
 
+> **Every Dept 1, Dept 2, and Interview Studio worker builds to `learning-science.md`** — the mandatory
+> per-lesson + per-concept translation of the brainlift into the shipped LS specs (spec-00…spec-24).
+> Pass it to each design/assessment worker as context. The role notes below call out who owns which §.
+
 ---
 
 ## Manager / Director — Opus
@@ -45,23 +49,46 @@ into the Lesson Brief.
    **anchor-and-source gate**.
 2. **Curriculum Architect** — *Opus readonly*. Designs the concept theme + lesson list (order,
    prerequisites) and each lesson's objectives + **Bet→Explore→Model→Prove** skeleton. **Reads the
-   Continuity Report so it never re-teaches what the corpus already covers.** Also specifies the
-   concept's **catalog card** (domain/order/status/tagline/accent/vizKey) and **`chapters[]` covering
-   every built lesson** so it auto-registers + renders in the Concept Catalog (ADR-0004; emit-contract
-   in `artifacts.md`). Leans on `docs/mvp_prd.md`, `docs/core_instructions.md`, `docs/proposed-lessons.md`,
-   `docs/beat-audit-rubric.md`.
+   Continuity Report so it never re-teaches what the corpus already covers.** **Owns the
+   expertise-reversal boundary conditions (`learning-science.md` §2.8/§4):** a **thin worked-example
+   on-ramp** for genuine first contact, **block briefly to seed each schema then interleave**, **fade
+   fast** (`density:'split'`→`'merged'`), and flag **speed primitives** to be **overlearned to
+   automaticity** (the one place smoothness is the goal). Also specifies the concept's **catalog card**
+   (domain/order/status/tagline/accent/vizKey) and **`chapters[]` covering every built lesson** so it
+   auto-registers + renders in the Concept Catalog (ADR-0004; emit-contract in `artifacts.md`). Leans on
+   `docs/mvp_prd.md`, `docs/core_instructions.md`, `docs/proposed-lessons.md`, `docs/beat-audit-rubric.md`.
 3. **Misconception Specialist** — *Opus readonly*. Inventories the specific wrong mental models to
-   elicit + refute per beat; specifies per-option (refutational) feedback. Leans on
-   `audits/ideation/inclusive-research-2-prerequisites-misconceptions.md`.
-4. **Assessment Designer** — *Opus readonly*. Designs graded beats: retrieval opener, guaranteed
-   early win, the end-of-lesson mastery challenge, spacing/interleaving, the mastery signal — and
-   **turns every Continuity-Report overlap into a concrete recall/interleaving beat**. **Also assigns
-   each graded beat its `schemaId` deep-structure method tag** (from `src/content/methods.ts`,
-   Foundation B / spec-00) at brief time — the hidden tag the which-method gate + interleaved queue
-   read; if no existing id fits, proposes a registry addition (see the Schema/Types Specialist).
-   **Also authors the held-out transfer problem** (fresh surface, **same `schemaId`** as the mastery
-   challenge, engine-verified, `heldOut:true track:'B' required:false`, placed **before** the mastery
-   challenge) for the Track-B delayed gold gate (spec-24).
+   elicit + refute per beat; specifies per-option (refutational) feedback. **Owns feedback discipline
+   (`learning-science.md` §2.9):** feedback targets the **task/process and the next fix**, never the
+   person — **no verdict-on-the-learner anywhere** (ADR-0010 removed the hire signal). **Also supplies
+   the which-method gate's foils:** for each gate, name the wrong mental model behind each
+   `CONFUSABLE[correct]` distractor so the `byOption` copy refutes a *real* near-miss method, not a
+   strawman. Leans on `audits/ideation/inclusive-research-2-prerequisites-misconceptions.md`.
+4. **Assessment Designer** — *Opus readonly*. **Owns most of the per-lesson learning-science contract
+   (`learning-science.md` §2).** Designs graded beats: a **cold retrieval opener** (not a primer; gate
+   the worked solution behind a real attempt — §2.5), guaranteed early win, the end-of-lesson mastery
+   challenge, spacing/interleaving, the mastery signal — and **turns every Continuity-Report overlap
+   into a concrete recall/interleaving beat**, including ≥1 **"same method, different costume"
+   comparison** (`retrievalGrid`/compare) that pairs two surfaces sharing one `schemaId` (§2.7).
+   Specifically:
+   - **`schemaId` on every graded beat** (Foundation B / spec-00) at brief time — the hidden
+     deep-structure method tag, surface labels stripped; if no existing id fits, proposes a registry
+     addition (see the Schema/Types Specialist).
+   - **A which-method discrimination gate** (spec-13 / §2.2): a **graded `prediction` with the `gate`
+     block** (`kind:'which-method'`, `correct` == the beat's `schemaId`, `optionMethods` drawn from
+     `CONFUSABLE[correct]`), on a label-stripped prompt. **Never `patternPick`** (ungraded, no
+     `byOption`); never the exempt opening bet.
+   - **≥1 cold graded checkpoint** that confidence rides on (mastery challenge and/or the gate) so
+     spec-02 confidence + spec-12 calibration have somewhere to land (§2.4); keep the qualitative
+     opening bet a plain ungraded `prediction` (no `gate`). Design feedback to **reward correctly-low
+     confidence on hard items**, not bravado.
+   - **The held-out transfer problem** (fresh surface, **same `schemaId`** as the mastery challenge,
+     engine-verified, `heldOut:true track:'B' required:false`, placed **before** the mastery challenge)
+     for the Track-B delayed gold gate (spec-24 / §2.3).
+   - **Difficulty-band readiness** (spec-21 / §2.6): every capped graded beat carries an **assist /
+     `hintCapOverride` path** (so the governor never dead-ends a struggling novice — foolproofing R6)
+     and a sensible **`density`** flag; author for productive struggle (~50–85% success), never floor
+     below ~50%.
    Leans on `audits/ideation/inclusive-research-5-progression-assessment.md` and the
    `validate-fixtures` gates.
 5. **Corpus Cartographer / Continuity Auditor** — *Opus, non-readonly (Firebase MCP + git)*. Maps the
@@ -89,7 +116,10 @@ Models: **Opus** (design + critique is reasoning); read the codebase catalog + d
 1. **Game / Mechanic Designer** — turns each problem into a playable mechanic: the core loop + the
    "wow" moment.
 2. **Interaction Designer** — formalizes each mechanic into a concrete beat: manipulate → instant
-   response → feedback; names an existing interaction type or a new one.
+   response → feedback; names an existing interaction type or a new one. **Realizes the which-method
+   gate as a graded `prediction.gate` beat** (never `patternPick`) and the **"same method, different
+   costume" comparison** as a `retrievalGrid`/compare beat (`learning-science.md` §2.2/§2.7) — making
+   method *selection* and schema *abstraction* the graded acts, not just execution.
 3. **Catalog / Reuse Auditor** — maps every proposal to the current Zod schema + widget catalog
    (`src/content/schema.ts`, `src/lesson/beats/`, `src/lesson/konva/`); maximizes reuse; flags
    genuinely-new interaction types. Also reads `docs/interactive-mechanics-backlog.md`.
@@ -103,9 +133,18 @@ Models: **Opus** (design + critique is reasoning); read the codebase catalog + d
 7. **Accessibility & Mobile Specialist** — 44px tap-only, reduced-motion, `aria-live` mirrors,
    keyboard/screen-reader.
 8. **Feedback & Hint-Ladder Designer** — per-mistake feedback + the 3-level hint ladder for each
-   interactive beat. Consumes Dept 1's misconception inventory.
+   interactive beat. Consumes Dept 1's misconception inventory. **Feedback is feed-forward and
+   task-level** ("next fix"), never a verdict-on-the-learner (`learning-science.md` §2.9). **Owns the
+   assist path so capped beats never dead-end** (foolproofing R6 / spec-21): every capped graded beat
+   gets `hintCapOverride` (reveal stays reachable) and/or an `assist` re-prefill, so when the difficulty
+   governor lowers scaffolding a struggling learner still has a way through.
 9. **Two-Track / Scaffolding Designer** — Track A/B density, just-in-time primers, faded worked
-   examples (the product's inclusivity spine).
+   examples (the product's inclusivity spine). **Owns worked-example/concreteness fading + the
+   desirable-difficulty knobs (`learning-science.md` §2.6/§2.8):** set each beat's **`density`**
+   (`'split'` scaffolded ↔ `'merged'` dense), keep a **thin worked-example on-ramp** for first contact
+   then **fade fast**, and ensure the quant-intensity governor has scaffolding to fade without breaking
+   Track A (static). Flag **speed primitives** as overlearn-to-automaticity (smoothness is the goal only
+   there).
 
 **Dept1↔Dept2 loop:** Dept 2 reviews the Brief; any beat that lacks a verified+sourced problem or a
 genuine interactive mechanic kicks back to Dept 1 (reframe / reselect / re-sequence). Loop until the
@@ -172,9 +211,17 @@ the lessons.
 
 1. **Interview Question Author** — *Opus, non-readonly*. Designs the tiered (`hard/harder/brutal`)
    synthesis questions + engine-backed templates (anchored+sourced), each question's hidden record
-   (answer, approaches, wrong turns, hint ladder, rubric), and follow-up chains.
+   (answer, approaches, wrong turns, hint ladder, rubric), and follow-up chains. **Brutal-by-default for
+   the quant-intensity audience** (floor = `hard`, always harder than any lesson's mastery challenge;
+   synthesis across the whole concept) with a **tier-aware `hidden.rubric`** so a brutal question is not
+   graded by the hard rubric (`learning-science.md` §3, spec-22). Captures per-question confidence so
+   the report can score calibration.
 2. **Interview Prompt Engineer** — *Opus*. Writes the per-concept interviewer system-prompt template and
-   the generator prompt (engine-verify-before-serve + avoid-list constraints).
+   the generator prompt (engine-verify-before-serve + avoid-list constraints). **The interviewer scales
+   expectations to the question's tier and the report feeds forward (`learning-science.md` §3,
+   spec-23/ADR-0010): five dimensions as "next fix" cards + a predicted-vs-measured calibration delta +
+   a one-sentence `pressureNote` framing the result as under-pressure retrieval — never a
+   Strong-No→Strong-Yes verdict or any person-level score.**
 3. **Coder / Verification / Integrator** — spawned by this lead (same worker types as Dept 3, not
    shared). A Coder builds the templates/parameterizer/fingerprinter (on the concept's engine); the
    Verification Engineer engine-verifies the entire pre-loaded pool; the Integrator writes

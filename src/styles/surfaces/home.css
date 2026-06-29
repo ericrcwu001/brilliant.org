@@ -69,6 +69,17 @@
   font-weight: 600;
   color: var(--ink);
 }
+.profile__section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s3);
+}
+.profile__section-title {
+  margin: 0;
+  font-size: calc(16px * var(--fs));
+  font-weight: 600;
+  color: var(--ink);
+}
 .profile__signout {
   margin-top: var(--s5);
   padding-top: var(--s5);

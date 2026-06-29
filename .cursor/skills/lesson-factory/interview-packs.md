@@ -84,6 +84,31 @@ Contents:
 > Runtime generation is the **single exception** to the factory's "never invent" rule — and it is fenced
 > by *both* real-quant-style grounding *and* engine-verify-before-serve (ADR-0005). Neither is optional.
 
+## Pressure, tier-aware grading & feed-forward (learning science — `learning-science.md` §3)
+
+The capstone is where the brainlift's **stress-inoculation** (SPOV 3) and **feed-forward** (SPOV 4) live.
+The pack and its prompts must encode all of:
+
+- **Brutal-by-default for the quant-intensity audience** (spec-22 / D9): the live mint floors the tier at
+  `hard` for Track A and **`brutal` for the quant-intensity gate** (Track B `OR`
+  `learningGoal==='interview'`). A single brutal mock outcome should weigh more than any number of smooth
+  in-app wins (brainlift I11) — train under representative pressure *after* the concept is encoded.
+- **Tier-aware grading (a correctness fix, all tracks — spec-22):** each `hidden.rubric` and the
+  interviewer prompt **scale expectations to the question's tier** — a `brutal` question must not be
+  graded by the `hard` rubric (which deflates the score). The grader emits a `tier`.
+- **Feed-forward report, NO person-verdict (spec-23 / ADR-0010):** the report is five dimensions as
+  **"next fix" cards** + a **predicted-vs-measured calibration delta** + a one-sentence **`pressureNote`**
+  framing the result as *under-pressure retrieval*. **There is no Strong-No→Strong-Yes hire signal and no
+  person-level score anywhere** — the hire signal was removed entirely. Person-level verdicts are the
+  weakest, most-often-harmful feedback type (Kluger & DeNisi; Hattie & Timperley).
+- **Calibration is captured + celebrated:** the interview captures **per-question confidence**
+  (`Turn.confidence`), the grader returns a Brier/overconfidence **calibration** block (spec-12), and the
+  report rewards **correctly-low confidence on hard items** — the trader's core skill (bet sizing).
+- **Arousal reappraisal** (boundary §4.4): the `pressureNote` + interviewer tone reframe arousal as
+  readiness, never shame. *(The pre-interview expressive-writing worry-dump is a real technique but is
+  not yet spec'd as app machinery — express it as report/interviewer copy only, not new infra;
+  `learning-science.md` §5.)*
+
 ## Per-question record (in the JSON)
 
 ```jsonc
@@ -121,7 +146,9 @@ Stored as `interviewerPrompt` in the JSON. Structure:
 - **Persona** — a senior quant interviewer at a top desk; professional, probing, fair-but-pressured.
 - **Protocol** — one question at a time; make the candidate think aloud; **never reveal the answer**;
   probe assumptions/edge cases; **escalating hints only when stuck** (use `hidden.hintLadder`); ask the
-  `followUps`; close with **structured feedback + a score** against `hidden.rubric`.
+  `followUps`; close with **structured feed-forward feedback + a tier-scaled score** against
+  `hidden.rubric` (the rubric scales to the question's tier) — phrased as "next fix" cards, **never a
+  person-level verdict / hire signal** (spec-23 / ADR-0010; `learning-science.md` §3).
 - **Grounding clause (critical)** — treat `hidden.answer`/`approaches` as **ground truth; do NOT invent
   or re-derive math**; grade the candidate against the rubric only. Keeps the *interviewer* honest.
 - **Injection** — at runtime the feature fills the template with the drawn question's `prompt` + `hidden`.
@@ -164,11 +191,12 @@ The **Interview Studio Lead** *(Opus, non-readonly, persistent/resumable — spa
 | 2 | Real quant-style | every question reads like a real quant-interview question (canon-grounded), not an arbitrary puzzle | manual review |
 | 3 | Engine-verified pool | every pooled question's answer reproduced by the engine; all `verified:true` | **`./node_modules/.bin/tsx scripts/validate-interview-packs.ts`** (engine cross-check section; exits non-zero on any mismatch) |
 | 4 | De-duplicated | all fingerprints unique within the pool | **`validate-interview-packs.ts`** (duplicate-fingerprint gate) |
-| 5 | Interviewer prompt | no-answer-leak; escalating hints; grounding clause; structured scoring | **`validate-interview-packs.ts`** (NO-LEAK hint-rung gate) + manual review of persona/protocol |
+| 5 | Interviewer prompt | no-answer-leak; escalating hints; grounding clause; structured **feed-forward** scoring; **tier-aware rubric**; **`pressureNote` (no person-verdict / hire signal)** | **`validate-interview-packs.ts`** (NO-LEAK hint-rung gate) + manual review of persona/protocol |
 | 6 | Generator prompt | constrained to real-quant-style + anchored + engine-solvable forms; engine-verify-before-serve; avoid-list | manual review |
 | 7 | Difficulty | floor = hard; tiers tagged; follow-up chains present | **`validate-interview-packs.ts`** (tier + followUps structural gates) |
 | 8 | Asset hygiene | `interviews/<courseId>.json` validates against `InterviewPackSchema`; `.md` mirror generated; schema drift guard passes | **`validate-interview-packs.ts`** (schema validation + functions copy drift guard) |
 | 9 | Leak guard | `functions/src/interview.leak.test.ts` passes | **`./node_modules/.bin/vitest run functions/src/interview.leak.test.ts`** |
+| 10 | Pressure & feed-forward (learning science — `learning-science.md` §3) | brutal floor for the quant-intensity gate (spec-22); `hidden.rubric` scales by tier (no `hard`-rubric on a `brutal` Q); report is feed-forward "next fix" + predicted-vs-measured calibration + `pressureNote`; **no hire-signal / person-verdict anywhere** (spec-23 / ADR-0010); per-question confidence captured for calibration (spec-12) | manual review of rubric/prompt + report copy |
 
 Run both mechanized gates before signing off:
 ```bash
