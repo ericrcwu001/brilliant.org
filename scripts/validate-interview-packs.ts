@@ -84,6 +84,28 @@ import {
   balancedTernary,
   binaryExpansion,
 } from '../src/engine/binary'
+import {
+  spreadPayoff as optSpreadPayoff,
+  paritySolve as optParitySolve,
+  parityGap as optParityGap,
+  callBounds as optCallBounds,
+  putBounds as optPutBounds,
+  riskNeutralQ as optRiskNeutralQ,
+  binomialPrice as optBinomialPrice,
+  replicate as optReplicate,
+  treeTerminals as optTreeTerminals,
+  treeWeights as optTreeWeights,
+  pathCount as optPathCount,
+  hedgeRatio as optHedgeRatio,
+  minVarWeights as optMinVarWeights,
+  oneTouchPrice as optOneTouchPrice,
+  greekSign as optGreekSign,
+  reduce as optReduce,
+  formatRational as optFmt,
+  type BigRational as OptRat,
+  type Leg as OptLeg,
+  type Kind as OptKind,
+} from '../src/engine/options'
 
 const interviewsDir = join(dirname(fileURLToPath(import.meta.url)), '..', 'interviews')
 
@@ -453,7 +475,116 @@ function recomputeBinary(q: Question): string | null {
   }
 }
 
+// Options & No-Arbitrage pack recompute (returns the answer STRING directly).
+// The build script (interviews/_build/build-options-pack.ts) encodes template
+// params in exactly these shapes so this independent reproduction matches the
+// engineCheck answer. Every free-form id is engine-computable → full N/N coverage.
+const OB = (n: number, d = 1): OptRat => optReduce(BigInt(n), BigInt(d))
+function OF(s: string | number): OptRat {
+  if (typeof s === 'number') return OB(s)
+  const m = String(s).trim().match(/^(-?\d+)(?:\/(-?\d+))?$/)
+  if (!m) throw new Error(`unparseable options fraction: ${s}`)
+  return optReduce(BigInt(m[1]), BigInt(m[2] ?? '1'))
+}
+function optLegs(structure: string, strikes: string): OptLeg[] {
+  const K = strikes.split('-').map(OF)
+  switch (structure) {
+    case 'call':
+      return [{ kind: 'call', K: K[0], qty: OB(1) }]
+    case 'put':
+      return [{ kind: 'put', K: K[0], qty: OB(1) }]
+    case 'straddle':
+      return [{ kind: 'call', K: K[0], qty: OB(1) }, { kind: 'put', K: K[0], qty: OB(1) }]
+    case 'bull':
+      return [{ kind: 'call', K: K[0], qty: OB(1) }, { kind: 'call', K: K[1], qty: OB(-1) }]
+    case 'butterfly':
+      return [
+        { kind: 'call', K: K[0], qty: OB(1) },
+        { kind: 'call', K: K[1], qty: OB(-2) },
+        { kind: 'call', K: K[2], qty: OB(1) },
+      ]
+    case 'strangle':
+      return [{ kind: 'put', K: K[0], qty: OB(1) }, { kind: 'call', K: K[1], qty: OB(1) }]
+    case 'protective-put':
+      return [{ kind: 'stock', qty: OB(1) }, { kind: 'put', K: K[0], qty: OB(1) }]
+    default:
+      throw new Error(`unknown options payoff structure: ${structure}`)
+  }
+}
+function recomputeOptions(q: Question): string | null {
+  const t = q.template?.id
+  const p = (q.template?.params ?? {}) as Record<string, unknown>
+  const num = (k: string): number => Number(p[k])
+  const str = (k: string): string => String(p[k])
+  switch (t) {
+    case 'tmpl-payoff':
+      return optFmt(optSpreadPayoff(optLegs(str('structure'), str('strikes')), OF(str('ST'))))
+    case 'tmpl-parity-solve': {
+      const known =
+        str('solveFor') === 'P'
+          ? { C: OF(str('premium')), S: OF(str('S')), K: OF(str('K')), D: OF(str('D')) }
+          : { P: OF(str('premium')), S: OF(str('S')), K: OF(str('K')), D: OF(str('D')) }
+      return optFmt(optParitySolve(known))
+    }
+    case 'tmpl-parity-gap':
+      return optFmt(optParityGap(OF(str('C')), OF(str('P')), OF(str('S')), OF(str('K')), OF(str('D'))))
+    case 'tmpl-bounds': {
+      const b =
+        str('kind') === 'call'
+          ? optCallBounds(OF(str('S')), OF(str('K')), OF(str('D')))
+          : optPutBounds(OF(str('S')), OF(str('K')), OF(str('D')))
+      return optFmt(str('which') === 'lo' ? b.lo : b.hi)
+    }
+    case 'tmpl-rn-q':
+      return optFmt(optRiskNeutralQ(OF(str('u')), OF(str('d')), OF(str('R'))))
+    case 'tmpl-binomial-price':
+      return optFmt(
+        optBinomialPrice(OF(str('S')), OF(str('u')), OF(str('d')), OF(str('R')), OF(str('K')), num('n'), str('kind') as OptKind),
+      )
+    case 'tmpl-replicate': {
+      const r = optReplicate(OF(str('S')), OF(str('u')), OF(str('d')), OF(str('R')), OF(str('K')), str('kind') as OptKind)
+      return optFmt(str('which') === 'delta' ? r.delta : r.bond)
+    }
+    case 'tmpl-tree-terminal':
+      return optFmt(optTreeTerminals(OF(str('S')), OF(str('u')), OF(str('d')), num('n'))[num('i')])
+    case 'tmpl-tree-weight':
+      return optFmt(optTreeWeights(OF(str('q')), num('n'))[num('i')])
+    case 'tmpl-path-count':
+      return String(optPathCount(num('n'), num('k')))
+    case 'tmpl-hedge-ratio':
+      return optFmt(optHedgeRatio(OF(str('cov')), OF(str('varB'))))
+    case 'tmpl-min-var': {
+      const m = optMinVarWeights(OF(str('varA')), OF(str('varB')), OF(str('cov')))
+      return optFmt(str('which') === 'wA' ? m.wA : str('which') === 'wB' ? m.wB : m.varMin)
+    }
+    case 'tmpl-one-touch':
+      return optFmt(optOneTouchPrice(OF(str('H'))))
+    case 'tmpl-greek-sign':
+      return String(
+        optGreekSign(str('greek') as 'delta' | 'gamma' | 'theta' | 'vega' | 'rho', str('kind') as OptKind),
+      )
+  }
+  // free-form (by id) — every free-form id in this pack is engine-computable.
+  switch (q.id) {
+    case 'ff-canonical-hedge-cost':
+      return optFmt(optBinomialPrice(OB(100), OB(6, 5), OB(4, 5), OB(1), OB(100), 1, 'call'))
+    case 'ff-parity-put-from-call':
+      return optFmt(optParitySolve({ C: OB(10), S: OB(100), K: OB(100), D: OB(1) }))
+    case 'ff-conversion-arb-gap':
+      return optFmt(optParityGap(OB(8), OB(2), OB(100), OB(95), OB(1)))
+    case 'ff-two-step-call-price':
+      return optFmt(optBinomialPrice(OB(100), OB(6, 5), OB(4, 5), OB(1), OB(100), 2, 'call'))
+    case 'ff-delta-is-hedge-ratio':
+      return optFmt(optReplicate(OB(100), OB(6, 5), OB(4, 5), OB(1), OB(100), 'call').delta)
+    case 'ff-min-var-weight-A':
+      return optFmt(optMinVarWeights(OB(1, 25), OB(9, 100), OB(3, 100)).wA)
+    default:
+      return null
+  }
+}
+
 function recomputeAnswer(q: Question): string | null {
+  if (q.engineCheck.module === 'src/engine/options.ts') return recomputeOptions(q)
   if (q.engineCheck.module === 'src/engine/gameTheory.ts') return recomputeGameTheory(q)
   if (q.engineCheck.module === 'src/engine/covariance.ts') return recomputeCovariance(q)
   if (q.engineCheck.module === 'src/engine/binary.ts') return recomputeBinary(q)
