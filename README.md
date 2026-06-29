@@ -1,6 +1,6 @@
 # Ergo
 
-**Quantitative intuition, learned by doing.** Ergo is a Brilliant.org-style interactive web app that teaches probability and combinatorial reasoning through direct manipulation — not videos or walls of text. It spans a catalog of seven concepts across two domains, and each concept ends with an optional, AI-powered spoken mock interview.
+**Quantitative intuition, learned by doing.** Ergo is a Brilliant.org-style interactive web app that teaches probability, combinatorics, and quantitative reasoning through direct manipulation — not videos or walls of text. It spans a catalog of ten concepts across four domains, and each concept ends with an optional, AI-powered spoken mock interview.
 
 The flagship topic is *pattern hitting times*: why does flipping for HH take longer (E[HH] = 6) than flipping for HT (E[HT] = 4)? The answer unfolds through interactive state graphs, Monte-Carlo simulations, and a short proof built beat by beat.
 
@@ -79,17 +79,20 @@ The one AI surface is the **optional capstone interview** at the end of each con
 
 ## Concept Catalog
 
-Ergo is organized as a **catalog of concepts** grouped into two domains. A signed-in learner lands on a domain-shelved home (`ConceptCatalogPage`) and drills into a per-concept lesson path (`/concept/:conceptId`). All seven concepts below are **live** — **48 lessons total** — and each ships its own engine-verified interview pack.
+Ergo is organized as a **catalog of concepts** grouped into four domains. A signed-in learner lands on a domain-shelved home (`ConceptCatalogPage`) and drills into a per-concept lesson path (`/concept/:conceptId`). All ten concepts below are **live** — **66 lessons total** — and each ships its own engine-verified interview pack.
 
 | Domain | Concept | Lessons | What it covers |
 |--------|---------|:-------:|----------------|
 | Probability | **Pattern Hitting Times** *(flagship)* | 7 | Why `E[HH] = 6` but `E[HT] = 4`; Penney's game; gambler's ruin; the overlap shortcut |
 | Probability | Expected Value | 6 | Linearity, indicators, conditional expectation, coupon collector, order statistics |
 | Probability | Bayes' Rule | 8 | The update rule, the base-rate trap, Monty Hall, the prosecutor's fallacy |
+| Probability | Covariance & Correlation | 6 | Variance and standard deviation, the covariance formula, variance of a sum, the unit-free correlation ρ and its [−1, 1] bound, the correlation triangle |
 | Probability | Markov Chains | 10 | Transition matrices, absorption, stationary distributions, PageRank |
 | Combinatorics & Games | Optimal Stopping | 5 | The secretary problem and the 37% rule |
 | Combinatorics & Games | Game Theory | 6 | Dominance, Nash, mixed strategies, minimax, backward induction, Nim |
 | Combinatorics & Games | Combinatorics | 6 | Counting principle, permutations/combinations, the binomial theorem, inclusion–exclusion |
+| Algorithms & Information | Binary & Information | 6 | Numbers as sums of powers of two; bits as information; group testing (poisoned wine), base-3 weighing, bit tricks, and the ⌈log₂N⌉ search bound |
+| Quantitative Finance | Options, Payoffs & No-Arbitrage | 6 | Payoff diagrams, put-call parity and no-arbitrage bounds, replication, the binomial tree and risk-neutral measure, delta hedging |
 
 **Roadmap (not yet built):** Weighted Coins & Dice (a roadmap lesson within Pattern Hitting Times).
 
@@ -326,6 +329,6 @@ The Firebase project alias is `brilliant-org` (`.firebaserc`). Hosting serves `d
 
 ## Status
 
-Active development. The catalog covers **seven live concepts (48 lessons)** across Probability and Combinatorics & Games, each with an engine-verified interview pack and an optional AI capstone interview. The "Weighted Coins & Dice" lesson within Pattern Hitting Times is on the roadmap but not yet built.
+Active development. The catalog covers **ten live concepts (66 lessons)** across Probability, Combinatorics & Games, Algorithms & Information, and Quantitative Finance, each with an engine-verified interview pack and an optional AI capstone interview. The "Weighted Coins & Dice" lesson within Pattern Hitting Times is on the roadmap but not yet built.
 
 *License: not specified.*
