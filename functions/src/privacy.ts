@@ -18,9 +18,17 @@
 // so there is no audio to delete; we field-clear per-turn `confidence`.
 
 import { onCall, HttpsError, type CallableRequest } from 'firebase-functions/v2/https'
-import { getFirestore, FieldValue } from 'firebase-admin/firestore'
+import { getFirestore, FieldValue, type Firestore } from 'firebase-admin/firestore'
 
-const db = getFirestore()
+// Lazy Firestore: getFirestore() must not run at module load (this module is
+// imported before index.ts's initializeApp(), which would throw "default app
+// does not exist" during `firebase deploy` codebase analysis). First-call init
+// guarantees the app exists.
+let _db: Firestore | undefined
+function db(): Firestore {
+  if (!_db) _db = getFirestore()
+  return _db
+}
 
 function requireUid(request: CallableRequest<unknown>): string {
   const uid = request.auth?.uid
@@ -38,13 +46,13 @@ export async function deleteLearningDataFor(uid: string): Promise<{
 }> {
   // 1 + 2 — recursive cascade-delete of the reviews + calibration subcollections.
   // recursiveDelete is idempotent: an empty/absent collection is a no-op.
-  await db.recursiveDelete(db.collection(`users/${uid}/reviews`))
-  await db.recursiveDelete(db.collection(`users/${uid}/calibration`))
+  await db().recursiveDelete(db().collection(`users/${uid}/reviews`))
+  await db().recursiveDelete(db().collection(`users/${uid}/calibration`))
 
   // 3 + 4 — per-attempt field-clears on each interview (spec-12 calibration block,
   // spec-02 per-turn transcript confidence). The interview DOC + transcript text
   // stay intact; only the learning-science fields this plan added are cleared.
-  const interviews = await db.collection(`users/${uid}/interviews`).get()
+  const interviews = await db().collection(`users/${uid}/interviews`).get()
   let interviewsCleared = 0
   for (const snap of interviews.docs) {
     const data = snap.data() as Record<string, unknown>
@@ -75,7 +83,7 @@ export async function deleteLearningDataFor(uid: string): Promise<{
   // 5 — userDoc fields this plan added: targetInterviewDate (spec-01) +
   // rolloutCohort (this spec). FieldValue.delete() leaves the account intact.
   // Guard: only update if the doc exists (a missing doc ⇒ nothing to clear).
-  const userRef = db.doc(`users/${uid}`)
+  const userRef = db().doc(`users/${uid}`)
   const userSnap = await userRef.get()
   let userFieldsCleared = false
   if (userSnap.exists) {

@@ -19,7 +19,7 @@
 // or engineCheck.answer. Exact answers are consumed ONLY by the grader.
 
 import { onCall, HttpsError, type CallableRequest } from 'firebase-functions/v2/https'
-import { getFirestore, FieldValue } from 'firebase-admin/firestore'
+import { getFirestore, FieldValue, type Firestore } from 'firebase-admin/firestore'
 import { defineSecret } from 'firebase-functions/params'
 import * as fs from 'fs'
 import * as path from 'path'
@@ -51,7 +51,15 @@ import { compareAnswers } from './answerCheck'
 
 const OPENAI_API_KEY = defineSecret('OPENAI_API_KEY')
 
-const db = getFirestore()
+// Lazy Firestore: getFirestore() must not run at module load (this module is
+// re-exported by index.ts before its initializeApp(), which would throw "default
+// app does not exist" during `firebase deploy` codebase analysis). First-call
+// init guarantees the app exists.
+let _db: Firestore | undefined
+function db(): Firestore {
+  if (!_db) _db = getFirestore()
+  return _db
+}
 
 // Caps — load-bearing, enforced server-side (README §Caps/constants).
 const SESSION_CAP_SECONDS = 480 // 8 min hard per-session
@@ -229,7 +237,7 @@ export const mintInterviewToken = onCall(
       try {
         const [serverFlags, userSnap] = await Promise.all([
           loadServerFlags(),
-          db.doc(`users/${uid}`).get(),
+          db().doc(`users/${uid}`).get(),
         ])
         const cohort = userSnap.get('rolloutCohort') as 'treatment' | 'holdout' | undefined
         if (!serverGatedOn('brutalMockFloor', cohort, serverFlags)) effectiveTierFloor = 'hard'
@@ -243,7 +251,7 @@ export const mintInterviewToken = onCall(
     const day = localDateInTimezone(tz)
 
     // 3 — quota check (read; throw before any write)
-    const usageRef = db.doc(`users/${uid}/interviewUsage/${day}`)
+    const usageRef = db().doc(`users/${uid}/interviewUsage/${day}`)
     const usageSnap = await usageRef.get()
     const secondsUsed = (usageSnap.data()?.secondsUsed ?? 0) as number
     const dailyRemaining = Math.max(0, DAILY_QUOTA_SECONDS - secondsUsed)
@@ -255,7 +263,7 @@ export const mintInterviewToken = onCall(
     const pack = loadPack(conceptId)
 
     // 5 — load seen-set
-    const stateRef = db.doc(`users/${uid}/interviewState/${conceptId}`)
+    const stateRef = db().doc(`users/${uid}/interviewState/${conceptId}`)
     const stateSnap = await stateRef.get()
     const seenQuestionIds: string[] = (stateSnap.data()?.seenQuestionIds ?? []) as string[]
 
@@ -278,7 +286,7 @@ export const mintInterviewToken = onCall(
 
     // 7 — write pending attempt. _usageDay is a server-internal field so
     // gradeInterview can increment the correct bucket without a timezone param.
-    const attemptRef = db.collection(`users/${uid}/interviews`).doc()
+    const attemptRef = db().collection(`users/${uid}/interviews`).doc()
     const attemptId = attemptRef.id
     await attemptRef.set({
       conceptId,
@@ -595,7 +603,7 @@ export const gradeInterview = onCall(
     }
 
     // 2 — load + verify pending attempt (read before transaction)
-    const attemptRef = db.doc(`users/${uid}/interviews/${attemptId}`)
+    const attemptRef = db().doc(`users/${uid}/interviews/${attemptId}`)
     const attemptSnap = await attemptRef.get()
     if (!attemptSnap.exists) throw new HttpsError('not-found', 'Interview attempt not found.')
     if (attemptSnap.get('status') !== 'pending')
@@ -692,11 +700,11 @@ export const gradeInterview = onCall(
 
     // 5 — transaction: finalize attempt + seen-set + usage + calibration trend
     // (reads before writes).
-    const stateRef = db.doc(`users/${uid}/interviewState/${conceptId}`)
-    const usageRef = db.doc(`users/${uid}/interviewUsage/${usageDay}`)
-    const summaryRef = db.doc(`users/${uid}/calibration/summary`)
+    const stateRef = db().doc(`users/${uid}/interviewState/${conceptId}`)
+    const usageRef = db().doc(`users/${uid}/interviewUsage/${usageDay}`)
+    const summaryRef = db().doc(`users/${uid}/calibration/summary`)
 
-    await db.runTransaction(async (tx) => {
+    await db().runTransaction(async (tx) => {
       const stateSnap = await tx.get(stateRef)
       const usageSnap = await tx.get(usageRef)
       // Read the calibration trend BEFORE any write (only when this attempt has

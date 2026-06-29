@@ -22,7 +22,7 @@
 
 import { onCall, HttpsError, type CallableRequest } from 'firebase-functions/v2/https'
 import { getFirestore, FieldValue, Timestamp } from 'firebase-admin/firestore'
-import type { Transaction, DocumentReference } from 'firebase-admin/firestore'
+import type { Transaction, DocumentReference, Firestore } from 'firebase-admin/firestore'
 
 import {
   initialSchedule,
@@ -39,7 +39,15 @@ import {
   type TrendSums,
 } from './calibration'
 
-const db = getFirestore()
+// Lazy Firestore: getFirestore() must not run at module load (this module is
+// imported + re-exported by index.ts before its initializeApp(), which would
+// throw "default app does not exist" during `firebase deploy` codebase analysis).
+// First-call init guarantees the app exists.
+let _db: Firestore | undefined
+function db(): Firestore {
+  if (!_db) _db = getFirestore()
+  return _db
+}
 
 // Mirror of index.ts's module-local PROGRESS_SCHEMA_VERSION. review.ts cannot
 // import it (index.ts re-exports submitReview from this file → circular), so the
@@ -83,7 +91,7 @@ export type ReviewLessonDoc = {
 }
 
 async function loadReviewLesson(lessonId: string): Promise<ReviewLessonDoc> {
-  const snap = await db.doc(`lessons/${lessonId}`).get()
+  const snap = await db().doc(`lessons/${lessonId}`).get()
   if (!snap.exists) {
     throw new HttpsError('not-found', `Lesson ${lessonId} not found.`)
   }
@@ -265,9 +273,9 @@ export async function readCardsForCompletion(
   // must not silently opt a learner into the brutal/transfer-gated path.
   const conceptId = typeof lesson.courseId === 'string' ? lesson.courseId : ''
   const conceptProgressSnap = conceptId
-    ? await tx.get(db.doc(`users/${uid}/progress/${conceptId}`))
+    ? await tx.get(db().doc(`users/${uid}/progress/${conceptId}`))
     : null
-  const userSnap = await tx.get(db.doc(`users/${uid}`))
+  const userSnap = await tx.get(db().doc(`users/${uid}`))
   const resolvedTrack: 'A' | 'B' =
     (conceptProgressSnap?.get('track') as 'A' | 'B' | undefined) ??
     (userSnap.get('defaultTrack') as 'A' | 'B' | undefined) ??
@@ -279,7 +287,7 @@ export async function readCardsForCompletion(
   for (const beat of beats) {
     if (!isCardBeat(beat)) continue
     const cardId = `${lessonId}__${beat.beatId}`
-    const cardRef = db.doc(`users/${uid}/reviews/${cardId}`)
+    const cardRef = db().doc(`users/${uid}/reviews/${cardId}`)
     const snap = await tx.get(cardRef)
     entries.push({
       cardRef,
@@ -366,7 +374,7 @@ export async function submitReviewTx(
   elapsedIntervalDays: number
   schemaId: string
 }> {
-  const ref = db.doc(`users/${uid}/reviews/${cardId}`)
+  const ref = db().doc(`users/${uid}/reviews/${cardId}`)
   const snap = await tx.get(ref)
   if (!snap.exists) {
     throw new HttpsError('failed-precondition', 'review card not found.')
@@ -374,7 +382,7 @@ export async function submitReviewTx(
   const card = snap.data() as Record<string, unknown>
 
   // Read the learner's target interview date in the SAME tx (anchoring).
-  const userSnap = await tx.get(db.doc(`users/${uid}`))
+  const userSnap = await tx.get(db().doc(`users/${uid}`))
   const rawDate = userSnap.get('targetInterviewDate') as string | undefined
   const targetDate = parseTargetDate(rawDate)
 
@@ -387,12 +395,12 @@ export async function submitReviewTx(
   // calibration trend doc (review-rep fold). Both reads MUST precede every write
   // in this transaction (Firestore forbids reads-after-writes). We read them
   // unconditionally up front; the writes below decide whether to act.
-  const progressRef = db.doc(`users/${uid}/progress/${lessonId}`)
+  const progressRef = db().doc(`users/${uid}/progress/${lessonId}`)
   const progressSnap = await tx.get(progressRef)
   const alreadyGold =
     (progressSnap.get('derived') as { mastered?: boolean } | undefined)
       ?.mastered === true
-  const summaryRef = db.doc(`users/${uid}/calibration/summary`)
+  const summaryRef = db().doc(`users/${uid}/calibration/summary`)
   // Only read the summary when a confidence is present to fold (no fold ⇒ no read).
   const summarySnap = confidence != null ? await tx.get(summaryRef) : null
 
@@ -558,7 +566,7 @@ export const submitReview = onCall(
     try {
       const [serverFlags, userSnap] = await Promise.all([
         loadServerFlags(),
-        db.doc(`users/${uid}`).get(),
+        db().doc(`users/${uid}`).get(),
       ])
       const cohort = userSnap.get('rolloutCohort') as
         | 'treatment'
@@ -569,7 +577,7 @@ export const submitReview = onCall(
       goldMintEnabled = false // fail CLOSED — never mint on a flag-read error
     }
 
-    const result = await db.runTransaction((tx) =>
+    const result = await db().runTransaction((tx) =>
       submitReviewTx(
         tx,
         uid,
